@@ -1,0 +1,70 @@
+{
+	"name": "vscode-azurestorage",
+	"displayName": "vscode-azurestorage",
+	"description": "An Azure Stroage management extension for Visual Studio Code.",
+	"version": "0.0.1",
+	"publisher": "ms-azuretools",
+	"engines": {
+		"vscode": "^1.17.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onView:azureStorage"
+	],
+	"main": "./out/src/extension",
+	"icon": "media/dep.png",
+	"contributes": {
+		"views": {
+			"explorer": [
+				{
+					"id": "azureStorage",
+					"name": "Azure Storage"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "azureStorage.refreshEntry",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
+			}
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "azureStorage.refreshEntry",
+					"when": "view == azureStorage",
+					"group": "navigation"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install",
+		"test": "npm run compile && node ./node_modules/vscode/bin/test"
+	},
+	"devDependencies": {
+		"typescript": "^2.5.3",
+		"vscode": "^1.1.5",
+		"@types/node": "^7.0.43",
+		"@types/mocha": "^2.2.42"
+	},
+	"extensionDependencies": [
+		"ms-vscode.azure-account"
+	],
+	"dependencies": {
+		"azure-arm-resource": "^2.0.0-preview",
+		"azure-arm-storage": "^3.1.0",
+		"azure-storage": "^2.6.0",
+		"ms-rest": "^2.2.2",
+		"ms-rest-azure": "^2.3.1"
+	}
+}
