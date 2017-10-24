@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount } from '../../node_modules/azure-arm-storage/lib/models';
 import { ISubscriptionChildrenProvider } from "../AzureServiceExplorer/ISubscriptionChildrenProvider";

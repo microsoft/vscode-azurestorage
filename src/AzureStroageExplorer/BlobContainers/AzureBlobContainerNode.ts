@@ -18,8 +18,7 @@ export class AzureBlobContainerNode extends AzureTreeNodeBase {
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
         parentNode: AzureTreeNodeBase) {
-		super(container.name, treeDataProvider, parentNode);
-		
+		super(container.name, treeDataProvider, parentNode);	
     }
 
     getTreeItem(): TreeItem {

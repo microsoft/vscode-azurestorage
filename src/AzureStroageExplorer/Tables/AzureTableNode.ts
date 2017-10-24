@@ -31,8 +31,4 @@ export class AzureTableNode extends AzureTreeNodeBase {
 			}
         }
     }
-
-    async getChildren(): Promise<any> {
-        return [];
-    }
 }

@@ -18,8 +18,7 @@ export class AzureBlobNode extends AzureTreeNodeBase {
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
         parentNode: AzureTreeNodeBase) {
-		super(blob.name, treeDataProvider, parentNode);
-		
+		super(blob.name, treeDataProvider, parentNode);	
     }
 
     getTreeItem(): TreeItem {
@@ -32,9 +31,5 @@ export class AzureBlobNode extends AzureTreeNodeBase {
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
 			}
         }
-    }
-
-    async getChildren(): Promise<any> {
-        return [];
     }
 }

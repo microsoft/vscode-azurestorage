@@ -18,7 +18,6 @@ export class AzureBlobContainerGroupNode extends AzureTreeNodeBase {
 		treeDataProvider: AzureTreeDataProvider, 
         parentNode: AzureTreeNodeBase) {
 		super("Blob Containers", treeDataProvider, parentNode);
-		
     }
 
     getTreeItem(): TreeItem {

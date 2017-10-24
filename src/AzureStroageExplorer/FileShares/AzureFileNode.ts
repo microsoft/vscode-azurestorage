@@ -33,8 +33,4 @@ export class AzureFileNode extends AzureTreeNodeBase {
 			}
         }
     }
-
-    async getChildren(): Promise<any> {
-        return [];
-    }
 }
