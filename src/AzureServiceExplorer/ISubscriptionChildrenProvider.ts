@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SubscriptionModels } from 'azure-arm-resource';
-import { AzureTreeNodeBase } from './Nodes/AzureTreeNodeBase';
-import { AccountManager } from './AccountManager';
-import { AzureTreeDataProvider } from './AzureTreeDataProvider';
+import { AzureTreeNodeBase } from './nodes/azureTreeNodeBase';
+import { AccountManager } from './accountManager';
+import { AzureTreeDataProvider } from './azureTreeDataProvider';
 
 export interface ISubscriptionChildrenProvider {
     getChildren(accountManager: AccountManager, subscription: SubscriptionModels.Subscription, treeDataProvider: AzureTreeDataProvider, subscriptionNode): Promise<AzureTreeNodeBase[]>;

@@ -7,9 +7,9 @@ import { TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as path from 'path';
 
-import { AzureTreeNodeBase } from './AzureTreeNodeBase';
-import { AzureTreeDataProvider } from '../AzureTreeDataProvider';
-import { AccountManager } from '../AccountManager';
+import { AzureTreeNodeBase } from './azureTreeNodeBase';
+import { AzureTreeDataProvider } from '../azureTreeDataProvider';
+import { AccountManager } from '../accountManager';
 import { ISubscriptionChildrenProvider } from '../ISubscriptionChildrenProvider';
 
 export class SubscriptionNode extends AzureTreeNodeBase {

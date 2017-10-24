@@ -5,12 +5,12 @@
 
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount } from '../../node_modules/azure-arm-storage/lib/models';
-import { ISubscriptionChildrenProvider } from "../AzureServiceExplorer/ISubscriptionChildrenProvider";
-import { AzureStorageAccountNode } from './StorageAccount/AzureStorageAccountNode';
-import { AccountManager } from '../AzureServiceExplorer/AccountManager';
+import { ISubscriptionChildrenProvider } from "../azureServiceExplorer/ISubscriptionChildrenProvider";
+import { StorageAccountNode } from './storageAccount/storageAccountNode';
+import { AccountManager } from '../azureServiceExplorer/accountManager';
 import { SubscriptionModels } from 'azure-arm-resource';
-import { AzureTreeNodeBase } from '../AzureServiceExplorer/Nodes/AzureTreeNodeBase';
-import { AzureTreeDataProvider } from '../AzureServiceExplorer/AzureTreeDataProvider';
+import { AzureTreeNodeBase } from '../azureServiceExplorer/nodes/azureTreeNodeBase';
+import { AzureTreeDataProvider } from '../azureServiceExplorer/azureTreeDataProvider';
 
 export class StorageSubscriptionChildProvider implements ISubscriptionChildrenProvider {
     async getChildren(azureAccountWrapper: AccountManager, subscription: SubscriptionModels.Subscription, treeDataProvider: AzureTreeDataProvider, subscriptionNode): Promise<AzureTreeNodeBase[]> {
@@ -19,7 +19,7 @@ export class StorageSubscriptionChildProvider implements ISubscriptionChildrenPr
 
         var accounts = await storageManagementClient.storageAccounts.list();
         var accountNodes = accounts.map((storageAccount: StorageAccount) => {
-            return new AzureStorageAccountNode(azureAccountWrapper, subscription, storageAccount, treeDataProvider, subscriptionNode, storageManagementClient);
+            return new StorageAccountNode(azureAccountWrapper, subscription, storageAccount, treeDataProvider, subscriptionNode, storageManagementClient);
         })
 
         return accountNodes;

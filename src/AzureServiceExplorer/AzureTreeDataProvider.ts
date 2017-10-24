@@ -4,14 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TreeDataProvider, TreeItem, EventEmitter, Event } from 'vscode';
-import { AccountManager } from './AccountManager';
-import { SubscriptionNode } from './Nodes/SubscriptionNode';
+import { AccountManager } from './accountManager';
+import { SubscriptionNode } from './nodes/subscriptionNode';
 import { ISubscriptionChildrenProvider } from './ISubscriptionChildrenProvider';
-import { AzureTreeNodeBase } from './Nodes/AzureTreeNodeBase';
+import { AzureTreeNodeBase } from './nodes/azureTreeNodeBase';
 
-import { LoadingNode } from './Nodes/LoadingNode';
-import { NotSignedInNode } from './Nodes/NotSignedInNode';
-import { SelectSubscriptionsNode } from './Nodes/SelectSubscriptionsNode';
+import { LoadingNode } from './nodes/loadingNode';
+import { NotSignedInNode } from './nodes/notSignedInNode';
+import { SelectSubscriptionsNode } from './nodes/selectSubscriptionsNode';
 
 export class AzureTreeDataProvider implements TreeDataProvider<AzureTreeNodeBase> {
     private readonly _azureAccount: AccountManager;

@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureTreeDataProvider } from '../AzureTreeDataProvider';
+import { AzureTreeDataProvider } from '../azureTreeDataProvider';
 import { TreeItemCollapsibleState, TreeItem } from 'vscode';
-import { AzureTreeNodeBase } from './AzureTreeNodeBase';
+import { AzureTreeNodeBase } from './azureTreeNodeBase';
 
 export class SelectSubscriptionsNode extends AzureTreeNodeBase {
     constructor(treeDataProvider: AzureTreeDataProvider, parentNode?: AzureTreeNodeBase) {

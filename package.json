@@ -65,6 +65,7 @@
 		"azure-arm-storage": "^3.1.0",
 		"azure-storage": "^2.6.0",
 		"ms-rest": "^2.2.2",
-		"ms-rest-azure": "^2.3.1"
+		"ms-rest-azure": "^2.3.1",
+		"vscode-extension-telemetry": "^0.0.6"
 	}
 }

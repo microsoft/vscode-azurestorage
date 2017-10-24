@@ -5,18 +5,20 @@
 
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { AzureTreeNodeBase } from '../../AzureServiceExplorer/Nodes/AzureTreeNodeBase';
-import { AzureTreeDataProvider } from '../../AzureServiceExplorer/AzureTreeDataProvider';
+import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
+import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
+import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
-export class AzureTableNode extends AzureTreeNodeBase {
+export class FileNode extends AzureTreeNodeBase {
     constructor(
-		public readonly tableName: string,
+		public readonly file: azureStorage.FileService.FileResult,
+		public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
         parentNode: AzureTreeNodeBase) {
-		super(tableName, treeDataProvider, parentNode);
+		super(file.name, treeDataProvider, parentNode);
 		
     }
 
@@ -24,10 +26,10 @@ export class AzureTableNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.None,
-            contextValue: 'azureTableNode',
+            contextValue: 'azureFileNode',
             iconPath: {
-				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable_16x.png'),
-				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.png')
+				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
+				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
 			}
         }
     }

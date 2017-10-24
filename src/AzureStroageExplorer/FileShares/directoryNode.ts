@@ -5,19 +5,20 @@
 
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { AzureTreeNodeBase } from '../../AzureServiceExplorer/Nodes/AzureTreeNodeBase';
-import { AzureTreeDataProvider } from '../../AzureServiceExplorer/AzureTreeDataProvider';
-import { AzureFileShareNode } from './AzureFileShareNode';
+import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
+import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
-export class AzureFileShareGroupNode extends AzureTreeNodeBase {
+export class DirectoryNode extends AzureTreeNodeBase {
     constructor(
+		public readonly directory: azureStorage.FileService.DirectoryResult,
+		public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
         parentNode: AzureTreeNodeBase) {
-		super("File Shares", treeDataProvider, parentNode);
+		super(directory.name, treeDataProvider, parentNode);
 		
     }
 
@@ -25,7 +26,7 @@ export class AzureFileShareGroupNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureFileShareGroupNode',
+            contextValue: 'azureFileshareDirectoryNode',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
@@ -34,22 +35,6 @@ export class AzureFileShareGroupNode extends AzureTreeNodeBase {
     }
 
     async getChildren(): Promise<any> {
-        var fileShares = await this.listFileShares(null);
-        var {entries /*, continuationToken*/} = fileShares;
-
-        return entries.map((fileShare: azureStorage.FileService.ShareResult) => {
-            return new AzureFileShareNode(
-                fileShare, this.storageAccount, this.key, this.getTreeDataProvider(), this);
-        });
-
-    }
-
-    listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
-        return new Promise(resolve => {
-            var fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
-			fileService.listSharesSegmented(currentToken, {maxResults: 5}, (_err, result: azureStorage.FileService.ListSharesResult) => {
-				resolve(result);
-			})
-		});
+        return [];
     }
 }

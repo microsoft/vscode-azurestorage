@@ -5,30 +5,29 @@
 
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { AzureTreeNodeBase } from '../../AzureServiceExplorer/Nodes/AzureTreeNodeBase';
-import { AzureTreeDataProvider } from '../../AzureServiceExplorer/AzureTreeDataProvider';
-import { AzureTableNode } from './AzureTableNode';
+import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
+import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
+import { BlobContainerNode } from './blobContainerNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
-export class AzureTableGroupNode extends AzureTreeNodeBase {
+export class BlobContainerGroupNode extends AzureTreeNodeBase {
     constructor(
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
         parentNode: AzureTreeNodeBase) {
-		super("Tables", treeDataProvider, parentNode);
-		
+		super("Blob Containers", treeDataProvider, parentNode);
     }
 
     getTreeItem(): TreeItem {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureTableGroupNode',
+            contextValue: 'azureBlobContainerGroupNode',
             iconPath: {
-				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable_16x.png'),
-				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.png')
+				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
+				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
 			}
         }
     }
@@ -37,17 +36,17 @@ export class AzureTableGroupNode extends AzureTreeNodeBase {
         var containers = await this.listContainers(null);
         var {entries /*, continuationToken*/} = containers;
 
-        return entries.map((table: string) => {
-            return new AzureTableNode(
-                table, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+        return entries.map((container: azureStorage.BlobService.ContainerResult) => {
+            return new BlobContainerNode(
+                container, this.storageAccount, this.key, this.getTreeDataProvider(), this);
         });
 
     }
 
-    listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
+    listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise(resolve => {
-            var tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
-			tableService.listTablesSegmented(currentToken, {maxResults: 5}, (_err, result: azureStorage.TableService.ListTablesResponse) => {
+            var blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+			blobService.listContainersSegmented(currentToken, {maxResults: 5}, (_err, result: azureStorage.BlobService.ListContainerResult) => {
 				resolve(result);
 			})
 		});

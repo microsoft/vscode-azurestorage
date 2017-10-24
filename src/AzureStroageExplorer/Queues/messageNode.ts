@@ -5,12 +5,12 @@
 
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { AzureTreeNodeBase } from '../../AzureServiceExplorer/Nodes/AzureTreeNodeBase';
-import { AzureTreeDataProvider } from '../../AzureServiceExplorer/AzureTreeDataProvider';
+import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
+import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
-export class AzureMessageNode extends AzureTreeNodeBase {
+export class MessageNode extends AzureTreeNodeBase {
     constructor(
 		public readonly message: azureStorage.QueueService.QueueMessageResult,
 		public readonly container: azureStorage.QueueService.QueueResult,

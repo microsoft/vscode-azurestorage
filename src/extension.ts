@@ -4,9 +4,9 @@ import * as vscode from 'vscode';
 import { AzureStorgeProvider } from './explorer/azureStorage'
 */
 
-import { AzureTreeDataProvider } from './AzureServiceExplorer/AzureTreeDataProvider';
-import { AccountManager } from './AzureServiceExplorer/AccountManager';
-import { StorageSubscriptionChildProvider } from "./AzureStroageExplorer/StorageSubscriptionChildProvider";
+import { AzureTreeDataProvider } from './azureServiceExplorer/azureTreeDataProvider';
+import { AccountManager } from './azureServiceExplorer/accountManager';
+import { StorageSubscriptionChildProvider } from "./azureStroageExplorer/storageSubscriptionChildProvider";
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Extension "Azure Storage Tools" is now active.');

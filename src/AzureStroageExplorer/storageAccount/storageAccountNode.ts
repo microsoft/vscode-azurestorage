@@ -5,18 +5,18 @@
 
 import StorageManagementClient = require('azure-arm-storage');
 import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { AccountManager } from '../../AzureServiceExplorer/AccountManager';
+import { AccountManager } from '../../azureServiceExplorer/accountManager';
 import { SubscriptionModels } from 'azure-arm-resource';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { AzureTreeNodeBase } from '../../AzureServiceExplorer/Nodes/AzureTreeNodeBase';
-import { AzureTreeDataProvider } from '../../AzureServiceExplorer/AzureTreeDataProvider';
-import { AzureBlobContainerGroupNode } from '../BlobContainers/AzureBlobContainerGroupNode';
-import { AzureFileShareGroupNode } from '../FileShares/AzureFileShareGroupNode';
-import { AzureTableGroupNode } from '../Tables/AzureTableGroupNode';
-import { AzureQueueGroupNode } from '../Queues/AzureQueueGroupNode';
+import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
+import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
+import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
+import { FileShareGroupNode } from '../fileShares/fileShareGroupNode';
+import { TableGroupNode } from '../tables/tableGroupNode';
+import { QueueGroupNode } from '../queues/queueGroupNode';
 import * as path from 'path';
 
-export class AzureStorageAccountNode extends AzureTreeNodeBase {
+export class StorageAccountNode extends AzureTreeNodeBase {
     constructor(
 		public readonly accountManager: AccountManager, 
 		public readonly subscription: SubscriptionModels.Subscription, 
@@ -47,10 +47,10 @@ export class AzureStorageAccountNode extends AzureTreeNodeBase {
         });
         
 		return [
-            new AzureBlobContainerGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
-            new AzureFileShareGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
-            new AzureTableGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
-            new AzureQueueGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this)
+            new BlobContainerGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
+            new FileShareGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
+            new TableGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
+            new QueueGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this)
         ];
     }
 
