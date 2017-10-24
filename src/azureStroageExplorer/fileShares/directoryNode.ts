@@ -7,11 +7,13 @@ import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
+import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
 export class DirectoryNode extends AzureTreeNodeBase {
     constructor(
+        public readonly relativeDirectory: string,
 		public readonly directory: azureStorage.FileService.DirectoryResult,
 		public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
@@ -35,6 +37,24 @@ export class DirectoryNode extends AzureTreeNodeBase {
     }
 
     async getChildren(): Promise<any> {
-        return [];
+        var fileResults = await this.listFiles(null);
+        var {entries /*, continuationToken*/} = fileResults;
+
+        return []
+        .concat( entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
+            return new DirectoryNode(path.posix.join(this.relativeDirectory, this.directory.name), directory, this.share, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+        }))
+        .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
+            return new FileNode(file, this.share, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+        }));
+    }
+
+    listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
+        return new Promise(resolve => {
+            var fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+            fileService.listFilesAndDirectoriesSegmented(this.share.name, path.posix.join(this.relativeDirectory, this.directory.name), currentToken, {maxResults: 5}, (_err, result: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
+				resolve(result);
+			})
+		});
     }
 }
