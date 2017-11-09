@@ -7,6 +7,7 @@ import { AzureStorgeProvider } from './explorer/azureStorage'
 import { AzureTreeDataProvider } from './azureServiceExplorer/azureTreeDataProvider';
 import { AccountManager } from './azureServiceExplorer/accountManager';
 import { StorageSubscriptionChildProvider } from "./azureStroageExplorer/storageSubscriptionChildProvider";
+import { BlobContainerActionHandler } from "./azureStroageExplorer/blobContainers/blobContainerActionHandler"
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Extension "Azure Storage Tools" is now active.');
@@ -17,6 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	var subscriptionChildrenProvider = new StorageSubscriptionChildProvider();
 	azureTreeDataProvider.registerSubscriptionChildrenProvider(subscriptionChildrenProvider);
+	new BlobContainerActionHandler().registerActions(context);
 
 	vscode.window.registerTreeDataProvider('azureStorage', azureTreeDataProvider);
 	

@@ -1,6 +1,6 @@
 {
 	"name": "vscode-azurestorage",
-	"displayName": "vscode-azurestorage",
+	"displayName": "Azure Storage",
 	"description": "An Azure Stroage management extension for Visual Studio Code.",
 	"version": "0.0.1",
 	"publisher": "ms-azuretools",
@@ -32,6 +32,14 @@
 					"light": "resources/light/refresh.svg",
 					"dark": "resources/dark/refresh.svg"
 				}
+			},
+			{
+				"command": "azureStorage.openExplorer",
+				"title": "Open Explorer",
+				"icon": {
+					"light": "resources/light/AzureStorageAccount_16x.png",
+					"dark": "resources/dark/AzureStorageAccount_16x.png"
+				}
 			}
 		],
 		"menus": {
@@ -40,6 +48,12 @@
 					"command": "azureStorage.refreshEntry",
 					"when": "view == azureStorage",
 					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "azureStorage.openExplorer",
+					"when": "view == azureStorage"
 				}
 			]
 		}
