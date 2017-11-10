@@ -5,19 +5,19 @@
 import * as vscode from 'vscode';
 import { BaseActionHandler } from '../../azureServiceExplorer/actions/baseActionHandler';
 
-import { BlobContainerNode } from './blobContainerNode';
+import { FileShareNode } from './fileShareNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 
-export class BlobContainerActionHandler extends BaseActionHandler {
+export class FileShareActionHandler extends BaseActionHandler {
     registerActions(context: vscode.ExtensionContext) {
-        this.initCommand(context, "azureStorage.openBlobContainer", (node) => { this.openBlobContainerInStorageExplorer(node) });
+        this.initCommand(context, "azureStorage.openFileShare", (node) => { this.openFileShareInStorageExplorer(node) });
     }
 
-    openBlobContainerInStorageExplorer(node: BlobContainerNode) {
+    openFileShareInStorageExplorer(node: FileShareNode) {
         var resourceId = node.storageAccount.id;
         var subscriptionid = node.subscription.subscriptionId;
-        var resourceType = "Azure.BlobContainer";
-        var resourceName = node.container.name;
+        var resourceType = "Azure.FileShare";
+        var resourceName = node.share.name;
 
         StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
     }

@@ -7,12 +7,16 @@ import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
+import { SubscriptionModels } from 'azure-arm-resource';
+/*
 import { MessageNode } from './messageNode';
+*/
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
 export class QueueNode extends AzureTreeNodeBase {
     constructor(
+        public readonly subscription: SubscriptionModels.Subscription, 
 		public readonly queue: azureStorage.QueueService.QueueResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
@@ -25,8 +29,8 @@ export class QueueNode extends AzureTreeNodeBase {
     getTreeItem(): TreeItem {
         return {
             label: this.label,
-            collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureQueueNode',
+            collapsibleState: TreeItemCollapsibleState.None,
+            contextValue: 'azureQueue',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
@@ -34,6 +38,11 @@ export class QueueNode extends AzureTreeNodeBase {
         }
     }
 
+    async getChildren(): Promise<any> {
+        return [];
+    }
+
+    /*
     async getChildren(): Promise<any> {
         var messages = await this.listMessages();
         
@@ -50,4 +59,5 @@ export class QueueNode extends AzureTreeNodeBase {
 			})
 		});
     }
+    */
 }

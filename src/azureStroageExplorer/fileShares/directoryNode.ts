@@ -28,7 +28,7 @@ export class DirectoryNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureFileshareDirectoryNode',
+            contextValue: 'azureFileshareDirectory',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')

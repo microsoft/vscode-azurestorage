@@ -25,7 +25,7 @@ export class BlobNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.None,
-            contextValue: 'azureBlobNode',
+            contextValue: 'azureBlob',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')

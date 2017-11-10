@@ -8,11 +8,13 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { QueueNode } from './queueNode';
+import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
 export class QueueGroupNode extends AzureTreeNodeBase {
     constructor(
+        public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
@@ -25,7 +27,7 @@ export class QueueGroupNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureQueueGroupNode',
+            contextValue: 'azureQueueGroup',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
@@ -39,7 +41,12 @@ export class QueueGroupNode extends AzureTreeNodeBase {
 
         return entries.map((queue: azureStorage.QueueService.QueueResult) => {
             return new QueueNode(
-                queue, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+                this.subscription,
+                queue, 
+                this.storageAccount, 
+                this.key, 
+                this.getTreeDataProvider(), 
+                this);
         });
 
     }

@@ -26,7 +26,7 @@
 		},
 		"commands": [
 			{
-				"command": "azureStorage.refreshEntry",
+				"command": "azureStorage.refresh",
 				"title": "Refresh",
 				"icon": {
 					"light": "resources/light/refresh.svg",
@@ -34,8 +34,40 @@
 				}
 			},
 			{
-				"command": "azureStorage.openExplorer",
-				"title": "Open Explorer",
+				"command": "azureStorage.openBlobContainer",
+				"title": "Open Blob Container In Explorer",
+				"icon": {
+					"light": "resources/light/AzureStorageAccount_16x.png",
+					"dark": "resources/dark/AzureStorageAccount_16x.png"
+				}
+			},
+			{
+				"command": "azureStorage.openTable",
+				"title": "Open Table In Explorer",
+				"icon": {
+					"light": "resources/light/AzureStorageAccount_16x.png",
+					"dark": "resources/dark/AzureStorageAccount_16x.png"
+				}
+			},
+			{
+				"command": "azureStorage.openFileShare",
+				"title": "Open File Share In Explorer",
+				"icon": {
+					"light": "resources/light/AzureStorageAccount_16x.png",
+					"dark": "resources/dark/AzureStorageAccount_16x.png"
+				}
+			},
+			{
+				"command": "azureStorage.openQueue",
+				"title": "Open Queue In Explorer",
+				"icon": {
+					"light": "resources/light/AzureStorageAccount_16x.png",
+					"dark": "resources/dark/AzureStorageAccount_16x.png"
+				}
+			},
+			{
+				"command": "azureStorage.openStorageAccount",
+				"title": "Open Storage Account In Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -45,15 +77,31 @@
 		"menus": {
 			"view/title": [
 				{
-					"command": "azureStorage.refreshEntry",
+					"command": "azureStorage.refresh",
 					"when": "view == azureStorage",
 					"group": "navigation"
 				}
 			],
 			"view/item/context": [
 				{
-					"command": "azureStorage.openExplorer",
-					"when": "view == azureStorage"
+					"command": "azureStorage.openBlobContainer",
+					"when": "view == azureStorage && viewItem == azureBlobContainer"
+				},
+				{
+					"command": "azureStorage.openTable",
+					"when": "view == azureStorage && viewItem == azureTable"
+				},
+				{
+					"command": "azureStorage.openFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShare"
+				},
+				{
+					"command": "azureStorage.openQueue",
+					"when": "view == azureStorage && viewItem == azureQueue"
+				},
+				{
+					"command": "azureStorage.openStorageAccount",
+					"when": "view == azureStorage && viewItem == azureStorageAccount"
 				}
 			]
 		}

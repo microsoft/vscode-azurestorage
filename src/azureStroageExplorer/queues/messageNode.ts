@@ -26,7 +26,7 @@ export class MessageNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.None,
-            contextValue: 'azureQueueMessageNode',
+            contextValue: 'azureQueueMessage',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')

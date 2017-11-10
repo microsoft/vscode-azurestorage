@@ -32,7 +32,7 @@ export class StorageAccountNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureStorageAccountNode',
+            contextValue: 'azureStorageAccount',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount_16x.png')
@@ -47,10 +47,10 @@ export class StorageAccountNode extends AzureTreeNodeBase {
         });
         
 		return [
-            new BlobContainerGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
-            new FileShareGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
-            new TableGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
-            new QueueGroupNode(this.storageAccount, primaryKey, this.getTreeDataProvider(), this)
+            new BlobContainerGroupNode(this.subscription, this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
+            new FileShareGroupNode(this.subscription, this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
+            new TableGroupNode(this.subscription, this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
+            new QueueGroupNode(this.subscription, this.storageAccount, primaryKey, this.getTreeDataProvider(), this)
         ];
     }
 

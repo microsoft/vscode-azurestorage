@@ -6,7 +6,7 @@
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount } from '../../node_modules/azure-arm-storage/lib/models';
 import { ISubscriptionChildrenProvider } from "../azureServiceExplorer/ISubscriptionChildrenProvider";
-import { StorageAccountNode } from './storageAccount/storageAccountNode';
+import { StorageAccountNode } from './storageAccounts/storageAccountNode';
 import { AccountManager } from '../azureServiceExplorer/accountManager';
 import { SubscriptionModels } from 'azure-arm-resource';
 import { AzureTreeNodeBase } from '../azureServiceExplorer/nodes/azureTreeNodeBase';

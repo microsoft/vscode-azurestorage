@@ -8,11 +8,13 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { FileShareNode } from './fileShareNode';
+import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
 export class FileShareGroupNode extends AzureTreeNodeBase {
     constructor(
+        public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
@@ -25,7 +27,7 @@ export class FileShareGroupNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureFileShareGroupNode',
+            contextValue: 'azureFileShareGroup',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
@@ -39,7 +41,12 @@ export class FileShareGroupNode extends AzureTreeNodeBase {
 
         return entries.map((fileShare: azureStorage.FileService.ShareResult) => {
             return new FileShareNode(
-                fileShare, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+                this.subscription,
+                fileShare, 
+                this.storageAccount, 
+                this.key, 
+                this.getTreeDataProvider(), 
+                this);
         });
 
     }

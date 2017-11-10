@@ -8,11 +8,13 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { BlobContainerNode } from './blobContainerNode';
+import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
 export class BlobContainerGroupNode extends AzureTreeNodeBase {
     constructor(
+        public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
@@ -24,7 +26,7 @@ export class BlobContainerGroupNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureBlobContainerGroupNode',
+            contextValue: 'azureBlobContainerGroup',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
@@ -37,8 +39,7 @@ export class BlobContainerGroupNode extends AzureTreeNodeBase {
         var {entries /*, continuationToken*/} = containers;
 
         return entries.map((container: azureStorage.BlobService.ContainerResult) => {
-            return new BlobContainerNode(
-                container, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+            return new BlobContainerNode(this.subscription, container, this.storageAccount, this.key, this.getTreeDataProvider(), this);
         });
 
     }

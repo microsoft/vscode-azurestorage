@@ -8,11 +8,13 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { TableNode } from './tableNode';
+import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
 export class TableGroupNode extends AzureTreeNodeBase {
     constructor(
+        public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
@@ -25,7 +27,7 @@ export class TableGroupNode extends AzureTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureTableGroupNode',
+            contextValue: 'azureTableGroup',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.png')
@@ -39,7 +41,12 @@ export class TableGroupNode extends AzureTreeNodeBase {
 
         return entries.map((table: string) => {
             return new TableNode(
-                table, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+                this.subscription,
+                table, 
+                this.storageAccount, 
+                this.key, 
+                this.getTreeDataProvider(), 
+                this);
         });
 
     }

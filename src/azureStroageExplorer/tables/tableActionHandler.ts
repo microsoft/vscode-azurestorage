@@ -5,19 +5,19 @@
 import * as vscode from 'vscode';
 import { BaseActionHandler } from '../../azureServiceExplorer/actions/baseActionHandler';
 
-import { BlobContainerNode } from './blobContainerNode';
+import { TableNode } from './tableNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 
-export class BlobContainerActionHandler extends BaseActionHandler {
+export class TableActionHandler extends BaseActionHandler {
     registerActions(context: vscode.ExtensionContext) {
-        this.initCommand(context, "azureStorage.openBlobContainer", (node) => { this.openBlobContainerInStorageExplorer(node) });
+        this.initCommand(context, "azureStorage.openTable", (node) => { this.openTableInStorageExplorer(node) });
     }
 
-    openBlobContainerInStorageExplorer(node: BlobContainerNode) {
+    openTableInStorageExplorer(node: TableNode) {
         var resourceId = node.storageAccount.id;
         var subscriptionid = node.subscription.subscriptionId;
-        var resourceType = "Azure.BlobContainer";
-        var resourceName = node.container.name;
+        var resourceType = "Azure.Table";
+        var resourceName = node.tableName;
 
         StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
     }

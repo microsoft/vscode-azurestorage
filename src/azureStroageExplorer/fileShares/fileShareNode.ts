@@ -7,13 +7,17 @@ import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
+import { SubscriptionModels } from 'azure-arm-resource';
+/*
 import { FileNode } from './fileNode';
 import { DirectoryNode } from './directoryNode';
+*/
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
 export class FileShareNode extends AzureTreeNodeBase {
     constructor(
+        public readonly subscription: SubscriptionModels.Subscription, 
 		public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
@@ -26,8 +30,8 @@ export class FileShareNode extends AzureTreeNodeBase {
     getTreeItem(): TreeItem {
         return {
             label: this.label,
-            collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureFileNode',
+            collapsibleState: TreeItemCollapsibleState.None,
+            contextValue: 'azureFileShare',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
@@ -36,8 +40,13 @@ export class FileShareNode extends AzureTreeNodeBase {
     }
 
     async getChildren(): Promise<any> {
+        return [];
+    }
+
+    /*
+    async getChildren(): Promise<any> {
         var fileResults = await this.listFiles(null);
-        var {entries /*, continuationToken*/} = fileResults;
+        var {entries} = fileResults;
 
         return []
         .concat( entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
@@ -56,4 +65,5 @@ export class FileShareNode extends AzureTreeNodeBase {
 			})
 		});
     }
+    */
 }
