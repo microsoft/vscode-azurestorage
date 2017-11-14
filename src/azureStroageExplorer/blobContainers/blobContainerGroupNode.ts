@@ -11,8 +11,11 @@ import { BlobContainerNode } from './blobContainerNode';
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
+import { AzureLoadMoreTreeNodeBase } from '../../azureServiceExplorer/nodes/azureLoadMoreTreeNodeBase';
 
-export class BlobContainerGroupNode extends AzureTreeNodeBase {
+export class BlobContainerGroupNode extends AzureLoadMoreTreeNodeBase {
+    private _continuationToken: azureStorage.common.ContinuationToken;
+
     constructor(
         public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
@@ -34,14 +37,18 @@ export class BlobContainerGroupNode extends AzureTreeNodeBase {
         }
     }
 
-    async getChildren(): Promise<any> {
-        var containers = await this.listContainers(null);
-        var {entries /*, continuationToken*/} = containers;
+    async getMoreChildren(): Promise<AzureTreeNodeBase[]> {
+        var containers = await this.listContainers(this._continuationToken);
+        var {entries , continuationToken} = containers;
+        this._continuationToken = continuationToken;
 
         return entries.map((container: azureStorage.BlobService.ContainerResult) => {
-            return new BlobContainerNode(this.subscription, container, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+            return new BlobContainerNode(this.subscription, container, this.storageAccount, this.key, this.treeDataProvider, this);
         });
+    }
 
+    hasMoreChildren(): boolean {
+        return !!this._continuationToken;
     }
 
     listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {

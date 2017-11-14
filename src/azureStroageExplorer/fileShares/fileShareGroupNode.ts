@@ -11,8 +11,11 @@ import { FileShareNode } from './fileShareNode';
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
+import { AzureLoadMoreTreeNodeBase } from '../../azureServiceExplorer/nodes/azureLoadMoreTreeNodeBase';
 
-export class FileShareGroupNode extends AzureTreeNodeBase {
+export class FileShareGroupNode extends AzureLoadMoreTreeNodeBase {
+    private _continuationToken: azureStorage.common.ContinuationToken;
+
     constructor(
         public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
@@ -35,9 +38,10 @@ export class FileShareGroupNode extends AzureTreeNodeBase {
         }
     }
 
-    async getChildren(): Promise<any> {
-        var fileShares = await this.listFileShares(null);
-        var {entries /*, continuationToken*/} = fileShares;
+    async getMoreChildren(): Promise<AzureTreeNodeBase[]> {
+        var fileShares = await this.listFileShares(this._continuationToken);
+        var {entries, continuationToken } = fileShares;
+        this._continuationToken = continuationToken;
 
         return entries.map((fileShare: azureStorage.FileService.ShareResult) => {
             return new FileShareNode(
@@ -45,10 +49,13 @@ export class FileShareGroupNode extends AzureTreeNodeBase {
                 fileShare, 
                 this.storageAccount, 
                 this.key, 
-                this.getTreeDataProvider(), 
+                this.treeDataProvider, 
                 this);
         });
+    }
 
+    hasMoreChildren(): boolean {
+        return !!this._continuationToken;
     }
 
     listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {

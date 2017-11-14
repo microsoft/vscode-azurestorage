@@ -11,8 +11,11 @@ import { TableNode } from './tableNode';
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
+import { AzureLoadMoreTreeNodeBase } from '../../azureServiceExplorer/nodes/azureLoadMoreTreeNodeBase';
 
-export class TableGroupNode extends AzureTreeNodeBase {
+export class TableGroupNode extends AzureLoadMoreTreeNodeBase {
+    private _continuationToken: azureStorage.TableService.ListTablesContinuationToken;
+
     constructor(
         public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
@@ -35,9 +38,10 @@ export class TableGroupNode extends AzureTreeNodeBase {
         }
     }
 
-    async getChildren(): Promise<any> {
-        var containers = await this.listContainers(null);
-        var {entries /*, continuationToken*/} = containers;
+    async getMoreChildren(): Promise<any> {
+        var containers = await this.listContainers(this._continuationToken);
+        var {entries, continuationToken} = containers;
+        this._continuationToken = continuationToken;
 
         return entries.map((table: string) => {
             return new TableNode(
@@ -45,10 +49,14 @@ export class TableGroupNode extends AzureTreeNodeBase {
                 table, 
                 this.storageAccount, 
                 this.key, 
-                this.getTreeDataProvider(), 
+                this.treeDataProvider, 
                 this);
         });
 
+    }
+
+    hasMoreChildren(): boolean {
+        return !!this._continuationToken;
     }
 
     listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {

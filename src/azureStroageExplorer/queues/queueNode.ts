@@ -47,7 +47,7 @@ export class QueueNode extends AzureTreeNodeBase {
         var messages = await this.listMessages();
         
         return messages.map((message: azureStorage.QueueService.QueueMessageResult) => {
-            return new MessageNode(message, this.queue, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+            return new MessageNode(message, this.queue, this.storageAccount, this.key, this.treeDataProvider, this);
         });
     }
 

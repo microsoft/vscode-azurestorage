@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TreeDataProvider, TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as path from 'path';
 
@@ -15,7 +15,7 @@ import { ISubscriptionChildrenProvider } from '../ISubscriptionChildrenProvider'
 export class SubscriptionNode extends AzureTreeNodeBase {
     private _subscriptionChildrenDataProviders: ISubscriptionChildrenProvider[];
 
-    constructor(readonly subscription: SubscriptionModels.Subscription, treeDataProvider: TreeDataProvider<AzureTreeNodeBase>, parentNode: AzureTreeNodeBase | undefined, subscriptionChildrenDataProviders: ISubscriptionChildrenProvider[]) {
+    constructor(readonly subscription: SubscriptionModels.Subscription, treeDataProvider: AzureTreeDataProvider, parentNode: AzureTreeNodeBase | undefined, subscriptionChildrenDataProviders: ISubscriptionChildrenProvider[]) {
         super(subscription.displayName, treeDataProvider, parentNode);
         this._subscriptionChildrenDataProviders = subscriptionChildrenDataProviders;
     }
@@ -39,7 +39,7 @@ export class SubscriptionNode extends AzureTreeNodeBase {
 
         var childrenPromises = [];
         this._subscriptionChildrenDataProviders.forEach((childProvider) => {
-            childrenPromises.push(childProvider.getChildren(this.azureAccount, this.subscription, this.getTreeDataProvider(), this));
+            childrenPromises.push(childProvider.getChildren(this.azureAccount, this.subscription, this.treeDataProvider, this));
         })
 
         return await Promise.all(childrenPromises).then((childrenResults: AzureTreeNodeBase[][]) => {
@@ -48,6 +48,6 @@ export class SubscriptionNode extends AzureTreeNodeBase {
     }
 
     private get azureAccount(): AccountManager {
-        return this.getTreeDataProvider<AzureTreeDataProvider>().azureAccount;
+        return this.treeDataProvider.azureAccount;
     }
 }

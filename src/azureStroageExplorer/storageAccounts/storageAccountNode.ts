@@ -47,10 +47,10 @@ export class StorageAccountNode extends AzureTreeNodeBase {
         });
         
 		return [
-            new BlobContainerGroupNode(this.subscription, this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
-            new FileShareGroupNode(this.subscription, this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
-            new TableGroupNode(this.subscription, this.storageAccount, primaryKey, this.getTreeDataProvider(), this),
-            new QueueGroupNode(this.subscription, this.storageAccount, primaryKey, this.getTreeDataProvider(), this)
+            new BlobContainerGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this),
+            new FileShareGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this),
+            new TableGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this),
+            new QueueGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this)
         ];
     }
 

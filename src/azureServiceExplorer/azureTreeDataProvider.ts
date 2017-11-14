@@ -30,7 +30,7 @@ export class AzureTreeDataProvider implements TreeDataProvider<AzureTreeNodeBase
         this._subscriptionChildrenDataProviders.push(subscriptionChildrenProvider);
     }
 
-    refresh(element?: AzureTreeNodeBase): void {
+    public refresh(element?: AzureTreeNodeBase): void {
         this._onDidChangeTreeData.fire(element);
     }
 

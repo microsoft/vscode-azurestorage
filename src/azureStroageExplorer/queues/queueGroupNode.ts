@@ -11,8 +11,11 @@ import { QueueNode } from './queueNode';
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
+import { AzureLoadMoreTreeNodeBase } from '../../azureServiceExplorer/nodes/azureLoadMoreTreeNodeBase';
 
-export class QueueGroupNode extends AzureTreeNodeBase {
+export class QueueGroupNode extends AzureLoadMoreTreeNodeBase {
+    private _continuationToken: azureStorage.common.ContinuationToken;
+
     constructor(
         public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
@@ -35,9 +38,10 @@ export class QueueGroupNode extends AzureTreeNodeBase {
         }
     }
 
-    async getChildren(): Promise<any> {
-        var containers = await this.listQueues(null);
-        var {entries /*, continuationToken*/} = containers;
+    async getMoreChildren(): Promise<AzureTreeNodeBase[]> {
+        var containers = await this.listQueues(this._continuationToken);
+        var {entries, continuationToken} = containers;
+        this._continuationToken = continuationToken;
 
         return entries.map((queue: azureStorage.QueueService.QueueResult) => {
             return new QueueNode(
@@ -45,10 +49,14 @@ export class QueueGroupNode extends AzureTreeNodeBase {
                 queue, 
                 this.storageAccount, 
                 this.key, 
-                this.getTreeDataProvider(), 
+                this.treeDataProvider, 
                 this);
         });
 
+    }
+
+    hasMoreChildren(): boolean {
+        return !!this._continuationToken;
     }
 
     listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {

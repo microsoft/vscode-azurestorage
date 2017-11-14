@@ -47,7 +47,7 @@ export class BlobContainerNode extends AzureTreeNodeBase {
         var {entries} = blobs;
         
         return entries.map((blob: azureStorage.BlobService.BlobResult) => {
-            return new BlobNode(blob, this.container, this.storageAccount, this.key, this.getTreeDataProvider(), this);
+            return new BlobNode(blob, this.container, this.storageAccount, this.key, this.treeDataProvider, this);
         });
     }
 
