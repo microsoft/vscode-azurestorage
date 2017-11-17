@@ -16,17 +16,23 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     private static _regKey = "HKCR\\storageexplorer\\shell\\open\\command";
     private static _childProcess: ChildProcess;
     public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string) {
-        await WindowsStorageExplorerLauncher.launchStorageExplorer([
-            "storageexplorer://v=1"
-            + "&accountid="
-            + encodeURIComponent(resourceId)
-            + "&subscriptionid="
-            + encodeURIComponent(subscriptionid)
-            + "&resourcetype="
+        var url = "storageexplorer://v=1"
+        + "&accountid="
+        + encodeURIComponent(resourceId)
+        + "&subscriptionid="
+        + encodeURIComponent(subscriptionid);
+
+        if(!!resourceType) {
+            url = url + "&resourcetype="
             + resourceType
-            + "&resourcename="
-            + resourceName
-        ]);
+        }
+
+        if(!!resourceName) {
+            url = url + "&resourcename="
+            + resourceName;
+        }
+        
+        await WindowsStorageExplorerLauncher.launchStorageExplorer([url]);
     }
 
     private static async getStorageExplorerExecutable(): Promise<string> {

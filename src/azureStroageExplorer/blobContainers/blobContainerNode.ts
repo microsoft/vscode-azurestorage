@@ -8,9 +8,6 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { SubscriptionModels } from 'azure-arm-resource';
-/*
-import { BlobNode } from './blobNode';
-*/
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
@@ -40,24 +37,4 @@ export class BlobContainerNode extends AzureTreeNodeBase {
     async getChildren(): Promise<any> {
         return [];
     }
-
-    /*
-    async getChildren(): Promise<any> {
-        var blobs = await this.listBlobs(null);
-        var {entries} = blobs;
-        
-        return entries.map((blob: azureStorage.BlobService.BlobResult) => {
-            return new BlobNode(blob, this.container, this.storageAccount, this.key, this.treeDataProvider, this);
-        });
-    }
-
-    listBlobs(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListBlobsResult> {
-        return new Promise(resolve => {
-            var blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-			blobService.listBlobsSegmented(this.container.name, currentToken, {maxResults: 5}, (_err, result: azureStorage.BlobService.ListBlobsResult) => {
-				resolve(result);
-			})
-		});
-    }
-    */
 }

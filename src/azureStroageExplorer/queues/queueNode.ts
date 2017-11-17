@@ -8,9 +8,6 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { SubscriptionModels } from 'azure-arm-resource';
-/*
-import { MessageNode } from './messageNode';
-*/
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
@@ -41,23 +38,4 @@ export class QueueNode extends AzureTreeNodeBase {
     async getChildren(): Promise<any> {
         return [];
     }
-
-    /*
-    async getChildren(): Promise<any> {
-        var messages = await this.listMessages();
-        
-        return messages.map((message: azureStorage.QueueService.QueueMessageResult) => {
-            return new MessageNode(message, this.queue, this.storageAccount, this.key, this.treeDataProvider, this);
-        });
-    }
-
-    listMessages(): Promise<azureStorage.QueueService.QueueMessageResult[]> {
-        return new Promise(resolve => {
-            var queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
-			queueService.peekMessages(this.queue.name, (_err, result: azureStorage.QueueService.QueueMessageResult[]) => {
-				resolve(result);
-			})
-		});
-    }
-    */
 }

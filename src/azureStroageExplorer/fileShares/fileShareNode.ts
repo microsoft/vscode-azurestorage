@@ -8,10 +8,6 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { SubscriptionModels } from 'azure-arm-resource';
-/*
-import { FileNode } from './fileNode';
-import { DirectoryNode } from './directoryNode';
-*/
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
@@ -42,28 +38,4 @@ export class FileShareNode extends AzureTreeNodeBase {
     async getChildren(): Promise<any> {
         return [];
     }
-
-    /*
-    async getChildren(): Promise<any> {
-        var fileResults = await this.listFiles(null);
-        var {entries} = fileResults;
-
-        return []
-        .concat( entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
-            return new DirectoryNode('', directory, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
-        }))
-        .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
-            return new FileNode(file, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
-        }));
-    }
-
-    listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
-        return new Promise(resolve => {
-            var fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
-            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, {maxResults: 5}, (_err, result: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
-				resolve(result);
-			})
-		});
-    }
-    */
 }

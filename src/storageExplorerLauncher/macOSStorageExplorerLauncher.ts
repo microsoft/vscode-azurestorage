@@ -17,11 +17,18 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         + "&accountid="
         + encodeURIComponent(resourceId)
         + "&subscriptionid="
-        + encodeURIComponent(subscriptionid)
-        + "&resourcetype="
-        + resourceType
-        + "&resourcename="
-        + resourceName;
+        + encodeURIComponent(subscriptionid);
+
+        if(!!resourceType) {
+            url = url + "&resourcetype="
+            + resourceType
+        }
+
+        if(!!resourceName) {
+            url = url + "&resourcename="
+            + resourceName;
+        }
+        
         
         if(this._childProcess) {
             spawn("open", [url]);
