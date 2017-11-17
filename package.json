@@ -113,6 +113,9 @@
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "npm run compile && node ./node_modules/vscode/bin/test"
 	},
+	"optionalDependencies": {
+		"regedit": "^2.2.7"
+	},
 	"devDependencies": {
 		"typescript": "^2.5.3",
 		"vscode": "^1.1.5",
@@ -128,7 +131,6 @@
 		"azure-storage": "^2.6.0",
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
-		"regedit": "^2.2.7",
 		"vscode-extension-telemetry": "^0.0.6"
 	}
 }
