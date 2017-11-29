@@ -22,19 +22,41 @@ export class FileEditor extends BaseEditor<FileNode> {
 
     async getData(node: FileNode): Promise<string> {
         var fileService = azureStorage.createFileService(node.storageAccount.name, node.key.value);
-        return await new Promise<string>((resolve, _reject) => {
-            fileService.getFileToText(node.share.name, '', node.file.name, undefined, (_error: Error, text: string, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
-                resolve(text);
+        return await new Promise<string>((resolve, reject) => {
+            fileService.getFileToText(node.share.name, '', node.file.name, undefined, (error: Error, text: string, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+                if(!!error) {
+                    reject(error)
+                } else {
+                    resolve(text);
+                }
             });
         });
     }
 
     async updateData(node: FileNode, data: string): Promise<string> {
-        var fileService = azureStorage.createFileService(node.storageAccount.name, node.key.value);  
-        return new Promise<string>((resolve, _reject) => {
-            fileService.createFileFromText(node.share.name, '', node.file.name, data, async () => {
-                resolve(await this.getData(node));
+        var fileService = azureStorage.createFileService(node.storageAccount.name, node.key.value);
+        
+        await new Promise<string>((resolve, reject) => {
+            fileService.createFileFromText(node.share.name, '', node.file.name, data, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+                if(!!error) {
+                    var errorAny = <any>error;                
+                    if(!!errorAny.code) {
+                        var humanReadableMessage = `Unable to save '${node.file.name}' file service returned error code "${errorAny.code}"`;
+                        switch(errorAny.code) {
+                            case "ENOTFOUND":
+                                humanReadableMessage += " - Please check connection."
+                            break;
+                        }
+                        reject(humanReadableMessage);
+                    } else {
+                        reject(error);
+                    }     
+                } else {
+                    resolve();
+                }
             });
         });
+
+        return await this.getData(node);
     }
 }
