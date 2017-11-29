@@ -131,6 +131,7 @@
 		"azure-storage": "^2.6.0",
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
-		"vscode-extension-telemetry": "^0.0.6"
+		"vscode-extension-telemetry": "^0.0.6",
+		"fs-extra": "4.0.2"
 	}
 }
