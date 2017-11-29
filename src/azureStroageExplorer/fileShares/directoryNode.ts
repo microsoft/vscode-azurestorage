@@ -7,24 +7,20 @@ import { TreeItem, TreeItemCollapsibleState } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
-import { SubscriptionModels } from 'azure-arm-resource';
+import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { DirectoryNode } from './directoryNode';
-import { FileNode } from './fileNode';
-import { AzureLoadMoreTreeNodeBase } from '../../azureServiceExplorer/nodes/azureLoadMoreTreeNodeBase';
 
-export class FileShareNode extends AzureLoadMoreTreeNodeBase {
-    private _continuationToken: azureStorage.common.ContinuationToken;
-
+export class DirectoryNode extends AzureTreeNodeBase {
     constructor(
-        public readonly subscription: SubscriptionModels.Subscription, 
+        public readonly relativeDirectory: string,
+		public readonly directory: azureStorage.FileService.DirectoryResult,
 		public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,
 		treeDataProvider: AzureTreeDataProvider, 
         parentNode: AzureTreeNodeBase) {
-		super(share.name, treeDataProvider, parentNode);
+		super(directory.name, treeDataProvider, parentNode);
 		
     }
 
@@ -32,25 +28,21 @@ export class FileShareNode extends AzureLoadMoreTreeNodeBase {
         return {
             label: this.label,
             collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureFileShare',
+            contextValue: 'azureFileshareDirectory',
             iconPath: {
 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
 			}
         }
     }
-    
-    hasMoreChildren(): boolean {
-        return !!this._continuationToken;
-    }
 
-    async getMoreChildren(): Promise<any> {
-        var fileResults = await this.listFiles(this._continuationToken);
-        var {entries, continuationToken } = fileResults;
-        this._continuationToken = continuationToken;
+    async getChildren(): Promise<any> {
+        var fileResults = await this.listFiles(null);
+        var {entries /*, continuationToken*/} = fileResults;
+
         return []
         .concat( entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
-            return new DirectoryNode('', directory, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
+            return new DirectoryNode(path.posix.join(this.relativeDirectory, this.directory.name), directory, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
         }))
         .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
             return new FileNode(file, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
@@ -60,7 +52,7 @@ export class FileShareNode extends AzureLoadMoreTreeNodeBase {
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return new Promise(resolve => {
             var fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
-            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, {maxResults: 5}, (_err, result: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
+            fileService.listFilesAndDirectoriesSegmented(this.share.name, path.posix.join(this.relativeDirectory, this.directory.name), currentToken, {maxResults: 5}, (_err, result: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
 				resolve(result);
 			})
 		});

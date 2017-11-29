@@ -8,6 +8,10 @@ import * as azureStorage from "azure-storage";
 import { BaseEditor } from '../../azureServiceExplorer/editors/baseEditor';
 
 export class BlobEditor extends BaseEditor<BlobNode> {
+    constructor() {
+        super('azureStorage.blob.dontShow.SaveEqualsUpdateToAzure')
+    }
+
     async getSaveConfirmationText(node: BlobNode): Promise<string> {
         return `Saving '${node.blob.name}' will update the blob "${node.blob.name}" in Blob Container "${node.container.name}"`;
     }

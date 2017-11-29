@@ -19,13 +19,13 @@ export abstract class BaseEditor<NodeT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, NodeT] } = {};
     private ignoreSave: boolean = false;
 
-    private readonly dontShowKey: string = 'azureStorage.dontShow.SaveEqualsUpdateToAzure';
-
-
     abstract getData(node: NodeT): Promise<string>;
     abstract updateData(node: NodeT, data: string): Promise<string>;
     abstract getFilename(node: NodeT): Promise<string>;
     abstract getSaveConfirmationText(node: NodeT): Promise<string>;
+
+    constructor(readonly dontShowKey: string) {
+    }
 
     public async showEditor(node: NodeT): Promise<void> {
         var fileName = await this.getFilename(node);     

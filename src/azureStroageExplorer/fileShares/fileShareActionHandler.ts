@@ -7,10 +7,18 @@ import { BaseActionHandler } from '../../azureServiceExplorer/actions/baseAction
 
 import { FileShareNode } from './fileShareNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { FileEditor } from './fileEditor';
 
 export class FileShareActionHandler extends BaseActionHandler {
+    private _editor: FileEditor;
+
     registerActions(context: vscode.ExtensionContext) {
+        this._editor = new FileEditor();
+        context.subscriptions.push(this._editor);
+
         this.initCommand(context, "azureStorage.openFileShare", (node) => { this.openFileShareInStorageExplorer(node) });
+        this.initCommand(context, "azureStorage.editFile", (node) => {this._editor.showEditor(node)});
+        this.initEvent(context, 'azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (doc: vscode.TextDocument) => this._editor.onDidSaveTextDocument(context.globalState, doc));
     }
 
     openFileShareInStorageExplorer(node: FileShareNode) {
