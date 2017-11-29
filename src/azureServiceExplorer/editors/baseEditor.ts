@@ -15,40 +15,40 @@ class SaveDialogResponses {
 
 export class UserCancelledError extends Error { }
 
-export abstract class BaseEditor<NodeT> implements vscode.Disposable {
-    private fileMap: { [key: string]: [vscode.TextDocument, NodeT] } = {};
+export abstract class BaseEditor<ContextT> implements vscode.Disposable {
+    private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};
     private ignoreSave: boolean = false;
 
-    abstract getData(node: NodeT): Promise<string>;
-    abstract updateData(node: NodeT, data: string): Promise<string>;
-    abstract getFilename(node: NodeT): Promise<string>;
-    abstract getSaveConfirmationText(node: NodeT): Promise<string>;
+    abstract getData(context: ContextT): Promise<string>;
+    abstract updateData(context: ContextT, data: string): Promise<string>;
+    abstract getFilename(context: ContextT): Promise<string>;
+    abstract getSaveConfirmationText(context: ContextT): Promise<string>;
 
     constructor(readonly dontShowKey: string) {
     }
 
-    public async showEditor(node: NodeT): Promise<void> {
-        var fileName = await this.getFilename(node);     
+    public async showEditor(context: ContextT): Promise<void> {
+        var fileName = await this.getFilename(context);     
         const localFilePath = await TemporaryFile.create(fileName)
         const document = await vscode.workspace.openTextDocument(localFilePath);
-        this.fileMap[localFilePath] = [document, node];
+        this.fileMap[localFilePath] = [document, context];
         const textEditor = await vscode.window.showTextDocument(document);
-        var data = await this.getData(node);
+        var data = await this.getData(context);
         await this.updateEditor(data, textEditor);
     }
 
-    public async updateMatchingNode(doc): Promise<void> {
+    public async updateMatchingcontext(doc): Promise<void> {
         const filePath = Object.keys(this.fileMap).find((filePath) => path.relative(doc.fsPath, filePath) === '');
-        var [ textDocument, node] = this.fileMap[filePath];
-        await this.updateRemote(node, textDocument);
+        var [ textDocument, context] = this.fileMap[filePath];
+        await this.updateRemote(context, textDocument);
     }
 
     public async dispose(): Promise<void> {
         Object.keys(this.fileMap).forEach(async (key) => await fse.remove(path.dirname(key)));
     }
 
-    private async updateRemote(node: NodeT, doc: vscode.TextDocument): Promise<void> {
-        const updatedData: string = await this.updateData(node, doc.getText());
+    private async updateRemote(context: ContextT, doc: vscode.TextDocument): Promise<void> {
+        const updatedData: string = await this.updateData(context, doc.getText());
         await this.updateEditor(updatedData, vscode.window.activeTextEditor);
     }
 
@@ -65,11 +65,11 @@ export abstract class BaseEditor<NodeT> implements vscode.Disposable {
     public async onDidSaveTextDocument(globalState: vscode.Memento, doc: vscode.TextDocument): Promise<void> {
         const filePath = Object.keys(this.fileMap).find((filePath) => path.relative(doc.uri.fsPath, filePath) === '');
         if (!this.ignoreSave && filePath) {
-            const node: NodeT = this.fileMap[filePath][1];
+            const context: ContextT = this.fileMap[filePath][1];
             const dontShow: boolean | undefined = globalState.get(this.dontShowKey);
             if (dontShow !== true) {
                 
-                const message: string = await this.getSaveConfirmationText(node);
+                const message: string = await this.getSaveConfirmationText(context);
                 const result: string | undefined = await vscode.window.showWarningMessage(message, SaveDialogResponses.OK, SaveDialogResponses.DontShowAgain);
 
                 if (!result) {
@@ -79,7 +79,7 @@ export abstract class BaseEditor<NodeT> implements vscode.Disposable {
                 }
             }
 
-            await this.updateRemote(node, doc);
+            await this.updateRemote(context, doc);
         }
     }
 
