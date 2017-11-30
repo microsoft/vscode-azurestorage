@@ -109,15 +109,18 @@
 				},
 				{
 					"command": "azureStorage.openStorageAccount",
-					"when": "view == azureStorage && viewItem == azureStorageAccount"
-				},
-				{
-					"command": "azureStorage.copyPrimaryKey",
-					"when": "view == azureStorage && viewItem == azureStorageAccount"
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "storageAccount@1"
 				},
 				{
 					"command": "azureStorage.copyConnectionString",
-					"when": "view == azureStorage && viewItem == azureStorageAccount"
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "storageAccount@2"
+				},
+				{
+					"command": "azureStorage.copyPrimaryKey",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "storageAccount@3"
 				}
 			]
 		}
