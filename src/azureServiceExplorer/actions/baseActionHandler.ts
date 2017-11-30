@@ -19,27 +19,7 @@ export abstract class BaseActionHandler {
     }
     
     initAsyncCommand(context: vscode.ExtensionContext, commandId: string, callback: (...args: any[]) => Promise<any>) {
-        context.subscriptions.push(vscode.commands.registerCommand(commandId, async (...args: any[]) => {
-            const start = Date.now();
-            let result = 'Succeeded';
-            let errorData: string = '';
-    
-            try {
-                await callback(...args);
-            } catch (err) {
-                if (err instanceof UserCancelledError) {
-                    result = 'Canceled';
-                } else {
-                    result = 'Failed';
-                    errorData = this.errToString(err);
-                    vscode.window.showErrorMessage(errorData);
-                    throw err;
-                }
-            } finally {
-                const end = Date.now();
-                this.sendTelemetry(commandId, { result: result, error: errorData }, { duration: (end - start) / 1000 });
-            }
-        }));
+        context.subscriptions.push(vscode.commands.registerCommand(commandId, this.wrapAsyncCallback(commandId, callback)));
     }
 
     wrapAsyncCallback(callbackId, callback: (...args: any[]) => Promise<any>): (...args: any[]) => Promise<any> {
