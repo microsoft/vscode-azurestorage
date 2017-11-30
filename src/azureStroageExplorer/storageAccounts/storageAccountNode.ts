@@ -41,10 +41,7 @@ export class StorageAccountNode extends AzureTreeNodeBase {
     }
 
     async getChildren(): Promise<AzureTreeNodeBase[]> {
-        var keys: StorageAccountKey[] = await this.getKeys();
-        var primaryKey = keys.find((key: StorageAccountKey) => {
-            return key.keyName === "key1";
-        });
+        var primaryKey = await this.getPrimaryKey();
         var primaryEndpoints = this.storageAccount.primaryEndpoints;
         var groupNodes = [];
 
@@ -65,6 +62,20 @@ export class StorageAccountNode extends AzureTreeNodeBase {
         }
 
         return groupNodes;
+    }
+
+    async getPrimaryKey() : Promise<string> {
+        var keys: StorageAccountKey[] = await this.getKeys();
+        var primaryKey = keys.find((key: StorageAccountKey) => {
+            return key.keyName === "key1" || key.keyName === "primaryKey";
+        });
+
+        return primaryKey.value;
+    }
+
+    async getConnectionString() {
+        var primaryKey = await this.getPrimaryKey();
+        return "DefaultEndpointsProtocol=https;AccountName=" + this.storageAccount.name + ";AccountKey=" + primaryKey;
     }
 
     async getKeys() {
