@@ -24,6 +24,6 @@ export class StorageAccountActionHandler extends BaseActionHandler {
 
     async copyPrimaryKey(node: StorageAccountNode) {
         var primaryKey = await node.getPrimaryKey();
-        copypaste.copy(primaryKey);
+        copypaste.copy(primaryKey.value);
     }
 }
