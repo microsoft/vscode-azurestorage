@@ -12,7 +12,7 @@ export class StorageAccountActionHandler extends BaseActionHandler {
     registerActions(context: vscode.ExtensionContext) {
         this.initCommand(context, "azureStorage.openStorageAccount", (node) => { this.openStorageAccountInStorageExplorer(node) });
         this.initCommand(context, "azureStorage.copyPrimaryKey", (node) => { this.copyPrimaryKey(node) });
-        this.initCommand(context, "azureStorage.copyConnectionString", (node) => { this.copyPrimaryKey(node) });
+        this.initCommand(context, "azureStorage.copyConnectionString", (node) => { this.copyConnectionString(node) });
     }
 
     openStorageAccountInStorageExplorer(node: StorageAccountNode) {
@@ -25,5 +25,10 @@ export class StorageAccountActionHandler extends BaseActionHandler {
     async copyPrimaryKey(node: StorageAccountNode) {
         var primaryKey = await node.getPrimaryKey();
         copypaste.copy(primaryKey.value);
+    }
+
+    async copyConnectionString(node: StorageAccountNode) {
+        var connectionString = await node.getConnectionString();
+        copypaste.copy(connectionString);
     }
 }
