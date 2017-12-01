@@ -11,30 +11,27 @@ export class UserCancelledError extends Error { }
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     private static defaultAppLocation = "/Applications/Microsoft\ Azure\ Storage\ Explorer.app";
+    private static selectedAppLocation = MacOSStorageExplorerLauncher.defaultAppLocation;
     private static subExecutableLocation = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
     public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
 
-    public static async getStorageExplorerExecutable(): Promise<string> {
-        var appLocation = MacOSStorageExplorerLauncher.defaultAppLocation;
-        
-        if(!(await MacOSStorageExplorerLauncher.fileExists(appLocation))) {
-            var selected: "Browse" | "Download" = <"Browse" | "Download"> await vscode.window.showWarningMessage("Could not find Storage Explorer. How would you like to resolve?", "Browse", "Download");
+    private static async getStorageExplorerExecutable(
+        warningString: string = "Could not find Storage Explorer. How would you like to resolve?",
+        selectedLocation: string  = MacOSStorageExplorerLauncher.selectedAppLocation): Promise<string> {
+        if(!(await MacOSStorageExplorerLauncher.fileExists(selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation))) {
+            var selected: "Browse" | "Download" = <"Browse" | "Download"> await vscode.window.showWarningMessage(warningString, "Browse", "Download");
+            
             if(selected === "Browse") {
-                var selectedLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
-                if(await MacOSStorageExplorerLauncher.fileExists(selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation)) {
-                    appLocation = selectedLocation;
-                    // TODO set user config value with selected location.
-                } else {
-                    // TODO prompt user that they didn't choose a storage exporer.
-                }
+                MacOSStorageExplorerLauncher.selectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
+                return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected Location is not a valid Storage Explorer. How would you like to resolve?");
             } else if(selected === "Download") {
-                appLocation = appLocation;
+                
             } else {
                 throw new UserCancelledError();
             }
         }
 
-        return appLocation +  MacOSStorageExplorerLauncher.subExecutableLocation;
+        return selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation;
     }
 
     public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string) {
