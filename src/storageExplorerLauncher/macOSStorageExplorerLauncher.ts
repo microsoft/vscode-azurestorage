@@ -25,7 +25,8 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
                 MacOSStorageExplorerLauncher.selectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
                 return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected Location is not a valid Storage Explorer. How would you like to resolve?");
             } else if(selected === "Download") {
-                
+                await MacOSStorageExplorerLauncher.downloadStorageExplorer();
+                throw new UserCancelledError();
             } else {
                 throw new UserCancelledError();
             }
@@ -49,29 +50,32 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         if(!!resourceName) {
             url = url + "&resourcename="
             + resourceName;
-        }
-        
+        }  
         
         await this.launchStorageExplorer([
             url
         ]);
     }
 
+    private static async downloadStorageExplorer() {
+        MacOSStorageExplorerLauncher.runOpenCommand(MacOSStorageExplorerLauncher.downloadPageUrl);
+    }
+
     private async launchStorageExplorer(extraArgs: string[] = []) {
         var storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
+        return MacOSStorageExplorerLauncher.runOpenCommand(...["-a", storageExplorerExecutable].concat(extraArgs));
+    }
 
+    private static async runOpenCommand(...args: string[]): Promise<any> {
         return await new Promise((resolve, _reject) => {
             var spawn_env = JSON.parse(JSON.stringify(process.env));
             // remove those env vars
             delete spawn_env.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
             delete spawn_env.ELECTRON_RUN_AS_NODE;
-            
-            var command = "open";
-            var args = ["-a", storageExplorerExecutable];
 
             var childProcess = spawn(
-                command,
-                args.concat(extraArgs),
+                "open",
+                args,
                 {
                     env: spawn_env
                 }
