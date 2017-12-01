@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { spawn, ChildProcess } from "child_process";
+import { spawn } from "child_process";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import * as vscode from 'vscode';
 import * as fs from "fs";
@@ -10,7 +10,6 @@ import * as fs from "fs";
 export class UserCancelledError extends Error { }
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
-    private _childProcess: ChildProcess;
     private static defaultAppLocation = "/Applications/Microsoft\ Azure\ Storage\ Explorer.app";
     private static subExecutableLocation = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
     public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
@@ -56,18 +55,12 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         }
         
         
-        if(this._childProcess) {
-            spawn("open", [url]);
-        } else {
-            await this.launchStorageExplorer([
-                url
-            ]);
-
-            spawn("open", [url]);
-        }
+        await this.launchStorageExplorer([
+            url
+        ]);
     }
 
-    private async launchStorageExplorer(args: string[] = []) {
+    private async launchStorageExplorer(extraArgs: string[] = []) {
         var storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
 
         return await new Promise((resolve, _reject) => {
@@ -75,26 +68,25 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             // remove those env vars
             delete spawn_env.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
             delete spawn_env.ELECTRON_RUN_AS_NODE;
+            
+            var command = "open";
+            var args = ["-a", storageExplorerExecutable];
 
-            this._childProcess = spawn(
-                storageExplorerExecutable,
-                args,
+            var childProcess = spawn(
+                command,
+                args.concat(extraArgs),
                 {
                     env: spawn_env
                 }
             );
 
-            this._childProcess.stdout.on("data", (chunk) => {
+            childProcess.stdout.on("data", (chunk) => {
                 resolve("");
                 console.log(`child process message:  ${chunk}`);
             });
     
-            this._childProcess.stderr.on("data", (chunk) => {
+            childProcess.stderr.on("data", (chunk) => {
                 console.log(`child process message:  ${chunk}`);
-            });
-    
-            this._childProcess.on("exit", (_code, _signal) => {
-                this._childProcess = null;
             });
         });
     }
