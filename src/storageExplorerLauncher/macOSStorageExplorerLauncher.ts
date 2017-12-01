@@ -107,7 +107,10 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             canSelectFiles: true,
             canSelectFolders: false,
             canSelectMany: false,
-            openLabel: 'select'
+            openLabel: 'Select Storage Explorer Application',
+            filters:{
+                "Applications":["app"]
+            }
         };
         const result: vscode.Uri[] | undefined = await vscode.window.showOpenDialog(options);
 
