@@ -41,17 +41,41 @@ export class StorageAccountNode extends AzureTreeNodeBase {
     }
 
     async getChildren(): Promise<AzureTreeNodeBase[]> {
+        var primaryKey = await this.getPrimaryKey();
+        var primaryEndpoints = this.storageAccount.primaryEndpoints;
+        var groupNodes = [];
+
+        if (!!primaryEndpoints.blob) {
+            groupNodes.push(new BlobContainerGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this));
+        }
+
+        if (!!primaryEndpoints.file) {
+            groupNodes.push(new FileShareGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this));
+        }
+
+        if (!!primaryEndpoints.queue) {
+            groupNodes.push(new QueueGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this));
+        }
+
+        if(!!primaryEndpoints.table) {
+            groupNodes.push(new TableGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this));
+        }
+
+        return groupNodes;
+    }
+
+    async getPrimaryKey() : Promise<StorageAccountKey> {
         var keys: StorageAccountKey[] = await this.getKeys();
         var primaryKey = keys.find((key: StorageAccountKey) => {
-            return key.keyName === "key1";
+            return key.keyName === "key1" || key.keyName === "primaryKey";
         });
-        
-		return [
-            new BlobContainerGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this),
-            new FileShareGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this),
-            new TableGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this),
-            new QueueGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this)
-        ];
+
+        return primaryKey;
+    }
+
+    async getConnectionString() {
+        var primaryKey = await this.getPrimaryKey();
+        return "DefaultEndpointsProtocol=https;AccountName=" + this.storageAccount.name + ";AccountKey=" + primaryKey.value;
     }
 
     async getKeys() {

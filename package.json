@@ -72,6 +72,14 @@
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
 				}
+			},
+			{
+				"command": "azureStorage.copyPrimaryKey",
+				"title": "Copy Primary Key"
+			},
+			{
+				"command": "azureStorage.copyConnectionString",
+				"title": "Copy Connection String"
 			}
 		],
 		"menus": {
@@ -101,7 +109,18 @@
 				},
 				{
 					"command": "azureStorage.openStorageAccount",
-					"when": "view == azureStorage && viewItem == azureStorageAccount"
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "storageAccount@1"
+				},
+				{
+					"command": "azureStorage.copyConnectionString",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "storageAccount@2"
+				},
+				{
+					"command": "azureStorage.copyPrimaryKey",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "storageAccount@3"
 				}
 			]
 		}
@@ -113,7 +132,11 @@
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "npm run compile && node ./node_modules/vscode/bin/test"
 	},
+	"optionalDependencies": {
+		"regedit": "^2.2.7"
+	},
 	"devDependencies": {
+		"@types/copy-paste": "^1.1.30",
 		"typescript": "^2.5.3",
 		"vscode": "^1.1.5",
 		"@types/node": "^7.0.43",
@@ -128,7 +151,8 @@
 		"azure-storage": "^2.6.0",
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
-		"regedit": "^2.2.7",
-		"vscode-extension-telemetry": "^0.0.6"
+		"vscode-extension-telemetry": "^0.0.6",
+		"fs-extra": "4.0.2",
+		"copy-paste": "^1.3.0"
 	}
 }

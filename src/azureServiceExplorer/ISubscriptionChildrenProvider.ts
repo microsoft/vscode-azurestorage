@@ -9,5 +9,6 @@ import { AccountManager } from './accountManager';
 import { AzureTreeDataProvider } from './azureTreeDataProvider';
 
 export interface ISubscriptionChildrenProvider {
-    getChildren(accountManager: AccountManager, subscription: SubscriptionModels.Subscription, treeDataProvider: AzureTreeDataProvider, subscriptionNode): Promise<AzureTreeNodeBase[]>;
+    getMoreChildren(accountManager: AccountManager, subscription: SubscriptionModels.Subscription, treeDataProvider: AzureTreeDataProvider, subscriptionNode): Promise<AzureTreeNodeBase[]>;
+    hasMoreChildren(): boolean;
 }
