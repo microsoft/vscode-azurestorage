@@ -2,9 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { spawn, ChildProcess } from "child_process";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
+import {Launcher} from "../components/launcher/launcher";
+import * as fs from "fs";
 import * as os from "os";
+import { UserCancelledError } from "../azureServiceExplorer/actions/baseActionHandler";
+import * as vscode from 'vscode';
 
 // regedit doesn't exist for Mac. I have to import like this so it builds.
 var regedit: any;
@@ -13,8 +16,8 @@ if(os.platform() === "win32") {
 }
 
 export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher {
+    public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
     private static _regKey = "HKCR\\storageexplorer\\shell\\open\\command";
-    private static _childProcess: ChildProcess;
     public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string) {
         var url = "storageexplorer://v=1"
         + "&accountid="
@@ -36,9 +39,31 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async getStorageExplorerExecutable(): Promise<string> {
-        return WindowsStorageExplorerLauncher.getWindowsRegistryValue(WindowsStorageExplorerLauncher._regKey).then((value) => {
-            console.log(value);
-            return value;
+        var regVal: string;
+        try
+        {
+            regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(WindowsStorageExplorerLauncher._regKey);
+        } catch(_err) {
+            // ignore and prompt to download.
+        } finally {
+            if(regVal && await WindowsStorageExplorerLauncher.fileExists(regVal)) {
+                return regVal;
+            } else {
+                var selected: "Download" = <"Download"> await vscode.window.showWarningMessage("Could not find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
+                if(selected === "Download") {
+                    await WindowsStorageExplorerLauncher.downloadStorageExplorer();
+                }
+                
+                throw new UserCancelledError();        
+            }
+        }
+    }
+
+    private static async fileExists(path: string): Promise<boolean> {
+        return await new Promise<boolean>((resolve, _reject) => {
+            fs.exists(path, (exists: boolean) => {
+                resolve(exists);
+            });
         });
     }
 
@@ -55,34 +80,13 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
         });
     }
 
-    private static async launchStorageExplorer(args: string[] = []) {
-            var storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
-
-            var spawn_env = JSON.parse(JSON.stringify(process.env));
-            // remove those env vars
-            delete spawn_env.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
-            delete spawn_env.ELECTRON_RUN_AS_NODE;
-
-            WindowsStorageExplorerLauncher._childProcess = spawn(
-                storageExplorerExecutable,
-                args,
-                {
-                    env: spawn_env
-                }
-            );
-
-            WindowsStorageExplorerLauncher._childProcess.stdout.on("data", (chunk) => {
-                console.log(`child process message:  ${chunk}`);
-            });
-    
-            WindowsStorageExplorerLauncher._childProcess.stderr.on("data", (chunk) => {
-                console.log(`child process message:  ${chunk}`);
-            });
-    
-            WindowsStorageExplorerLauncher._childProcess.on("exit", (code, signal) => {
-                console.log('child process exited with ' +
-                `code ${code} and signal ${signal}`);
-            });
+    private static async downloadStorageExplorer() {
+        //I'm not sure why running start directly doesn't work. Opening seperate cmd to run the command works well
+        await Launcher.launch("cmd", "/c","start", WindowsStorageExplorerLauncher.downloadPageUrl);
     }
 
+    private static async launchStorageExplorer(args: string[] = []) {
+        var storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
+        await Launcher.launch(storageExplorerExecutable, ...args);
+    }
 }

@@ -2,8 +2,9 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { spawn } from "child_process";
+
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
+import {Launcher} from "../components/launcher/launcher";
 import * as vscode from 'vscode';
 import * as fs from "fs";
 
@@ -58,38 +59,13 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     }
 
     private static async downloadStorageExplorer() {
-        MacOSStorageExplorerLauncher.runOpenCommand(MacOSStorageExplorerLauncher.downloadPageUrl);
+        await Launcher.launch("open", MacOSStorageExplorerLauncher.downloadPageUrl);
     }
 
     private async launchStorageExplorer(extraArgs: string[] = []) {
         var storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
-        return MacOSStorageExplorerLauncher.runOpenCommand(...["-a", storageExplorerExecutable].concat(extraArgs));
-    }
-
-    private static async runOpenCommand(...args: string[]): Promise<any> {
-        return await new Promise((resolve, _reject) => {
-            var spawn_env = JSON.parse(JSON.stringify(process.env));
-            // remove those env vars
-            delete spawn_env.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
-            delete spawn_env.ELECTRON_RUN_AS_NODE;
-
-            var childProcess = spawn(
-                "open",
-                args,
-                {
-                    env: spawn_env
-                }
-            );
-
-            childProcess.stdout.on("data", (chunk) => {
-                resolve("");
-                console.log(`child process message:  ${chunk}`);
-            });
-    
-            childProcess.stderr.on("data", (chunk) => {
-                console.log(`child process message:  ${chunk}`);
-            });
-        });
+        
+        return Launcher.launch("open", ...["-a", storageExplorerExecutable, "--args"].concat(extraArgs));
     }
 
     private static async fileExists(path: string): Promise<boolean> {
