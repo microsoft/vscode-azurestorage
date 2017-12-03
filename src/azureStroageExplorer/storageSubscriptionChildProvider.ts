@@ -13,7 +13,7 @@ import { AzureTreeNodeBase } from '../azureServiceExplorer/nodes/azureTreeNodeBa
 import { AzureTreeDataProvider } from '../azureServiceExplorer/azureTreeDataProvider';
 
 export class StorageSubscriptionChildProvider implements ISubscriptionChildrenProvider {
-    async getChildren(azureAccountWrapper: AccountManager, subscription: SubscriptionModels.Subscription, treeDataProvider: AzureTreeDataProvider, subscriptionNode): Promise<AzureTreeNodeBase[]> {
+    async getMoreChildren(azureAccountWrapper: AccountManager, subscription: SubscriptionModels.Subscription, treeDataProvider: AzureTreeDataProvider, subscriptionNode): Promise<AzureTreeNodeBase[]> {
         const credentials = azureAccountWrapper.getCredentialByTenantId(subscription.tenantId);
         var storageManagementClient = new StorageManagementClient(credentials, subscription.subscriptionId);
 
@@ -23,5 +23,9 @@ export class StorageSubscriptionChildProvider implements ISubscriptionChildrenPr
         })
 
         return accountNodes;
+    }
+
+    hasMoreChildren(): boolean {
+        return false;
     }
 }

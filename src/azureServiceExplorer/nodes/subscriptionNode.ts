@@ -11,8 +11,9 @@ import { AzureTreeNodeBase } from './azureTreeNodeBase';
 import { AzureTreeDataProvider } from '../azureTreeDataProvider';
 import { AccountManager } from '../accountManager';
 import { ISubscriptionChildrenProvider } from '../ISubscriptionChildrenProvider';
+import { AzureLoadMoreTreeNodeBase } from './azureLoadMoreTreeNodeBase';
 
-export class SubscriptionNode extends AzureTreeNodeBase {
+export class SubscriptionNode extends AzureLoadMoreTreeNodeBase {
     private _subscriptionChildrenDataProviders: ISubscriptionChildrenProvider[];
 
     constructor(readonly subscription: SubscriptionModels.Subscription, treeDataProvider: AzureTreeDataProvider, parentNode: AzureTreeNodeBase | undefined, subscriptionChildrenDataProviders: ISubscriptionChildrenProvider[]) {
@@ -32,18 +33,24 @@ export class SubscriptionNode extends AzureTreeNodeBase {
         }
     }
 
-    async getChildren(): Promise<AzureTreeNodeBase[]> {
+    async getMoreChildren(): Promise<AzureTreeNodeBase[]> {
         if (this.azureAccount.signInStatus !== 'LoggedIn') {
             return [];
         }
 
         var childrenPromises = [];
         this._subscriptionChildrenDataProviders.forEach((childProvider) => {
-            childrenPromises.push(childProvider.getChildren(this.azureAccount, this.subscription, this.treeDataProvider, this));
+            childrenPromises.push(childProvider.getMoreChildren(this.azureAccount, this.subscription, this.treeDataProvider, this));
         })
 
         return await Promise.all(childrenPromises).then((childrenResults: AzureTreeNodeBase[][]) => {
             return [].concat.apply([], childrenResults);
+        });
+    }
+
+    hasMoreChildren(): boolean {
+        return this._subscriptionChildrenDataProviders.some(( childProvider ) => {
+            return childProvider.hasMoreChildren();
         });
     }
 

@@ -4,18 +4,26 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { reporter } from '../../telemetry/reporter';
+import { reporter } from '../../components/telemetry/reporter';
 export class UserCancelledError extends Error { }
 
 export abstract class BaseActionHandler {
     abstract registerActions(context: vscode.ExtensionContext);
+
+    initEvent<T>(context: vscode.ExtensionContext, eventId: string, event: vscode.Event<T>, callback: (...args: any[]) => any) {
+        context.subscriptions.push(event(this.wrapAsyncCallback(eventId, (...args: any[]) => Promise.resolve(callback(...args)))));
+    }
 
     initCommand(context: vscode.ExtensionContext, commandId: string, callback: (...args: any[]) => any) {
         this.initAsyncCommand(context, commandId, (...args: any[]) => Promise.resolve(callback(...args)));
     }
     
     initAsyncCommand(context: vscode.ExtensionContext, commandId: string, callback: (...args: any[]) => Promise<any>) {
-        context.subscriptions.push(vscode.commands.registerCommand(commandId, async (...args: any[]) => {
+        context.subscriptions.push(vscode.commands.registerCommand(commandId, this.wrapAsyncCallback(commandId, callback)));
+    }
+
+    wrapAsyncCallback(callbackId, callback: (...args: any[]) => Promise<any>): (...args: any[]) => Promise<any> {
+        return async (...args: any[]) => {
             const start = Date.now();
             let result = 'Succeeded';
             let errorData: string = '';
@@ -33,9 +41,9 @@ export abstract class BaseActionHandler {
                 }
             } finally {
                 const end = Date.now();
-                this.sendTelemetry(commandId, { result: result, error: errorData }, { duration: (end - start) / 1000 });
+                this.sendTelemetry(callbackId, { result: result, error: errorData }, { duration: (end - start) / 1000 });
             }
-        }));
+        };
     }
 
     sendTelemetry(eventName: string, properties?: { [key: string]: string; }, measures?: { [key: string]: number; }) {
