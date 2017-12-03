@@ -65,7 +65,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     private async launchStorageExplorer(extraArgs: string[] = []) {
         var storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
         
-        return Launcher.launch("open", ...["-a", storageExplorerExecutable, "--args"].concat(extraArgs));
+        return Launcher.launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
     }
 
     private static async fileExists(path: string): Promise<boolean> {
