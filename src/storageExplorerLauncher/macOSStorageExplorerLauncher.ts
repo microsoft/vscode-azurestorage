@@ -83,7 +83,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             canSelectFiles: true,
             canSelectFolders: false,
             canSelectMany: false,
-            openLabel: 'Select Storage Explorer Application',
+            openLabel: 'Select',
             filters:{
                 "Applications":["app"]
             }
