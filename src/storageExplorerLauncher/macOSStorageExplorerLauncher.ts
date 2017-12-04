@@ -41,7 +41,10 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         + "&accountid="
         + encodeURIComponent(resourceId)
         + "&subscriptionid="
-        + encodeURIComponent(subscriptionid);
+        + encodeURIComponent(subscriptionid)
+        + "&source="
+        + encodeURIComponent("VSCODE-AzureStorage");
+
 
         if(!!resourceType) {
             url = url + "&resourcetype="
