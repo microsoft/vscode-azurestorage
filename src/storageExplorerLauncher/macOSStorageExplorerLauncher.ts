@@ -15,12 +15,9 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
 
     private static async getStorageExplorerExecutable(
-        warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer.",
-        selectedLocation?: string): Promise<string> {
-            
-        if(!selectedLocation) {
-            selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
-        }
+        warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer."): Promise<string> {
+        
+        var selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
 
         if(!(await MacOSStorageExplorerLauncher.fileExists(selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation))) {
             var selected: "Browse" | "Download" = <"Browse" | "Download"> await vscode.window.showWarningMessage(warningString, "Browse", "Download");
