@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { TemporaryFile } from '../../components/temporaryFile';
 
-class SaveDialogResponses {
+class DialogResponses {
     static readonly OK: string = "OK";
     static readonly DontShowAgain: string = "Don't Show Again";
 }
@@ -22,19 +22,29 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     abstract getData(context: ContextT): Promise<string>;
     abstract updateData(context: ContextT, data: string): Promise<string>;
     abstract getFilename(context: ContextT): Promise<string>;
+    abstract getSize(context: ContextT): Promise<number>;
     abstract getSaveConfirmationText(context: ContextT): Promise<string>;
 
     constructor(readonly dontShowKey: string) {
     }
 
     public async showEditor(context: ContextT): Promise<void> {
-        var fileName = await this.getFilename(context);     
-        const localFilePath = await TemporaryFile.create(fileName)
-        const document = await vscode.workspace.openTextDocument(localFilePath);
-        this.fileMap[localFilePath] = [document, context];
-        const textEditor = await vscode.window.showTextDocument(document);
-        var data = await this.getData(context);
-        await this.updateEditor(data, textEditor);
+        var size = await this.getSize(context);
+        var fileName = await this.getFilename(context);
+        var splitFileName = fileName.split(".");
+        var extension = splitFileName[splitFileName.length-1];
+        if (size > 50 /*Megabytes*/) {
+            await vscode.window.showWarningMessage(`"${fileName}" is too large to download. Please use Storage Explorer for files over 50 Megabytes.`, DialogResponses.OK);
+        } else if (extension === "exe" || extension === "img" || extension === "zip") {
+            await vscode.window.showWarningMessage(`"${fileName}" has an unsupported file extension. Please use Storage Explorer to download or modify this file.`, DialogResponses.OK);
+        } else {     
+            const localFilePath = await TemporaryFile.create(fileName)
+            const document = await vscode.workspace.openTextDocument(localFilePath);
+            this.fileMap[localFilePath] = [document, context];
+            var data = await this.getData(context);
+            const textEditor = await vscode.window.showTextDocument(document);
+            await this.updateEditor(data, textEditor);
+        }
     }
 
     public async updateMatchingcontext(doc): Promise<void> {
@@ -70,11 +80,11 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
             if (dontShow !== true) {
                 
                 const message: string = await this.getSaveConfirmationText(context);
-                const result: string | undefined = await vscode.window.showWarningMessage(message, SaveDialogResponses.OK, SaveDialogResponses.DontShowAgain);
+                const result: string | undefined = await vscode.window.showWarningMessage(message, DialogResponses.OK, DialogResponses.DontShowAgain);
 
                 if (!result) {
                     throw new UserCancelledError();
-                } else if (result === SaveDialogResponses.DontShowAgain) {
+                } else if (result === DialogResponses.DontShowAgain) {
                     await globalState.update(this.dontShowKey, true);
                 }
             }

@@ -20,6 +20,10 @@ export class FileEditor extends BaseEditor<FileNode> {
         return node.file.name;
     }
 
+    async getSize(node: FileNode): Promise<number> {
+        return Number(node.file.contentLength)/(1024*1024);
+    }
+
     async getData(node: FileNode): Promise<string> {
         var fileService = azureStorage.createFileService(node.storageAccount.name, node.key.value);
         return await new Promise<string>((resolve, reject) => {

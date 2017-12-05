@@ -62,7 +62,7 @@ export class QueueGroupNode extends AzureLoadMoreTreeNodeBase {
     listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise(resolve => {
             var queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
-			queueService.listQueuesSegmented(currentToken, {maxResults: 5}, (_err, result: azureStorage.QueueService.ListQueueResult) => {
+			queueService.listQueuesSegmented(currentToken, {maxResults: 50}, (_err, result: azureStorage.QueueService.ListQueueResult) => {
 				resolve(result);
 			})
 		});

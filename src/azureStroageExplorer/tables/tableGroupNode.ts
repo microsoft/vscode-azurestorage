@@ -62,7 +62,7 @@ export class TableGroupNode extends AzureLoadMoreTreeNodeBase {
     listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise(resolve => {
             var tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
-			tableService.listTablesSegmented(currentToken, {maxResults: 5}, (_err, result: azureStorage.TableService.ListTablesResponse) => {
+			tableService.listTablesSegmented(currentToken, {maxResults: 50}, (_err, result: azureStorage.TableService.ListTablesResponse) => {
 				resolve(result);
 			})
 		});

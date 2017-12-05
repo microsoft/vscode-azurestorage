@@ -61,7 +61,7 @@ export class FileShareGroupNode extends AzureLoadMoreTreeNodeBase {
     listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
         return new Promise(resolve => {
             var fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
-			fileService.listSharesSegmented(currentToken, {maxResults: 5}, (_err, result: azureStorage.FileService.ListSharesResult) => {
+			fileService.listSharesSegmented(currentToken, {maxResults: 50}, (_err, result: azureStorage.FileService.ListSharesResult) => {
 				resolve(result);
 			})
 		});

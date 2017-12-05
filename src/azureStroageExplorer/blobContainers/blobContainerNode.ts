@@ -55,7 +55,7 @@ export class BlobContainerNode extends AzureLoadMoreTreeNodeBase {
     listBlobs(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise(resolve => {
             var blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-            blobService.listBlobsSegmented(this.container.name, currentToken, {maxResults: 5}, (_err, result: azureStorage.BlobService.ListBlobsResult) => {
+            blobService.listBlobsSegmented(this.container.name, currentToken, {maxResults: 50}, (_err, result: azureStorage.BlobService.ListBlobsResult) => {
             resolve(result);
             })
         });

@@ -20,6 +20,10 @@ export class BlobEditor extends BaseEditor<BlobNode> {
         return node.blob.name;
     }
 
+    async getSize(node: BlobNode): Promise<number> {
+        return Number(node.blob.contentLength)/(1024*1024);
+    }
+
     async getData(node: BlobNode): Promise<string> {
         var blobService = azureStorage.createBlobService(node.storageAccount.name, node.key.value);
         return await new Promise<string>((resolve, reject) => {
