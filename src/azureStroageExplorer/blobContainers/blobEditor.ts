@@ -9,7 +9,7 @@ import { BaseEditor } from '../../azureServiceExplorer/editors/baseEditor';
 
 export class BlobEditor extends BaseEditor<BlobNode> {
     constructor() {
-        super('azureStorage.blob.dontShow.SaveEqualsUpdateToAzure')
+        super("azureStorage.blob.showSavePrompt")
     }
 
     async getSaveConfirmationText(node: BlobNode): Promise<string> {

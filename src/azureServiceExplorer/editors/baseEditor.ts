@@ -25,7 +25,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     abstract getSize(context: ContextT): Promise<number>;
     abstract getSaveConfirmationText(context: ContextT): Promise<string>;
 
-    constructor(readonly dontShowKey: string) {
+    constructor(readonly showSavePromptKey: string) {
     }
 
     public async showEditor(context: ContextT): Promise<void> {
@@ -76,8 +76,8 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         const filePath = Object.keys(this.fileMap).find((filePath) => path.relative(doc.uri.fsPath, filePath) === '');
         if (!this.ignoreSave && filePath) {
             const context: ContextT = this.fileMap[filePath][1];
-            const dontShow: boolean | undefined = globalState.get(this.dontShowKey);
-            if (dontShow !== true) {
+            const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
+            if (showSaveWarning) {
                 
                 const message: string = await this.getSaveConfirmationText(context);
                 const result: string | undefined = await vscode.window.showWarningMessage(message, DialogResponses.OK, DialogResponses.DontShowAgain);
@@ -85,7 +85,8 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
                 if (!result) {
                     throw new UserCancelledError();
                 } else if (result === DialogResponses.DontShowAgain) {
-                    await globalState.update(this.dontShowKey, true);
+                    await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
+                    await globalState.update(this.showSavePromptKey, true);
                 }
             }
 

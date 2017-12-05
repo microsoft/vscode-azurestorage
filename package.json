@@ -164,6 +164,16 @@
 					"type": "string",
 					"default": "/Applications/Microsoft Azure Storage Explorer.app",
 					"description": "Show or hide the Azure Storage Explorer"
+				},
+				"azureStorage.file.showSavePrompt": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show warning dialog on File file save."
+				},
+				"azureStorage.blob.showSavePrompt": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show warning dialog on Blob file save."
 				}
 			}
 		}
