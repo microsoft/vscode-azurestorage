@@ -51,7 +51,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
             if(regVal && await WindowsStorageExplorerLauncher.fileExists(regVal)) {
                 return regVal;
             } else {
-                var selected: "Download" = <"Download"> await vscode.window.showWarningMessage("Could not find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
+                var selected: "Download" = <"Download"> await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
                 if(selected === "Download") {
                     await WindowsStorageExplorerLauncher.downloadStorageExplorer();
                 }

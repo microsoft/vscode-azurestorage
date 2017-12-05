@@ -17,14 +17,14 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
 
     private static async getStorageExplorerExecutable(
-        warningString: string = "Could not find Storage Explorer. How would you like to resolve?",
+        warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer.",
         selectedLocation: string  = MacOSStorageExplorerLauncher.selectedAppLocation): Promise<string> {
         if(!(await MacOSStorageExplorerLauncher.fileExists(selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation))) {
             var selected: "Browse" | "Download" = <"Browse" | "Download"> await vscode.window.showWarningMessage(warningString, "Browse", "Download");
             
             if(selected === "Browse") {
                 MacOSStorageExplorerLauncher.selectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
-                return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected Location is not a valid Storage Explorer. How would you like to resolve?");
+                return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected app is not a valid Storage Explorer installation. Browse to existing installation location or download and install Storage Explorer.");
             } else if(selected === "Download") {
                 await MacOSStorageExplorerLauncher.downloadStorageExplorer();
                 throw new UserCancelledError();
