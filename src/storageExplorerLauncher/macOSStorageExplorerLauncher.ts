@@ -11,19 +11,23 @@ import * as fs from "fs";
 export class UserCancelledError extends Error { }
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
-    private static defaultAppLocation = "/Applications/Microsoft\ Azure\ Storage\ Explorer.app";
-    private static selectedAppLocation = MacOSStorageExplorerLauncher.defaultAppLocation;
     private static subExecutableLocation = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
     public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
 
     private static async getStorageExplorerExecutable(
         warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer.",
-        selectedLocation: string  = MacOSStorageExplorerLauncher.selectedAppLocation): Promise<string> {
+        selectedLocation?: string): Promise<string> {
+            
+        if(!selectedLocation) {
+            selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
+        }
+
         if(!(await MacOSStorageExplorerLauncher.fileExists(selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation))) {
             var selected: "Browse" | "Download" = <"Browse" | "Download"> await vscode.window.showWarningMessage(warningString, "Browse", "Download");
             
             if(selected === "Browse") {
-                MacOSStorageExplorerLauncher.selectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
+                var userSelectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
+                await vscode.workspace.getConfiguration('azureStorage').update('storageExplorerLocation', userSelectedAppLocation, vscode.ConfigurationTarget.Global);
                 return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected app is not a valid Storage Explorer installation. Browse to existing installation location or download and install Storage Explorer.");
             } else if(selected === "Download") {
                 await MacOSStorageExplorerLauncher.downloadStorageExplorer();

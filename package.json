@@ -36,9 +36,10 @@
 		"views": {
 			"explorer": [
 				{
-					"id": "azureStorage",
-					"name": "Azure Storage"
-				}
+                    "id": "azureStorage",
+                    "name": "Azure Storage",
+                    "when": "config.azureStorage.showExplorer == true"
+                }
 			]
 		},
 		"commands": [
@@ -150,6 +151,21 @@
 				{ "command": "azureStorage.copyConnectionString", "when": "never" },
 				{ "command": "azureStorage.copyPrimaryKey", "when": "never" }
 			]
+		},
+		"configuration": {
+			"title": "Azure Storage Accounts",
+			"properties": {
+				"azureStorage.showExplorer": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show or hide the Azure Storage Explorer"
+				},
+				"azureStorage.storageExplorerLocation": {
+					"type": "string",
+					"default": "/Applications/Microsoft Azure Storage Explorer.app",
+					"description": "Show or hide the Azure Storage Explorer"
+				}
+			}
 		}
 	},
 	"scripts": {
