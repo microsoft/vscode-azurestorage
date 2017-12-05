@@ -24,14 +24,10 @@
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `azureStorage.showExplorer`: Set to `false` to hide Azure Storage Explorer
+* `azureStorage.storageExplorerLocation`: Set to `"Path/To/Microsoft Azure Storage Explorer.app"` to override the default location.
+* `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing warning dialog on File file save.
+* `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing warning dialog on Blob file save.
 
 ## Known Issues
 
