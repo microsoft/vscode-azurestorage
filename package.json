@@ -122,6 +122,16 @@
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "storageAccount@3"
 				}
+			],
+			"commandPalette": [
+				{ "command": "azureStorage.refresh", "when": "never" },
+				{ "command": "azureStorage.openBlobContainer", "when": "never" },
+				{ "command": "azureStorage.openTable", "when": "never" },
+				{ "command": "azureStorage.openFileShare", "when": "never" },
+				{ "command": "azureStorage.openQueue", "when": "never" },
+				{ "command": "azureStorage.openStorageAccount", "when": "never" },
+				{ "command": "azureStorage.copyConnectionString", "when": "never" },
+				{ "command": "azureStorage.copyPrimaryKey", "when": "never" }
 			]
 		}
 	},
