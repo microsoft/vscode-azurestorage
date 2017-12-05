@@ -1,18 +1,26 @@
 
 
 ## Features
+- Storage Accounts
+  - Explore Blob Containers, File Shares, Queues and Tables
+  - Copy Connection String
+  - Copy Primary Key
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Blob Containers
+  - Deeplink into Storage Explorer
+  - Enumerate Blobs
+  - Edit Blobs
 
-For example if there is an image subfolder under your extension project workspace:
+- File Shares
+  - Deeplink into Storage Explorer
+  - Enumerate Files
+  - Edit Files
 
-\!\[feature X\]\(images/feature-x.png\)
+- Queues
+  - Deeplink into Storage Explorer
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- Tables
+  - Deeplink into Storage Explorer
 
 ## Extension Settings
 
@@ -27,7 +35,7 @@ This extension contributes the following settings:
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+- Clasic Storage Accounts not supported.
 
 ## Contributing
 
