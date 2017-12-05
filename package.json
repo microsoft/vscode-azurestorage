@@ -2,14 +2,31 @@
 	"name": "vscode-azurestorage",
 	"displayName": "Azure Storage",
 	"description": "An Azure Stroage management extension for Visual Studio Code.",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"publisher": "ms-azuretools",
 	"engines": {
 		"vscode": "^1.17.0"
 	},
+	"repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/vscode-azurestorage"
+    },
+    "galleryBanner": {
+        "color": "#0072c6",
+        "theme": "dark"
+    },
+    "homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/master/README.md",
 	"categories": [
-		"Other"
-	],
+        "Azure"
+    ],
+    "keywords": [
+        "Azure",
+        "Storage",
+		"Blob Containers",
+		"File Share",
+		"Queues",
+		"Tables"
+    ],
 	"activationEvents": [
 		"onView:azureStorage"
 	],
