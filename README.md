@@ -9,7 +9,7 @@
 - Blob Containers
   - Deeplink into Storage Explorer
   - Enumerate Blobs
-  - Edit Blobs
+  - Edit Block Blobs
 
 - File Shares
   - Deeplink into Storage Explorer
