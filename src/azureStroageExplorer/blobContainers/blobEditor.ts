@@ -28,6 +28,11 @@ export class BlobEditor extends BaseEditor<BlobNode> {
     async getData(node: BlobNode): Promise<string> {
         var blobService = azureStorage.createBlobService(node.storageAccount.name, node.key.value);
         return await new Promise<string>((resolve, reject) => {
+
+            if(!node.blob.blobType.toLocaleLowerCase().startsWith("block")) {
+                reject(`Editing blobs of type '${node.blob.blobType}' is not supported. Please use Storage Explorer to work with these blobs.`);
+            }
+
             blobService.getBlobToText(node.container.name, node.blob.name, (error: Error, text: string, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
                 if(!!error) {
                     reject(error)

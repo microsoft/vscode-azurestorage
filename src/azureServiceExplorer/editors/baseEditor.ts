@@ -33,17 +33,36 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         var fileName = await this.getFilename(context);
         var splitFileName = fileName.split(".");
         var extension = splitFileName[splitFileName.length-1];
+
+        this.appendToOutput(`Opening '${fileName}' ...`);
         if (size > 50 /*Megabytes*/) {
             await vscode.window.showWarningMessage(`"${fileName}" is too large to download. Please use Storage Explorer for files over 50 Megabytes.`, DialogResponses.OK);
         } else if (extension === "exe" || extension === "img" || extension === "zip") {
             await vscode.window.showWarningMessage(`"${fileName}" has an unsupported file extension. Please use Storage Explorer to download or modify this file.`, DialogResponses.OK);
-        } else {     
-            const localFilePath = await TemporaryFile.create(fileName)
-            const document = await vscode.workspace.openTextDocument(localFilePath);
-            this.fileMap[localFilePath] = [document, context];
-            var data = await this.getData(context);
-            const textEditor = await vscode.window.showTextDocument(document);
-            await this.updateEditor(data, textEditor);
+        } else {
+            try {
+                const localFilePath = await TemporaryFile.create(fileName)
+                const document = await vscode.workspace.openTextDocument(localFilePath);
+                this.fileMap[localFilePath] = [document, context];
+                var data = await this.getData(context);
+                const textEditor = await vscode.window.showTextDocument(document);
+                await this.updateEditor(data, textEditor);
+                this.appendLineToOutput(` Done.`);
+            } catch (error) {
+                var details: string;
+                
+                if(!!error.message) {
+                    details = error.message;
+                } else {
+                    details = JSON.stringify(error);
+                }
+
+                this.appendLineToOutput(" Failed.");
+                this.appendLineToOutput(`Error Details: ${details}`);
+
+                await vscode.window.showWarningMessage(`Unable to download "${fileName}". Please check Output for more information.`, DialogResponses.OK);
+            }
+            
         }
     }
 
