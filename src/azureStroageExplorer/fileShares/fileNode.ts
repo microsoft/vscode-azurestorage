@@ -28,8 +28,8 @@ export class FileNode extends AzureTreeNodeBase {
             collapsibleState: TreeItemCollapsibleState.None,
             contextValue: 'azureFile',
             iconPath: {
-				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
-				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
+				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'document.svg'),
+				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'document.svg')
 			},
             command:{
                command: 'azureStorage.editFile',

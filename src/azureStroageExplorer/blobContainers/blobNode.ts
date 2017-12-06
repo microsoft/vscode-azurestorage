@@ -27,8 +27,8 @@
              collapsibleState: TreeItemCollapsibleState.None,
              contextValue: 'azureBlob',
              iconPath: {
- 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
- 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
+ 				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'document.svg'),
+ 				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'document.svg')
              },
              command:{
                 command: 'azureStorage.editBlob',
