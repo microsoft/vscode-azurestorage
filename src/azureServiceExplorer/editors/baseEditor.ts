@@ -36,9 +36,17 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
 
         this.appendToOutput(`Opening '${fileName}' ...`);
         if (size > 50 /*Megabytes*/) {
-            await vscode.window.showWarningMessage(`"${fileName}" is too large to download. Please use Storage Explorer for files over 50 Megabytes.`, DialogResponses.OK);
+            let message = `'${fileName}' is too large to download. Please use Storage Explorer for files over 50 Megabytes.`;
+            
+            await vscode.window.showWarningMessage(message, DialogResponses.OK);
+            this.appendLineToOutput(" Failed.");
+            this.appendLineToOutput(`Error Details: ${message}`);
         } else if (extension === "exe" || extension === "img" || extension === "zip") {
-            await vscode.window.showWarningMessage(`"${fileName}" has an unsupported file extension. Please use Storage Explorer to download or modify this file.`, DialogResponses.OK);
+            let message = `'${fileName}' has an unsupported file extension. Please use Storage Explorer to download or modify this file.`;
+            
+            await vscode.window.showWarningMessage(message, DialogResponses.OK);
+            this.appendLineToOutput(" Failed.");
+            this.appendLineToOutput(`Error Details: ${message}`);
         } else {
             try {
                 const localFilePath = await TemporaryFile.create(fileName)
