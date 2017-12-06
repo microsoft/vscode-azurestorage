@@ -25,7 +25,7 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     abstract getSize(context: ContextT): Promise<number>;
     abstract getSaveConfirmationText(context: ContextT): Promise<string>;
 
-    constructor(readonly showSavePromptKey: string) {
+    constructor(readonly showSavePromptKey: string, readonly outputChanel?: vscode.OutputChannel) {
     }
 
     public async showEditor(context: ContextT): Promise<void> {
@@ -58,8 +58,30 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     }
 
     private async updateRemote(context: ContextT, doc: vscode.TextDocument): Promise<void> {
-        const updatedData: string = await this.updateData(context, doc.getText());
-        await this.updateEditor(updatedData, vscode.window.activeTextEditor);
+        var filename = await this.getFilename(context);
+        this.appendToOutput(`Updating '${filename}' ...`);
+        try {
+            const updatedData: string = await this.updateData(context, doc.getText());
+            this.appendLineToOutput(` Done.`);
+            await this.updateEditor(updatedData, vscode.window.activeTextEditor);
+        } catch (error) {
+            this.appendLineToOutput(" Failed.");
+            this.appendLineToOutput(`Error Details: ${error}`);
+        }
+    }
+
+    protected appendToOutput(value: string) {
+        if(!!this.outputChanel) {
+            this.outputChanel.append(value);
+            this.outputChanel.show(true);
+        }
+    }
+
+    protected appendLineToOutput(value: string) {
+        if(!!this.outputChanel) {
+            this.outputChanel.appendLine(value);
+            this.outputChanel.show(true);
+        }
     }
 
     private async updateEditor(data: string, textEditor: vscode.TextEditor): Promise<void> {

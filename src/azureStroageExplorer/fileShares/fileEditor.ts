@@ -6,10 +6,11 @@
 import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
 import { BaseEditor } from '../../azureServiceExplorer/editors/baseEditor';
+import { AzureStorageOutputChanel } from '../azureStorageOutputChannel';
 
 export class FileEditor extends BaseEditor<FileNode> {
     constructor() {
-        super("azureStorage.file.showSavePrompt")
+        super("azureStorage.file.showSavePrompt", AzureStorageOutputChanel)
     }
 
     async getSaveConfirmationText(node: FileNode): Promise<string> {

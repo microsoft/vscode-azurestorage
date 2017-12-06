@@ -6,10 +6,11 @@
 import { BlobNode } from './blobNode';
 import * as azureStorage from "azure-storage";
 import { BaseEditor } from '../../azureServiceExplorer/editors/baseEditor';
+import { AzureStorageOutputChanel } from '../azureStorageOutputChannel';
 
 export class BlobEditor extends BaseEditor<BlobNode> {
     constructor() {
-        super("azureStorage.blob.showSavePrompt")
+        super("azureStorage.blob.showSavePrompt", AzureStorageOutputChanel)
     }
 
     async getSaveConfirmationText(node: BlobNode): Promise<string> {
