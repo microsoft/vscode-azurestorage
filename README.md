@@ -26,8 +26,8 @@
 
 * `azureStorage.showExplorer`: Set to `false` to hide Azure Storage Explorer
 * `azureStorage.storageExplorerLocation`: Set to `"Path/To/Microsoft Azure Storage Explorer.app"` to override the default location.
-* `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing warning dialog on File file save.
-* `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing warning dialog on Blob file save.
+* `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing a warning dialog on File file save.
+* `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing a warning dialog on Blob file save.
 
 ## Known Issues
 
@@ -52,5 +52,25 @@ VS Code collects usage data and sends it to Microsoft to help improve our produc
 
 ## Release Notes
 
-Version 0.1.0
-- Initial release
+### Version 0.1.0
+
+- Storage Accounts
+  - Explore Blob Containers, File Shares, Queues and Tables
+  - Copy Connection String
+  - Copy Primary Key
+
+- Blob Containers
+  - Deeplink into Storage Explorer
+  - Enumerate Blobs
+  - Edit Block Blobs
+
+- File Shares
+  - Deeplink into Storage Explorer
+  - Enumerate Files
+  - Edit Files
+
+- Queues
+  - Deeplink into Storage Explorer
+
+- Tables
+  - Deeplink into Storage Explorer
