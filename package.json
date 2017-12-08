@@ -16,18 +16,18 @@
         "color": "#0072c6",
         "theme": "dark"
     },
-    "homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/master/README.md",
+	"homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/master/README.md",
+	"license": "SEE LICENSE IN LICENSE.md",
 	"categories": [
         "Azure"
     ],
     "keywords": [
         "Azure",
-        "Storage",
 		"Blob Containers",
 		"File Share",
-		"Queues",
-		"Tables"
-    ],
+		"Storage Account"
+	],
+	"preview": true,
 	"activationEvents": [
 		"onView:azureStorage"
 	],
