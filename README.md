@@ -1,5 +1,5 @@
 # Azure Storage for Visual Studio Code (Preview)
-The Azure Storate extension for VS Code lets you browse Azure Blob Containers, File Shares, Tables, and Queues.
+The Azure Storage extension for VS Code lets you browse Azure Blob Containers, File Shares, Tables, and Queues.
 
 ## Features
  * Explore Blob Containers, File Shares, Queues and Tables
