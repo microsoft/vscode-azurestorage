@@ -9,8 +9,9 @@ import * as vscode from 'vscode';
 import { TemporaryFile } from '../../components/temporaryFile';
 
 class DialogResponses {
-    static readonly OK: string = "OK";
-    static readonly DontShowAgain: string = "Don't Show Again";
+    static readonly OK: vscode.MessageItem = { title: "OK" };
+    static readonly DontShowAgain: vscode.MessageItem = { title: "Don't Show Again" };
+    static readonly Cancel: vscode.MessageItem = { title: "Cancel", isCloseAffordance: true };
 }
 
 export class UserCancelledError extends Error { }
@@ -126,20 +127,26 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         if (!this.ignoreSave && filePath) {
             const context: ContextT = this.fileMap[filePath][1];
             const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
-            if (showSaveWarning) {
-                
-                const message: string = await this.getSaveConfirmationText(context);
-                const result: string | undefined = await vscode.window.showWarningMessage(message, DialogResponses.OK, DialogResponses.DontShowAgain);
+            let shouldUpdateRemote = false;
 
-                if (!result) {
-                    throw new UserCancelledError();
+            if (showSaveWarning) {             
+                const message: string = await this.getSaveConfirmationText(context);
+                const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.OK, DialogResponses.DontShowAgain, DialogResponses.Cancel);
+
+                if (result === DialogResponses.OK) {
+                    shouldUpdateRemote = true;
                 } else if (result === DialogResponses.DontShowAgain) {
+                    shouldUpdateRemote = true;
                     await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
                     await globalState.update(this.showSavePromptKey, true);
                 }
+            } else {
+                shouldUpdateRemote = true;
             }
 
-            await this.updateRemote(context, doc);
+            if(shouldUpdateRemote) {
+                await this.updateRemote(context, doc);
+            }
         }
     }
 
