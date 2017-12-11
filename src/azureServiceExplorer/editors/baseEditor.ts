@@ -7,14 +7,13 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { TemporaryFile } from '../../components/temporaryFile';
+import { UserCancelledError } from '../errors/UserCancelledError';
 
 class DialogResponses {
     static readonly OK: vscode.MessageItem = { title: "OK" };
     static readonly DontShowAgain: vscode.MessageItem = { title: "Don't Show Again" };
     static readonly Cancel: vscode.MessageItem = { title: "Cancel", isCloseAffordance: true };
 }
-
-export class UserCancelledError extends Error { }
 
 export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};
@@ -127,26 +126,21 @@ export abstract class BaseEditor<ContextT> implements vscode.Disposable {
         if (!this.ignoreSave && filePath) {
             const context: ContextT = this.fileMap[filePath][1];
             const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
-            let shouldUpdateRemote = false;
+
 
             if (showSaveWarning) {             
                 const message: string = await this.getSaveConfirmationText(context);
                 const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.OK, DialogResponses.DontShowAgain, DialogResponses.Cancel);
 
-                if (result === DialogResponses.OK) {
-                    shouldUpdateRemote = true;
+                if (!result || result === DialogResponses.Cancel) {
+                    throw new UserCancelledError();
                 } else if (result === DialogResponses.DontShowAgain) {
-                    shouldUpdateRemote = true;
                     await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
                     await globalState.update(this.showSavePromptKey, true);
                 }
-            } else {
-                shouldUpdateRemote = true;
             }
 
-            if(shouldUpdateRemote) {
-                await this.updateRemote(context, doc);
-            }
+            await this.updateRemote(context, doc);
         }
     }
 

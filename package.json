@@ -32,7 +32,7 @@
 		"onView:azureStorage"
 	],
 	"main": "./out/src/extension",
-	"icon": "media/dep.png",
+	"icon": "media/azureStorageIcon.png",
 	"contributes": {
 		"views": {
 			"explorer": [

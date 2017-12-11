@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode';
 import { reporter } from '../../components/telemetry/reporter';
-export class UserCancelledError extends Error { }
+import { UserCancelledError } from '../errors/UserCancelledError';
 
 export abstract class BaseActionHandler {
     abstract registerActions(context: vscode.ExtensionContext);
