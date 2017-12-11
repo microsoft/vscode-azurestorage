@@ -40,9 +40,10 @@ export class FileEditor extends BaseEditor<FileNode> {
 
     async updateData(node: FileNode, data: string): Promise<string> {
         var fileService = azureStorage.createFileService(node.storageAccount.name, node.key.value);
-        
+        var fileProperties = await this.getProperties(node);
+
         await new Promise<string>((resolve, reject) => {
-            fileService.createFileFromText(node.share.name, '', node.file.name, data, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+            fileService.createFileFromText(node.share.name, '', node.file.name, data, { contentSettings: {contentType: fileProperties.contentSettings.contentType} }, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if(!!error) {
                     var errorAny = <any>error;                
                     if(!!errorAny.code) {
@@ -63,5 +64,30 @@ export class FileEditor extends BaseEditor<FileNode> {
         });
 
         return await this.getData(node);
+    }
+
+    private async getProperties(node: FileNode): Promise<azureStorage.FileService.FileResult> {
+        var fileService = azureStorage.createFileService(node.storageAccount.name, node.key.value);
+
+        return await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
+            fileService.getFileProperties(node.share.name, '', node.file.name, (error: Error, result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+                if(!!error) {
+                    var errorAny = <any>error;                
+                    if(!!errorAny.code) {
+                        var humanReadableMessage = `Unable to retrieve properties for '${node.file.name}' file service returned error code "${errorAny.code}"`;
+                        switch(errorAny.code) {
+                            case "ENOTFOUND":
+                                humanReadableMessage += " - Please check connection."
+                            break;
+                        }
+                        reject(humanReadableMessage);
+                    } else {
+                        reject(error);
+                    }     
+                } else {
+                    resolve(result);
+                }
+            });
+        });
     }
 }
