@@ -48,7 +48,7 @@ export class BlobEditor extends BaseEditor<BlobNode> {
         var createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
         
         if(node.blob && node.blob.contentSettings && node.blob.contentSettings.contentType){
-            createOptions.contentSettings.contentType = node.blob.contentSettings.contentType;
+            createOptions.contentSettings = {contentType: node.blob.contentSettings.contentType };
         }
 
 

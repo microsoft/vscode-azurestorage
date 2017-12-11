@@ -44,7 +44,7 @@ export class FileEditor extends BaseEditor<FileNode> {
         var createOptions: azureStorage.FileService.CreateFileRequestOptions = {};
         
         if(fileProperties && fileProperties.contentSettings && fileProperties.contentSettings.contentType){
-            createOptions.contentSettings.contentType = fileProperties.contentSettings.contentType;
+            createOptions.contentSettings = { contentType: fileProperties.contentSettings.contentType };
         }
 
         await new Promise<string>((resolve, reject) => {
