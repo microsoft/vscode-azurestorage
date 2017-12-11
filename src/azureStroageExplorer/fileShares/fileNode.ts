@@ -12,7 +12,8 @@ import * as path from 'path';
 
 export class FileNode extends AzureTreeNodeBase {
     constructor(
-		public readonly file: azureStorage.FileService.FileResult,
+        public readonly file: azureStorage.FileService.FileResult,
+        public readonly directory: string,
 		public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey,

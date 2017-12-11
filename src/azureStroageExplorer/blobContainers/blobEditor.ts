@@ -45,9 +45,15 @@ export class BlobEditor extends BaseEditor<BlobNode> {
 
     async updateData(node: BlobNode, data: string): Promise<string> {
         var blobService = azureStorage.createBlobService(node.storageAccount.name, node.key.value);  
+        var createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
         
+        if(node.blob && node.blob.contentSettings && node.blob.contentSettings.contentType){
+            createOptions.contentSettings.contentType = node.blob.contentSettings.contentType;
+        }
+
+
         await new Promise<string>((resolve, reject) => {
-            blobService.createBlockBlobFromText(node.container.name, node.blob.name, data, {contentSettings: { contentType: node.blob.contentSettings.contentType } }, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
+            blobService.createBlockBlobFromText(node.container.name, node.blob.name, data, createOptions, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
                 if(!!error) {
                     var errorAny = <any>error;                
                     if(!!errorAny.code) {

@@ -53,7 +53,7 @@ export class FileShareNode extends AzureLoadMoreTreeNodeBase {
             return new DirectoryNode('', directory, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
         }))
         .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
-            return new FileNode(file, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
+            return new FileNode(file, '', this.share, this.storageAccount, this.key, this.treeDataProvider, this);
         }));
     }
 
