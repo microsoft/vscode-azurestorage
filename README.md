@@ -3,9 +3,15 @@ The Azure Storage extension for VS Code lets you browse Azure Blob Containers, F
 
 ## Features
  * Explore Blob Containers, File Shares, Queues and Tables
+
+   ![Explore Containers, Shares, Queues, and Tables](resources/exploreScreenshot.png)
  * Access Connection String and Primary Key
+ 
+   ![Copy Connection String and Primary Key](resources/storageActionsScreenshot.png)
  * Edit Block Blobs and Files
  * Open in Storage Explorer for memory or computationally heavy tasks.
+   
+   ![Open In Storage Explorer](resources/openBlobContainerScreenshot.png)
 
 ## Extension Settings
 
