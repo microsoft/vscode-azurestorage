@@ -25,8 +25,8 @@ export class DirectoryNode implements IAzureParentTreeItem {
     public label: string = this.directory.name;
     public contextValue: string = 'azureFileshareDirectory';
     public iconPath: { light: string | Uri; dark: string | Uri } =  {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'folder.svg'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'folder.svg')
     };
 
     hasMoreChildren(): boolean {

@@ -25,8 +25,8 @@ export class FileShareNode implements IAzureParentTreeItem {
     public label: string = this.share.name;
     public contextValue: string = 'azureFileShare';
     public iconPath: { light: string | Uri; dark: string | Uri } =  {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
     };
     
     hasMoreChildren(): boolean {
