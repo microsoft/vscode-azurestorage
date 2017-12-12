@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.1.1 - 2017-12-08
+### Fixed
+ - Updated package to have better description.
+
 ## 0.1.0 - 2017-12-08
 ### Added
  - Explore Blob Containers, File Shares, Queues and Tables
