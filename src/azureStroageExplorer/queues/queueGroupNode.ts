@@ -3,42 +3,33 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
-import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { QueueNode } from './queueNode';
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { AzureLoadMoreTreeNodeBase } from '../../azureServiceExplorer/nodes/azureLoadMoreTreeNodeBase';
 
-export class QueueGroupNode extends AzureLoadMoreTreeNodeBase {
+import { IAzureParentTreeItem, IAzureTreeItem } from 'vscode-azureextensionui';
+
+export class QueueGroupNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
 
     constructor(
         public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey,
-		treeDataProvider: AzureTreeDataProvider, 
-        parentNode: AzureTreeNodeBase) {
-		super("Queues", treeDataProvider, parentNode);
-		
+        public readonly key: StorageAccountKey) {		
     }
 
-    getTreeItem(): TreeItem {
-        return {
-            label: this.label,
-            collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureQueueGroup',
-            iconPath: {
-				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue_16x.png'),
-				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
-			}
-        }
-    }
+    public id: string = "Queues";
+    public label: string = "Queues";
+    public contextValue: string = 'azureQueueGroup';
+    public iconPath: { light: string | Uri; dark: string | Uri } =  {
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue_16x.png'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
+    };
 
-    async getMoreChildren(): Promise<AzureTreeNodeBase[]> {
+    async loadMoreChildren(): Promise<IAzureTreeItem[]> {
         var containers = await this.listQueues(this._continuationToken);
         var {entries, continuationToken} = containers;
         this._continuationToken = continuationToken;
@@ -48,9 +39,7 @@ export class QueueGroupNode extends AzureLoadMoreTreeNodeBase {
                 this.subscription,
                 queue, 
                 this.storageAccount, 
-                this.key, 
-                this.treeDataProvider, 
-                this);
+                this.key);
         });
 
     }

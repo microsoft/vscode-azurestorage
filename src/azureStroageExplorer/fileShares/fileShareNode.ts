@@ -3,57 +3,46 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
-import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { DirectoryNode } from './directoryNode';
 import { FileNode } from './fileNode';
-import { AzureLoadMoreTreeNodeBase } from '../../azureServiceExplorer/nodes/azureLoadMoreTreeNodeBase';
+import { IAzureTreeItem, IAzureParentTreeItem } from 'vscode-azureextensionui';
 
-export class FileShareNode extends AzureLoadMoreTreeNodeBase {
+export class FileShareNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
 
     constructor(
         public readonly subscription: SubscriptionModels.Subscription, 
 		public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey,
-		treeDataProvider: AzureTreeDataProvider, 
-        parentNode: AzureTreeNodeBase) {
-		super(share.name, treeDataProvider, parentNode);
-		
+        public readonly key: StorageAccountKey) {		
     }
-
-    getTreeItem(): TreeItem {
-        return {
-            label: this.label,
-            collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureFileShare',
-            iconPath: {
-				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
-				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
-			}
-        }
-    }
+    public id: string = this.share.name;
+    public label: string = this.share.name;
+    public contextValue: string = 'azureFileShare';
+    public iconPath: { light: string | Uri; dark: string | Uri } =  {
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
+    };
     
     hasMoreChildren(): boolean {
         return !!this._continuationToken;
     }
 
-    async getMoreChildren(): Promise<any> {
+    async loadMoreChildren(): Promise<IAzureTreeItem[]> {
         var fileResults = await this.listFiles(this._continuationToken);
         var {entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
         return []
         .concat( entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
-            return new DirectoryNode('', directory, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
+            return new DirectoryNode('', directory, this.share, this.storageAccount, this.key);
         }))
         .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
-            return new FileNode(file, '', this.share, this.storageAccount, this.key, this.treeDataProvider, this);
+            return new FileNode(file, '', this.share, this.storageAccount, this.key);
         }));
     }
 

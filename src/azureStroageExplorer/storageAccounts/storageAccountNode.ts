@@ -4,64 +4,59 @@
  *--------------------------------------------------------------------------------------------*/
 
 import StorageManagementClient = require('azure-arm-storage');
-import { TreeItem, TreeItemCollapsibleState } from 'vscode';
-import { AccountManager } from '../../azureServiceExplorer/accountManager';
-import { SubscriptionModels } from 'azure-arm-resource';
+import { Uri } from 'vscode';
+import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
-import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
-import { FileShareGroupNode } from '../fileShares/fileShareGroupNode';
-import { TableGroupNode } from '../tables/tableGroupNode';
-import { QueueGroupNode } from '../queues/queueGroupNode';
 import * as path from 'path';
 
-export class StorageAccountNode extends AzureTreeNodeBase {
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
+import { FileShareGroupNode } from '../fileShares/fileShareGroupNode';
+import { QueueGroupNode } from '../queues/queueGroupNode';
+import { TableGroupNode } from '../tables/tableGroupNode';
+
+export class StorageAccountNode implements IAzureParentTreeItem {
     constructor(
-		public readonly accountManager: AccountManager, 
-		public readonly subscription: SubscriptionModels.Subscription, 
+		public readonly subscription: Subscription, 
 		public readonly storageAccount: StorageAccount, 
-		treeDataProvider: AzureTreeDataProvider, 
-        parentNode: AzureTreeNodeBase,
         public readonly storageManagementClient: StorageManagementClient) {
-		super(storageAccount.name, treeDataProvider, parentNode);
 		
     }
 
-    getTreeItem(): TreeItem {
-        return {
-            label: this.label,
-            collapsibleState: TreeItemCollapsibleState.Collapsed,
-            contextValue: 'azureStorageAccount',
-            iconPath: {
-				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount_16x.png'),
-				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount_16x.png')
-			}
-        }
-    }
+    public id: string = this.storageAccount.name;
+    public label: string = this.storageAccount.name;
+    public contextValue: string = 'azureStorageAccount';
+    public iconPath: { light: string | Uri; dark: string | Uri } = {
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount_16x.png'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount_16x.png')
+    };
 
-    async getChildren(): Promise<AzureTreeNodeBase[]> {
+    async loadMoreChildren(_node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
         var primaryKey = await this.getPrimaryKey();
         var primaryEndpoints = this.storageAccount.primaryEndpoints;
         var groupNodes = [];
 
         if (!!primaryEndpoints.blob) {
-            groupNodes.push(new BlobContainerGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this));
+            groupNodes.push(new BlobContainerGroupNode(this.subscription, this.storageAccount, primaryKey));
         }
 
         if (!!primaryEndpoints.file) {
-            groupNodes.push(new FileShareGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this));
+            groupNodes.push(new FileShareGroupNode(this.subscription, this.storageAccount, primaryKey));
         }
 
         if (!!primaryEndpoints.queue) {
-            groupNodes.push(new QueueGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this));
+            groupNodes.push(new QueueGroupNode(this.subscription, this.storageAccount, primaryKey));
         }
 
         if(!!primaryEndpoints.table) {
-            groupNodes.push(new TableGroupNode(this.subscription, this.storageAccount, primaryKey, this.treeDataProvider, this));
+            groupNodes.push(new TableGroupNode(this.subscription, this.storageAccount, primaryKey));
         }
 
         return groupNodes;
+    }
+
+    hasMoreChildren(): boolean {
+        return false;
     }
 
     async getPrimaryKey() : Promise<StorageAccountKey> {
