@@ -45,7 +45,7 @@ export class DirectoryNode extends AzureTreeNodeBase {
             return new DirectoryNode(path.posix.join(this.relativeDirectory, this.directory.name), directory, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
         }))
         .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
-            return new FileNode(file, this.share, this.storageAccount, this.key, this.treeDataProvider, this);
+            return new FileNode(file, path.posix.join(this.relativeDirectory, this.directory.name), this.share, this.storageAccount, this.key, this.treeDataProvider, this);
         }));
     }
 
