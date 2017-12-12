@@ -8,6 +8,7 @@ import { BaseActionHandler } from '../../azureServiceExplorer/actions/baseAction
 import { FileShareNode } from './fileShareNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { FileEditor } from './fileEditor';
+import { IAzureNode } from 'vscode-azureextensionui';
 
 export class FileShareActionHandler extends BaseActionHandler {
     private _editor: FileEditor;
@@ -21,11 +22,11 @@ export class FileShareActionHandler extends BaseActionHandler {
         this.initEvent(context, 'azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (doc: vscode.TextDocument) => this._editor.onDidSaveTextDocument(context.globalState, doc));
     }
 
-    openFileShareInStorageExplorer(node: FileShareNode) {
-        var resourceId = node.storageAccount.id;
-        var subscriptionid = node.subscription.subscriptionId;
+    openFileShareInStorageExplorer(node: IAzureNode<FileShareNode>) {
+        var resourceId = node.treeItem.storageAccount.id;
+        var subscriptionid = node.treeItem.subscription.subscriptionId;
         var resourceType = "Azure.FileShare";
-        var resourceName = node.share.name;
+        var resourceName = node.treeItem.share.name;
 
         StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
     }

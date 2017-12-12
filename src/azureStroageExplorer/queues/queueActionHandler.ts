@@ -7,17 +7,18 @@ import { BaseActionHandler } from '../../azureServiceExplorer/actions/baseAction
 
 import { QueueNode } from './queueNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { IAzureNode } from 'vscode-azureextensionui';
 
 export class QueueActionHandler extends BaseActionHandler {
     registerActions(context: vscode.ExtensionContext) {
         this.initCommand(context, "azureStorage.openQueue", (node) => { this.openQueueInStorageExplorer(node) });
     }
 
-    openQueueInStorageExplorer(node: QueueNode) {
-        var resourceId = node.storageAccount.id;
+    openQueueInStorageExplorer(node: IAzureNode<QueueNode>) {
+        var resourceId = node.treeItem.storageAccount.id;
         var subscriptionid = node.subscription.subscriptionId;
         var resourceType = "Azure.Queue";
-        var resourceName = node.queue.name;
+        var resourceName = node.treeItem.queue.name;
 
         StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
     }
