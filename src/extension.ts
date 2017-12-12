@@ -11,6 +11,7 @@ import { TableActionHandler } from "./azureStroageExplorer/tables/tableActionHan
 import { StorageAccountActionHandler } from "./azureStroageExplorer/storageAccounts/storageAccountActionHandler";
 import { AzureTreeDataProvider } from 'vscode-azureextensionui';
 import { StorageAccountProvider } from './azureStroageExplorer/storageAccountProvider';
+import { LoadMoreActionHandler } from './azureStroageExplorer/loadMoreActionHandler';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Extension "Azure Storage Tools" is now active.');
@@ -22,6 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
 	new QueueActionHandler().registerActions(context);
 	new TableActionHandler().registerActions(context);
 	new StorageAccountActionHandler().registerActions(context);
+	new LoadMoreActionHandler(azureTreeDataProvider).registerActions(context);
 
 	vscode.window.registerTreeDataProvider('azureStorage', azureTreeDataProvider);
 	vscode.commands.registerCommand('azureStorage.refresh', () => azureTreeDataProvider.refresh());
