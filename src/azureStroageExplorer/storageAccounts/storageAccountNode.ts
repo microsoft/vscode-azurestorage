@@ -23,7 +23,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
 		
     }
 
-    public id: string = this.storageAccount.name;
+    public id: string = this.storageAccount.id;
     public label: string = this.storageAccount.name;
     public contextValue: string = 'azureStorageAccount';
     public iconPath: { light: string | Uri; dark: string | Uri } = {

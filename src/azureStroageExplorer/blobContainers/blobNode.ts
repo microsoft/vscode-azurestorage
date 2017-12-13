@@ -18,7 +18,7 @@ import { Uri } from 'vscode';
         public readonly key: StorageAccountKey) {
      }
 
-     public id: string = this.blob.name;
+     public id: string = undefined;
      public label: string = this.blob.name;
      public contextValue: string = 'azureBlob';
      public iconPath: { light: string | Uri; dark: string | Uri } =  {

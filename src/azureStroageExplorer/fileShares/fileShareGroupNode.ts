@@ -20,7 +20,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
         public readonly key: StorageAccountKey) {		
     }
 
-    public id: string = "File Shares";
+    public id: string = undefined;
     public label: string = "File Shares";
     public contextValue: string = 'azureFileShare';
     public iconPath: { light: string | Uri; dark: string | Uri } = {

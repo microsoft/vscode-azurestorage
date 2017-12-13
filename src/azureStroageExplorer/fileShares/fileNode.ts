@@ -18,7 +18,7 @@ export class FileNode implements IAzureTreeItem {
         public readonly key: StorageAccountKey) {		
     }
 
-    public id: string = this.file.name;
+    public id: string = undefined;
     public label: string = this.file.name;
     public contextValue: string = 'azureFile';
     public iconPath: { light: string | Uri; dark: string | Uri } =  {

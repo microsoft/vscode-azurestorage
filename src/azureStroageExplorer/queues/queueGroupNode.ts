@@ -21,7 +21,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
         public readonly key: StorageAccountKey) {		
     }
 
-    public id: string = "Queues";
+    public id: string = undefined;
     public label: string = "Queues";
     public contextValue: string = 'azureQueueGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } =  {
