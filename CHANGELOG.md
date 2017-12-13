@@ -3,7 +3,7 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 
 ## 0.1.2 - 2017-12-13
 ### Fixed
- - Resovled extension loading issue on Windows machines.
+ - Resolved extension loading issue on Windows machines.
 
 ## 0.1.1 - 2017-12-08
 ### Fixed
