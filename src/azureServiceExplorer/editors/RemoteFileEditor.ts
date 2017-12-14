@@ -31,10 +31,6 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
         }
     }
 
-    async getSaveConfirmationText(context: ContextT): Promise<string> {
-        return await this.remoteFileHandler.getSaveConfirmationText(context);
-    }
-
     async showEditor(context: ContextT): Promise<void> {
         var fileName = await this.remoteFileHandler.getFilename(context);
 
@@ -66,7 +62,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
         const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);     
         
         if (showSaveWarning) {             
-            const message: string = await this.getSaveConfirmationText(context);
+            const message: string = await this.remoteFileHandler.getSaveConfirmationText(context);
             const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogOptions.OK, DialogOptions.DontShowAgain, DialogOptions.Cancel);
 
             if (!result || result === DialogOptions.Cancel) {
