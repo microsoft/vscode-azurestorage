@@ -5,7 +5,7 @@
 
 import { BlobNode } from './blobNode';
 import * as azureStorage from "azure-storage";
-import { BaseEditor } from '../../azureServiceExplorer/editors/baseEditor';
+import { BaseEditor } from 'vscode-azureextensionui';
 import { AzureStorageOutputChanel } from '../azureStorageOutputChannel';
 
 export class BlobEditor extends BaseEditor<BlobNode> {

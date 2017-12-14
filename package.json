@@ -9,20 +9,20 @@
 		"vscode": "^1.17.0"
 	},
 	"repository": {
-        "type": "git",
-        "url": "https://github.com/Microsoft/vscode-azurestorage"
-    },
-    "galleryBanner": {
-        "color": "#0072c6",
-        "theme": "dark"
-    },
+		"type": "git",
+		"url": "https://github.com/Microsoft/vscode-azurestorage"
+	},
+	"galleryBanner": {
+		"color": "#0072c6",
+		"theme": "dark"
+	},
 	"homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/master/README.md",
 	"license": "SEE LICENSE IN LICENSE.md",
 	"categories": [
-        "Azure"
-    ],
-    "keywords": [
-        "Azure",
+		"Azure"
+	],
+	"keywords": [
+		"Azure",
 		"Blob Containers",
 		"File Share",
 		"Storage Account"
@@ -37,10 +37,10 @@
 		"views": {
 			"explorer": [
 				{
-                    "id": "azureStorage",
-                    "name": "Azure Storage",
-                    "when": "config.azureStorage.showExplorer == true"
-                }
+					"id": "azureStorage",
+					"name": "Azure Storage",
+					"when": "config.azureStorage.showExplorer == true"
+				}
 			]
 		},
 		"commands": [
@@ -143,14 +143,38 @@
 				}
 			],
 			"commandPalette": [
-				{ "command": "azureStorage.refresh", "when": "never" },
-				{ "command": "azureStorage.openBlobContainer", "when": "never" },
-				{ "command": "azureStorage.openTable", "when": "never" },
-				{ "command": "azureStorage.openFileShare", "when": "never" },
-				{ "command": "azureStorage.openQueue", "when": "never" },
-				{ "command": "azureStorage.openStorageAccount", "when": "never" },
-				{ "command": "azureStorage.copyConnectionString", "when": "never" },
-				{ "command": "azureStorage.copyPrimaryKey", "when": "never" }
+				{
+					"command": "azureStorage.refresh",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openBlobContainer",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openTable",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openFileShare",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openQueue",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openStorageAccount",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.copyConnectionString",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.copyPrimaryKey",
+					"when": "never"
+				}
 			]
 		},
 		"configuration": {
@@ -203,10 +227,10 @@
 		"azure-arm-resource": "^2.0.0-preview",
 		"azure-arm-storage": "^3.1.0",
 		"azure-storage": "^2.6.0",
+		"copy-paste": "^1.3.0",
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
-		"vscode-extension-telemetry": "^0.0.6",
-		"fs-extra": "4.0.2",
-		"copy-paste": "^1.3.0"
+		"vscode-azureextensionui": "~0.4.0",
+		"vscode-extension-telemetry": "^0.0.6"
 	}
 }
