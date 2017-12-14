@@ -48,10 +48,14 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
     }
 
     listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             var fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
-            fileService.listSharesSegmented(currentToken, { maxResults: 50 }, (_err, result: azureStorage.FileService.ListSharesResult) => {
-                resolve(result);
+            fileService.listSharesSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.FileService.ListSharesResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
             })
         });
     }

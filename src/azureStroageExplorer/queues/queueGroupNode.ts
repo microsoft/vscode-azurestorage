@@ -50,10 +50,14 @@ export class QueueGroupNode implements IAzureParentTreeItem {
     }
 
     listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             var queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
-            queueService.listQueuesSegmented(currentToken, { maxResults: 50 }, (_err, result: azureStorage.QueueService.ListQueueResult) => {
-                resolve(result);
+            queueService.listQueuesSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.QueueService.ListQueueResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
             })
         });
     }

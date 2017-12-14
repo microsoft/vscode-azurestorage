@@ -46,10 +46,14 @@ export class BlobContainerNode implements IAzureParentTreeItem {
     }
 
     listBlobs(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListBlobsResult> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             var blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-            blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults: 50 }, (_err, result: azureStorage.BlobService.ListBlobsResult) => {
-                resolve(result);
+            blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.BlobService.ListBlobsResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
             })
         });
     }

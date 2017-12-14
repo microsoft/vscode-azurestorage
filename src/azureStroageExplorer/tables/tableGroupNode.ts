@@ -49,10 +49,14 @@ export class TableGroupNode implements IAzureParentTreeItem {
     }
 
     listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             var tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
-            tableService.listTablesSegmented(currentToken, { maxResults: 50 }, (_err, result: azureStorage.TableService.ListTablesResponse) => {
-                resolve(result);
+            tableService.listTablesSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.TableService.ListTablesResponse) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
             })
         });
     }
