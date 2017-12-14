@@ -29,7 +29,7 @@ export class RemoteFileEditor<ContextT> extends BaseEditor<ContextT> {
             let parsedPath: path.ParsedPath  =  path.posix.parse(fileName);       
             let temporaryFilePath = await TemporaryFile.create(parsedPath.base);    
             await this.remoteFileHandler.downloadFile(context, temporaryFilePath);
-            super.showEditor(context, temporaryFilePath);
+            await super.showEditor(context, temporaryFilePath);
             this.appendLineToOutput(`Successfully opened '${fileName}'`);
         } catch (error) {
             var details: string;

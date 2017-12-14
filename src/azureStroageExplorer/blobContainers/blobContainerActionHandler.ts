@@ -8,7 +8,7 @@ import { BaseActionHandler } from '../../azureServiceExplorer/actions/baseAction
 import { BlobContainerNode } from './blobContainerNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { IAzureNode } from 'vscode-azureextensionui';
-import { RemoteFileEditor } from '../../azureServiceExplorer/editors/baseRemoteEditor';
+import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileEditor';
 import { AzureStorageOutputChanel } from '../azureStorageOutputChannel';
 import { BlobNode } from './blobNode';
 import { BlobFileHandler } from './blobFileHandler';
