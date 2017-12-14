@@ -7,17 +7,18 @@ import { BaseActionHandler } from '../../azureServiceExplorer/actions/baseAction
 
 import { TableNode } from './tableNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { IAzureNode } from 'vscode-azureextensionui';
 
 export class TableActionHandler extends BaseActionHandler {
     registerActions(context: vscode.ExtensionContext) {
         this.initCommand(context, "azureStorage.openTable", (node) => { this.openTableInStorageExplorer(node) });
     }
 
-    openTableInStorageExplorer(node: TableNode) {
-        var resourceId = node.storageAccount.id;
+    openTableInStorageExplorer(node: IAzureNode<TableNode>) {
+        var resourceId = node.treeItem.storageAccount.id;
         var subscriptionid = node.subscription.subscriptionId;
         var resourceType = "Azure.Table";
-        var resourceName = node.tableName;
+        var resourceName = node.treeItem.tableName;
 
         StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
     }

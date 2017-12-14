@@ -3,40 +3,28 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TreeItem, TreeItemCollapsibleState } from 'vscode';
+import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { AzureTreeNodeBase } from '../../azureServiceExplorer/nodes/azureTreeNodeBase';
-import { AzureTreeDataProvider } from '../../azureServiceExplorer/azureTreeDataProvider';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
+import { IAzureTreeItem } from 'vscode-azureextensionui';
 
-export class FileNode extends AzureTreeNodeBase {
+export class FileNode implements IAzureTreeItem {
     constructor(
         public readonly file: azureStorage.FileService.FileResult,
         public readonly directory: string,
 		public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey,
-		treeDataProvider: AzureTreeDataProvider, 
-        parentNode: AzureTreeNodeBase) {
-		super(file.name, treeDataProvider, parentNode);
-		
+        public readonly key: StorageAccountKey) {		
     }
 
-    getTreeItem(): TreeItem {
-        return {
-            label: this.label,
-            collapsibleState: TreeItemCollapsibleState.None,
-            contextValue: 'azureFile',
-            iconPath: {
-				light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'document.svg'),
-				dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'document.svg')
-			},
-            command:{
-               command: 'azureStorage.editFile',
-               arguments: [this],
-               title: ''
-           }
-        }
-    }
+    public id: string = undefined;
+    public label: string = this.file.name;
+    public contextValue: string = 'azureFile';
+    public iconPath: { light: string | Uri; dark: string | Uri } =  {
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'document.svg'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'document.svg')
+    };
+
+   public commandId: string = 'azureStorage.editFile';
 }

@@ -8,6 +8,7 @@ import { BaseActionHandler } from '../../azureServiceExplorer/actions/baseAction
 import { BlobContainerNode } from './blobContainerNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobEditor } from './blobEditor';
+import { IAzureNode } from 'vscode-azureextensionui';
 
 export class BlobContainerActionHandler extends BaseActionHandler {
     private _editor: BlobEditor;
@@ -20,11 +21,11 @@ export class BlobContainerActionHandler extends BaseActionHandler {
         this.initEvent(context, 'azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (doc: vscode.TextDocument) => this._editor.onDidSaveTextDocument(context.globalState, doc));
     }
 
-    openBlobContainerInStorageExplorer(node: BlobContainerNode) {
-        var resourceId = node.storageAccount.id;
+    openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>) {
+        var resourceId = node.treeItem.storageAccount.id;
         var subscriptionid = node.subscription.subscriptionId;
         var resourceType = "Azure.BlobContainer";
-        var resourceName = node.container.name;
+        var resourceName = node.treeItem.container.name;
 
         StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
     }
