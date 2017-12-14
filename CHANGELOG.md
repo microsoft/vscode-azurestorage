@@ -3,10 +3,10 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 
 ## 0.1.3 - 2017-12-13
 ### Added
- - Changed TreeItems to using the common ui library 'vscode-azureextensionui'.
+ - Changed TreeItems to use the common ui library 'vscode-azureextensionui'.
 
 ### Fixed
- - Fixed hash-mismatch issue for Blob and File Downlaod by using 'ToLocalFile' instead of 'ToText' download methods.
+ - Fixed hash-mismatch issue for Blob and File Download by using 'ToLocalFile' instead of 'ToText' download methods.
 
 ## 0.1.2 - 2017-12-13
 ### Fixed
