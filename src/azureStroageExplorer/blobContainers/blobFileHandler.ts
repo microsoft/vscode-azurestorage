@@ -7,7 +7,6 @@ import { BlobNode } from './blobNode';
 import * as azureStorage from "azure-storage";
 
 import { IAzureNode } from 'vscode-azureextensionui';
-import { TextDocument } from 'vscode';
 import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
 
 export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>> {
