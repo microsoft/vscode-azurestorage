@@ -7,7 +7,7 @@ import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import {Launcher} from "../components/launcher/launcher";
 import * as vscode from 'vscode';
 import * as fs from "fs";
-import { UserCancelledError } from "../azureServiceExplorer/errors/UserCancelledError";
+import { UserCancelledError } from "vscode-azureextensionui";
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     private static subExecutableLocation = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";

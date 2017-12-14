@@ -6,8 +6,8 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { UserCancelledError } from '../errors/UserCancelledError';
 import DialogOptions from '../messageItems/dialogOptions';
+import { UserCancelledError } from 'vscode-azureextensionui';
 
 export abstract class BaseEditor<ContextT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};
