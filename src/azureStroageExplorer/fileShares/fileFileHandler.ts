@@ -5,15 +5,11 @@
 
 import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
-import { BaseEditor } from '../../azureServiceExplorer/editors/baseEditor';
-import { AzureStorageOutputChanel } from '../azureStorageOutputChannel';
 import { IAzureNode } from 'vscode-azureextensionui';
+import { TextDocument } from 'vscode';
+import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
 
-export class FileEditor extends BaseEditor<IAzureNode<FileNode>> {
-    constructor() {
-        super("azureStorage.file.showSavePrompt", AzureStorageOutputChanel)
-    }
-
+export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>> {
     async getSaveConfirmationText(node: IAzureNode<FileNode>): Promise<string> {
         return `Saving '${node.treeItem.file.name}' will update the file "${node.treeItem.file.name}" in File Share "${node.treeItem.share.name}"`;
     }
@@ -22,24 +18,20 @@ export class FileEditor extends BaseEditor<IAzureNode<FileNode>> {
         return node.treeItem.file.name;
     }
 
-    async getSize(node: IAzureNode<FileNode>): Promise<number> {
-        return Number(node.treeItem.file.contentLength)/(1024*1024);
-    }
-
-    async getData(node: IAzureNode<FileNode>): Promise<string> {
+    async downloadFile(node: IAzureNode<FileNode>, filePath: string): Promise<void> {
         var fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
-        return await new Promise<string>((resolve, reject) => {
-            fileService.getFileToText(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, undefined, (error: Error, text: string, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+        return await new Promise<void>((resolve, reject) => {
+            fileService.getFileToLocalFile(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, filePath, (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if(!!error) {
                     reject(error)
                 } else {
-                    resolve(text);
+                    resolve();
                 }
             });
         });
     }
 
-    async updateData(node: IAzureNode<FileNode>, data: string): Promise<string> {
+    async uploadFile(node: IAzureNode<FileNode>, document: TextDocument) {
         var fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         var fileProperties = await this.getProperties(node);
         var createOptions: azureStorage.FileService.CreateFileRequestOptions = {};
@@ -49,7 +41,7 @@ export class FileEditor extends BaseEditor<IAzureNode<FileNode>> {
         }
 
         await new Promise<string>((resolve, reject) => {
-            fileService.createFileFromText(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, data, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+            fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, document.fileName, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if(!!error) {
                     var errorAny = <any>error;                
                     if(!!errorAny.code) {
@@ -68,8 +60,6 @@ export class FileEditor extends BaseEditor<IAzureNode<FileNode>> {
                 }
             });
         });
-
-        return await this.getData(node);
     }
 
     private async getProperties(node: IAzureNode<FileNode>): Promise<azureStorage.FileService.FileResult> {
