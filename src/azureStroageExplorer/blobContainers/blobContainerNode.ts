@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { BlobNode } from './blobNode';
@@ -37,7 +36,7 @@ export class BlobContainerNode implements IAzureParentTreeItem  {
         if(clearCache) {
             this._continuationToken = undefined;
         }
-        
+
         var blobs = await this.listBlobs(this._continuationToken);
         var {entries, continuationToken} = blobs;
         this._continuationToken = continuationToken;

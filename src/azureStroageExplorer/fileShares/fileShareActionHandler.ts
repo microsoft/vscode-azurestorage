@@ -24,7 +24,7 @@ export class FileShareActionHandler extends BaseActionHandler {
 
     openFileShareInStorageExplorer(node: IAzureNode<FileShareNode>) {
         var resourceId = node.treeItem.storageAccount.id;
-        var subscriptionid = node.treeItem.subscription.subscriptionId;
+        var subscriptionid = node.subscription.subscriptionId;
         var resourceType = "Azure.FileShare";
         var resourceName = node.treeItem.share.name;
 

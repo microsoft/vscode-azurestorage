@@ -5,7 +5,6 @@
 
 import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { DirectoryNode } from './directoryNode';
@@ -36,7 +35,7 @@ export class FileShareNode implements IAzureParentTreeItem {
         if(clearCache) {
             this._continuationToken = undefined;
         }
-        
+
         var fileResults = await this.listFiles(this._continuationToken);
         var {entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
