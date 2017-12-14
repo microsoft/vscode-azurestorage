@@ -16,12 +16,6 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};
 
     constructor(private readonly remoteFileHandler:IRemoteFileHandler<ContextT>, private readonly showSavePromptKey: string, private readonly outputChanel?: vscode.OutputChannel) {
-    }  
-
-    public async updateMatchingcontext(doc): Promise<void> {
-        const filePath = Object.keys(this.fileMap).find((filePath) => path.relative(doc.fsPath, filePath) === '');
-        var [ textDocument, context] = this.fileMap[filePath];
-        await this.saveDocument(context, textDocument);
     }
 
     public async dispose(): Promise<void> {
