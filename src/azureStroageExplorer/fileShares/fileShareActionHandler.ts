@@ -11,13 +11,13 @@ import { IAzureNode } from 'vscode-azureextensionui';
 import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileEditor';
 import { FileFileHandler } from './fileFileHandler';
 import { FileNode } from './fileNode';
-import { AzureStorageOutputChanel } from '../azureStorageOutputChannel';
+import { AzureStorageOutputChannel } from '../azureStorageOutputChannel';
 
 export class FileShareActionHandler extends BaseActionHandler {
     private _editor: RemoteFileEditor<IAzureNode<FileNode>>;
 
     registerActions(context: vscode.ExtensionContext) {
-        this._editor = new RemoteFileEditor(new FileFileHandler(), "azureStorage.file.showSavePrompt", AzureStorageOutputChanel);
+        this._editor = new RemoteFileEditor(new FileFileHandler(), "azureStorage.file.showSavePrompt", AzureStorageOutputChannel);
         context.subscriptions.push(this._editor);
 
         this.initCommand(context, "azureStorage.openFileShare", (node) => { this.openFileShareInStorageExplorer(node) });

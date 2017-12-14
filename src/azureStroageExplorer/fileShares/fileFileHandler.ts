@@ -6,7 +6,6 @@
 import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
 import { IAzureNode } from 'vscode-azureextensionui';
-import { TextDocument } from 'vscode';
 import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
 
 export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>> {
@@ -31,7 +30,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         });
     }
 
-    async uploadFile(node: IAzureNode<FileNode>, document: TextDocument) {
+    async uploadFile(node: IAzureNode<FileNode>, filePath: string) {
         var fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         var fileProperties = await this.getProperties(node);
         var createOptions: azureStorage.FileService.CreateFileRequestOptions = {};
@@ -41,7 +40,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         }
 
         await new Promise<string>((resolve, reject) => {
-            fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, document.fileName, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+            fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, filePath, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if(!!error) {
                     var errorAny = <any>error;                
                     if(!!errorAny.code) {

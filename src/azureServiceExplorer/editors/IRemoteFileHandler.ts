@@ -3,10 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TextDocument } from "vscode";
-
 export interface IRemoteFileHandler<ContextT> {
-    uploadFile(context: ContextT, document: TextDocument): Promise<void>;
+    uploadFile(context: ContextT, filePath: string): Promise<void>;
     downloadFile(context: ContextT, filePath: string): Promise<void>;
     getFilename(context: ContextT): Promise<string>;
     getSaveConfirmationText(context: ContextT): Promise<string>;

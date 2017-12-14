@@ -51,7 +51,7 @@ export class RemoteFileEditor<ContextT> extends BaseEditor<ContextT> {
         var fileName = await this.remoteFileHandler.getFilename(context);
         this.appendLineToOutput(`Updating '${fileName}' ...`);
         try {
-            await this.remoteFileHandler.uploadFile(context, document);
+            await this.remoteFileHandler.uploadFile(context, document.fileName);
             this.appendLineToOutput(`Successfully updated '${fileName}'`);
         } catch (error) {
             this.appendLineToOutput(`Unable to save '${fileName}'`);
