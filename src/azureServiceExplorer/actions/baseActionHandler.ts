@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode';
 import { reporter } from '../../components/telemetry/reporter';
-import { UserCancelledError } from '../errors/UserCancelledError';
+import { UserCancelledError } from 'vscode-azureextensionui';
 
 export abstract class BaseActionHandler {
     abstract registerActions(context: vscode.ExtensionContext);

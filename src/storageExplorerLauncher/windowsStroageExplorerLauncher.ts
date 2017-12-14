@@ -7,7 +7,7 @@ import {Launcher} from "../components/launcher/launcher";
 import * as fs from "fs";
 import * as os from "os";
 import * as vscode from 'vscode';
-import { UserCancelledError } from "../azureServiceExplorer/errors/UserCancelledError";
+import { UserCancelledError } from "vscode-azureextensionui";
 
 // regedit doesn't exist for Mac. I have to import like this so it builds.
 var regedit: any;
