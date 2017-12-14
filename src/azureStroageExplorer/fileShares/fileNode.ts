@@ -13,18 +13,18 @@ export class FileNode implements IAzureTreeItem {
     constructor(
         public readonly file: azureStorage.FileService.FileResult,
         public readonly directory: string,
-		public readonly share: azureStorage.FileService.ShareResult,
+        public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {		
+        public readonly key: StorageAccountKey) {
     }
 
     public id: string = undefined;
     public label: string = this.file.name;
     public contextValue: string = 'azureFile';
-    public iconPath: { light: string | Uri; dark: string | Uri } =  {
+    public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'document.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'document.svg')
     };
 
-   public commandId: string = 'azureStorage.editFile';
+    public commandId: string = 'azureStorage.editFile';
 }

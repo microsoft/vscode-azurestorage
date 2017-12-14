@@ -16,11 +16,11 @@ import { BlobFileHandler } from './blobFileHandler';
 export class BlobContainerActionHandler extends BaseActionHandler {
     private _editor: RemoteFileEditor<IAzureNode<BlobNode>>;
     registerActions(context: vscode.ExtensionContext) {
-        this._editor = new RemoteFileEditor(new BlobFileHandler(),"azureStorage.blob.showSavePrompt", AzureStorageOutputChannel);
+        this._editor = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt", AzureStorageOutputChannel);
         context.subscriptions.push(this._editor);
 
         this.initCommand(context, "azureStorage.openBlobContainer", (node) => { this.openBlobContainerInStorageExplorer(node) });
-        this.initCommand(context, "azureStorage.editBlob", (node) => {this._editor.showEditor(node)});
+        this.initCommand(context, "azureStorage.editBlob", (node) => { this._editor.showEditor(node) });
         this.initEvent(context, 'azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (doc: vscode.TextDocument) => this._editor.onDidSaveTextDocument(doc));
     }
 

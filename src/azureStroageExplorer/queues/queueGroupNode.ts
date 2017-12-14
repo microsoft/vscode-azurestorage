@@ -16,30 +16,30 @@ export class QueueGroupNode implements IAzureParentTreeItem {
 
     constructor(
         public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {		
+        public readonly key: StorageAccountKey) {
     }
 
     public id: string = undefined;
     public label: string = "Queues";
     public contextValue: string = 'azureQueueGroup';
-    public iconPath: { light: string | Uri; dark: string | Uri } =  {
+    public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue_16x.png'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
     };
 
     async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
-        if(clearCache) {
+        if (clearCache) {
             this._continuationToken = undefined;
         }
 
         var containers = await this.listQueues(this._continuationToken);
-        var {entries, continuationToken} = containers;
+        var { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 
         return entries.map((queue: azureStorage.QueueService.QueueResult) => {
             return new QueueNode(
-                queue, 
-                this.storageAccount, 
+                queue,
+                this.storageAccount,
                 this.key);
         });
 
@@ -52,9 +52,9 @@ export class QueueGroupNode implements IAzureParentTreeItem {
     listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise(resolve => {
             var queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
-			queueService.listQueuesSegmented(currentToken, {maxResults: 50}, (_err, result: azureStorage.QueueService.ListQueueResult) => {
-				resolve(result);
-			})
-		});
+            queueService.listQueuesSegmented(currentToken, { maxResults: 50 }, (_err, result: azureStorage.QueueService.ListQueueResult) => {
+                resolve(result);
+            })
+        });
     }
 }

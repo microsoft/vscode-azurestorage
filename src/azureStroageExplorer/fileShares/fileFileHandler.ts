@@ -21,7 +21,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         var fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         return await new Promise<void>((resolve, reject) => {
             fileService.getFileToLocalFile(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, filePath, (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
-                if(!!error) {
+                if (!!error) {
                     reject(error)
                 } else {
                     resolve();
@@ -34,26 +34,26 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         var fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         var fileProperties = await this.getProperties(node);
         var createOptions: azureStorage.FileService.CreateFileRequestOptions = {};
-        
-        if(fileProperties && fileProperties.contentSettings && fileProperties.contentSettings.contentType){
+
+        if (fileProperties && fileProperties.contentSettings && fileProperties.contentSettings.contentType) {
             createOptions.contentSettings = { contentType: fileProperties.contentSettings.contentType };
         }
 
         await new Promise<string>((resolve, reject) => {
             fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, filePath, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
-                if(!!error) {
-                    var errorAny = <any>error;                
-                    if(!!errorAny.code) {
+                if (!!error) {
+                    var errorAny = <any>error;
+                    if (!!errorAny.code) {
                         var humanReadableMessage = `Unable to save '${node.treeItem.file.name}' file service returned error code "${errorAny.code}"`;
-                        switch(errorAny.code) {
+                        switch (errorAny.code) {
                             case "ENOTFOUND":
                                 humanReadableMessage += " - Please check connection."
-                            break;
+                                break;
                         }
                         reject(humanReadableMessage);
                     } else {
                         reject(error);
-                    }     
+                    }
                 } else {
                     resolve();
                 }
@@ -66,19 +66,19 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
 
         return await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
             fileService.getFileProperties(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, (error: Error, result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
-                if(!!error) {
-                    var errorAny = <any>error;                
-                    if(!!errorAny.code) {
+                if (!!error) {
+                    var errorAny = <any>error;
+                    if (!!errorAny.code) {
                         var humanReadableMessage = `Unable to retrieve properties for '${node.treeItem.file.name}' file service returned error code "${errorAny.code}"`;
-                        switch(errorAny.code) {
+                        switch (errorAny.code) {
                             case "ENOTFOUND":
                                 humanReadableMessage += " - Please check connection."
-                            break;
+                                break;
                         }
                         reject(humanReadableMessage);
                     } else {
                         reject(error);
-                    }     
+                    }
                 } else {
                     resolve(result);
                 }

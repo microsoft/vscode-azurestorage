@@ -21,7 +21,7 @@ export class FileShareActionHandler extends BaseActionHandler {
         context.subscriptions.push(this._editor);
 
         this.initCommand(context, "azureStorage.openFileShare", (node) => { this.openFileShareInStorageExplorer(node) });
-        this.initCommand(context, "azureStorage.editFile", (node) => {this._editor.showEditor(node)});
+        this.initCommand(context, "azureStorage.editFile", (node) => { this._editor.showEditor(node) });
         this.initEvent(context, 'azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (doc: vscode.TextDocument) => this._editor.onDidSaveTextDocument(doc));
     }
 

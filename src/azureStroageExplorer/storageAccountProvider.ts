@@ -8,7 +8,7 @@ import { StorageAccount } from '../../node_modules/azure-arm-storage/lib/models'
 import { IChildProvider, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
 import { StorageAccountNode } from './storageAccounts/storageAccountNode';
 
-export class StorageAccountProvider implements IChildProvider { 
+export class StorageAccountProvider implements IChildProvider {
     async loadMoreChildren(node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
         var storageManagementClient = new StorageManagementClient(node.credentials, node.subscription.subscriptionId);
 

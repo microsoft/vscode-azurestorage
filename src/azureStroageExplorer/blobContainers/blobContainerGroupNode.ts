@@ -21,19 +21,19 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
     public id: string = undefined;
     public label: string = "Blob Containers";
     public contextValue: string = 'azureBlobContainerGroup';
-    public iconPath: { light: string | Uri; dark: string | Uri } =  {
+    public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
     };
 
 
     async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
-        if(clearCache) {
+        if (clearCache) {
             this._continuationToken = undefined;
         }
 
         var containers = await this.listContainers(this._continuationToken);
-        var {entries , continuationToken} = containers;
+        var { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 
         return entries.map((container: azureStorage.BlobService.ContainerResult) => {
@@ -48,9 +48,9 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
     listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise(resolve => {
             var blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-			blobService.listContainersSegmented(currentToken, {maxResults: 50}, (_err, result: azureStorage.BlobService.ListContainerResult) => {
-				resolve(result);
-			})
-		});
+            blobService.listContainersSegmented(currentToken, { maxResults: 50 }, (_err, result: azureStorage.BlobService.ListContainerResult) => {
+                resolve(result);
+            })
+        });
     }
 }

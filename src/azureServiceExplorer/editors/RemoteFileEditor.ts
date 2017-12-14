@@ -15,7 +15,7 @@ import * as fse from 'fs-extra';
 export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};
 
-    constructor(private readonly remoteFileHandler:IRemoteFileHandler<ContextT>, private readonly showSavePromptKey: string, private readonly outputChanel?: vscode.OutputChannel) {
+    constructor(private readonly remoteFileHandler: IRemoteFileHandler<ContextT>, private readonly showSavePromptKey: string, private readonly outputChanel?: vscode.OutputChannel) {
     }
 
     public async dispose(): Promise<void> {
@@ -25,7 +25,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     public async onDidSaveTextDocument(doc: vscode.TextDocument): Promise<void> {
         const filePath = Object.keys(this.fileMap).find((filePath) => path.relative(doc.uri.fsPath, filePath) === '');
         if (filePath) {
-            const context: ContextT = this.fileMap[filePath][1];       
+            const context: ContextT = this.fileMap[filePath][1];
             await this.confirmSaveDocument(context);
             await this.saveDocument(context, doc);
         }
@@ -35,17 +35,16 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
         var fileName = await this.remoteFileHandler.getFilename(context);
 
         this.appendLineToOutput(`Opening '${fileName}' ...`);
-        try
-        {
-            let parsedPath: path.ParsedPath  =  path.posix.parse(fileName);       
-            let temporaryFilePath = await TemporaryFile.create(parsedPath.base);    
+        try {
+            let parsedPath: path.ParsedPath = path.posix.parse(fileName);
+            let temporaryFilePath = await TemporaryFile.create(parsedPath.base);
             await this.remoteFileHandler.downloadFile(context, temporaryFilePath);
             await this.showEditorFromFile(context, temporaryFilePath);
             this.appendLineToOutput(`Successfully opened '${fileName}'`);
         } catch (error) {
             var details: string;
-            
-            if(!!error.message) {
+
+            if (!!error.message) {
                 details = error.message;
             } else {
                 details = JSON.stringify(error);
@@ -59,9 +58,9 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     }
 
     private async confirmSaveDocument(context: ContextT): Promise<void> {
-        const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);     
-        
-        if (showSaveWarning) {             
+        const showSaveWarning: boolean | undefined = vscode.workspace.getConfiguration().get(this.showSavePromptKey);
+
+        if (showSaveWarning) {
             const message: string = await this.remoteFileHandler.getSaveConfirmationText(context);
             const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogOptions.OK, DialogOptions.DontShowAgain, DialogOptions.Cancel);
 
@@ -92,7 +91,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     }
 
     protected appendLineToOutput(value: string) {
-        if(!!this.outputChanel) {
+        if (!!this.outputChanel) {
             this.outputChanel.appendLine(value);
             this.outputChanel.show(true);
         }

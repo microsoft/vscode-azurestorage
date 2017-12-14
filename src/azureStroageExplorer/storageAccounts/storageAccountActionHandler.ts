@@ -19,7 +19,7 @@ export class StorageAccountActionHandler extends BaseActionHandler {
     openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>) {
         var resourceId = node.treeItem.storageAccount.id;
         var subscriptionid = node.subscription.subscriptionId;
-        
+
         StorageExplorerLauncher.openResource(resourceId, subscriptionid);
     }
 

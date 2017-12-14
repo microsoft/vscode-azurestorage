@@ -21,24 +21,24 @@ export class TableGroupNode implements IAzureParentTreeItem {
     public id: string = undefined;
     public label: string = "Tables";
     public contextValue: string = 'azureTableGroup';
-    public iconPath: { light: string | Uri; dark: string | Uri } =  {
+    public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable_16x.png'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.png')
     };
 
     async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
-        if(clearCache) {
+        if (clearCache) {
             this._continuationToken = undefined;
         }
 
         var containers = await this.listContainers(this._continuationToken);
-        var {entries, continuationToken} = containers;
+        var { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 
         return entries.map((table: string) => {
             return new TableNode(
-                table, 
-                this.storageAccount, 
+                table,
+                this.storageAccount,
                 this.key);
         });
 
@@ -51,9 +51,9 @@ export class TableGroupNode implements IAzureParentTreeItem {
     listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise(resolve => {
             var tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
-			tableService.listTablesSegmented(currentToken, {maxResults: 50}, (_err, result: azureStorage.TableService.ListTablesResponse) => {
-				resolve(result);
-			})
-		});
+            tableService.listTablesSegmented(currentToken, { maxResults: 50 }, (_err, result: azureStorage.TableService.ListTablesResponse) => {
+                resolve(result);
+            })
+        });
     }
 }

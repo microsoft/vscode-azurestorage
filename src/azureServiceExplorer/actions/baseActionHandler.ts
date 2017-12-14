@@ -17,7 +17,7 @@ export abstract class BaseActionHandler {
     initCommand(context: vscode.ExtensionContext, commandId: string, callback: (...args: any[]) => any) {
         this.initAsyncCommand(context, commandId, (...args: any[]) => Promise.resolve(callback(...args)));
     }
-    
+
     initAsyncCommand(context: vscode.ExtensionContext, commandId: string, callback: (...args: any[]) => Promise<any>) {
         context.subscriptions.push(vscode.commands.registerCommand(commandId, this.wrapAsyncCallback(commandId, callback)));
     }
@@ -27,7 +27,7 @@ export abstract class BaseActionHandler {
             const start = Date.now();
             let result = 'Succeeded';
             let errorData: string = '';
-    
+
             try {
                 await callback(...args);
             } catch (err) {
@@ -47,39 +47,39 @@ export abstract class BaseActionHandler {
     }
 
     sendTelemetry(eventName: string, properties?: { [key: string]: string; }, measures?: { [key: string]: number; }) {
-            if (reporter) {
-                reporter.sendTelemetryEvent(eventName, properties, measures);
-            }
+        if (reporter) {
+            reporter.sendTelemetryEvent(eventName, properties, measures);
         }
-        
+    }
+
     errToString(error: any): string {
-            if (error === null || error === undefined) {
-                return '';
-            }
-        
-            if (error instanceof Error) {
-                try {
-                    // errors from Azure come as JSON string
-                    return JSON.stringify({
-                        'Error': JSON.parse(error.message).Code,
-                        'Message': JSON.parse(error.message).Message
-                    });
-        
-                } catch (error) {
-                    return JSON.stringify({
-                        'Error': error.constructor.name,
-                        'Message': error.message
-                    });
-                }
-        
-            }
-        
-            if (typeof (error) === 'object') {
+        if (error === null || error === undefined) {
+            return '';
+        }
+
+        if (error instanceof Error) {
+            try {
+                // errors from Azure come as JSON string
                 return JSON.stringify({
-                    'object': error.constructor.name
+                    'Error': JSON.parse(error.message).Code,
+                    'Message': JSON.parse(error.message).Message
+                });
+
+            } catch (error) {
+                return JSON.stringify({
+                    'Error': error.constructor.name,
+                    'Message': error.message
                 });
             }
-        
-            return error.toString();
+
         }
+
+        if (typeof (error) === 'object') {
+            return JSON.stringify({
+                'object': error.constructor.name
+            });
+        }
+
+        return error.toString();
+    }
 }

@@ -16,7 +16,7 @@ import { TableGroupNode } from '../tables/tableGroupNode';
 
 export class StorageAccountNode implements IAzureParentTreeItem {
     constructor(
-		public readonly storageAccount: StorageAccount, 
+        public readonly storageAccount: StorageAccount,
         public readonly storageManagementClient: StorageManagementClient) {
     }
 
@@ -45,7 +45,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
             groupNodes.push(new QueueGroupNode(this.storageAccount, primaryKey));
         }
 
-        if(!!primaryEndpoints.table) {
+        if (!!primaryEndpoints.table) {
             groupNodes.push(new TableGroupNode(this.storageAccount, primaryKey));
         }
 
@@ -56,7 +56,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         return false;
     }
 
-    async getPrimaryKey() : Promise<StorageAccountKey> {
+    async getPrimaryKey(): Promise<StorageAccountKey> {
         var keys: StorageAccountKey[] = await this.getKeys();
         var primaryKey = keys.find((key: StorageAccountKey) => {
             return key.keyName === "key1" || key.keyName === "primaryKey";
@@ -73,35 +73,35 @@ export class StorageAccountNode implements IAzureParentTreeItem {
     async getKeys() {
         var parsedId = this.parseAzureResourceId(this.storageAccount.id);
         var resourceGroupName = parsedId["resourceGroups"];
-        var keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);  
+        var keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
         return keyResult.keys;
     }
 
     parseAzureResourceId(resourceId: string): { [key: string]: string } {
         const invalidIdErr = new Error('Invalid Account ID.');
         const result = {};
-    
+
         if (!resourceId || resourceId.length < 2 || resourceId.charAt(0) !== '/') {
             throw invalidIdErr;
         }
-    
+
         const parts = resourceId.substring(1).split('/');
-    
+
         if (parts.length % 2 !== 0) {
             throw invalidIdErr;
         }
-    
+
         for (let i = 0; i < parts.length; i += 2) {
             const key = parts[i];
             const value = parts[i + 1];
-    
+
             if (key === '' || value === '') {
                 throw invalidIdErr;
             }
-    
+
             result[key] = value;
         }
-    
+
         return result;
     }
 }

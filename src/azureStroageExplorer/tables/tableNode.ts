@@ -10,15 +10,15 @@ import { IAzureTreeItem } from 'vscode-azureextensionui';
 
 export class TableNode implements IAzureTreeItem {
     constructor(
-		public readonly tableName: string,
+        public readonly tableName: string,
         public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {		
+        public readonly key: StorageAccountKey) {
     }
 
     public id: string = undefined;
     public label: string = this.tableName;
     public contextValue: string = 'azureTable';
-    public iconPath: { light: string | Uri; dark: string | Uri } =  {
+    public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable_16x.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.svg')
     };

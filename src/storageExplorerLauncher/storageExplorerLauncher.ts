@@ -10,7 +10,7 @@ import { MacOSStorageExplorerLauncher } from "./macOsStorageExplorerLauncher";
 
 var StorageExplorerLauncher: IStorageExplorerLauncher;
 
-if(os.platform() === "win32") {
+if (os.platform() === "win32") {
     StorageExplorerLauncher = new WindowsStorageExplorerLauncher();
 } else {
     // assume Mac Os for now.

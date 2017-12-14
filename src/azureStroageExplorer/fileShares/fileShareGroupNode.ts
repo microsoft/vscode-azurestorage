@@ -15,7 +15,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
 
     constructor(
         public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {		
+        public readonly key: StorageAccountKey) {
     }
 
     public id: string = undefined;
@@ -27,18 +27,18 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
     };
 
     async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
-        if(clearCache) {
+        if (clearCache) {
             this._continuationToken = undefined;
         }
-        
+
         var fileShares = await this.listFileShares(this._continuationToken);
-        var {entries, continuationToken } = fileShares;
+        var { entries, continuationToken } = fileShares;
         this._continuationToken = continuationToken;
 
         return entries.map((fileShare: azureStorage.FileService.ShareResult) => {
             return new FileShareNode(
-                fileShare, 
-                this.storageAccount, 
+                fileShare,
+                this.storageAccount,
                 this.key);
         });
     }
@@ -50,9 +50,9 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
     listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
         return new Promise(resolve => {
             var fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
-			fileService.listSharesSegmented(currentToken, {maxResults: 50}, (_err, result: azureStorage.FileService.ListSharesResult) => {
-				resolve(result);
-			})
-		});
+            fileService.listSharesSegmented(currentToken, { maxResults: 50 }, (_err, result: azureStorage.FileService.ListSharesResult) => {
+                resolve(result);
+            })
+        });
     }
 }
