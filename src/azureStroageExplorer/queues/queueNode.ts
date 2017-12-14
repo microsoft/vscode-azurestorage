@@ -5,14 +5,12 @@
 
 import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { IAzureTreeItem } from 'vscode-azureextensionui';
 
 export class QueueNode implements IAzureTreeItem {
     constructor(
-        public readonly subscription: SubscriptionModels.Subscription, 
 		public readonly queue: azureStorage.QueueService.QueueResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {		

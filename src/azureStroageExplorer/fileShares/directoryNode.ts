@@ -8,7 +8,7 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureTreeItem, IAzureParentTreeItem } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode } from 'vscode-azureextensionui';
 
 export class DirectoryNode implements IAzureParentTreeItem {
     constructor(
@@ -33,7 +33,11 @@ export class DirectoryNode implements IAzureParentTreeItem {
         return !!this._continuationToken;
     }
     
-    async loadMoreChildren(): Promise<IAzureTreeItem[]> {
+    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+        if(clearCache) {
+            this._continuationToken = undefined;
+        }
+
         var fileResults = await this.listFiles(this._continuationToken);
         var {entries, continuationToken} = fileResults;
         this._continuationToken = continuationToken;

@@ -5,7 +5,6 @@
 
 import StorageManagementClient = require('azure-arm-storage');
 import { Uri } from 'vscode';
-import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
 import * as path from 'path';
@@ -17,10 +16,8 @@ import { TableGroupNode } from '../tables/tableGroupNode';
 
 export class StorageAccountNode implements IAzureParentTreeItem {
     constructor(
-		public readonly subscription: Subscription, 
 		public readonly storageAccount: StorageAccount, 
         public readonly storageManagementClient: StorageManagementClient) {
-		
     }
 
     public id: string = this.storageAccount.id;
@@ -37,19 +34,19 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         var groupNodes = [];
 
         if (!!primaryEndpoints.blob) {
-            groupNodes.push(new BlobContainerGroupNode(this.subscription, this.storageAccount, primaryKey));
+            groupNodes.push(new BlobContainerGroupNode(this.storageAccount, primaryKey));
         }
 
         if (!!primaryEndpoints.file) {
-            groupNodes.push(new FileShareGroupNode(this.subscription, this.storageAccount, primaryKey));
+            groupNodes.push(new FileShareGroupNode(this.storageAccount, primaryKey));
         }
 
         if (!!primaryEndpoints.queue) {
-            groupNodes.push(new QueueGroupNode(this.subscription, this.storageAccount, primaryKey));
+            groupNodes.push(new QueueGroupNode(this.storageAccount, primaryKey));
         }
 
         if(!!primaryEndpoints.table) {
-            groupNodes.push(new TableGroupNode(this.subscription, this.storageAccount, primaryKey));
+            groupNodes.push(new TableGroupNode(this.storageAccount, primaryKey));
         }
 
         return groupNodes;

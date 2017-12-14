@@ -23,7 +23,7 @@ export class BlobContainerActionHandler extends BaseActionHandler {
 
     openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>) {
         var resourceId = node.treeItem.storageAccount.id;
-        var subscriptionid = node.treeItem.subscription.subscriptionId;
+        var subscriptionid = node.subscription.subscriptionId;
         var resourceType = "Azure.BlobContainer";
         var resourceName = node.treeItem.container.name;
 

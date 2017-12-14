@@ -12,8 +12,8 @@ import { Uri } from 'vscode';
 
  export class BlobNode implements IAzureTreeItem {
      constructor(
- 		public readonly blob: azureStorage.BlobService.BlobResult,
- 		public readonly container: azureStorage.BlobService.ContainerResult,
+ 		    public readonly blob: azureStorage.BlobService.BlobResult,
+ 		    public readonly container: azureStorage.BlobService.ContainerResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {
      }

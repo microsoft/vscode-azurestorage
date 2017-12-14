@@ -10,13 +10,12 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { DirectoryNode } from './directoryNode';
 import { FileNode } from './fileNode';
-import { IAzureTreeItem, IAzureParentTreeItem } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode } from 'vscode-azureextensionui';
 
 export class FileShareNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
 
     constructor(
-        public readonly subscription: SubscriptionModels.Subscription, 
 		public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {		
@@ -33,7 +32,11 @@ export class FileShareNode implements IAzureParentTreeItem {
         return !!this._continuationToken;
     }
 
-    async loadMoreChildren(): Promise<IAzureTreeItem[]> {
+    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+        if(clearCache) {
+            this._continuationToken = undefined;
+        }
+        
         var fileResults = await this.listFiles(this._continuationToken);
         var {entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;

@@ -6,17 +6,15 @@
 import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { QueueNode } from './queueNode';
-import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
-import { IAzureParentTreeItem, IAzureTreeItem } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
 
 export class QueueGroupNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
 
     constructor(
-        public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {		
     }
@@ -29,14 +27,17 @@ export class QueueGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
     };
 
-    async loadMoreChildren(): Promise<IAzureTreeItem[]> {
+    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+        if(clearCache) {
+            this._continuationToken = undefined;
+        }
+
         var containers = await this.listQueues(this._continuationToken);
         var {entries, continuationToken} = containers;
         this._continuationToken = continuationToken;
 
         return entries.map((queue: azureStorage.QueueService.QueueResult) => {
             return new QueueNode(
-                this.subscription,
                 queue, 
                 this.storageAccount, 
                 this.key);

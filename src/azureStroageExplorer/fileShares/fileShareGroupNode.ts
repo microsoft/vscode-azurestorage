@@ -6,16 +6,14 @@
 import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { FileShareNode } from './fileShareNode';
-import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureTreeItem, IAzureParentTreeItem } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode } from 'vscode-azureextensionui';
 
 export class FileShareGroupNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
 
     constructor(
-        public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {		
     }
@@ -28,14 +26,17 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
     };
 
-    async loadMoreChildren(): Promise<IAzureTreeItem[]> {
+    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+        if(clearCache) {
+            this._continuationToken = undefined;
+        }
+        
         var fileShares = await this.listFileShares(this._continuationToken);
         var {entries, continuationToken } = fileShares;
         this._continuationToken = continuationToken;
 
         return entries.map((fileShare: azureStorage.FileService.ShareResult) => {
             return new FileShareNode(
-                this.subscription,
                 fileShare, 
                 this.storageAccount, 
                 this.key);

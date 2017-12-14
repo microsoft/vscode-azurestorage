@@ -5,17 +5,15 @@
 
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { BlobContainerNode } from './blobContainerNode';
-import { Subscription } from 'azure-arm-resource/lib/subscription/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureParentTreeItem, IAzureTreeItem } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
 import { Uri } from 'vscode';
 
 export class BlobContainerGroupNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
 
     constructor(
-        public readonly subscription: Subscription, 
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {
     }
@@ -29,13 +27,17 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
     };
 
 
-    async loadMoreChildren(): Promise<IAzureTreeItem[]> {
+    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+        if(clearCache) {
+            this._continuationToken = undefined;
+        }
+
         var containers = await this.listContainers(this._continuationToken);
         var {entries , continuationToken} = containers;
         this._continuationToken = continuationToken;
 
         return entries.map((container: azureStorage.BlobService.ContainerResult) => {
-            return new BlobContainerNode(this.subscription, container, this.storageAccount, this.key);
+            return new BlobContainerNode(container, this.storageAccount, this.key);
         });
     }
 

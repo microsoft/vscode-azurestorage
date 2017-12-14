@@ -6,16 +6,14 @@
 import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { TableNode } from './tableNode';
-import { SubscriptionModels } from 'azure-arm-resource';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureTreeItem, IAzureParentTreeItem } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode } from 'vscode-azureextensionui';
 
 export class TableGroupNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.TableService.ListTablesContinuationToken;
 
     constructor(
-        public readonly subscription: SubscriptionModels.Subscription, 
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {
     }
@@ -28,14 +26,17 @@ export class TableGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.png')
     };
 
-    async loadMoreChildren(): Promise<IAzureTreeItem[]> {
+    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+        if(clearCache) {
+            this._continuationToken = undefined;
+        }
+
         var containers = await this.listContainers(this._continuationToken);
         var {entries, continuationToken} = containers;
         this._continuationToken = continuationToken;
 
         return entries.map((table: string) => {
             return new TableNode(
-                this.subscription,
                 table, 
                 this.storageAccount, 
                 this.key);

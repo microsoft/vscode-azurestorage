@@ -9,14 +9,13 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { BlobNode } from './blobNode';
 
-import { IAzureParentTreeItem, IAzureTreeItem } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
 import { Uri } from 'vscode';
 
 export class BlobContainerNode implements IAzureParentTreeItem  {
     private _continuationToken: azureStorage.common.ContinuationToken;
 
     constructor(
-        public readonly subscription: Subscription, 
 		public readonly container: azureStorage.BlobService.ContainerResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {
@@ -34,7 +33,11 @@ export class BlobContainerNode implements IAzureParentTreeItem  {
         return !!this._continuationToken;
     }
 
-    async loadMoreChildren(): Promise<IAzureTreeItem[]> {
+    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+        if(clearCache) {
+            this._continuationToken = undefined;
+        }
+        
         var blobs = await this.listBlobs(this._continuationToken);
         var {entries, continuationToken} = blobs;
         this._continuationToken = continuationToken;
