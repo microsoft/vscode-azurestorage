@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
-## 0.1.3 - 2017-12-13
+## 0.1.3 - 2017-12-15
 ### Added
  - Changed TreeItems to use the common ui library 'vscode-azureextensionui'.
 
