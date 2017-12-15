@@ -20,7 +20,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
 
     public id: string = undefined;
     public label: string = "File Shares";
-    public contextValue: string = 'azureFileShare';
+    public contextValue: string = 'azureFileShareGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
