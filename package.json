@@ -9,20 +9,20 @@
 		"vscode": "^1.17.0"
 	},
 	"repository": {
-        "type": "git",
-        "url": "https://github.com/Microsoft/vscode-azurestorage"
-    },
-    "galleryBanner": {
-        "color": "#0072c6",
-        "theme": "dark"
-    },
+		"type": "git",
+		"url": "https://github.com/Microsoft/vscode-azurestorage"
+	},
+	"galleryBanner": {
+		"color": "#0072c6",
+		"theme": "dark"
+	},
 	"homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/master/README.md",
 	"license": "SEE LICENSE IN LICENSE.md",
 	"categories": [
-        "Azure"
-    ],
-    "keywords": [
-        "Azure",
+		"Azure"
+	],
+	"keywords": [
+		"Azure",
 		"Blob Containers",
 		"File Share",
 		"Storage Account"
@@ -37,10 +37,10 @@
 		"views": {
 			"explorer": [
 				{
-                    "id": "azureStorage",
-                    "name": "Azure Storage",
-                    "when": "config.azureStorage.showExplorer == true"
-                }
+					"id": "azureStorage",
+					"name": "Azure Storage",
+					"when": "config.azureStorage.showExplorer == true"
+				}
 			]
 		},
 		"commands": [
@@ -99,6 +99,14 @@
 			{
 				"command": "azureStorage.copyConnectionString",
 				"title": "Copy Connection String"
+			},
+			{
+				"command": "azureStorage.createBlobContainer",
+				"title": "Create Blob Container"
+			},
+			{
+				"command": "azureStorage.deleteBlobContainer",
+				"title": "Delete Blob Container"
 			}
 		],
 		"menus": {
@@ -140,17 +148,53 @@
 					"command": "azureStorage.copyPrimaryKey",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "storageAccount@3"
+				},
+				{
+					"command": "azureStorage.createBlobContainer",
+					"when": "view == azureStorage && viewItem == azureBlobContainerGroup"
+				},
+				{
+					"command": "azureStorage.deleteBlobContainer",
+					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				}
 			],
 			"commandPalette": [
-				{ "command": "azureStorage.refresh", "when": "never" },
-				{ "command": "azureStorage.openBlobContainer", "when": "never" },
-				{ "command": "azureStorage.openTable", "when": "never" },
-				{ "command": "azureStorage.openFileShare", "when": "never" },
-				{ "command": "azureStorage.openQueue", "when": "never" },
-				{ "command": "azureStorage.openStorageAccount", "when": "never" },
-				{ "command": "azureStorage.copyConnectionString", "when": "never" },
-				{ "command": "azureStorage.copyPrimaryKey", "when": "never" }
+				{
+					"command": "azureStorage.refresh",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openBlobContainer",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openBlobContainer",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openTable",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openFileShare",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openQueue",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openStorageAccount",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.copyConnectionString",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.copyPrimaryKey",
+					"when": "never"
+				}
 			]
 		},
 		"configuration": {
@@ -205,8 +249,8 @@
 		"azure-storage": "^2.6.0",
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
-		"vscode-extension-telemetry": "^0.0.6",
-		"vscode-azureextensionui": "~0.3.0",
+		"vscode-extension-telemetry": "^0.0.10",
+		"vscode-azureextensionui": "^0.5.3",
 		"fs-extra": "4.0.2",
 		"copy-paste": "^1.3.0"
 	}

@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as vscode from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { BlobContainerNode } from './blobContainerNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import { Uri } from 'vscode';
 
 export class BlobContainerGroupNode implements IAzureParentTreeItem {
@@ -56,5 +57,60 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
                 }
             })
         });
+    }
+
+    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+        const containerName = await vscode.window.showInputBox({
+            placeHolder: `Enter a name for the new blob container`,
+            validateInput: BlobContainerGroupNode.validateContainerName
+        });
+
+        if (containerName) {
+            return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
+                showCreatingNode(containerName);
+                progress.report({ message: `Azure Storage: Creating blob container '${containerName}'` });
+                const container = await this.createBlobContainer(containerName);
+                return new BlobContainerNode(container, this.storageAccount, this.key);
+            });
+        }
+
+        throw new UserCancelledError();
+    }
+
+    private createBlobContainer(name: string): Promise<azureStorage.BlobService.ContainerResult> {
+        return new Promise((resolve, reject) => {
+            var blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            blobService.createContainer(name, (err: Error, result: azureStorage.BlobService.ContainerResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    private static validateContainerName(name: string): string | undefined | null {
+        if (!name) {
+            return "Container name cannot be empty";
+        }
+        if (name.indexOf(" ") >= 0) {
+            return "Container name cannot contain spaces";
+        }
+
+        if (name.length < 3 || name.length > 63) {
+            return 'Container name must be between 3 and 63 characters';
+        }
+        if (!/^[a-z0-9-]+$/.test(name)) {
+            return 'Container name can only contain lowercase letters, numbers and hyphens';
+        }
+        if (/--/.test(name)) {
+            return 'Container name cannot contain two hyphens in a row';
+        }
+        if (/(^-)|(-$)/.test(name)) {
+            return 'Container name cannot begin or end with a hyphen';
+        }
+
+        return undefined;
     }
 }

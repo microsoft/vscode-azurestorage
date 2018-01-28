@@ -21,6 +21,7 @@ export class BlobContainerActionHandler extends BaseActionHandler {
 
         this.initCommand(context, "azureStorage.openBlobContainer", (node) => { this.openBlobContainerInStorageExplorer(node) });
         this.initCommand(context, "azureStorage.editBlob", (node) => { this._editor.showEditor(node) });
+        this.initCommand(context, "azureStorage.deleteBlobContainer", (node) => node.deleteNode());
         this.initEvent(context, 'azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (doc: vscode.TextDocument) => this._editor.onDidSaveTextDocument(doc));
     }
 

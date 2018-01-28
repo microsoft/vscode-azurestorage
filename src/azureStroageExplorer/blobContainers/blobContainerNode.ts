@@ -3,12 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as vscode from 'vscode';
+import { DialogBoxResponses } from '../../constants';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { BlobNode } from './blobNode';
 
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import { Uri } from 'vscode';
 
 export class BlobContainerNode implements IAzureParentTreeItem {
@@ -56,5 +58,20 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                 }
             })
         });
+    }
+
+    public async deleteTreeItem(_node: IAzureNode): Promise<void> {
+        const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
+        const result = await vscode.window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
+        if (result === DialogBoxResponses.Yes) {
+            const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            await new Promise((resolve, reject) => {
+                blobService.deleteContainer(this.container.name, function (err) {
+                    err ? reject(err) : resolve();
+                });
+            });
+        } else {
+            throw new UserCancelledError();
+        }
     }
 }
