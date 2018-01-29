@@ -11,6 +11,7 @@ import { AzureStorgeProvider } from './explorer/azureStorage'
 */
 
 import { BlobContainerActionHandler } from "./azureStroageExplorer/blobContainers/blobContainerActionHandler"
+import { BlobContainerGroupActionHandler } from './azureStroageExplorer/blobContainers/BlobContainerGroupActionHandler';
 import { FileShareActionHandler } from "./azureStroageExplorer/fileShares/fileShareActionHandler";
 import { QueueActionHandler } from "./azureStroageExplorer/queues/queueActionHandler";
 import { TableActionHandler } from "./azureStroageExplorer/tables/tableActionHandler";
@@ -32,6 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
 	new TableActionHandler().registerActions(context);
 	new StorageAccountActionHandler().registerActions(context);
 	new LoadMoreActionHandler(azureTreeDataProvider).registerActions(context);
+	new BlobContainerGroupActionHandler().registerActions(context);
 
 	vscode.window.registerTreeDataProvider('azureStorage', azureTreeDataProvider);
 	vscode.commands.registerCommand('azureStorage.refresh', () => azureTreeDataProvider.refresh());
