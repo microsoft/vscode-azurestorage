@@ -3,26 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as vscode from 'vscode';
-import { BaseActionHandler } from '../../azureServiceExplorer/actions/baseActionHandler';
 
 import { BlobContainerNode } from './blobContainerNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
-import { IAzureNode } from 'vscode-azureextensionui';
+import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileEditor';
 import { AzureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { BlobNode } from './blobNode';
 import { BlobFileHandler } from './blobFileHandler';
 
-export class BlobContainerActionHandler extends BaseActionHandler {
+export class BlobContainerActionHandler extends AzureActionHandler {
     private _editor: RemoteFileEditor<IAzureNode<BlobNode>>;
+
     registerActions(context: vscode.ExtensionContext) {
         this._editor = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt", AzureStorageOutputChannel);
         context.subscriptions.push(this._editor);
 
-        this.initCommand(context, "azureStorage.openBlobContainer", (node) => { this.openBlobContainerInStorageExplorer(node) });
-        this.initCommand(context, "azureStorage.editBlob", (node) => { this._editor.showEditor(node) });
-        this.initCommand(context, "azureStorage.deleteBlobContainer", (node) => node.deleteNode());
-        this.initEvent(context, 'azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (doc: vscode.TextDocument) => this._editor.onDidSaveTextDocument(doc));
+        this.registerCommand("azureStorage.openBlobContainer", (node) => { this.openBlobContainerInStorageExplorer(node) });
+        this.registerCommand("azureStorage.editBlob", (node) => { this._editor.showEditor(node) });
+        this.registerCommand("azureStorage.deleteBlobContainer", (node) => node.deleteNode());
+        this.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => this._editor.onDidSaveTextDocument(trackTelemetry, doc));
     }
 
     openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>) {

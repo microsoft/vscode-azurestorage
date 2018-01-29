@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 'use strict';
-import { Reporter } from './components/telemetry/reporter';
+import { Reporter, reporter } from './components/telemetry/reporter';
 import * as vscode from 'vscode';
 /*
 import { AzureStorgeProvider } from './explorer/azureStorage'
@@ -19,6 +19,7 @@ import { StorageAccountActionHandler } from "./azureStroageExplorer/storageAccou
 import { AzureTreeDataProvider } from 'vscode-azureextensionui';
 import { StorageAccountProvider } from './azureStroageExplorer/storageAccountProvider';
 import { LoadMoreActionHandler } from './azureStroageExplorer/loadMoreActionHandler';
+import { AzureStorageOutputChannel } from './azureStroageExplorer/azureStorageOutputChannel';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Extension "Azure Storage Tools" is now active.');
@@ -27,13 +28,13 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(new Reporter(context));
 
 	const azureTreeDataProvider = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
-	new BlobContainerActionHandler().registerActions(context);
-	new FileShareActionHandler().registerActions(context);
-	new QueueActionHandler().registerActions(context);
-	new TableActionHandler().registerActions(context);
-	new StorageAccountActionHandler().registerActions(context);
-	new LoadMoreActionHandler(azureTreeDataProvider).registerActions(context);
-	new BlobContainerGroupActionHandler().registerActions(context);
+	new BlobContainerActionHandler(context, AzureStorageOutputChannel, reporter).registerActions(context);
+	new FileShareActionHandler(context, AzureStorageOutputChannel, reporter).registerActions(context);
+	new QueueActionHandler(context, AzureStorageOutputChannel, reporter).registerActions();
+	new TableActionHandler(context, AzureStorageOutputChannel, reporter).registerActions();
+	new StorageAccountActionHandler(context, AzureStorageOutputChannel, reporter).registerActions();
+	new LoadMoreActionHandler(context, AzureStorageOutputChannel, reporter, azureTreeDataProvider).registerActions();
+	new BlobContainerGroupActionHandler(context, AzureStorageOutputChannel, reporter).registerActions();
 
 	vscode.window.registerTreeDataProvider('azureStorage', azureTreeDataProvider);
 	vscode.commands.registerCommand('azureStorage.refresh', () => azureTreeDataProvider.refresh());
