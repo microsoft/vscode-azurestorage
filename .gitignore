@@ -290,3 +290,8 @@ __pycache__/
 out/
 
 \.DS_Store
+
+# VSCode testing artifacts
+.vscode-test/
+
+package-lock.json

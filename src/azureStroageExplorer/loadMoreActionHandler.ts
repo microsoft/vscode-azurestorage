@@ -3,16 +3,8 @@
   *  Licensed under the MIT License. See License.txt in the project root for license information.
   **/
 
-import * as vscode from 'vscode';
-import { BaseActionHandler } from '../azureServiceExplorer/actions/baseActionHandler';
-import { AzureTreeDataProvider, IAzureNode } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
-export class LoadMoreActionHandler extends BaseActionHandler {
-    constructor(private treeDataProvider: AzureTreeDataProvider) {
-        super();
-    }
-
-    registerActions(context: vscode.ExtensionContext) {
-        this.initCommand(context, "azureStorage.loadMoreNode", (node: IAzureNode) => { this.treeDataProvider.loadMore(node) });
-    }
+export function RegisterLoadMoreActionHandler(actionHandler: AzureActionHandler, treeDataProvider: AzureTreeDataProvider) {
+    actionHandler.registerCommand("azureStorage.loadMoreNode", (node: IAzureNode) => treeDataProvider.loadMore(node));
 }
