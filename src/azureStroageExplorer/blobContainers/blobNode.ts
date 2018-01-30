@@ -7,8 +7,9 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
-import { IAzureTreeItem } from 'vscode-azureextensionui';
-import { Uri } from 'vscode';
+import { IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
+import { Uri, window } from 'vscode';
+import { DialogBoxResponses } from '../../constants';
 
 export class BlobNode implements IAzureTreeItem {
   constructor(
@@ -27,4 +28,19 @@ export class BlobNode implements IAzureTreeItem {
   };
 
   public commandId: string = 'azureStorage.editBlob';
+
+  public async deleteTreeItem(_node: IAzureNode): Promise<void> {
+    const message: string = `Are you sure you want to delete the blob '${this.label}'?`;
+    const result = await window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
+    if (result === DialogBoxResponses.Yes) {
+      const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+      await new Promise((resolve, reject) => {
+        blobService.deleteBlob(this.container.name, this.blob.name, function (err) {
+          err ? reject(err) : resolve();
+        });
+      });
+    } else {
+      throw new UserCancelledError();
+    }
+  }
 }
