@@ -115,6 +115,14 @@
 			{
 				"command": "azureStorage.deleteFileShare",
 				"title": "Delete File Share"
+			},
+			{
+				"command": "azureStorage.createTable",
+				"title": "Create Table"
+			},
+			{
+				"command": "azureStorage.deleteTable",
+				"title": "Delete Table"
 			}
 		],
 		"menus": {
@@ -172,6 +180,14 @@
 				{
 					"command": "azureStorage.deleteFileShare",
 					"when": "view == azureStorage && viewItem == azureFileShare"
+				},
+				{
+					"command": "azureStorage.createTable",
+					"when": "view == azureStorage && viewItem == azureTableGroup"
+				},
+				{
+					"command": "azureStorage.deleteTable",
+					"when": "view == azureStorage && viewItem == azureTable"
 				}
 			],
 			"commandPalette": [
@@ -193,6 +209,14 @@
 				},
 				{
 					"command": "azureStorage.openTable",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createTable",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.deleteTable",
 					"when": "never"
 				},
 				{
