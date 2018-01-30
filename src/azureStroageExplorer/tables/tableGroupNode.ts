@@ -70,7 +70,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
         if (tableName) {
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
                 showCreatingNode(tableName);
-                progress.report({ message: `Azure Storage: Creating file share '${tableName}'` });
+                progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
                 const table = await this.createTable(tableName);
                 return new TableNode(table.TableName, this.storageAccount, this.key);
             });

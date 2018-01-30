@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Uri } from 'vscode';
+import { Uri, ProgressLocation, window } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { QueueNode } from './queueNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 
 export class QueueGroupNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
@@ -60,5 +60,60 @@ export class QueueGroupNode implements IAzureParentTreeItem {
                 }
             })
         });
+    }
+
+    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+        const queueName = await window.showInputBox({
+            placeHolder: `Enter a name for the new queue`,
+            validateInput: QueueGroupNode.validateQueueName
+        });
+
+        if (queueName) {
+            return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
+                showCreatingNode(queueName);
+                progress.report({ message: `Azure Storage: Creating queue '${queueName}'` });
+                const share = await this.createQueue(queueName);
+                return new QueueNode(share, this.storageAccount, this.key);
+            });
+        }
+
+        throw new UserCancelledError();
+    }
+
+    private createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
+        return new Promise((resolve, reject) => {
+            var queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
+            queueService.createQueue(name, (err: Error, result: azureStorage.QueueService.QueueResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    private static validateQueueName(name: string): string | undefined | null {
+        if (!name) {
+            return "Queue name cannot be empty";
+        }
+        if (name.indexOf(" ") >= 0) {
+            return "Queue name cannot contain spaces";
+        }
+
+        if (name.length < 3 || name.length > 63) {
+            return 'Queue name must contain between 3 and 63 characters';
+        }
+        if (!/^[a-z0-9-]+$/.test(name)) {
+            return 'Queue name can only contain lowercase letters, numbers and hyphens';
+        }
+        if (/--/.test(name)) {
+            return 'Queue name cannot contain two hyphens in a row';
+        }
+        if (/(^-)|(-$)/.test(name)) {
+            return 'Queue name cannot begin or end with a hyphen';
+        }
+
+        return undefined;
     }
 }
