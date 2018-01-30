@@ -19,6 +19,7 @@ import { RegisterFileShareActionHandlers } from './azureStroageExplorer/fileShar
 import { RegisterFileShareGroupActionHandlers } from './azureStroageExplorer/fileShares/fileShareGroupActionHandlers';
 import { RegisterLoadMoreActionHandler } from './azureStroageExplorer/loadMoreActionHandler';
 import { RegisterQueueActionHandlers } from './azureStroageExplorer/queues/queueActionHandlers';
+import { RegisterQueueGroupActionHandlers } from './azureStroageExplorer/queues/queueGroupActionHandlers';
 import { RegisterStorageAccountActionHandlers } from './azureStroageExplorer/storageAccounts/storageAccountActionHandlers';
 import { RegisterTableActionHandlers } from './azureStroageExplorer/tables/tableActionHandlers';
 import { RegisterTableGroupActionHandlers } from './azureStroageExplorer/tables/tableGroupActionHandlers';
@@ -38,6 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
 	RegisterFileShareGroupActionHandlers(actionHandler);
 	RegisterLoadMoreActionHandler(actionHandler, azureTreeDataProvider);
 	RegisterQueueActionHandlers(actionHandler);
+	RegisterQueueGroupActionHandlers(actionHandler);
 	RegisterStorageAccountActionHandlers(actionHandler);
 	RegisterTableActionHandlers(actionHandler);
 	RegisterTableGroupActionHandlers(actionHandler);
