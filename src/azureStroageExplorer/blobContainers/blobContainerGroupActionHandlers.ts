@@ -5,8 +5,6 @@
 
 import { AzureActionHandler } from 'vscode-azureextensionui';
 
-export class BlobContainerGroupActionHandler extends AzureActionHandler {
-    registerActions() {
-        this.registerCommand("azureStorage.createBlobContainer", (node) => node.createChild());
-    }
+export function RegisterBlobContainerGroupActionHandlers(actionHandler: AzureActionHandler) {
+    actionHandler.registerCommand("azureStorage.createBlobContainer", (node) => node.createChild());
 }

@@ -10,16 +10,16 @@ import * as vscode from 'vscode';
 import { AzureStorgeProvider } from './explorer/azureStorage'
 */
 
-import { BlobContainerActionHandler } from "./azureStroageExplorer/blobContainers/blobContainerActionHandler"
-import { BlobContainerGroupActionHandler } from './azureStroageExplorer/blobContainers/BlobContainerGroupActionHandler';
-import { FileShareActionHandler } from "./azureStroageExplorer/fileShares/fileShareActionHandler";
-import { QueueActionHandler } from "./azureStroageExplorer/queues/queueActionHandler";
-import { TableActionHandler } from "./azureStroageExplorer/tables/tableActionHandler";
-import { StorageAccountActionHandler } from "./azureStroageExplorer/storageAccounts/storageAccountActionHandler";
-import { AzureTreeDataProvider } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, AzureActionHandler } from 'vscode-azureextensionui';
 import { StorageAccountProvider } from './azureStroageExplorer/storageAccountProvider';
-import { LoadMoreActionHandler } from './azureStroageExplorer/loadMoreActionHandler';
 import { AzureStorageOutputChannel } from './azureStroageExplorer/azureStorageOutputChannel';
+import { RegisterBlobContainerActionHandlers } from './azureStroageExplorer/blobContainers/blobContainerActionHandlers';
+import { RegisterBlobContainerGroupActionHandlers } from './azureStroageExplorer/blobContainers/blobContainerGroupActionHandlers';
+import { RegisterFileShareActionHandlers } from './azureStroageExplorer/fileShares/fileShareActionHandlers';
+import { RegisterLoadMoreActionHandler } from './azureStroageExplorer/loadMoreActionHandler';
+import { RegisterQueueActionHandlers } from './azureStroageExplorer/queues/queueActionHandlers';
+import { RegisterStorageAccountActionHandlers } from './azureStroageExplorer/storageAccounts/storageAccountActionHandlers';
+import { RegisterTableActionHandlers } from './azureStroageExplorer/tables/tableActionHandlers';
 
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Extension "Azure Storage Tools" is now active.');
@@ -27,14 +27,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(new Reporter(context));
 
+	const actionHandler: AzureActionHandler = new AzureActionHandler(context, AzureStorageOutputChannel, reporter);
+
 	const azureTreeDataProvider = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
-	new BlobContainerActionHandler(context, AzureStorageOutputChannel, reporter).registerActions(context);
-	new FileShareActionHandler(context, AzureStorageOutputChannel, reporter).registerActions(context);
-	new QueueActionHandler(context, AzureStorageOutputChannel, reporter).registerActions();
-	new TableActionHandler(context, AzureStorageOutputChannel, reporter).registerActions();
-	new StorageAccountActionHandler(context, AzureStorageOutputChannel, reporter).registerActions();
-	new LoadMoreActionHandler(context, AzureStorageOutputChannel, reporter, azureTreeDataProvider).registerActions();
-	new BlobContainerGroupActionHandler(context, AzureStorageOutputChannel, reporter).registerActions();
+	RegisterBlobContainerActionHandlers(actionHandler, context);
+	RegisterBlobContainerGroupActionHandlers(actionHandler);
+	RegisterFileShareActionHandlers(actionHandler, context);
+	RegisterLoadMoreActionHandler(actionHandler, azureTreeDataProvider);
+	RegisterQueueActionHandlers(actionHandler);
+	RegisterStorageAccountActionHandlers(actionHandler);
+	RegisterTableActionHandlers(actionHandler);
 
 	vscode.window.registerTreeDataProvider('azureStorage', azureTreeDataProvider);
 	vscode.commands.registerCommand('azureStorage.refresh', () => azureTreeDataProvider.refresh());
