@@ -49,7 +49,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
 
     listBlobs(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {
-            var blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            var blobService = this.createBlobService();
             blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.BlobService.ListBlobsResult) => {
                 if (err) {
                     reject(err);
@@ -60,11 +60,15 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         });
     }
 
+    private createBlobService() {
+        return azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+    }
+
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
         const result = await vscode.window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
         if (result === DialogBoxResponses.Yes) {
-            const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            const blobService = this.createBlobService();
             await new Promise((resolve, reject) => {
                 blobService.deleteContainer(this.container.name, function (err) {
                     err ? reject(err) : resolve();
@@ -73,5 +77,71 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         } else {
             throw new UserCancelledError();
         }
+    }
+
+    // Currently only supports creating block blobs
+    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+        const blobName = await vscode.window.showInputBox({
+            placeHolder: `Enter a name for the new block blob`,
+            validateInput: BlobContainerNode.validateBlobName
+        });
+
+        if (blobName) {
+            return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
+                showCreatingNode(blobName);
+                progress.report({ message: `Azure Storage: Creating block blob '${blobName}'` });
+                const blob = await this.createTextBlockBlob(blobName);
+                const actualBlob = await this.getBlob(blob.name);
+                return new BlobNode(actualBlob, this.container, this.storageAccount, this.key);
+            });
+        }
+
+        throw new UserCancelledError();
+    }
+
+    private getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+        const blobService = this.createBlobService();
+        return new Promise((resolve, reject) => {
+            blobService.getBlobProperties(this.container.name, name, (err: Error, result: azureStorage.BlobService.BlobResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            })
+        });
+    }
+
+    private createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+        return new Promise((resolve, reject) => {
+            var blobService = this.createBlobService();
+            const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
+                contentSettings: {
+                    contentType: 'text/plain'
+                }
+            };
+            blobService.createBlockBlobFromText(this.container.name, name, '', options, (err: Error, result: azureStorage.BlobService.BlobResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    // asdf escape
+    private static validateBlobName(name: string): string | undefined | null {
+        if (!name) {
+            return "Blob name cannot be empty";
+        }
+        if (name.length < 1 || name.length > 1024) {
+            return 'Container name must contain between 1 and 1024 characters';
+        }
+        if (/[/\\.]$/.test(name)) {
+            return 'Blob name cannot end with a forward or backward slash or a period.';
+        }
+
+        return undefined;
     }
 }

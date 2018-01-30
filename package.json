@@ -109,6 +109,14 @@
 				"title": "Delete Blob Container"
 			},
 			{
+				"command": "azureStorage.createBlockBlob",
+				"title": "Create Empty Text Blob"
+			},
+			{
+				"command": "azureStorage.deleteBlob",
+				"title": "Delete Blob"
+			},
+			{
 				"command": "azureStorage.createFileShare",
 				"title": "Create File Share"
 			},
@@ -190,6 +198,14 @@
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
 				{
+					"command": "azureStorage.createBlockBlob",
+					"when": "view == azureStorage && viewItem == azureBlobContainer"
+				},
+				{
+					"command": "azureStorage.deleteBlob",
+					"when": "view == azureStorage && viewItem == azureBlob"
+				},
+				{
 					"command": "azureStorage.createFileShare",
 					"when": "view == azureStorage && viewItem == azureFileShareGroup"
 				},
@@ -221,6 +237,14 @@
 				},
 				{
 					"command": "azureStorage.deleteBlobContainer",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createBlockBlob",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.deleteBlob",
 					"when": "never"
 				},
 				{

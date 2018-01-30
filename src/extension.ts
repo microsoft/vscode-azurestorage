@@ -13,6 +13,7 @@ import { AzureStorgeProvider } from './explorer/azureStorage'
 import { AzureTreeDataProvider, AzureActionHandler } from 'vscode-azureextensionui';
 import { StorageAccountProvider } from './azureStroageExplorer/storageAccountProvider';
 import { AzureStorageOutputChannel } from './azureStroageExplorer/azureStorageOutputChannel';
+import { RegisterBlobActionHandlers } from './azureStroageExplorer/blobContainers/blobActionHandlers';
 import { RegisterBlobContainerActionHandlers } from './azureStroageExplorer/blobContainers/blobContainerActionHandlers';
 import { RegisterBlobContainerGroupActionHandlers } from './azureStroageExplorer/blobContainers/blobContainerGroupActionHandlers';
 import { RegisterFileShareActionHandlers } from './azureStroageExplorer/fileShares/fileShareActionHandlers';
@@ -33,6 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const actionHandler: AzureActionHandler = new AzureActionHandler(context, AzureStorageOutputChannel, reporter);
 
 	const azureTreeDataProvider = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
+	RegisterBlobActionHandlers(actionHandler);
 	RegisterBlobContainerActionHandlers(actionHandler, context);
 	RegisterBlobContainerGroupActionHandlers(actionHandler);
 	RegisterFileShareActionHandlers(actionHandler, context);
