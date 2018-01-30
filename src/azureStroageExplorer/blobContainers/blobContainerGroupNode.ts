@@ -99,7 +99,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         }
 
         if (name.length < 3 || name.length > 63) {
-            return 'Container name must be between 3 and 63 characters';
+            return 'Container name must contain between 3 and 63 characters';
         }
         if (!/^[a-z0-9-]+$/.test(name)) {
             return 'Container name can only contain lowercase letters, numbers and hyphens';
