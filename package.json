@@ -107,6 +107,14 @@
 			{
 				"command": "azureStorage.deleteBlobContainer",
 				"title": "Delete Blob Container"
+			},
+			{
+				"command": "azureStorage.createFileShare",
+				"title": "Create File Share"
+			},
+			{
+				"command": "azureStorage.deleteFileShare",
+				"title": "Delete File Share"
 			}
 		],
 		"menus": {
@@ -156,6 +164,14 @@
 				{
 					"command": "azureStorage.deleteBlobContainer",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
+				},
+				{
+					"command": "azureStorage.createFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShareGroup"
+				},
+				{
+					"command": "azureStorage.deleteFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShare"
 				}
 			],
 			"commandPalette": [
@@ -181,6 +197,14 @@
 				},
 				{
 					"command": "azureStorage.openFileShare",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createFileShare",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.deleteFileShare",
 					"when": "never"
 				},
 				{

@@ -16,6 +16,7 @@ import { AzureStorageOutputChannel } from './azureStroageExplorer/azureStorageOu
 import { RegisterBlobContainerActionHandlers } from './azureStroageExplorer/blobContainers/blobContainerActionHandlers';
 import { RegisterBlobContainerGroupActionHandlers } from './azureStroageExplorer/blobContainers/blobContainerGroupActionHandlers';
 import { RegisterFileShareActionHandlers } from './azureStroageExplorer/fileShares/fileShareActionHandlers';
+import { RegisterFileShareGroupActionHandlers } from './azureStroageExplorer/fileShares/fileShareGroupActionHandlers';
 import { RegisterLoadMoreActionHandler } from './azureStroageExplorer/loadMoreActionHandler';
 import { RegisterQueueActionHandlers } from './azureStroageExplorer/queues/queueActionHandlers';
 import { RegisterStorageAccountActionHandlers } from './azureStroageExplorer/storageAccounts/storageAccountActionHandlers';
@@ -33,6 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
 	RegisterBlobContainerActionHandlers(actionHandler, context);
 	RegisterBlobContainerGroupActionHandlers(actionHandler);
 	RegisterFileShareActionHandlers(actionHandler, context);
+	RegisterFileShareGroupActionHandlers(actionHandler);
 	RegisterLoadMoreActionHandler(actionHandler, azureTreeDataProvider);
 	RegisterQueueActionHandlers(actionHandler);
 	RegisterStorageAccountActionHandlers(actionHandler);
