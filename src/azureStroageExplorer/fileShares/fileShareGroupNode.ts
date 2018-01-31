@@ -72,7 +72,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
 
         if (shareName) {
             const quotaGB = await window.showInputBox({
-                placeHolder: `Specify quota (in GB, between ${minQuotaGB} and ${maxQuotaGB} GB), to limit the total storage size`,
+                prompt: `Specify quota (in GB, between ${minQuotaGB} and ${maxQuotaGB}), to limit total storage size`,
                 value: maxQuotaGB.toString(),
                 validateInput: FileShareGroupNode.validateQuota
             });

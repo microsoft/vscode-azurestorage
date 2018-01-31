@@ -20,7 +20,7 @@ export function RegisterBlobContainerActionHandlers(actionHandler: AzureActionHa
     actionHandler.registerCommand("azureStorage.openBlobContainer", (node) => { openBlobContainerInStorageExplorer(node) });
     actionHandler.registerCommand("azureStorage.editBlob", (node) => { _editor.showEditor(node) });
     actionHandler.registerCommand("azureStorage.deleteBlobContainer", (node) => node.deleteNode());
-    actionHandler.registerCommand("azureStorage.createBlockBlob", (node) => node.createChild());
+    actionHandler.registerCommand("azureStorage.createBlockTextBlob", (node) => node.createChild());
     actionHandler.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => _editor.onDidSaveTextDocument(trackTelemetry, doc));
 }
 

@@ -120,7 +120,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                     contentType: 'text/plain'
                 }
             };
-            blobService.createBlockBlobFromText(this.container.name, name, '', options, (err: Error, result: azureStorage.BlobService.BlobResult) => {
+            blobService.createBlockTextBlobFromText(this.container.name, name, '', options, (err: Error, result: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
