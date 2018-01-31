@@ -72,7 +72,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
 
         if (shareName) {
             const quotaGB = await window.showInputBox({
-                placeHolder: `Specify quota (in GB, between ${minQuotaGB} and ${maxQuotaGB} GB), to limit the total storage size`,
+                prompt: `Specify quota (in GB, between ${minQuotaGB} and ${maxQuotaGB}), to limit total storage size`,
                 value: maxQuotaGB.toString(),
                 validateInput: FileShareGroupNode.validateQuota
             });
@@ -107,15 +107,16 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
     }
 
     private static validateFileShareName(name: string): string | undefined | null {
+        const validLength = { min: 3, max: 63 };
+
         if (!name) {
             return "Share name cannot be empty";
         }
         if (name.indexOf(" ") >= 0) {
             return "Share name cannot contain spaces";
         }
-
-        if (name.length < 3 || name.length > 63) {
-            return 'Share name must contain between 3 and 63 characters';
+        if (name.length < validLength.min || name.length > validLength.max) {
+            return `Share name must contain between ${validLength.min} and ${validLength.max} characters`;
         }
         if (!/^[a-z0-9-]+$/.test(name)) {
             return 'Share name can only contain lowercase letters, numbers and hyphens';

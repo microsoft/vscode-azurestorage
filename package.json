@@ -109,7 +109,7 @@
 				"title": "Delete Blob Container"
 			},
 			{
-				"command": "azureStorage.createBlockBlob",
+				"command": "azureStorage.createBlockTextBlob",
 				"title": "Create Empty Text Blob"
 			},
 			{
@@ -123,6 +123,26 @@
 			{
 				"command": "azureStorage.deleteFileShare",
 				"title": "Delete File Share"
+			},
+			{
+				"command": "azureStorage.createDirectory",
+				"title": "Create Directory"
+			},
+			{
+				"command": "azureStorage.createSubdirectory",
+				"title": "Create Subdirectory"
+			},
+			{
+				"command": "azureStorage.deleteDirectory",
+				"title": "Delete Directory"
+			},
+			{
+				"command": "azureStorage.createTextFile",
+				"title": "Create Empty Text File"
+			},
+			{
+				"command": "azureStorage.deleteFile",
+				"title": "Delete File"
 			},
 			{
 				"command": "azureStorage.createTable",
@@ -198,12 +218,32 @@
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
 				{
-					"command": "azureStorage.createBlockBlob",
+					"command": "azureStorage.createBlockTextBlob",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
 				{
 					"command": "azureStorage.deleteBlob",
 					"when": "view == azureStorage && viewItem == azureBlob"
+				},
+				{
+					"command": "azureStorage.createDirectory",
+					"when": "view == azureStorage && viewItem == azureFileShare"
+				},
+				{
+					"command": "azureStorage.createSubdirectory",
+					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
+				},
+				{
+					"command": "azureStorage.deleteDirectory",
+					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
+				},
+				{
+					"command": "azureStorage.createTextFile",
+					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
+				},
+				{
+					"command": "azureStorage.deleteFile",
+					"when": "view == azureStorage && viewItem == azureFile"
 				},
 				{
 					"command": "azureStorage.createFileShare",
@@ -240,7 +280,7 @@
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.createBlockBlob",
+					"command": "azureStorage.createBlockTextBlob",
 					"when": "never"
 				},
 				{
@@ -269,6 +309,26 @@
 				},
 				{
 					"command": "azureStorage.deleteFileShare",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createDirectory",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createSubdirectory",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.deleteDirectory",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createTextFile",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.deleteFile",
 					"when": "never"
 				},
 				{
@@ -347,11 +407,11 @@
 		"azure-arm-resource": "^2.0.0-preview",
 		"azure-arm-storage": "^3.1.0",
 		"azure-storage": "^2.6.0",
+		"copy-paste": "^1.3.0",
+		"fs-extra": "4.0.2",
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
 		"vscode-extension-telemetry": "^0.0.10",
-		"vscode-azureextensionui": "~0.5.3",
-		"fs-extra": "4.0.2",
-		"copy-paste": "^1.3.0"
+		"vscode-azureextensionui": "0.5.5"
 	}
 }

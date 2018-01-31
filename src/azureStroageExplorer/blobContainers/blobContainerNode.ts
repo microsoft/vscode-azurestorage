@@ -130,13 +130,12 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         });
     }
 
-    // asdf escape
     private static validateBlobName(name: string): string | undefined | null {
         if (!name) {
             return "Blob name cannot be empty";
         }
         if (name.length < 1 || name.length > 1024) {
-            return 'Container name must contain between 1 and 1024 characters';
+            return 'Blob name must contain between 1 and 1024 characters';
         }
         if (/[/\\.]$/.test(name)) {
             return 'Blob name cannot end with a forward or backward slash or a period.';

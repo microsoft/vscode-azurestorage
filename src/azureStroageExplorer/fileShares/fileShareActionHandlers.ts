@@ -18,6 +18,7 @@ export function RegisterFileShareActionHandlers(actionHandler: AzureActionHandle
     actionHandler.registerCommand("azureStorage.openFileShare", (node) => { openFileShareInStorageExplorer(node) });
     actionHandler.registerCommand("azureStorage.editFile", (node) => { _editor.showEditor(node) });
     actionHandler.registerCommand("azureStorage.deleteFileShare", (node) => node.deleteNode());
+    actionHandler.registerCommand("azureStorage.createDirectory", (node) => node.createChild());
     actionHandler.registerEvent('azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => _editor.onDidSaveTextDocument(trackTelemetry, doc));
 
 

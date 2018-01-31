@@ -11,6 +11,7 @@ import { DirectoryNode } from './directoryNode';
 import { FileNode } from './fileNode';
 import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import { DialogBoxResponses } from '../../constants';
+import { askAndCreateChildDirectory } from './createDirectories';
 
 export class FileShareNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
@@ -75,5 +76,9 @@ export class FileShareNode implements IAzureParentTreeItem {
         } else {
             throw new UserCancelledError();
         }
+    }
+
+    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+        return askAndCreateChildDirectory(this.share, '', this.storageAccount, this.key, showCreatingNode);
     }
 }
