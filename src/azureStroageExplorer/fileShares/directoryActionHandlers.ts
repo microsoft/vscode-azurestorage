@@ -4,10 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
-import { ChildKind } from './childKind';
+import { DirectoryNode } from './directoryNode';
+import { FileNode } from './fileNode';
 
 export function RegisterDirectoryActionHandlers(actionHandler: AzureActionHandler) {
     actionHandler.registerCommand("azureStorage.deleteDirectory", (node: IAzureParentNode) => node.deleteNode());
-    actionHandler.registerCommand("azureStorage.createSubdirectory", (node: IAzureParentNode) => node.createChild(ChildKind.Subdirectory));
-    actionHandler.registerCommand("azureStorage.createTextFile", (node: IAzureParentNode) => node.createChild(ChildKind.File));
+    actionHandler.registerCommand("azureStorage.createSubdirectory", (node: IAzureParentNode) => node.createChild(DirectoryNode.contextValue));
+
+    // Note: azureStorage.createTextFile is registered in fileShareActionHandlers
 }

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Uri, window, ProgressLocation } from 'vscode';
+import { Uri, window } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
@@ -11,11 +11,11 @@ import * as path from 'path';
 import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import { askAndCreateChildDirectory } from './createDirectories';
 import { DialogBoxResponses } from '../../constants';
-import { validateFileName } from './validateNames';
+import { askAndCreateEmptyTextFile } from './createFiles';
 
 export class DirectoryNode implements IAzureParentTreeItem {
     constructor(
-        public readonly relativeDirectory: string, // full path of the parent
+        public readonly parentPath: string,
         public readonly directory: azureStorage.FileService.DirectoryResult, // directory.name should not include parent path
         public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
@@ -34,7 +34,7 @@ export class DirectoryNode implements IAzureParentTreeItem {
     };
 
     private get fullPath(): string {
-        return path.posix.join(this.relativeDirectory, this.directory.name);
+        return path.posix.join(this.parentPath, this.directory.name);
     }
 
     hasMoreChildren(): boolean {
@@ -74,9 +74,9 @@ export class DirectoryNode implements IAzureParentTreeItem {
 
     public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem> {
         if (userOptions === FileNode.contextValue) {
-            return this.askAndCreateEmptyTextFile(showCreatingNode);
+            return askAndCreateEmptyTextFile(this.fullPath, this.share, this.storageAccount, this.key, showCreatingNode);
         } else {
-            return askAndCreateChildDirectory(this.share, this.fullPath, this.storageAccount, this.key, showCreatingNode);
+            return askAndCreateChildDirectory(this.fullPath, this.share, this.storageAccount, this.key, showCreatingNode);
         }
     }
 
@@ -98,51 +98,5 @@ export class DirectoryNode implements IAzureParentTreeItem {
 
     private createFileService() {
         return azureStorage.createFileService(this.storageAccount.name, this.key.value);
-    }
-
-    // Currently only supports creating block blobs
-    private async askAndCreateEmptyTextFile(showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
-        const fileName = await window.showInputBox({
-            placeHolder: `Enter a name for the new file`,
-            validateInput: validateFileName
-        });
-
-        if (fileName) {
-            return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-                showCreatingNode(fileName);
-                progress.report({ message: `Azure Storage: Creating file '${fileName}'` });
-                const file = await this.createFile(fileName);
-                const actualFile = await this.getFile(file.name);
-                return new FileNode(actualFile, this.fullPath, this.share, this.storageAccount, this.key);
-            });
-        }
-
-        throw new UserCancelledError();
-    }
-
-    private getFile(name: string): Promise<azureStorage.FileService.FileResult> {
-        var fileService = this.createFileService();
-        return new Promise((resolve, reject) => {
-            fileService.getFileProperties(this.share.name, this.fullPath, name, (err: Error, result: azureStorage.FileService.FileResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            })
-        });
-    }
-
-    private createFile(name: string): Promise<azureStorage.FileService.FileResult> {
-        return new Promise((resolve, reject) => {
-            var fileService = this.createFileService();
-            fileService.createFile(this.share.name, this.fullPath, name, 0, (err: Error, result: azureStorage.FileService.FileResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
     }
 }

@@ -239,6 +239,10 @@
 				},
 				{
 					"command": "azureStorage.createTextFile",
+					"when": "view == azureStorage && viewItem == azureFileShare"
+				},
+				{
+					"command": "azureStorage.createTextFile",
 					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
 				},
 				{

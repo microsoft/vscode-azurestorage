@@ -13,7 +13,7 @@ import { StorageAccount, StorageAccountKey } from "azure-arm-storage/lib/models"
 import { validateDirectoryName } from "./validateNames";
 
 // Supports both file share and directory parents
-export async function askAndCreateChildDirectory(share: azureStorage.FileService.ShareResult, parentPath: string, storageAccount: StorageAccount, key: StorageAccountKey, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+export async function askAndCreateChildDirectory(parentPath: string, share: azureStorage.FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
     const dirName = await window.showInputBox({
         placeHolder: `Enter a name for the new directory`,
         validateInput: validateDirectoryName

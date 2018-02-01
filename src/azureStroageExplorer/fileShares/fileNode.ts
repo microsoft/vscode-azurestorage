@@ -13,7 +13,7 @@ import { DialogBoxResponses } from '../../constants';
 export class FileNode implements IAzureTreeItem {
     constructor(
         public readonly file: azureStorage.FileService.FileResult,
-        public readonly directory: string,
+        public readonly directoryPath: string,
         public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {
@@ -36,7 +36,7 @@ export class FileNode implements IAzureTreeItem {
         if (result === DialogBoxResponses.Yes) {
             const fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
-                fileService.deleteFile(this.share.name, this.directory, this.file.name, function (err) {
+                fileService.deleteFile(this.share.name, this.directoryPath, this.file.name, function (err) {
                     err ? reject(err) : resolve();
                 });
             });
