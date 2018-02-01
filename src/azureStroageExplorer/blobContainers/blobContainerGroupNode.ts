@@ -91,15 +91,16 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
     }
 
     private static validateContainerName(name: string): string | undefined | null {
+        const validLength = { min: 3, max: 63 };
+
         if (!name) {
             return "Container name cannot be empty";
         }
         if (name.indexOf(" ") >= 0) {
             return "Container name cannot contain spaces";
         }
-
-        if (name.length < 3 || name.length > 63) {
-            return 'Container name must contain between 3 and 63 characters';
+        if (name.length < validLength.min || name.length > validLength.max) {
+            return `Container name must contain between ${validLength.min} and ${validLength.max} characters`;
         }
         if (!/^[a-z0-9-]+$/.test(name)) {
             return 'Container name can only contain lowercase letters, numbers and hyphens';

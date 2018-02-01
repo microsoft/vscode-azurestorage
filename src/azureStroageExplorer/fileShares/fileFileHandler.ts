@@ -20,7 +20,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
     async downloadFile(node: IAzureNode<FileNode>, filePath: string): Promise<void> {
         var fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         return await new Promise<void>((resolve, reject) => {
-            fileService.getFileToLocalFile(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, filePath, (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+            fileService.getFileToLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     reject(error)
                 } else {
@@ -40,7 +40,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         }
 
         await new Promise<string>((resolve, reject) => {
-            fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, filePath, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+            fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     var errorAny = <any>error;
                     if (!!errorAny.code) {
@@ -65,7 +65,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         var fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
 
         return await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
-            fileService.getFileProperties(node.treeItem.share.name, node.treeItem.directory, node.treeItem.file.name, (error: Error, result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+            fileService.getFileProperties(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, (error: Error, result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     var errorAny = <any>error;
                     if (!!errorAny.code) {

@@ -93,15 +93,16 @@ export class TableGroupNode implements IAzureParentTreeItem {
     }
 
     private static validateTableName(name: string): string | undefined | null {
+        const validLength = { min: 3, max: 36 };
+
         if (!name) {
             return "Table name cannot be empty";
         }
         if (name.indexOf(" ") >= 0) {
             return "Table name cannot contain spaces";
         }
-
-        if (name.length < 3 || name.length > 36) {
-            return 'Table name must contain between 3 and 36 characters';
+        if (name.length < validLength.min || name.length > validLength.max) {
+            return `Table name must contain between ${validLength.min} and ${validLength.max} characters`;
         }
         if (!/^[a-zA-Z0-9]+$/.test(name)) {
             return 'Table name can only contain letters and digits';
