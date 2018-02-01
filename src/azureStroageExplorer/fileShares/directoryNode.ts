@@ -9,9 +9,9 @@ import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
-import { askAndCreateChildDirectory } from './createDirectories';
+import { askAndCreateChildDirectory } from './directoryUtils';
 import { DialogBoxResponses } from '../../constants';
-import { askAndCreateEmptyTextFile } from './createFiles';
+import { askAndCreateEmptyTextFile } from './fileUtils';
 
 export class DirectoryNode implements IAzureParentTreeItem {
     constructor(
