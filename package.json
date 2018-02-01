@@ -107,6 +107,30 @@
 			{
 				"command": "azureStorage.deleteBlobContainer",
 				"title": "Delete Blob Container"
+			},
+			{
+				"command": "azureStorage.createFileShare",
+				"title": "Create File Share"
+			},
+			{
+				"command": "azureStorage.deleteFileShare",
+				"title": "Delete File Share"
+			},
+			{
+				"command": "azureStorage.createTable",
+				"title": "Create Table"
+			},
+			{
+				"command": "azureStorage.deleteTable",
+				"title": "Delete Table"
+			},
+			{
+				"command": "azureStorage.createQueue",
+				"title": "Create Queue"
+			},
+			{
+				"command": "azureStorage.deleteQueue",
+				"title": "Delete Queue"
 			}
 		],
 		"menus": {
@@ -135,6 +159,14 @@
 					"when": "view == azureStorage && viewItem == azureQueue"
 				},
 				{
+					"command": "azureStorage.createQueue",
+					"when": "view == azureStorage && viewItem == azureQueueGroup"
+				},
+				{
+					"command": "azureStorage.deleteQueue",
+					"when": "view == azureStorage && viewItem == azureQueue"
+				},
+				{
 					"command": "azureStorage.openStorageAccount",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "storageAccount@1"
@@ -156,6 +188,22 @@
 				{
 					"command": "azureStorage.deleteBlobContainer",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
+				},
+				{
+					"command": "azureStorage.createFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShareGroup"
+				},
+				{
+					"command": "azureStorage.deleteFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShare"
+				},
+				{
+					"command": "azureStorage.createTable",
+					"when": "view == azureStorage && viewItem == azureTableGroup"
+				},
+				{
+					"command": "azureStorage.deleteTable",
+					"when": "view == azureStorage && viewItem == azureTable"
 				}
 			],
 			"commandPalette": [
@@ -180,7 +228,23 @@
 					"when": "never"
 				},
 				{
+					"command": "azureStorage.createTable",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.deleteTable",
+					"when": "never"
+				},
+				{
 					"command": "azureStorage.openFileShare",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createFileShare",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.deleteFileShare",
 					"when": "never"
 				},
 				{
@@ -197,6 +261,14 @@
 				},
 				{
 					"command": "azureStorage.copyPrimaryKey",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createQueue",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.deleteQueue",
 					"when": "never"
 				}
 			]

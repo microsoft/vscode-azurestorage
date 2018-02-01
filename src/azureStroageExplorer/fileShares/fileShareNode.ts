@@ -3,13 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Uri } from 'vscode';
+import { Uri, window } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { DirectoryNode } from './directoryNode';
 import { FileNode } from './fileNode';
-import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
+import { DialogBoxResponses } from '../../constants';
 
 export class FileShareNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
@@ -59,5 +60,20 @@ export class FileShareNode implements IAzureParentTreeItem {
                 }
             })
         });
+    }
+
+    public async deleteTreeItem(_node: IAzureNode): Promise<void> {
+        const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
+        const result = await window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
+        if (result === DialogBoxResponses.Yes) {
+            const fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+            await new Promise((resolve, reject) => {
+                fileService.deleteShare(this.share.name, function (err) {
+                    err ? reject(err) : resolve();
+                });
+            });
+        } else {
+            throw new UserCancelledError();
+        }
     }
 }

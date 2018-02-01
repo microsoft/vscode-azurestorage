@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Uri } from 'vscode';
+import { Uri, window } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureTreeItem } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
+import { DialogBoxResponses } from '../../constants';
 
 export class TableNode implements IAzureTreeItem {
     constructor(
@@ -22,4 +24,19 @@ export class TableNode implements IAzureTreeItem {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable_16x.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.svg')
     };
+
+    public async deleteTreeItem(_node: IAzureNode): Promise<void> {
+        const message: string = `Are you sure you want to delete table '${this.label}' and all its contents?`;
+        const result = await window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
+        if (result === DialogBoxResponses.Yes) {
+            const tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
+            await new Promise((resolve, reject) => {
+                tableService.deleteTable(this.tableName, function (err) {
+                    err ? reject(err) : resolve();
+                });
+            });
+        } else {
+            throw new UserCancelledError();
+        }
+    }
 }
