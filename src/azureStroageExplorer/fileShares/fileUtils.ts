@@ -56,3 +56,12 @@ function createFile(directoryPath: string, name: string, share: FileService.Shar
         });
     });
 }
+
+export async function deleteFile(directory: string, name: string, share: string, storageAccount: string, key: string): Promise<void> {
+    const fileService = azureStorage.createFileService(storageAccount, key);
+    await new Promise((resolve, reject) => {
+        fileService.deleteFile(share, directory, name, (err) => {
+            err ? reject(err) : resolve();
+        });
+    });
+}
