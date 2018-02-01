@@ -1,6 +1,15 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.2.0 - 2018-02-01
+### Added
+- Create and delete blob containers, file shares, queues and tables
+- Create empty block blobs (text only), files and directories
+- Delete blobs, files and directories
+
+### Fixed
+- Improved error handling
+
 ## 0.1.3 - 2017-12-15
 ### Added
  - Changed TreeItems to use the common ui library 'vscode-azureextensionui'.
