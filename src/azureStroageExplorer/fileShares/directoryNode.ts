@@ -9,9 +9,10 @@ import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
-import { askAndCreateChildDirectory } from './createDirectories';
+import { askAndCreateChildDirectory, listFilesInDirectory, deleteDirectoryAndContents } from './directoryUtils';
 import { DialogBoxResponses } from '../../constants';
-import { askAndCreateEmptyTextFile } from './createFiles';
+import { askAndCreateEmptyTextFile } from './fileUtils';
+import { AzureStorageOutputChannel } from '../azureStorageOutputChannel';
 
 export class DirectoryNode implements IAzureParentTreeItem {
     constructor(
@@ -60,16 +61,7 @@ export class DirectoryNode implements IAzureParentTreeItem {
     }
 
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
-        return new Promise((resolve, reject) => {
-            var fileService = this.createFileService();
-            fileService.listFilesAndDirectoriesSegmented(this.share.name, this.fullPath, currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            })
-        });
+        return listFilesInDirectory(this.fullPath, this.share.name, this.storageAccount.name, this.key.value, 50, currentToken);
     }
 
     public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem> {
@@ -82,21 +74,12 @@ export class DirectoryNode implements IAzureParentTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         // Note: Azure will fail the directory delete if it's not empty, so no need to ask about deleting contents
-        const message: string = `Are you sure you want to delete the directory '${this.label} (it must be empty)'?`;
+        const message: string = `Are you sure you want to delete the directory '${this.label}' and all of its files and subdirectories?`;
         const result = await window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
         if (result === DialogBoxResponses.Yes) {
-            const fileService = this.createFileService();
-            await new Promise((resolve, reject) => {
-                fileService.deleteDirectory(this.share.name, this.fullPath, function (err) {
-                    err ? reject(err) : resolve();
-                });
-            });
+            await deleteDirectoryAndContents(this.fullPath, this.share.name, this.storageAccount.name, this.key.value, AzureStorageOutputChannel);
         } else {
             throw new UserCancelledError();
         }
-    }
-
-    private createFileService() {
-        return azureStorage.createFileService(this.storageAccount.name, this.key.value);
     }
 }

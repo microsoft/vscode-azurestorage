@@ -9,6 +9,7 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import { DialogBoxResponses } from '../../constants';
+import { deleteFile } from './fileUtils';
 
 export class FileNode implements IAzureTreeItem {
     constructor(
@@ -34,12 +35,7 @@ export class FileNode implements IAzureTreeItem {
         const message: string = `Are you sure you want to delete the file '${this.label}'?`;
         const result = await window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
         if (result === DialogBoxResponses.Yes) {
-            const fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
-            await new Promise((resolve, reject) => {
-                fileService.deleteFile(this.share.name, this.directoryPath, this.file.name, function (err) {
-                    err ? reject(err) : resolve();
-                });
-            });
+            await deleteFile(this.directoryPath, this.file.name, this.share.name, this.storageAccount.name, this.key.value);
         } else {
             throw new UserCancelledError();
         }

@@ -11,8 +11,8 @@ import { DirectoryNode } from './directoryNode';
 import { FileNode } from './fileNode';
 import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import { DialogBoxResponses } from '../../constants';
-import { askAndCreateChildDirectory } from './createDirectories';
-import { askAndCreateEmptyTextFile } from './createFiles';
+import { askAndCreateChildDirectory } from './directoryUtils';
+import { askAndCreateEmptyTextFile } from './fileUtils';
 
 export class FileShareNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
