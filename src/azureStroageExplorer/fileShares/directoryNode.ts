@@ -11,7 +11,6 @@ import * as path from 'path';
 import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import { askAndCreateChildDirectory } from './createDirectories';
 import { DialogBoxResponses } from '../../constants';
-import { ChildKind } from './childKind';
 import { validateFileName } from './validateNames';
 
 export class DirectoryNode implements IAzureParentTreeItem {
@@ -27,7 +26,8 @@ export class DirectoryNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
     public id: string = undefined;
     public label: string = this.directory.name;
-    public contextValue: string = 'azureFileShareDirectory';
+    public static contextValue: string = 'azureFileShareDirectory';
+    public contextValue = DirectoryNode.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'folder.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'folder.svg')
@@ -73,7 +73,7 @@ export class DirectoryNode implements IAzureParentTreeItem {
     }
 
     public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem> {
-        if (<ChildKind>userOptions === ChildKind.File) {
+        if (userOptions === FileNode.contextValue) {
             return this.askAndCreateEmptyTextFile(showCreatingNode);
         } else {
             return askAndCreateChildDirectory(this.share, this.fullPath, this.storageAccount, this.key, showCreatingNode);
