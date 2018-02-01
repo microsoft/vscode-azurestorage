@@ -5,7 +5,6 @@
 
 import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
 import { DirectoryNode } from './directoryNode';
-import { FileNode } from './fileNode';
 
 export function RegisterDirectoryActionHandlers(actionHandler: AzureActionHandler) {
     actionHandler.registerCommand("azureStorage.deleteDirectory", (node: IAzureParentNode) => node.deleteNode());
