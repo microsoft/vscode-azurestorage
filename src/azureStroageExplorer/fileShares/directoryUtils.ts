@@ -64,15 +64,24 @@ export function listFilesInDirectory(directory: string, share: string, storageAc
 }
 
 export async function deleteDirectoryAndContents(directory: string, share: string, storageAccount: string, key: string, channel: OutputChannel): Promise<void> {
-    const maxResults = 2; // asdf
+    const parallelOperations = 5;
+    const maxResults = 50;
 
     var currentToken: azureStorage.common.ContinuationToken | undefined = undefined;
     while (true) {
         var { entries, continuationToken } = await listFilesInDirectory(directory, share, storageAccount, key, maxResults, currentToken);
+        let promises: Promise<void>[] = [];
         for (let file of entries.files) {
-            await deleteFile(directory, file.name, share, storageAccount, key);
+            let promise = deleteFile(directory, file.name, share, storageAccount, key);
+            promises.push(promise);
             channel.appendLine(`Deleted file "${directory}/${file.name}"`);
+
+            if (promises.length >= parallelOperations) {
+                await Promise.all(promises);
+                promises = [];
+            }
         }
+        await Promise.all(promises);
 
         for (let dir of entries.directories) {
             await deleteDirectoryAndContents(path.posix.join(directory, dir.name), share, storageAccount, key, channel);
