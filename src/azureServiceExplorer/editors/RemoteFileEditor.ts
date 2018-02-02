@@ -63,11 +63,11 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
 
         if (showSaveWarning) {
             const message: string = await this.remoteFileHandler.getSaveConfirmationText(context);
-            const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogOptions.OK, DialogOptions.DontShowAgain, DialogOptions.Cancel);
+            const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogOptions.OK, DialogOptions.UploadDontShowAgain, DialogOptions.Cancel);
 
             if (!result || result === DialogOptions.Cancel) {
                 throw new UserCancelledError();
-            } else if (result === DialogOptions.DontShowAgain) {
+            } else if (result === DialogOptions.UploadDontShowAgain) {
                 await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
             }
         }
