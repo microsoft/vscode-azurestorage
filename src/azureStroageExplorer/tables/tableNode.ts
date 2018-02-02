@@ -21,8 +21,8 @@ export class TableNode implements IAzureTreeItem {
     public label: string = this.tableName;
     public contextValue: string = 'azureTable';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable_16x.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.svg')
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable_16x.png'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.png')
     };
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
