@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
-## 0.2.0 - 2018-02-01
+## 0.2.0 - 2018-02-02
 ### Added
 - Create and delete blob containers, file shares, queues and tables
 - Create empty block blobs (text only), files and directories
