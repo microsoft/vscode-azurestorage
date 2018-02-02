@@ -77,6 +77,7 @@ export class DirectoryNode implements IAzureParentTreeItem {
         const message: string = `Are you sure you want to delete the directory '${this.label}' and all of its files and subdirectories?`;
         const result = await window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
         if (result === DialogBoxResponses.Yes) {
+            AzureStorageOutputChannel.show();
             await deleteDirectoryAndContents(this.fullPath, this.share.name, this.storageAccount.name, this.key.value, AzureStorageOutputChannel);
         } else {
             throw new UserCancelledError();
