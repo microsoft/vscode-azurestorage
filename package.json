@@ -54,7 +54,7 @@
 			},
 			{
 				"command": "azureStorage.openBlobContainer",
-				"title": "Open Blob Container In Explorer",
+				"title": "Open Blob Container in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -62,7 +62,7 @@
 			},
 			{
 				"command": "azureStorage.openTable",
-				"title": "Open Table In Explorer",
+				"title": "Open Table in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -70,7 +70,7 @@
 			},
 			{
 				"command": "azureStorage.openFileShare",
-				"title": "Open File Share In Explorer",
+				"title": "Open File Share in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -78,7 +78,7 @@
 			},
 			{
 				"command": "azureStorage.openQueue",
-				"title": "Open Queue In Explorer",
+				"title": "Open Queue in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -86,7 +86,7 @@
 			},
 			{
 				"command": "azureStorage.openStorageAccount",
-				"title": "Open Storage Account In Explorer",
+				"title": "Open Storage Account in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
