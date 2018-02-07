@@ -5,7 +5,7 @@
 
 import * as os from "os";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
-import { WindowsStorageExplorerLauncher } from "./windowsStroageExplorerLauncher";
+import { WindowsStorageExplorerLauncher } from "./windowsStorageExplorerLauncher";
 import { MacOSStorageExplorerLauncher } from "./macOSStorageExplorerLauncher";
 
 var StorageExplorerLauncher: IStorageExplorerLauncher;
