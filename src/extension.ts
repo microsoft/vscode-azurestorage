@@ -28,28 +28,28 @@ import { RegisterTableActionHandlers } from './azureStroageExplorer/tables/table
 import { RegisterTableGroupActionHandlers } from './azureStroageExplorer/tables/tableGroupActionHandlers';
 
 export function activate(context: vscode.ExtensionContext) {
-	console.log('Extension "Azure Storage Tools" is now active.');
-	// const rootPath = vscode.workspace.rootPath;
+    console.log('Extension "Azure Storage Tools" is now active.');
+    // const rootPath = vscode.workspace.rootPath;
 
-	context.subscriptions.push(new Reporter(context));
+    context.subscriptions.push(new Reporter(context));
 
-	const actionHandler: AzureActionHandler = new AzureActionHandler(context, AzureStorageOutputChannel, reporter);
+    const actionHandler: AzureActionHandler = new AzureActionHandler(context, AzureStorageOutputChannel, reporter);
 
-	const azureTreeDataProvider = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
-	RegisterBlobActionHandlers(actionHandler);
-	RegisterBlobContainerActionHandlers(actionHandler, context);
-	RegisterBlobContainerGroupActionHandlers(actionHandler);
-	RegisterFileActionHandlers(actionHandler);
-	RegisterDirectoryActionHandlers(actionHandler);
-	RegisterFileShareActionHandlers(actionHandler, context);
-	RegisterFileShareGroupActionHandlers(actionHandler);
-	RegisterLoadMoreActionHandler(actionHandler, azureTreeDataProvider);
-	RegisterQueueActionHandlers(actionHandler);
-	RegisterQueueGroupActionHandlers(actionHandler);
-	RegisterStorageAccountActionHandlers(actionHandler);
-	RegisterTableActionHandlers(actionHandler);
-	RegisterTableGroupActionHandlers(actionHandler);
+    const azureTreeDataProvider = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
+    RegisterBlobActionHandlers(actionHandler);
+    RegisterBlobContainerActionHandlers(actionHandler, context);
+    RegisterBlobContainerGroupActionHandlers(actionHandler);
+    RegisterFileActionHandlers(actionHandler);
+    RegisterDirectoryActionHandlers(actionHandler);
+    RegisterFileShareActionHandlers(actionHandler, context);
+    RegisterFileShareGroupActionHandlers(actionHandler);
+    RegisterLoadMoreActionHandler(actionHandler, azureTreeDataProvider);
+    RegisterQueueActionHandlers(actionHandler);
+    RegisterQueueGroupActionHandlers(actionHandler);
+    RegisterStorageAccountActionHandlers(actionHandler);
+    RegisterTableActionHandlers(actionHandler);
+    RegisterTableGroupActionHandlers(actionHandler);
 
-	vscode.window.registerTreeDataProvider('azureStorage', azureTreeDataProvider);
-	vscode.commands.registerCommand('azureStorage.refresh', () => azureTreeDataProvider.refresh());
+    vscode.window.registerTreeDataProvider('azureStorage', azureTreeDataProvider);
+    vscode.commands.registerCommand('azureStorage.refresh', () => azureTreeDataProvider.refresh());
 }
