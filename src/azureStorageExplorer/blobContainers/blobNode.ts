@@ -8,8 +8,9 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 
 import { IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
-import { Uri, window } from 'vscode';
+import { Uri, window, SaveDialogOptions } from 'vscode';
 import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
+import { BlobFileHandler } from './blobFileHandler';
 
 export class BlobNode implements IAzureTreeItem {
   constructor(
@@ -40,6 +41,29 @@ export class BlobNode implements IAzureTreeItem {
       });
     } else {
       throw new UserCancelledError();
+    }
+  }
+
+  public async download(node: IAzureNode<BlobNode>): Promise<void> {
+    const handler = new BlobFileHandler();
+    await handler.checkCanDownload(node);
+
+    const extension = path.extname(this.blob.name);
+    const filters = {
+      "All files": ['*']
+    };
+    if (extension) {
+      // This is needed to ensure the file extension is added in the Save dialog, since the filename will be displayed without it by default on Windows
+      filters['*' + extension] = [extension];
+    }
+
+    const uri: Uri | undefined = await window.showSaveDialog(<SaveDialogOptions>{
+      saveLabel: "Download",
+      filters,
+      defaultUri: Uri.file(this.blob.name)
+    });
+    if (uri && uri.scheme === 'file') {
+      await handler.downloadFile(node, uri.fsPath);
     }
   }
 }

@@ -121,8 +121,16 @@
 				"title": "Create Empty Text Blob"
 			},
 			{
+				"command": "azureStorage.uploadBlockBlob",
+				"title": "Upload block blob..."
+			},
+			{
 				"command": "azureStorage.deleteBlob",
-				"title": "Delete Blob"
+				"title": "Delete"
+			},
+			{
+				"command": "azureStorage.downloadBlob",
+				"title": "Download..."
 			},
 			{
 				"command": "azureStorage.createFileShare",
@@ -150,7 +158,7 @@
 			},
 			{
 				"command": "azureStorage.deleteFile",
-				"title": "Delete File"
+				"title": "Delete"
 			},
 			{
 				"command": "azureStorage.createTable",
@@ -235,7 +243,15 @@
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
 				{
+					"command": "azureStorage.uploadBlockBlob",
+					"when": "view == azureStorage && viewItem == azureBlobContainer"
+				},
+				{
 					"command": "azureStorage.deleteBlob",
+					"when": "view == azureStorage && viewItem == azureBlob"
+				},
+				{
+					"command": "azureStorage.downloadBlob",
 					"when": "view == azureStorage && viewItem == azureBlob"
 				},
 				{
@@ -301,7 +317,15 @@
 					"when": "never"
 				},
 				{
+					"command": "azureStorage.uploadBlockBlob",
+					"when": "never"
+				},
+				{
 					"command": "azureStorage.deleteBlob",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.downloadBlob",
 					"when": "never"
 				},
 				{

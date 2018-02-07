@@ -8,17 +8,18 @@ import * as fs from "fs";
 import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
+import { ResourceType } from "./ResourceType";
 
 const downloadPageUrl: string = "https://go.microsoft.com/fwlink/?LinkId=723579";
 const regKey: { hive: string, key: string } = { hive: "HKCR", key: "\\storageexplorer\\shell\\open\\command" };
 
 export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher {
 
-    public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string): Promise<void> {
+    public async openResource(accountId: string, subscriptionid: string, resourceType: ResourceType, resourceName: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
-            + encodeURIComponent(resourceId)
+            + encodeURIComponent(accountId)
             + "&subscriptionid="
             + encodeURIComponent(subscriptionid)
             + "&source="
@@ -39,8 +40,9 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
         let regVal: string;
         try {
             regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(regKey.hive, regKey.key);
-        } catch (_err) {
+        } catch (err) {
             // ignore and prompt to download.
+            console.error(err);
         } finally {
             let exePath: string;
             if (regVal) {
