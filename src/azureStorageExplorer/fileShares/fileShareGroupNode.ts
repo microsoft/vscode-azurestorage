@@ -66,7 +66,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
 
     public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         const shareName = await window.showInputBox({
-            placeHolder: `Enter a name for the new file share`,
+            placeHolder: 'Enter a name for the new file share',
             validateInput: FileShareGroupNode.validateFileShareName
         });
 

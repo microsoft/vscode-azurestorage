@@ -61,7 +61,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
 
     public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         const containerName = await vscode.window.showInputBox({
-            placeHolder: `Enter a name for the new blob container`,
+            placeHolder: 'Enter a name for the new blob container',
             validateInput: BlobContainerGroupNode.validateContainerName
         });
 

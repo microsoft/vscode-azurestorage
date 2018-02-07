@@ -16,7 +16,7 @@ import { deleteFile } from "./fileUtils";
 // Supports both file share and directory parents
 export async function askAndCreateChildDirectory(parentPath: string, share: azureStorage.FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
     const dirName = await window.showInputBox({
-        placeHolder: `Enter a name for the new directory`,
+        placeHolder: 'Enter a name for the new directory',
         validateInput: validateDirectoryName
     });
 
@@ -67,7 +67,9 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
     const parallelOperations = 5;
     const maxResults = 50;
 
+    // tslint:disable-next-line:no-unnecessary-initializer
     var currentToken: azureStorage.common.ContinuationToken | undefined = undefined;
+    // tslint:disable-next-line:no-constant-condition
     while (true) {
         var { entries, continuationToken } = await listFilesInDirectory(directory, share, storageAccount, key, maxResults, currentToken);
         let promises: Promise<void>[] = [];

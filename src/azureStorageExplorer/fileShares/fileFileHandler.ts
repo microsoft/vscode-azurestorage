@@ -49,6 +49,8 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
                             case "ENOTFOUND":
                                 humanReadableMessage += " - Please check connection."
                                 break;
+                            default:
+                                break;
                         }
                         reject(humanReadableMessage);
                     } else {
@@ -73,6 +75,8 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
                         switch (errorAny.code) {
                             case "ENOTFOUND":
                                 humanReadableMessage += " - Please check connection."
+                                break;
+                            default:
                                 break;
                         }
                         reject(humanReadableMessage);

@@ -21,7 +21,7 @@
         "no-string-based-set-immediate": true,
         "no-string-based-set-interval": true,
         "no-string-based-set-timeout": true,
-        "non-literal-require": false /*TODO: true*/,
+        "non-literal-require": true,
         "possible-timing-attack": true,
         "react-anchor-blank-noopener": true,
         "react-iframe-missing-sandbox": true,
@@ -38,11 +38,11 @@
         "mocha-no-side-effect-code": true,
         "no-any": false /*TODO: true*/,
         "no-arg": true,
-        "no-backbone-get-set-outside-model": false /*TODO: true*/,
+        "no-backbone-get-set-outside-model": false, // changed
         "no-bitwise": true,
         "no-conditional-assignment": true,
         "no-console": [
-            false /*TODO: true*/,
+            false, // changed
             "debug",
             "info",
             "log",
@@ -50,7 +50,7 @@
             "timeEnd",
             "trace"
         ],
-        "no-constant-condition": false /*TODO: true*/,
+        "no-constant-condition": true,
         "no-control-regex": true,
         "no-debugger": true,
         "no-duplicate-case": true,
@@ -75,7 +75,7 @@
         "no-string-throw": true,
         "no-unnecessary-bind": true,
         "no-unnecessary-callback-wrapper": false /*TODO: true*/,
-        "no-unnecessary-initializer": false /*TODO: true*/,
+        "no-unnecessary-initializer": true,
         "no-unnecessary-override": true,
         "no-unsafe-any": false /*TODO: true*/,
         "no-unsafe-finally": false /*TODO: true*/,
@@ -94,7 +94,7 @@
             "allow-undefined-union", // changed
             "allow-mix" // changed
         ],
-        "switch-default": false /*TODO: true*/,
+        "switch-default": true,
         "triple-equals": [
             true,
             "allow-null-check"
@@ -154,7 +154,7 @@
         "no-for-in": true,
         "no-function-expression": false /*TODO: true*/,
         "no-inferrable-types": false,
-        "no-multiline-string": false /*TODO: true*/,
+        "no-multiline-string": true,
         "no-null-keyword": false,
         "no-parameter-properties": false /*TODO: true*/,
         "no-relative-imports": false, // changed
