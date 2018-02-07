@@ -53,6 +53,8 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
                             case "ENOTFOUND":
                                 humanReadableMessage += " - Please check connection."
                                 break;
+                            default:
+                                break;
                         }
                         reject(humanReadableMessage);
                     } else {

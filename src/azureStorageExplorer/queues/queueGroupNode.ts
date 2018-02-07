@@ -64,7 +64,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
 
     public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         const queueName = await window.showInputBox({
-            placeHolder: `Enter a name for the new queue`,
+            placeHolder: 'Enter a name for the new queue',
             validateInput: QueueGroupNode.validateQueueName
         });
 

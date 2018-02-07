@@ -63,7 +63,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
 
     public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         const tableName = await window.showInputBox({
-            placeHolder: `Enter a name for the new table`,
+            placeHolder: 'Enter a name for the new table',
             validateInput: TableGroupNode.validateTableName
         });
 

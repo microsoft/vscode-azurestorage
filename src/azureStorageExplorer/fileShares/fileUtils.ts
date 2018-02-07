@@ -14,7 +14,7 @@ import { StorageAccount, StorageAccountKey } from "azure-arm-storage/lib/models"
 // Currently only supports creating block blobs
 export async function askAndCreateEmptyTextFile(directoryPath: string, share: FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
     const fileName = await window.showInputBox({
-        placeHolder: `Enter a name for the new file`,
+        placeHolder: 'Enter a name for the new file',
         validateInput: validateFileName
     });
 

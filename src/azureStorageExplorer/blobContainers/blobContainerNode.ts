@@ -82,7 +82,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
     // Currently only supports creating block blobs
     public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         const blobName = await vscode.window.showInputBox({
-            placeHolder: `Enter a name for the new block blob`,
+            placeHolder: 'Enter a name for the new block blob',
             validateInput: BlobContainerNode.validateBlobName
         });
 
