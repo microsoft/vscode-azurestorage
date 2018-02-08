@@ -19,7 +19,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         public readonly key: StorageAccountKey) {
     }
 
-    public id: string = undefined;
+    public id: string;
     public label: string = "Blob Containers";
     public contextValue: string = 'azureBlobContainerGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } = {

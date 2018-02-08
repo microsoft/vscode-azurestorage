@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { StorageAccount } from '../../node_modules/azure-arm-storage/lib/models';
 import { IChildProvider, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';

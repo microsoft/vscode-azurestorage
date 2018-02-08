@@ -37,6 +37,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     }
 
     public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string) {
+        // tslint:disable-next-line:prefer-template
         var url = "storageexplorer://v=1"
             + "&accountid="
             + encodeURIComponent(resourceId)
@@ -45,15 +46,12 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             + "&source="
             + encodeURIComponent("VSCODE-AzureStorage");
 
-
         if (!!resourceType) {
-            url = url + "&resourcetype="
-                + resourceType
+            url = `${url}&resourcetype=${resourceType}`;
         }
 
         if (!!resourceName) {
-            url = url + "&resourcename="
-                + resourceName;
+            url = `${url}&resourcename=${resourceName}`;
         }
 
         await this.launchStorageExplorer([

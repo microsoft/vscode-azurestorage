@@ -18,7 +18,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
         public readonly key: StorageAccountKey) {
     }
 
-    public id: string = undefined;
+    public id: string;
     public label: string = "Tables";
     public contextValue: string = 'azureTableGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } = {

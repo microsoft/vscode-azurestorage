@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
@@ -67,7 +68,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
 
     async getConnectionString() {
         var primaryKey = await this.getPrimaryKey();
-        return "DefaultEndpointsProtocol=https;AccountName=" + this.storageAccount.name + ";AccountKey=" + primaryKey.value;
+        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${primaryKey.value}`;
     }
 
     async getKeys() {
