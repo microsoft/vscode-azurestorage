@@ -53,6 +53,14 @@
 				}
 			},
 			{
+				"command": "azureStorage.selectSubscriptions",
+				"title": "Select Subscriptions...",
+				"icon": {
+					"light": "resources/selectSubscriptions.svg",
+					"dark": "resources/selectSubscriptions.svg"
+				}
+			},
+			{
 				"command": "azureStorage.openBlobContainer",
 				"title": "Open Blob Container in Storage Explorer",
 				"icon": {
@@ -170,6 +178,11 @@
 				}
 			],
 			"view/item/context": [
+				{
+					"command": "azureStorage.selectSubscriptions",
+					"when": "view == azureStorage",
+					"group": "inline"
+				},
 				{
 					"command": "azureStorage.openBlobContainer",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
