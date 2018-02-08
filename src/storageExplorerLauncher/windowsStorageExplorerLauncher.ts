@@ -71,7 +71,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     private static getWindowsRegistryValue(key: string): Promise<string> {
         return new Promise((resolve, reject) => {
             regedit.list([key])
-                .on('data',  (entry) =>  {
+                .on('data', (entry) => {
                     var value = <string>entry.data.values[""].value.split("\"")[1];
                     resolve(value);
                 })
