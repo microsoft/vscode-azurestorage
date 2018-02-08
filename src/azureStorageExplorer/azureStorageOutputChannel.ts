@@ -4,4 +4,4 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { OutputChannel, window } from 'vscode';
-export let AzureStorageOutputChannel: OutputChannel = window.createOutputChannel("Azure Storage");
+export const azureStorageOutputChannel: OutputChannel = window.createOutputChannel("Azure Storage");

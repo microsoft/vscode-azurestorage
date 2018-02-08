@@ -6,7 +6,7 @@
 import { TextDocument, window } from 'vscode';
 import { TemporaryFile } from '../../components/temporaryFile';
 import * as path from "path";
-import DialogOptions from '../../azureServiceExplorer/messageItems/dialogOptions';
+import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import * as vscode from "vscode";
 import { IRemoteFileHandler } from './IRemoteFileHandler';
 import { UserCancelledError } from 'vscode-azureextensionui';
@@ -54,7 +54,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
             this.appendLineToOutput(`Unable to open '${fileName}'`);
             this.appendLineToOutput(`Error Details: ${details}`);
 
-            await window.showWarningMessage(`Unable to open "${fileName}". Please check Output for more information.`, DialogOptions.OK);
+            await window.showWarningMessage(`Unable to open "${fileName}". Please check Output for more information.`, DialogOptions.ok);
         }
     }
 
@@ -63,11 +63,11 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
 
         if (showSaveWarning) {
             const message: string = await this.remoteFileHandler.getSaveConfirmationText(context);
-            const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogOptions.OK, DialogOptions.UploadDontShowAgain, DialogOptions.Cancel);
+            const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogOptions.ok, DialogOptions.uploadDontShowAgain, DialogOptions.cancel);
 
-            if (!result || result === DialogOptions.Cancel) {
+            if (!result || result === DialogOptions.cancel) {
                 throw new UserCancelledError();
-            } else if (result === DialogOptions.UploadDontShowAgain) {
+            } else if (result === DialogOptions.uploadDontShowAgain) {
                 await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
             }
         }

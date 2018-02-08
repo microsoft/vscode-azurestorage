@@ -33,8 +33,8 @@ export class FileNode implements IAzureTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete the file '${this.label}'?`;
-        const result = await window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
-        if (result === DialogBoxResponses.Yes) {
+        const result = await window.showWarningMessage(message, DialogBoxResponses.yes, DialogBoxResponses.cancel);
+        if (result === DialogBoxResponses.yes) {
             await deleteFile(this.directoryPath, this.file.name, this.share.name, this.storageAccount.name, this.key.value);
         } else {
             throw new UserCancelledError();

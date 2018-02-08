@@ -66,8 +66,8 @@ export class BlobContainerNode implements IAzureParentTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
-        const result = await vscode.window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
-        if (result === DialogBoxResponses.Yes) {
+        const result = await vscode.window.showWarningMessage(message, DialogBoxResponses.yes, DialogBoxResponses.cancel);
+        if (result === DialogBoxResponses.yes) {
             const blobService = this.createBlobService();
             await new Promise((resolve, reject) => {
                 blobService.deleteContainer(this.container.name, function (err) {

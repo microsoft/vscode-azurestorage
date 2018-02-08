@@ -8,13 +8,13 @@ import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { WindowsStorageExplorerLauncher } from "./windowsStorageExplorerLauncher";
 import { MacOSStorageExplorerLauncher } from "./macOSStorageExplorerLauncher";
 
-var StorageExplorerLauncher: IStorageExplorerLauncher;
+var storageExplorerLauncher: IStorageExplorerLauncher;
 
 if (os.platform() === "win32") {
-    StorageExplorerLauncher = new WindowsStorageExplorerLauncher();
+    storageExplorerLauncher = new WindowsStorageExplorerLauncher();
 } else {
     // assume Mac Os for now.
-    StorageExplorerLauncher = new MacOSStorageExplorerLauncher();
+    storageExplorerLauncher = new MacOSStorageExplorerLauncher();
 }
 
-export { StorageExplorerLauncher };
+export { storageExplorerLauncher };

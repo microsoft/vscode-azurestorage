@@ -27,8 +27,8 @@ export class QueueNode implements IAzureTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete queue '${this.label}' and all its contents?`;
-        const result = await window.showWarningMessage(message, DialogBoxResponses.Yes, DialogBoxResponses.Cancel);
-        if (result === DialogBoxResponses.Yes) {
+        const result = await window.showWarningMessage(message, DialogBoxResponses.yes, DialogBoxResponses.cancel);
+        if (result === DialogBoxResponses.yes) {
             const queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
                 queueService.deleteQueue(this.queue.name, function (err) {

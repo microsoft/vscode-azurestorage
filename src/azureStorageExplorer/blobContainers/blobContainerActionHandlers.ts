@@ -6,15 +6,15 @@
 import * as vscode from 'vscode';
 
 import { BlobContainerNode } from './blobContainerNode';
-import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileEditor';
-import { AzureStorageOutputChannel } from '../azureStorageOutputChannel';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { BlobNode } from './blobNode';
 import { BlobFileHandler } from './blobFileHandler';
 
 export function RegisterBlobContainerActionHandlers(actionHandler: AzureActionHandler, context: vscode.ExtensionContext) {
-    const _editor: RemoteFileEditor<IAzureNode<BlobNode>> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt", AzureStorageOutputChannel);
+    const _editor: RemoteFileEditor<IAzureNode<BlobNode>> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt", azureStorageOutputChannel);
     context.subscriptions.push(_editor);
 
     actionHandler.registerCommand("azureStorage.openBlobContainer", (node) => { openBlobContainerInStorageExplorer(node) });
@@ -30,5 +30,5 @@ function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>)
     var resourceType = "Azure.BlobContainer";
     var resourceName = node.treeItem.container.name;
 
-    StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
+    storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

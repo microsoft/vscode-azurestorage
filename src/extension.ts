@@ -12,7 +12,7 @@ import { AzureStorgeProvider } from './explorer/azureStorage'
 
 import { AzureTreeDataProvider, AzureActionHandler } from 'vscode-azureextensionui';
 import { StorageAccountProvider } from './azureStorageExplorer/storageAccountProvider';
-import { AzureStorageOutputChannel } from './azureStorageExplorer/azureStorageOutputChannel';
+import { azureStorageOutputChannel } from './azureStorageExplorer/azureStorageOutputChannel';
 import { RegisterBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { RegisterBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
 import { RegisterBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(new Reporter(context));
 
-    const actionHandler: AzureActionHandler = new AzureActionHandler(context, AzureStorageOutputChannel, reporter);
+    const actionHandler: AzureActionHandler = new AzureActionHandler(context, azureStorageOutputChannel, reporter);
 
     const azureTreeDataProvider = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
     RegisterBlobActionHandlers(actionHandler);
