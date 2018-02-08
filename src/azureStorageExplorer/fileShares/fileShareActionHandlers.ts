@@ -12,7 +12,7 @@ import { AzureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { DirectoryNode } from './directoryNode';
 import { FileNode } from './fileNode';
 
-export function RegisterFileShareActionHandlers(actionHandler: AzureActionHandler, context: vscode.ExtensionContext): void {
+export function registerFileShareActionHandlers(actionHandler: AzureActionHandler, context: vscode.ExtensionContext): void {
     const _editor = new RemoteFileEditor(new FileFileHandler(), "azureStorage.file.showSavePrompt", AzureStorageOutputChannel);
 
     context.subscriptions.push(_editor);

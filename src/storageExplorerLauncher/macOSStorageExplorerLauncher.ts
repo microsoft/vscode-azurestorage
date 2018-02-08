@@ -62,13 +62,13 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     }
 
     private static async downloadStorageExplorer() {
-        await Launcher.launch("open", MacOSStorageExplorerLauncher.downloadPageUrl);
+        await Launcher.Launch("open", MacOSStorageExplorerLauncher.downloadPageUrl);
     }
 
     private async launchStorageExplorer(extraArgs: string[] = []) {
         var storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
 
-        return Launcher.launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
+        return Launcher.Launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
     }
 
     private static async fileExists(path: string): Promise<boolean> {

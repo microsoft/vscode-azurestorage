@@ -13,7 +13,7 @@ import { AzureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { BlobNode } from './blobNode';
 import { BlobFileHandler } from './blobFileHandler';
 
-export function RegisterBlobContainerActionHandlers(actionHandler: AzureActionHandler, context: vscode.ExtensionContext) {
+export function registerBlobContainerActionHandlers(actionHandler: AzureActionHandler, context: vscode.ExtensionContext) {
     const _editor: RemoteFileEditor<IAzureNode<BlobNode>> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt", AzureStorageOutputChannel);
     context.subscriptions.push(_editor);
 

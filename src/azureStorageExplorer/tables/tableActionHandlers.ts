@@ -7,8 +7,8 @@ import { TableNode } from './tableNode';
 import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
-export function RegisterTableActionHandlers(actionHandler: AzureActionHandler) {
-    actionHandler.registerCommand("azureStorage.openTable", (node) => openTableInStorageExplorer(node));
+export function registerTableActionHandlers(actionHandler: AzureActionHandler) {
+    actionHandler.registerCommand("azureStorage.openTable", openTableInStorageExplorer);
     actionHandler.registerCommand("azureStorage.deleteTable", (node) => node.deleteNode());
 }
 
