@@ -22,7 +22,7 @@ export class FileShareNode implements IAzureParentTreeItem {
         public readonly storageAccount: StorageAccount,
         public readonly key: StorageAccountKey) {
     }
-    public id: string = undefined;
+    public id: string;
     public label: string = this.share.name;
     public contextValue: string = 'azureFileShare';
     public iconPath: { light: string | Uri; dark: string | Uri } = {

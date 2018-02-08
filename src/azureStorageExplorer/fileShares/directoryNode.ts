@@ -25,7 +25,7 @@ export class DirectoryNode implements IAzureParentTreeItem {
     }
 
     private _continuationToken: azureStorage.common.ContinuationToken;
-    public id: string = undefined;
+    public id: string;
     public label: string = this.directory.name;
     public static contextValue: string = 'azureFileShareDirectory';
     public contextValue = DirectoryNode.contextValue;

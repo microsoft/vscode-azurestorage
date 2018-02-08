@@ -12,6 +12,7 @@ import { UserCancelledError } from "vscode-azureextensionui";
 // regedit doesn't exist for Mac. I have to import like this so it builds.
 var regedit: any;
 if (os.platform() === "win32") {
+    // tslint:disable-next-line:no-require-imports
     regedit = require("regedit");
 }
 
@@ -19,6 +20,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
     private static _regKey = "HKCR\\storageexplorer\\shell\\open\\command";
     public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string) {
+        // tslint:disable-next-line:prefer-template
         var url = "storageexplorer://v=1"
             + "&accountid="
             + encodeURIComponent(resourceId)
@@ -28,13 +30,11 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
             + encodeURIComponent("VSCODE-AzureStorage");
 
         if (!!resourceType) {
-            url = url + "&resourcetype="
-                + resourceType
+            url = `${url}&resourcetype=${resourceType}`;
         }
 
         if (!!resourceName) {
-            url = url + "&resourcename="
-                + resourceName;
+            url = `${url}&resourcename=${resourceName}`;
         }
 
         await WindowsStorageExplorerLauncher.launchStorageExplorer([url]);
