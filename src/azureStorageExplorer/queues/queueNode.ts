@@ -31,7 +31,7 @@ export class QueueNode implements IAzureTreeItem {
         if (result === DialogBoxResponses.Yes) {
             const queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
-                queueService.deleteQueue(this.queue.name, function (err) {
+                queueService.deleteQueue(this.queue.name, err => {
                     err ? reject(err) : resolve();
                 });
             });

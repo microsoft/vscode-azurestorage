@@ -5,6 +5,6 @@
 
 import { AzureActionHandler } from 'vscode-azureextensionui';
 
-export function RegisterFileShareGroupActionHandlers(actionHandler: AzureActionHandler) {
+export function registerFileShareGroupActionHandlers(actionHandler: AzureActionHandler) {
     actionHandler.registerCommand("azureStorage.createFileShare", (node) => node.createChild());
 }

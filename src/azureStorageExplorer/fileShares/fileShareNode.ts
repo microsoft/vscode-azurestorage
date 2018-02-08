@@ -70,7 +70,7 @@ export class FileShareNode implements IAzureParentTreeItem {
         if (result === DialogBoxResponses.Yes) {
             const fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
-                fileService.deleteShare(this.share.name, function (err) {
+                fileService.deleteShare(this.share.name, err => {
                     err ? reject(err) : resolve();
                 });
             });
