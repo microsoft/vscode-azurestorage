@@ -70,7 +70,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         if (result === DialogBoxResponses.yes) {
             const blobService = this.createBlobService();
             await new Promise((resolve, reject) => {
-                blobService.deleteContainer(this.container.name, function (err) {
+                blobService.deleteContainer(this.container.name, err => {
                     err ? reject(err) : resolve();
                 });
             });

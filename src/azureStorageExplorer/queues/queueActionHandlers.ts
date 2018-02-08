@@ -7,7 +7,7 @@ import { QueueNode } from './queueNode';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
-export function RegisterQueueActionHandlers(actionHandler: AzureActionHandler) {
+export function registerQueueActionHandlers(actionHandler: AzureActionHandler) {
     actionHandler.registerCommand("azureStorage.openQueue", (node) => { openQueueInStorageExplorer(node) });
     actionHandler.registerCommand("azureStorage.deleteQueue", (node) => node.deleteNode());
 }

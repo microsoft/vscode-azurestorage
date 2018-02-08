@@ -74,7 +74,7 @@
         "no-string-literal": false /*TODO: true*/,
         "no-string-throw": true,
         "no-unnecessary-bind": true,
-        "no-unnecessary-callback-wrapper": false /*TODO: true*/,
+        "no-unnecessary-callback-wrapper": true,
         "no-unnecessary-initializer": true,
         "no-unnecessary-override": true,
         "no-unsafe-any": false /*TODO: true*/,
@@ -118,7 +118,12 @@
             "classes"
         ],
         "export-name": false /*TODO: true*/,
-        "function-name": false /*TODO: true*/,
+        "function-name": [
+            false,
+            {
+                "static-method-regex": "^[A-Z_][A-Za-z_\\d]*$" // changed
+            }
+        ],
         "import-name": false, // changed
         "interface-name": true,
         "jsdoc-format": true,
@@ -152,7 +157,7 @@
         "no-default-export": false /*TODO: true*/,
         "no-empty-interface": true,
         "no-for-in": true,
-        "no-function-expression": false /*TODO: true*/,
+        "no-function-expression": true,
         "no-inferrable-types": false,
         "no-multiline-string": true,
         "no-null-keyword": false,

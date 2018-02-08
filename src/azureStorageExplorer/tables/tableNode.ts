@@ -31,7 +31,7 @@ export class TableNode implements IAzureTreeItem {
         if (result === DialogBoxResponses.yes) {
             const tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
-                tableService.deleteTable(this.tableName, function (err) {
+                tableService.deleteTable(this.tableName, err => {
                     err ? reject(err) : resolve();
                 });
             });

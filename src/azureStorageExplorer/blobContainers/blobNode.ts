@@ -35,7 +35,7 @@ export class BlobNode implements IAzureTreeItem {
     if (result === DialogBoxResponses.yes) {
       const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
       await new Promise((resolve, reject) => {
-        blobService.deleteBlob(this.container.name, this.blob.name, function (err) {
+        blobService.deleteBlob(this.container.name, this.blob.name, err => {
           err ? reject(err) : resolve();
         });
       });

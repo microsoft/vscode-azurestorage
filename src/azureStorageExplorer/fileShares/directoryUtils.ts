@@ -102,7 +102,7 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
 async function deleteDirectoryOnly(directory: string, share: string, storageAccount: string, key: string): Promise<void> {
     const fileService = azureStorage.createFileService(storageAccount, key);
     await new Promise((resolve, reject) => {
-        fileService.deleteDirectory(share, directory, function (err) {
+        fileService.deleteDirectory(share, directory, err => {
             err ? reject(err) : resolve();
         });
     });

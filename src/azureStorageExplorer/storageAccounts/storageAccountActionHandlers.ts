@@ -8,10 +8,10 @@ import { StorageAccountNode } from './storageAccountNode';
 import * as copypaste from 'copy-paste';
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
-export function RegisterStorageAccountActionHandlers(actionHandler: AzureActionHandler) {
-    actionHandler.registerCommand("azureStorage.openStorageAccount", (node) => openStorageAccountInStorageExplorer(node));
-    actionHandler.registerCommand("azureStorage.copyPrimaryKey", (node) => copyPrimaryKey(node));
-    actionHandler.registerCommand("azureStorage.copyConnectionString", (node) => copyConnectionString(node));
+export function registerStorageAccountActionHandlers(actionHandler: AzureActionHandler) {
+    actionHandler.registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
+    actionHandler.registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
+    actionHandler.registerCommand("azureStorage.copyConnectionString", copyConnectionString);
 }
 
 function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>) {
