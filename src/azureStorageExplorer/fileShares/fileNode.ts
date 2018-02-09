@@ -20,7 +20,6 @@ export class FileNode implements IAzureTreeItem {
         public readonly key: StorageAccountKey) {
     }
 
-    public id: string;
     public label: string = this.file.name;
     public static contextValue: string = 'azureFile';
     public contextValue = FileNode.contextValue;

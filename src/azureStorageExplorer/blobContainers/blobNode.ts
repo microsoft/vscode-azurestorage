@@ -19,7 +19,6 @@ export class BlobNode implements IAzureTreeItem {
     public readonly key: StorageAccountKey) {
   }
 
-  public id: string;
   public label: string = this.blob.name;
   public contextValue: string = 'azureBlob';
   public iconPath: { light: string | Uri; dark: string | Uri } = {
