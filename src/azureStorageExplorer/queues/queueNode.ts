@@ -17,7 +17,6 @@ export class QueueNode implements IAzureTreeItem {
         public readonly key: StorageAccountKey) {
     }
 
-    public id: string;
     public label: string = this.queue.name;
     public contextValue: string = 'azureQueue';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
