@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TableNode } from './tableNode';
-import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
 export function registerTableActionHandlers(actionHandler: AzureActionHandler) {
@@ -18,5 +18,5 @@ function openTableInStorageExplorer(node: IAzureNode<TableNode>) {
     var resourceType = "Azure.Table";
     var resourceName = node.treeItem.tableName;
 
-    StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
+    storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

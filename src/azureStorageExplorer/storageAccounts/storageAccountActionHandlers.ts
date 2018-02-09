@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { StorageAccountNode } from './storageAccountNode';
 import * as copypaste from 'copy-paste';
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
@@ -18,7 +18,7 @@ function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode
     var resourceId = node.treeItem.storageAccount.id;
     var subscriptionid = node.subscription.subscriptionId;
 
-    StorageExplorerLauncher.openResource(resourceId, subscriptionid);
+    storageExplorerLauncher.openResource(resourceId, subscriptionid);
 }
 
 async function copyPrimaryKey(node: IAzureNode<StorageAccountNode>) {

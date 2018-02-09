@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { QueueNode } from './queueNode';
-import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
 export function registerQueueActionHandlers(actionHandler: AzureActionHandler) {
@@ -18,5 +18,5 @@ function openQueueInStorageExplorer(node: IAzureNode<QueueNode>) {
     var resourceType = "Azure.Queue";
     var resourceName = node.treeItem.queue.name;
 
-    StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
+    storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

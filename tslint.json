@@ -182,9 +182,9 @@
         "object-literal-sort-keys": false,
         "one-variable-per-declaration": true,
         "only-arrow-functions": false,
-        "ordered-imports": false /*TODO: true*/,
+        "ordered-imports": false, // changed
         "prefer-array-literal": true,
-        "prefer-const": false /*TODO: true*/,
+        "prefer-const": false, // changed (makes it impossible to change locals while debugging)
         "prefer-for-of": true,
         "prefer-method-signature": true,
         "prefer-template": true,
@@ -202,7 +202,7 @@
         "underscore-consistent-invocation": true,
         "unified-signatures": true,
         "variable-name": [ // changed
-            false /*TODO: true*/,
+            true,
             "ban-keywords",
             "check-format",
             "allow-leading-underscore"

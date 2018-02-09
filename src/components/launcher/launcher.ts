@@ -2,16 +2,16 @@ import { spawn } from "child_process";
 export class Launcher {
     public static async Launch(command: string, ...args: string[]) {
         return await new Promise((resolve, _reject) => {
-            var spawn_env = JSON.parse(JSON.stringify(process.env));
+            let spawnEnv = JSON.parse(JSON.stringify(process.env));
             // remove those env vars
-            delete spawn_env.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
-            delete spawn_env.ELECTRON_RUN_AS_NODE;
+            delete spawnEnv.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
+            delete spawnEnv.ELECTRON_RUN_AS_NODE;
 
-            var childProcess = spawn(
+            let childProcess = spawn(
                 command,
                 args,
                 {
-                    env: spawn_env
+                    env: spawnEnv
                 }
             );
 

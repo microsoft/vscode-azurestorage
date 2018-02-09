@@ -4,16 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 import * as vscode from 'vscode';
 import { FileShareNode } from './fileShareNode';
-import { StorageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { IAzureNode, AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
 import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileEditor';
 import { FileFileHandler } from './fileFileHandler';
-import { AzureStorageOutputChannel } from '../azureStorageOutputChannel';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { DirectoryNode } from './directoryNode';
 import { FileNode } from './fileNode';
 
 export function registerFileShareActionHandlers(actionHandler: AzureActionHandler, context: vscode.ExtensionContext): void {
-    const _editor = new RemoteFileEditor(new FileFileHandler(), "azureStorage.file.showSavePrompt", AzureStorageOutputChannel);
+    const _editor = new RemoteFileEditor(new FileFileHandler(), "azureStorage.file.showSavePrompt", azureStorageOutputChannel);
 
     context.subscriptions.push(_editor);
 
@@ -33,5 +33,5 @@ function openFileShareInStorageExplorer(node: IAzureNode<FileShareNode>) {
     var resourceType = "Azure.FileShare";
     var resourceName = node.treeItem.share.name;
 
-    StorageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
+    storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }
