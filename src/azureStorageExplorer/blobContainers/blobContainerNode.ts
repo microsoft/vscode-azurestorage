@@ -59,7 +59,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         });
     }
 
-    private createBlobService() {
+    private createBlobService(): azureStorage.BlobService {
         return azureStorage.createBlobService(this.storageAccount.name, this.key.value);
     }
 

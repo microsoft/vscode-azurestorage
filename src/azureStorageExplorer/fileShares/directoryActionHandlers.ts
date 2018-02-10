@@ -6,7 +6,7 @@
 import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
 import { DirectoryNode } from './directoryNode';
 
-export function registerDirectoryActionHandlers(actionHandler: AzureActionHandler) {
+export function registerDirectoryActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.deleteDirectory", (node: IAzureParentNode) => node.deleteNode());
     actionHandler.registerCommand("azureStorage.createSubdirectory", (node: IAzureParentNode) => node.createChild(DirectoryNode.contextValue));
 

@@ -22,7 +22,7 @@ export class FileNode implements IAzureTreeItem {
 
     public label: string = this.file.name;
     public static contextValue: string = 'azureFile';
-    public contextValue = FileNode.contextValue;
+    public contextValue: string = FileNode.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'document.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'document.svg')

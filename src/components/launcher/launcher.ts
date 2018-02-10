@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 export class Launcher {
-    public static async Launch(command: string, ...args: string[]) {
-        return await new Promise((resolve, _reject) => {
+    public static async Launch(command: string, ...args: string[]): Promise<void> {
+        return await new Promise<void>((resolve, _reject) => {
             let spawnEnv = JSON.parse(JSON.stringify(process.env));
             // remove those env vars
             delete spawnEnv.ATOM_SHELL_INTERNAL_RUN_AS_NODE;
@@ -16,7 +16,7 @@ export class Launcher {
             );
 
             childProcess.stdout.on("data", (chunk) => {
-                resolve("");
+                resolve();
                 console.log(`child process message:  ${chunk}`);
             });
 

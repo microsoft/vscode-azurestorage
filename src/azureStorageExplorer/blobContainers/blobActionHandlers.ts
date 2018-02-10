@@ -5,6 +5,6 @@
 
 import { AzureActionHandler } from "vscode-azureextensionui";
 
-export function registerBlobActionHandlers(actionHandler: AzureActionHandler) {
+export function registerBlobActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.deleteBlob", (node) => node.deleteNode());
 }

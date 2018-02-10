@@ -35,7 +35,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         });
     }
 
-    async uploadFile(node: IAzureNode<BlobNode>, filePath: string) {
+    async uploadFile(node: IAzureNode<BlobNode>, filePath: string): Promise<void> {
         var blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         var createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
 
@@ -43,7 +43,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
             createOptions.contentSettings = { contentType: node.treeItem.blob.contentSettings.contentType };
         }
 
-        await new Promise<string>((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             blobService.createBlockBlobFromLocalFile(node.treeItem.container.name, node.treeItem.blob.name, filePath, createOptions, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     var errorAny = <any>error;
