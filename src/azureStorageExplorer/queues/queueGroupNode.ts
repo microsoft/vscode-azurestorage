@@ -57,7 +57,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
                 } else {
                     resolve(result);
                 }
-            })
+            });
         });
     }
 

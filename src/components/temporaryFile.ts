@@ -6,7 +6,7 @@
 import * as crypto from "crypto";
 import * as fse from 'fs-extra';
 import * as path from 'path';
-import * as os from 'os'
+import * as os from 'os';
 
 export class TemporaryFile {
     private static randomFolderNameLength = 12;

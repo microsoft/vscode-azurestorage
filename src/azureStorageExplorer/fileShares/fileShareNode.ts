@@ -60,7 +60,7 @@ export class FileShareNode implements IAzureParentTreeItem {
                 } else {
                     resolve(result);
                 }
-            })
+            });
         });
     }
 

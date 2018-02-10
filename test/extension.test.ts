@@ -6,7 +6,6 @@
 // The module 'assert' provides assertion methods from node
 import * as assert from 'assert';
 
-
 // Defines a Mocha test suite to group tests of similar kind together
 suite("Extension Tests", () => {
 

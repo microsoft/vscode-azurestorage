@@ -55,7 +55,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                 } else {
                     resolve(result);
                 }
-            })
+            });
         });
     }
 
@@ -107,7 +107,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                 } else {
                     resolve(result);
                 }
-            })
+            });
         });
     }
 

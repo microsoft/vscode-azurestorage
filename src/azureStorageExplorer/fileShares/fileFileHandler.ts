@@ -22,7 +22,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         return await new Promise<void>((resolve, reject) => {
             fileService.getFileToLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
-                    reject(error)
+                    reject(error);
                 } else {
                     resolve();
                 }
@@ -47,7 +47,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
                         var humanReadableMessage = `Unable to save '${node.treeItem.file.name}' file service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {
                             case "ENOTFOUND":
-                                humanReadableMessage += " - Please check connection."
+                                humanReadableMessage += " - Please check connection.";
                                 break;
                             default:
                                 break;
@@ -74,7 +74,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
                         var humanReadableMessage = `Unable to retrieve properties for '${node.treeItem.file.name}' file service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {
                             case "ENOTFOUND":
-                                humanReadableMessage += " - Please check connection."
+                                humanReadableMessage += " - Please check connection.";
                                 break;
                             default:
                                 break;

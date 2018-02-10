@@ -59,7 +59,7 @@ export function listFilesInDirectory(directory: string, share: string, storageAc
             } else {
                 resolve(result);
             }
-        })
+        });
     });
 }
 

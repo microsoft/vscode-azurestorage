@@ -26,7 +26,6 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
     };
 
-
     async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
@@ -54,7 +53,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
                 } else {
                     resolve(result);
                 }
-            })
+            });
         });
     }
 

@@ -16,7 +16,7 @@ export class StorageAccountProvider implements IChildProvider {
         var accounts = await storageManagementClient.storageAccounts.list();
         var accountNodes = accounts.map((storageAccount: StorageAccount) => {
             return new StorageAccountNode(storageAccount, storageManagementClient);
-        })
+        });
 
         return accountNodes;
     }

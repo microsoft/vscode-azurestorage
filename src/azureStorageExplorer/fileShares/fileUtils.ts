@@ -40,7 +40,7 @@ function getFile(directoryPath: string, name: string, share: FileService.ShareRe
             } else {
                 resolve(result);
             }
-        })
+        });
     });
 }
 

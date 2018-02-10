@@ -17,8 +17,8 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
     const _editor: RemoteFileEditor<IAzureNode<BlobNode>> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt", azureStorageOutputChannel);
     context.subscriptions.push(_editor);
 
-    actionHandler.registerCommand("azureStorage.openBlobContainer", (node) => { openBlobContainerInStorageExplorer(node) });
-    actionHandler.registerCommand("azureStorage.editBlob", (node) => { _editor.showEditor(node) });
+    actionHandler.registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
+    actionHandler.registerCommand("azureStorage.editBlob", (node) => _editor.showEditor(node));
     actionHandler.registerCommand("azureStorage.deleteBlobContainer", (node) => node.deleteNode());
     actionHandler.registerCommand("azureStorage.createBlockTextBlob", (node) => node.createChild());
     actionHandler.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => _editor.onDidSaveTextDocument(trackTelemetry, doc));

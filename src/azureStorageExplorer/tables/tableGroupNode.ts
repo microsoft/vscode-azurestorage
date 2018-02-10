@@ -56,7 +56,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
                 } else {
                     resolve(result);
                 }
-            })
+            });
         });
     }
 

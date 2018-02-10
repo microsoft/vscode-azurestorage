@@ -59,7 +59,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
                 } else {
                     resolve(result);
                 }
-            })
+            });
         });
     }
 
@@ -134,10 +134,10 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
         try {
             const value = Number(input);
             if (value < minQuotaGB || value > maxQuotaGB) {
-                return `Value must be between ${minQuotaGB} and ${maxQuotaGB}`
+                return `Value must be between ${minQuotaGB} and ${maxQuotaGB}`;
             }
         } catch (err) {
-            return "Input must be a number"
+            return "Input must be a number";
         }
         return undefined;
     }

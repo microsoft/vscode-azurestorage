@@ -21,7 +21,6 @@ export function validateDirectoryName(name: string): string | undefined | null {
         return `Directory name cannot contain the following characters: '${invalidCharsString}`;
     }
 
-
     return undefined;
 }
 

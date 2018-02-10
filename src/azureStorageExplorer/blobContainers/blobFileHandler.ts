@@ -27,7 +27,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
 
             blobService.getBlobToLocalFile(node.treeItem.container.name, node.treeItem.blob.name, filePath, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
-                    reject(error)
+                    reject(error);
                 } else {
                     resolve();
                 }
@@ -51,7 +51,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
                         var humanReadableMessage = `Unable to save '${node.treeItem.blob.name}' blob service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {
                             case "ENOTFOUND":
-                                humanReadableMessage += " - Please check connection."
+                                humanReadableMessage += " - Please check connection.";
                                 break;
                             default:
                                 break;
