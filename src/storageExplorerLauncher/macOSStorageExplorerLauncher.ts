@@ -16,13 +16,13 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     private static async getStorageExplorerExecutable(
         warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer."): Promise<string> {
 
-        var selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
+        let selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
 
         if (!(await MacOSStorageExplorerLauncher.fileExists(selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation))) {
-            var selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
+            let selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
 
             if (selected === "Browse") {
-                var userSelectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
+                let userSelectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
                 await vscode.workspace.getConfiguration('azureStorage').update('storageExplorerLocation', userSelectedAppLocation, vscode.ConfigurationTarget.Global);
                 return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected app is not a valid Storage Explorer installation. Browse to existing installation location or download and install Storage Explorer.");
             } else if (selected === "Download") {
@@ -38,7 +38,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
 
     public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string) {
         // tslint:disable-next-line:prefer-template
-        var url = "storageexplorer://v=1"
+        let url = "storageexplorer://v=1"
             + "&accountid="
             + encodeURIComponent(resourceId)
             + "&subscriptionid="
@@ -64,7 +64,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     }
 
     private async launchStorageExplorer(extraArgs: string[] = []) {
-        var storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
+        let storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
 
         return Launcher.Launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
     }

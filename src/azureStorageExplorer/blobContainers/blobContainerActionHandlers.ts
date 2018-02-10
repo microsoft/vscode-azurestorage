@@ -25,10 +25,10 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
 }
 
 function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>) {
-    var resourceId = node.treeItem.storageAccount.id;
-    var subscriptionid = node.subscription.subscriptionId;
-    var resourceType = "Azure.BlobContainer";
-    var resourceName = node.treeItem.container.name;
+    let resourceId = node.treeItem.storageAccount.id;
+    let subscriptionid = node.subscription.subscriptionId;
+    let resourceType = "Azure.BlobContainer";
+    let resourceName = node.treeItem.container.name;
 
     storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

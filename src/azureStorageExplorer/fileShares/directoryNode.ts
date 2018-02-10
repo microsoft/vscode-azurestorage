@@ -46,8 +46,8 @@ export class DirectoryNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        var fileResults = await this.listFiles(this._continuationToken);
-        var { entries, continuationToken } = fileResults;
+        let fileResults = await this.listFiles(this._continuationToken);
+        let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
 
         return []

@@ -32,7 +32,7 @@ export async function askAndCreateEmptyTextFile(directoryPath: string, share: Fi
 }
 
 function getFile(directoryPath: string, name: string, share: FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey): Promise<azureStorage.FileService.FileResult> {
-    var fileService = azureStorage.createFileService(storageAccount.name, key.value);
+    let fileService = azureStorage.createFileService(storageAccount.name, key.value);
     return new Promise((resolve, reject) => {
         fileService.getFileProperties(share.name, directoryPath, name, (err: Error, result: azureStorage.FileService.FileResult) => {
             if (err) {
@@ -46,7 +46,7 @@ function getFile(directoryPath: string, name: string, share: FileService.ShareRe
 
 function createFile(directoryPath: string, name: string, share: FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey): Promise<azureStorage.FileService.FileResult> {
     return new Promise((resolve, reject) => {
-        var fileService = azureStorage.createFileService(storageAccount.name, key.value);
+        let fileService = azureStorage.createFileService(storageAccount.name, key.value);
         fileService.createFile(share.name, directoryPath, name, 0, (err: Error, result: azureStorage.FileService.FileResult) => {
             if (err) {
                 reject(err);

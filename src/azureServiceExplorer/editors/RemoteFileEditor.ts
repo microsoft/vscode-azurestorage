@@ -33,7 +33,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     }
 
     async showEditor(context: ContextT): Promise<void> {
-        var fileName = await this.remoteFileHandler.getFilename(context);
+        let fileName = await this.remoteFileHandler.getFilename(context);
 
         this.appendLineToOutput(`Opening '${fileName}' ...`);
         try {
@@ -43,7 +43,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
             await this.showEditorFromFile(context, temporaryFilePath);
             this.appendLineToOutput(`Successfully opened '${fileName}'`);
         } catch (error) {
-            var details: string;
+            let details: string;
 
             if (!!error.message) {
                 details = error.message;
@@ -74,7 +74,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     }
 
     private async saveDocument(context: ContextT, document: TextDocument): Promise<void> {
-        var fileName = await this.remoteFileHandler.getFilename(context);
+        let fileName = await this.remoteFileHandler.getFilename(context);
         this.appendLineToOutput(`Updating '${fileName}' ...`);
         try {
             await this.remoteFileHandler.uploadFile(context, document.fileName);
