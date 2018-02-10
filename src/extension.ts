@@ -27,7 +27,7 @@ import { registerStorageAccountActionHandlers } from './azureStorageExplorer/sto
 import { registerTableActionHandlers } from './azureStorageExplorer/tables/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/tableGroupActionHandlers';
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext): void {
     console.log('Extension "Azure Storage Tools" is now active.');
     // const rootPath = vscode.workspace.rootPath;
 

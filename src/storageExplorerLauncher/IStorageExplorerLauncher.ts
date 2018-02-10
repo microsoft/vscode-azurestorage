@@ -4,5 +4,5 @@
  *--------------------------------------------------------------------------------------------*/
 
 export interface IStorageExplorerLauncher {
-    openResource(resourceId: string, subscriptionid: string, resourceType?: string, resourceName?: string);
+    openResource(resourceId: string, subscriptionid: string, resourceType?: string, resourceName?: string): Promise<void>;
 }
