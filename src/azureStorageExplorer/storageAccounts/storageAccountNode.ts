@@ -66,12 +66,12 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         return primaryKey;
     }
 
-    async getConnectionString() {
+    async getConnectionString(): Promise<string> {
         let primaryKey = await this.getPrimaryKey();
         return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${primaryKey.value}`;
     }
 
-    async getKeys() {
+    async getKeys(): Promise<StorageAccountKey[]> {
         let parsedId = this.parseAzureResourceId(this.storageAccount.id);
         let resourceGroupName = parsedId["resourceGroups"];
         let keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);

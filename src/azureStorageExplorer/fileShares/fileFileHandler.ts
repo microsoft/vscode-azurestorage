@@ -30,7 +30,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         });
     }
 
-    async uploadFile(node: IAzureNode<FileNode>, filePath: string) {
+    async uploadFile(node: IAzureNode<FileNode>, filePath: string): Promise<void> {
         let fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         let fileProperties = await this.getProperties(node);
         let createOptions: azureStorage.FileService.CreateFileRequestOptions = {};
@@ -39,7 +39,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
             createOptions.contentSettings = { contentType: fileProperties.contentSettings.contentType };
         }
 
-        await new Promise<string>((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     let errorAny = <any>error;

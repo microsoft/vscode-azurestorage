@@ -91,7 +91,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
         await vscode.window.showTextDocument(document);
     }
 
-    protected appendLineToOutput(value: string) {
+    protected appendLineToOutput(value: string): void {
         if (!!this.outputChanel) {
             this.outputChanel.appendLine(value);
             this.outputChanel.show(true);

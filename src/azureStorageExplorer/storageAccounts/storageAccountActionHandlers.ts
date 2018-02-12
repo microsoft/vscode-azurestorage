@@ -8,25 +8,25 @@ import { StorageAccountNode } from './storageAccountNode';
 import * as copypaste from 'copy-paste';
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
-export function registerStorageAccountActionHandlers(actionHandler: AzureActionHandler) {
+export function registerStorageAccountActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
     actionHandler.registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
     actionHandler.registerCommand("azureStorage.copyConnectionString", copyConnectionString);
 }
 
-function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>) {
+function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>): Promise<void> {
     let resourceId = node.treeItem.storageAccount.id;
     let subscriptionid = node.subscription.subscriptionId;
 
-    storageExplorerLauncher.openResource(resourceId, subscriptionid);
+    return storageExplorerLauncher.openResource(resourceId, subscriptionid);
 }
 
-async function copyPrimaryKey(node: IAzureNode<StorageAccountNode>) {
+async function copyPrimaryKey(node: IAzureNode<StorageAccountNode>): Promise<void> {
     let primaryKey = await node.treeItem.getPrimaryKey();
     copypaste.copy(primaryKey.value);
 }
 
-async function copyConnectionString(node: IAzureNode<StorageAccountNode>) {
+async function copyConnectionString(node: IAzureNode<StorageAccountNode>): Promise<void> {
     let connectionString = await node.treeItem.getConnectionString();
     copypaste.copy(connectionString);
 }

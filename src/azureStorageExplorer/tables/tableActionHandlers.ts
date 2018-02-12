@@ -7,16 +7,16 @@ import { TableNode } from './tableNode';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
-export function registerTableActionHandlers(actionHandler: AzureActionHandler) {
+export function registerTableActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.openTable", openTableInStorageExplorer);
     actionHandler.registerCommand("azureStorage.deleteTable", (node) => node.deleteNode());
 }
 
-function openTableInStorageExplorer(node: IAzureNode<TableNode>) {
+function openTableInStorageExplorer(node: IAzureNode<TableNode>): Promise<void> {
     let resourceId = node.treeItem.storageAccount.id;
     let subscriptionid = node.subscription.subscriptionId;
     let resourceType = "Azure.Table";
     let resourceName = node.treeItem.tableName;
 
-    storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
+    return storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

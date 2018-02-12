@@ -185,13 +185,13 @@
         "prefer-template": false /*TODO: true*/,
         "return-undefined": false,
         "typedef": [
-            false /*TODO: true*/,
+            true,
             "call-signature",
-            "arrow-call-signature",
+            // "arrow-call-signature", // changed
             "parameter",
-            "arrow-parameter",
+            // "arrow-parameter", // changed
             "property-declaration",
-            "variable-declaration",
+            // "variable-declaration", //changed
             "member-variable-declaration"
         ],
         "underscore-consistent-invocation": true,

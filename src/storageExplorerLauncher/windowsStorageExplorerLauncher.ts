@@ -18,9 +18,10 @@ if (os.platform() === "win32") {
 }
 
 export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher {
-    public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
-    private static _regKey = "HKCR\\storageexplorer\\shell\\open\\command";
-    public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string) {
+    public static downloadPageUrl: string = "https://go.microsoft.com/fwlink/?LinkId=723579";
+    private static _regKey: string = "HKCR\\storageexplorer\\shell\\open\\command";
+
+    public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
@@ -82,12 +83,12 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
         });
     }
 
-    private static async downloadStorageExplorer() {
+    private static async downloadStorageExplorer(): Promise<void> {
         //I'm not sure why running start directly doesn't work. Opening seperate cmd to run the command works well
         await Launcher.Launch("cmd", "/c", "start", WindowsStorageExplorerLauncher.downloadPageUrl);
     }
 
-    private static async launchStorageExplorer(args: string[] = []) {
+    private static async launchStorageExplorer(args: string[] = []): Promise<void> {
         let storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
         await Launcher.Launch(storageExplorerExecutable, ...args);
     }

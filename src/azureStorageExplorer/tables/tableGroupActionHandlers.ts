@@ -5,6 +5,6 @@
 
 import { AzureActionHandler } from 'vscode-azureextensionui';
 
-export function registerTableGroupActionHandlers(actionHandler: AzureActionHandler) {
+export function registerTableGroupActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.createTable", (node) => node.createChild());
 }
