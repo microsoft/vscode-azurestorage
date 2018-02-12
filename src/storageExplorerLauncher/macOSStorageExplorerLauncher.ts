@@ -10,8 +10,8 @@ import * as fs from "fs";
 import { UserCancelledError } from "vscode-azureextensionui";
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
-    private static subExecutableLocation = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
-    public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
+    private static subExecutableLocation: string = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
+    public static downloadPageUrl: string = "https://go.microsoft.com/fwlink/?LinkId=723579";
 
     private static async getStorageExplorerExecutable(
         warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer."): Promise<string> {
@@ -36,7 +36,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         return selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation;
     }
 
-    public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string) {
+    public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
         var url = "storageexplorer://v=1"
             + "&accountid="
@@ -59,11 +59,11 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         ]);
     }
 
-    private static async downloadStorageExplorer() {
+    private static async downloadStorageExplorer(): Promise<void> {
         await Launcher.Launch("open", MacOSStorageExplorerLauncher.downloadPageUrl);
     }
 
-    private async launchStorageExplorer(extraArgs: string[] = []) {
+    private async launchStorageExplorer(extraArgs: string[] = []): Promise<void> {
         var storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
 
         return Launcher.Launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));

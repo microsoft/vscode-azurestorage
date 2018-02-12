@@ -25,11 +25,11 @@ export function registerFileShareActionHandlers(actionHandler: AzureActionHandle
     actionHandler.registerEvent('azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => _editor.onDidSaveTextDocument(trackTelemetry, doc));
 }
 
-function openFileShareInStorageExplorer(node: IAzureNode<FileShareNode>) {
+function openFileShareInStorageExplorer(node: IAzureNode<FileShareNode>): Promise<void> {
     var resourceId = node.treeItem.storageAccount.id;
     var subscriptionid = node.subscription.subscriptionId;
     var resourceType = "Azure.FileShare";
     var resourceName = node.treeItem.share.name;
 
-    storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
+    return storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

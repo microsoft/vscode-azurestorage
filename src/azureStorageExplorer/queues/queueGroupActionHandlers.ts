@@ -5,6 +5,6 @@
 
 import { AzureActionHandler } from 'vscode-azureextensionui';
 
-export function registerQueueGroupActionHandlers(actionHandler: AzureActionHandler) {
+export function registerQueueGroupActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.createQueue", (node) => node.createChild());
 }
