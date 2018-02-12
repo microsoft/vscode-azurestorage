@@ -17,18 +17,18 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
     const _editor: RemoteFileEditor<IAzureNode<BlobNode>> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt", azureStorageOutputChannel);
     context.subscriptions.push(_editor);
 
-    actionHandler.registerCommand("azureStorage.openBlobContainer", (node: IAzureParentNode<BlobContainerNode>) => { openBlobContainerInStorageExplorer(node) });
-    actionHandler.registerCommand("azureStorage.editBlob", (node: IAzureParentNode<BlobNode>) => { _editor.showEditor(node) });
+    actionHandler.registerCommand("azureStorage.openBlobContainer", (node: IAzureParentNode<BlobContainerNode>) => openBlobContainerInStorageExplorer(node));
+    actionHandler.registerCommand("azureStorage.editBlob", (node: IAzureParentNode<BlobNode>) => _editor.showEditor(node));
     actionHandler.registerCommand("azureStorage.deleteBlobContainer", (node: IAzureParentNode<BlobContainerNode>) => node.deleteNode());
     actionHandler.registerCommand("azureStorage.createBlockTextBlob", (node: IAzureParentNode<BlobContainerNode>) => node.createChild());
     actionHandler.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => _editor.onDidSaveTextDocument(trackTelemetry, doc));
 }
 
-function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>): void {
-    var resourceId = node.treeItem.storageAccount.id;
-    var subscriptionid = node.subscription.subscriptionId;
-    var resourceType = "Azure.BlobContainer";
-    var resourceName = node.treeItem.container.name;
+function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>): Promise<void> {
+    let resourceId = node.treeItem.storageAccount.id;
+    let subscriptionid = node.subscription.subscriptionId;
+    let resourceType = "Azure.BlobContainer";
+    let resourceName = node.treeItem.container.name;
 
-    storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
+    return storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

@@ -17,21 +17,19 @@ export function registerFileShareActionHandlers(actionHandler: AzureActionHandle
 
     context.subscriptions.push(_editor);
 
-    actionHandler.registerCommand("azureStorage.openFileShare", (node: IAzureParentNode<FileShareNode>) => { openFileShareInStorageExplorer(node) });
-    actionHandler.registerCommand("azureStorage.editFile", (node) => { _editor.showEditor(node) });
+    actionHandler.registerCommand("azureStorage.openFileShare", openFileShareInStorageExplorer);
+    actionHandler.registerCommand("azureStorage.editFile", (node) => _editor.showEditor(node));
     actionHandler.registerCommand("azureStorage.deleteFileShare", (node: IAzureParentNode<FileShareNode>) => node.deleteNode());
     actionHandler.registerCommand("azureStorage.createDirectory", (node: IAzureParentNode<FileShareNode>) => node.createChild(DirectoryNode.contextValue));
     actionHandler.registerCommand("azureStorage.createTextFile", (node: IAzureParentNode<FileShareNode>) => node.createChild(FileNode.contextValue));
     actionHandler.registerEvent('azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => _editor.onDidSaveTextDocument(trackTelemetry, doc));
-
-
 }
 
 function openFileShareInStorageExplorer(node: IAzureNode<FileShareNode>): Promise<void> {
-    var resourceId = node.treeItem.storageAccount.id;
-    var subscriptionid = node.subscription.subscriptionId;
-    var resourceType = "Azure.FileShare";
-    var resourceName = node.treeItem.share.name;
+    let resourceId = node.treeItem.storageAccount.id;
+    let subscriptionid = node.subscription.subscriptionId;
+    let resourceType = "Azure.FileShare";
+    let resourceName = node.treeItem.share.name;
 
     return storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

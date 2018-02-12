@@ -19,7 +19,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
     }
 
     async downloadFile(node: IAzureNode<BlobNode>, filePath: string): Promise<void> {
-        var blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, node.treeItem.key.value);
+        let blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         return await new Promise<void>((resolve, reject) => {
             if (!node.treeItem.blob.blobType.toLocaleLowerCase().startsWith("block")) {
                 reject(`Editing blobs of type '${node.treeItem.blob.blobType}' is not supported. Please use Storage Explorer to work with these blobs.`);
@@ -27,7 +27,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
 
             blobService.getBlobToLocalFile(node.treeItem.container.name, node.treeItem.blob.name, filePath, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
-                    reject(error)
+                    reject(error);
                 } else {
                     resolve();
                 }
@@ -36,8 +36,8 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
     }
 
     async uploadFile(node: IAzureNode<BlobNode>, filePath: string): Promise<void> {
-        var blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, node.treeItem.key.value);
-        var createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
+        let blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, node.treeItem.key.value);
+        let createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
 
         if (node.treeItem.blob && node.treeItem.blob.contentSettings && node.treeItem.blob.contentSettings.contentType) {
             createOptions.contentSettings = { contentType: node.treeItem.blob.contentSettings.contentType };
@@ -46,12 +46,12 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         await new Promise<void>((resolve, reject) => {
             blobService.createBlockBlobFromLocalFile(node.treeItem.container.name, node.treeItem.blob.name, filePath, createOptions, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
-                    var errorAny = <any>error;
+                    let errorAny = <any>error;
                     if (!!errorAny.code) {
-                        var humanReadableMessage = `Unable to save '${node.treeItem.blob.name}' blob service returned error code "${errorAny.code}"`;
+                        let humanReadableMessage = `Unable to save '${node.treeItem.blob.name}' blob service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {
                             case "ENOTFOUND":
-                                humanReadableMessage += " - Please check connection."
+                                humanReadableMessage += " - Please check connection.";
                                 break;
                             default:
                                 break;

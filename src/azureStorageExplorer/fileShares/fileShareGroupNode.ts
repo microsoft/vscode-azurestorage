@@ -8,7 +8,7 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { FileShareNode } from './fileShareNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError, } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import { FileService } from 'azure-storage';
 
 const minQuotaGB = 1;
@@ -34,8 +34,8 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        var fileShares = await this.listFileShares(this._continuationToken);
-        var { entries, continuationToken } = fileShares;
+        let fileShares = await this.listFileShares(this._continuationToken);
+        let { entries, continuationToken } = fileShares;
         this._continuationToken = continuationToken;
 
         return entries.map((fileShare: azureStorage.FileService.ShareResult) => {
@@ -52,14 +52,14 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
 
     listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
         return new Promise((resolve, reject) => {
-            var fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+            let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
             fileService.listSharesSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.FileService.ListSharesResult) => {
                 if (err) {
                     reject(err);
                 } else {
                     resolve(result);
                 }
-            })
+            });
         });
     }
 
@@ -91,7 +91,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
 
     private createFileShare(name: string, quotaGB: number): Promise<azureStorage.FileService.ShareResult> {
         return new Promise((resolve, reject) => {
-            var shareService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+            let shareService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
             const options = <FileService.CreateShareRequestOptions>{
                 quota: quotaGB
             };
@@ -134,10 +134,10 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
         try {
             const value = Number(input);
             if (value < minQuotaGB || value > maxQuotaGB) {
-                return `Value must be between ${minQuotaGB} and ${maxQuotaGB}`
+                return `Value must be between ${minQuotaGB} and ${maxQuotaGB}`;
             }
         } catch (err) {
-            return "Input must be a number"
+            return "Input must be a number";
         }
         return undefined;
     }

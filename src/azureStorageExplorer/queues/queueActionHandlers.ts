@@ -8,15 +8,15 @@ import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageEx
 import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
 export function registerQueueActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.openQueue", (node) => { openQueueInStorageExplorer(node) });
+    actionHandler.registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);
     actionHandler.registerCommand("azureStorage.deleteQueue", (node) => node.deleteNode());
 }
 
 function openQueueInStorageExplorer(node: IAzureNode<QueueNode>): Promise<void> {
-    var resourceId = node.treeItem.storageAccount.id;
-    var subscriptionid = node.subscription.subscriptionId;
-    var resourceType = "Azure.Queue";
-    var resourceName = node.treeItem.queue.name;
+    let resourceId = node.treeItem.storageAccount.id;
+    let subscriptionid = node.subscription.subscriptionId;
+    let resourceType = "Azure.Queue";
+    let resourceName = node.treeItem.queue.name;
 
     return storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

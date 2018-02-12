@@ -59,7 +59,7 @@ export function listFilesInDirectory(directory: string, share: string, storageAc
             } else {
                 resolve(result);
             }
-        })
+        });
     });
 }
 
@@ -68,10 +68,10 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
     const maxResults = 50;
 
     // tslint:disable-next-line:no-unnecessary-initializer
-    var currentToken: azureStorage.common.ContinuationToken | undefined = undefined;
+    let currentToken: azureStorage.common.ContinuationToken | undefined = undefined;
     // tslint:disable-next-line:no-constant-condition
     while (true) {
-        var { entries, continuationToken } = await listFilesInDirectory(directory, share, storageAccount, key, maxResults, currentToken);
+        let { entries, continuationToken } = await listFilesInDirectory(directory, share, storageAccount, key, maxResults, currentToken);
         let promises: Promise<void>[] = [];
         for (let file of entries.files) {
             let promise = deleteFile(directory, file.name, share, storageAccount, key);
