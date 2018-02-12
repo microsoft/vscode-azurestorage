@@ -26,10 +26,10 @@ export function registerFileShareActionHandlers(actionHandler: AzureActionHandle
 }
 
 function openFileShareInStorageExplorer(node: IAzureNode<FileShareNode>): Promise<void> {
-    var resourceId = node.treeItem.storageAccount.id;
-    var subscriptionid = node.subscription.subscriptionId;
-    var resourceType = "Azure.FileShare";
-    var resourceName = node.treeItem.share.name;
+    let resourceId = node.treeItem.storageAccount.id;
+    let subscriptionid = node.subscription.subscriptionId;
+    let resourceType = "Azure.FileShare";
+    let resourceName = node.treeItem.share.name;
 
     return storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

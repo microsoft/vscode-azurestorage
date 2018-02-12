@@ -31,8 +31,8 @@ export class QueueGroupNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        var containers = await this.listQueues(this._continuationToken);
-        var { entries, continuationToken } = containers;
+        let containers = await this.listQueues(this._continuationToken);
+        let { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 
         return entries.map((queue: azureStorage.QueueService.QueueResult) => {
@@ -50,7 +50,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
 
     listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise((resolve, reject) => {
-            var queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
+            let queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
             queueService.listQueuesSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.QueueService.ListQueueResult) => {
                 if (err) {
                     reject(err);
@@ -81,7 +81,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
 
     private createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
         return new Promise((resolve, reject) => {
-            var queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
+            let queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
             queueService.createQueue(name, (err: Error, result: azureStorage.QueueService.QueueResult) => {
                 if (err) {
                     reject(err);

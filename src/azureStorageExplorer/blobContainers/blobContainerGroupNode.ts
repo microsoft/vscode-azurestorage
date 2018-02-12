@@ -31,8 +31,8 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        var containers = await this.listContainers(this._continuationToken);
-        var { entries, continuationToken } = containers;
+        let containers = await this.listContainers(this._continuationToken);
+        let { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 
         return entries.map((container: azureStorage.BlobService.ContainerResult) => {
@@ -46,7 +46,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
 
     listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise((resolve, reject) => {
-            var blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
             blobService.listContainersSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.BlobService.ListContainerResult) => {
                 if (err) {
                     reject(err);
@@ -77,7 +77,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
 
     private createBlobContainer(name: string): Promise<azureStorage.BlobService.ContainerResult> {
         return new Promise((resolve, reject) => {
-            var blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
             blobService.createContainer(name, (err: Error, result: azureStorage.BlobService.ContainerResult) => {
                 if (err) {
                     reject(err);

@@ -74,7 +74,7 @@
         "no-string-literal": false /*TODO: true*/,
         "no-string-throw": true,
         "no-unnecessary-bind": true,
-        "no-unnecessary-callback-wrapper": true,
+        "no-unnecessary-callback-wrapper": false /*TODO: true*/,
         "no-unnecessary-initializer": true,
         "no-unnecessary-override": true,
         "no-unsafe-any": false /*TODO: true*/,
@@ -118,12 +118,7 @@
             "classes"
         ],
         "export-name": false /*TODO: true*/,
-        "function-name": [
-            false,
-            {
-                "static-method-regex": "^[A-Z_][A-Za-z_\\d]*$" // changed
-            }
-        ],
+        "function-name": false /*TODO: true*/,
         "import-name": false, // changed
         "interface-name": true,
         "jsdoc-format": true,
@@ -157,23 +152,23 @@
         "no-default-export": false /*TODO: true*/,
         "no-empty-interface": true,
         "no-for-in": true,
-        "no-function-expression": true,
+        "no-function-expression": false /*TODO: true*/,
         "no-inferrable-types": false,
         "no-multiline-string": true,
         "no-null-keyword": false,
         "no-parameter-properties": false /*TODO: true*/,
         "no-relative-imports": false, // changed
-        "no-require-imports": true,
+        "no-require-imports": false /*TODO: true*/,
         "no-shadowed-variable": false /*TODO: true*/,
         "no-suspicious-comment": false /*TODO: true*/,
         "no-typeof-undefined": true,
-        "no-unnecessary-field-initialization": true,
-        "no-unnecessary-local-variable": false, // changed
+        "no-unnecessary-field-initialization": false /*TODO: true*/,
+        "no-unnecessary-local-variable": false /*TODO: true*/,
         "no-unnecessary-qualifier": true,
         "no-unsupported-browser-code": true,
         "no-useless-files": true,
-        "no-var-keyword": false /*TODO: true*/,
-        "no-var-requires": false /*TODO: true*/,
+        "no-var-keyword": true,
+        "no-var-requires": true,
         "no-var-self": true,
         "no-void-expression": [
             false /*TODO: true*/,
@@ -182,12 +177,12 @@
         "object-literal-sort-keys": false,
         "one-variable-per-declaration": true,
         "only-arrow-functions": false,
-        "ordered-imports": false, // changed
+        "ordered-imports": false /*TODO: true*/,
         "prefer-array-literal": true,
-        "prefer-const": false, // changed (makes it impossible to change locals while debugging)
+        "prefer-const": false /*TODO: true*/,
         "prefer-for-of": true,
         "prefer-method-signature": true,
-        "prefer-template": true,
+        "prefer-template": false /*TODO: true*/,
         "return-undefined": false,
         "typedef": [
             true,
@@ -202,7 +197,7 @@
         "underscore-consistent-invocation": true,
         "unified-signatures": true,
         "variable-name": [ // changed
-            true,
+            false /*TODO: true*/,
             "ban-keywords",
             "check-format",
             "allow-leading-underscore"
@@ -238,7 +233,7 @@
         "newline-before-return": false, // changed
         "no-consecutive-blank-lines": true,
         "no-empty-line-after-opening-brace": false,
-        "no-single-line-block-comment": false, // changed
+        "no-single-line-block-comment": true,
         "no-trailing-whitespace": true,
         "no-unnecessary-semicolons": true,
         "object-literal-key-quotes": [
@@ -262,10 +257,10 @@
             "always"
         ],
         "trailing-comma": [
-            false /*TODO: true*/,
+            true,
             {
                 "singleline": "never",
-                "multiline": "never"
+                "multiline": "ignore" // changed
             }
         ],
         "typedef-whitespace": false,

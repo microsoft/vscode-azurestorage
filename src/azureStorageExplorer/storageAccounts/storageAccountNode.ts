@@ -30,9 +30,9 @@ export class StorageAccountNode implements IAzureParentTreeItem {
     };
 
     async loadMoreChildren(_node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
-        var primaryKey = await this.getPrimaryKey();
-        var primaryEndpoints = this.storageAccount.primaryEndpoints;
-        var groupNodes = [];
+        let primaryKey = await this.getPrimaryKey();
+        let primaryEndpoints = this.storageAccount.primaryEndpoints;
+        let groupNodes = [];
 
         if (!!primaryEndpoints.blob) {
             groupNodes.push(new BlobContainerGroupNode(this.storageAccount, primaryKey));
@@ -58,8 +58,8 @@ export class StorageAccountNode implements IAzureParentTreeItem {
     }
 
     async getPrimaryKey(): Promise<StorageAccountKey> {
-        var keys: StorageAccountKey[] = await this.getKeys();
-        var primaryKey = keys.find((key: StorageAccountKey) => {
+        let keys: StorageAccountKey[] = await this.getKeys();
+        let primaryKey = keys.find((key: StorageAccountKey) => {
             return key.keyName === "key1" || key.keyName === "primaryKey";
         });
 
@@ -67,14 +67,14 @@ export class StorageAccountNode implements IAzureParentTreeItem {
     }
 
     async getConnectionString(): Promise<string> {
-        var primaryKey = await this.getPrimaryKey();
+        let primaryKey = await this.getPrimaryKey();
         return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${primaryKey.value}`;
     }
 
     async getKeys(): Promise<StorageAccountKey[]> {
-        var parsedId = this.parseAzureResourceId(this.storageAccount.id);
-        var resourceGroupName = parsedId["resourceGroups"];
-        var keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
+        let parsedId = this.parseAzureResourceId(this.storageAccount.id);
+        let resourceGroupName = parsedId["resourceGroups"];
+        let keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
         return keyResult.keys;
     }
 

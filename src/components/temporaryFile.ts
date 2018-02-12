@@ -13,8 +13,8 @@ export class TemporaryFile {
 
     static async create(fileName: string): Promise<string> {
         const buffer: Buffer = crypto.randomBytes(Math.ceil(TemporaryFile.randomFolderNameLength / 2));
-        var folderName = buffer.toString('hex').slice(0, TemporaryFile.randomFolderNameLength);
-        var filePath = path.join(os.tmpdir(), folderName, fileName);
+        let folderName = buffer.toString('hex').slice(0, TemporaryFile.randomFolderNameLength);
+        let filePath = path.join(os.tmpdir(), folderName, fileName);
         await fse.ensureFile(filePath);
         return filePath;
     }

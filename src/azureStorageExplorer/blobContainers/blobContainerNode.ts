@@ -38,8 +38,8 @@ export class BlobContainerNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        var blobs = await this.listBlobs(this._continuationToken);
-        var { entries, continuationToken } = blobs;
+        let blobs = await this.listBlobs(this._continuationToken);
+        let { entries, continuationToken } = blobs;
         this._continuationToken = continuationToken;
         return entries.map((blob: azureStorage.BlobService.BlobResult) => {
             return new BlobNode(blob, this.container, this.storageAccount, this.key);
@@ -48,7 +48,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
 
     listBlobs(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {
-            var blobService = this.createBlobService();
+            let blobService = this.createBlobService();
             blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.BlobService.ListBlobsResult) => {
                 if (err) {
                     reject(err);
@@ -113,7 +113,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
 
     private createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
-            var blobService = this.createBlobService();
+            let blobService = this.createBlobService();
             const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
                 contentSettings: {
                     contentType: 'text/plain'

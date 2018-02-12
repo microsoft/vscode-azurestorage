@@ -10,9 +10,10 @@ import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
 
 // regedit doesn't exist for Mac. I have to import like this so it builds.
-var regedit: any;
+let regedit: any;
 if (os.platform() === "win32") {
     // tslint:disable-next-line:no-require-imports
+    // tslint:disable-next-line:no-var-requires
     regedit = require("regedit");
 }
 
@@ -22,7 +23,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
 
     public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
-        var url = "storageexplorer://v=1"
+        let url = "storageexplorer://v=1"
             + "&accountid="
             + encodeURIComponent(resourceId)
             + "&subscriptionid="
@@ -42,7 +43,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async getStorageExplorerExecutable(): Promise<string> {
-        var regVal: string;
+        let regVal: string;
         try {
             regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(WindowsStorageExplorerLauncher._regKey);
         } catch (_err) {
@@ -51,7 +52,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
             if (regVal && await WindowsStorageExplorerLauncher.fileExists(regVal)) {
                 return regVal;
             } else {
-                var selected: "Download" = <"Download">await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
+                let selected: "Download" = <"Download">await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
                 if (selected === "Download") {
                     await WindowsStorageExplorerLauncher.downloadStorageExplorer();
                 }
@@ -73,7 +74,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
         return new Promise((resolve, reject) => {
             regedit.list([key])
                 .on('data', (entry) => {
-                    var value = <string>entry.data.values[""].value.split("\"")[1];
+                    let value = <string>entry.data.values[""].value.split("\"")[1];
                     resolve(value);
                 })
                 .on('error', (err) => {
@@ -88,7 +89,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async launchStorageExplorer(args: string[] = []): Promise<void> {
-        var storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
+        let storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
         await Launcher.Launch(storageExplorerExecutable, ...args);
     }
 }

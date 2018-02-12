@@ -13,10 +13,10 @@ export function registerQueueActionHandlers(actionHandler: AzureActionHandler): 
 }
 
 function openQueueInStorageExplorer(node: IAzureNode<QueueNode>): Promise<void> {
-    var resourceId = node.treeItem.storageAccount.id;
-    var subscriptionid = node.subscription.subscriptionId;
-    var resourceType = "Azure.Queue";
-    var resourceName = node.treeItem.queue.name;
+    let resourceId = node.treeItem.storageAccount.id;
+    let subscriptionid = node.subscription.subscriptionId;
+    let resourceType = "Azure.Queue";
+    let resourceName = node.treeItem.queue.name;
 
     return storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }

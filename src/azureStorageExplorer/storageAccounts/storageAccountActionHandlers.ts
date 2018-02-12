@@ -15,18 +15,18 @@ export function registerStorageAccountActionHandlers(actionHandler: AzureActionH
 }
 
 function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>): Promise<void> {
-    var resourceId = node.treeItem.storageAccount.id;
-    var subscriptionid = node.subscription.subscriptionId;
+    let resourceId = node.treeItem.storageAccount.id;
+    let subscriptionid = node.subscription.subscriptionId;
 
     return storageExplorerLauncher.openResource(resourceId, subscriptionid);
 }
 
 async function copyPrimaryKey(node: IAzureNode<StorageAccountNode>): Promise<void> {
-    var primaryKey = await node.treeItem.getPrimaryKey();
+    let primaryKey = await node.treeItem.getPrimaryKey();
     copypaste.copy(primaryKey.value);
 }
 
 async function copyConnectionString(node: IAzureNode<StorageAccountNode>): Promise<void> {
-    var connectionString = await node.treeItem.getConnectionString();
+    let connectionString = await node.treeItem.getConnectionString();
     copypaste.copy(connectionString);
 }
