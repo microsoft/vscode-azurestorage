@@ -24,11 +24,11 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
     actionHandler.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, (trackTelemetry: () => void, doc: vscode.TextDocument) => _editor.onDidSaveTextDocument(trackTelemetry, doc));
 }
 
-function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>) {
+function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>): Promise<void> {
     let resourceId = node.treeItem.storageAccount.id;
     let subscriptionid = node.subscription.subscriptionId;
     let resourceType = "Azure.BlobContainer";
     let resourceName = node.treeItem.container.name;
 
-    storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
+    return storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
 }
