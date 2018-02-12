@@ -231,7 +231,7 @@
         ],
         "linebreak-style": false, // changed
         "newline-before-return": false, // changed
-        "no-consecutive-blank-lines": false /*TODO: true*/,
+        "no-consecutive-blank-lines": true,
         "no-empty-line-after-opening-brace": false,
         "no-single-line-block-comment": true,
         "no-trailing-whitespace": true,
@@ -253,7 +253,7 @@
         ],
         "react-tsx-curly-spacing": true,
         "semicolon": [
-            false /*TODO: true*/,
+            true,
             "always"
         ],
         "trailing-comma": [
