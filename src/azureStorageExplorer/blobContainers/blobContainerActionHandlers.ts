@@ -17,7 +17,7 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
     const _editor: RemoteFileEditor<IAzureNode<BlobNode>> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt", azureStorageOutputChannel);
     context.subscriptions.push(_editor);
 
-    actionHandler.registerCommand("azureStorage.openBlobContainer", (node: IAzureParentNode<BlobContainerNode>) => openBlobContainerInStorageExplorer(node));
+    actionHandler.registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
     actionHandler.registerCommand("azureStorage.editBlob", (node: IAzureParentNode<BlobNode>) => _editor.showEditor(node));
     actionHandler.registerCommand("azureStorage.deleteBlobContainer", (node: IAzureParentNode<BlobContainerNode>) => node.deleteNode());
     actionHandler.registerCommand("azureStorage.createBlockTextBlob", (node: IAzureParentNode<BlobContainerNode>) => node.createChild());
