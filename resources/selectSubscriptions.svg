@@ -1,7 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svg="http://www.w3.org/2000/svg">
-    <g>
-        <path fill="#fcd116" d="M 39.337 19.525 a 5.688 5.688 0 0 0 0 -8.045 l -9.812 -9.813 a 5.69 5.69 0 0 0 -8.046 0 l -9.813 9.813 a 5.69 5.69 0 0 0 0 8.045 l 8.633 8.633 v 16.641 l 5.202 5.202 l 4.519 -4.519 v -0.033 l 2.652 -2.653 l -2.629 -2.629 l 2.629 -2.629 l -2.629 -2.629 l 2.629 -2.629 l -2.652 -2.653 v -0.784 l 9.317 -9.318 Z M 25.502 4.039 a 3.23 3.23 0 1 1 0 6.459 a 3.23 3.23 0 0 1 0 -6.459 Z" />
-        <path fill="#ff8c00" opacity="0.4" d="M 22.728 43.961 l 2.03 2 V 30.008 l -2.03 -1 Z" />
-        <path fill="#fff" opacity="0.5" d="M 15.868 13.617 h 18.64 v 2.679 h -18.64 Z m 0 4.359 h 18.64 v 2.679 h -18.64 Z" />
-    </g>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 18.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg version="1.0" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 792 612" enable-background="new 0 0 792 612" xml:space="preserve">
+<g id="Layer_1_1_">
+	<g id="File_x2C__general">
+		<title>Sheet.1071</title>
+	</g>
+</g>
+<g id="Access_control">
+</g>
+<g id="Azure_active_directory">
+</g>
+<g id="Filter">
+	<polygon fill="#2A3282" points="225,152.3 567.3,152.3 567.3,169.4 430.4,306.3 413.3,460.4 379,460.4 361.9,306.3 225,169.4 	"/>
+</g>
+<g id="symbols">
+</g>
 </svg>

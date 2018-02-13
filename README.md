@@ -22,11 +22,11 @@ The Azure Storage extension for VS Code lets you browse Azure Blob Containers, F
 * `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing a warning dialog on File file save.
 * `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing a warning dialog on Blob file save.
 
-## Signing In and Out of Azure and Filtering Subscriptions
+## Managing Azure Subscriptions
 
 If you are not signed in to Azure, you will see a "Sign in to Azure..." link. Alternatively, you can select "View->Command Palette" in the VS Code menu, and search for "Azure: Sign In".
 
-![Sign in to Azure](resources/signInScreenshot.png)
+![Sign in to Azure](resources/SignInScreenshot.png)
 
 If you don't have an Azure Account, you can sign up for one today for free and receive $200 in credits by selecting "View->Command Palette" and searching for "Azure: Create an Account".
 
