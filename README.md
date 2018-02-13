@@ -1,7 +1,9 @@
 # Azure Storage for Visual Studio Code (Preview)
+
 The Azure Storage extension for VS Code lets you browse Azure Blob Containers, File Shares, Tables, and Queues.
 
 ## Features
+
  * Explore/Create/Delete Blob Containers, File Shares, Queues and Tables
 
    ![Explore Containers, Shares, Queues, and Tables](resources/exploreScreenshot.png)
@@ -19,6 +21,20 @@ The Azure Storage extension for VS Code lets you browse Azure Blob Containers, F
 * `azureStorage.storageExplorerLocation`: Set to `"Path/To/Microsoft Azure Storage Explorer.app"` to override the default location.
 * `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing a warning dialog on File file save.
 * `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing a warning dialog on Blob file save.
+
+## Managing Azure Subscriptions
+
+If you are not signed in to Azure, you will see a "Sign in to Azure..." link. Alternatively, you can select "View->Command Palette" in the VS Code menu, and search for "Azure: Sign In".
+
+![Sign in to Azure](resources/SignInScreenshot.png)
+
+If you don't have an Azure Account, you can sign up for one today for free and receive $200 in credits by selecting "View->Command Palette" and searching for "Azure: Create an Account".
+
+You may sign out of Azure by selecting "View->Command Palette" and searching for "Azure: Sign Out".
+
+To select which subscriptions show up in the extension's explorer, click on the "Select Subscriptions..." button on any subscription node (indicated by a "key" icon when you hover over it), or select "View->Command Palette" and search for "Azure: Select Subscriptions". Note that this selection affects all VS Code extensions that support the [Azure Account and Sign-In](https://github.com/Microsoft/vscode-azure-account) extension.
+
+![Select Azure Subscriptions](resources/SelectSubscriptionsScreenshot.png)
 
 ## Known Issues
 
