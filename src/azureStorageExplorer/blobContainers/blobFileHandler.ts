@@ -46,6 +46,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         await new Promise<void>((resolve, reject) => {
             blobService.createBlockBlobFromLocalFile(node.treeItem.container.name, node.treeItem.blob.name, filePath, createOptions, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
+                    // tslint:disable-next-line:no-any
                     let errorAny = <any>error;
                     if (!!errorAny.code) {
                         let humanReadableMessage = `Unable to save '${node.treeItem.blob.name}' blob service returned error code "${errorAny.code}"`;

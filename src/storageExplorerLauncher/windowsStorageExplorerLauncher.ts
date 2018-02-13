@@ -8,9 +8,12 @@ import * as fs from "fs";
 import * as os from "os";
 import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
+import { Stream } from 'stream';
 
 // regedit doesn't exist for Mac. I have to import like this so it builds.
-let regedit: any;
+let regedit: {
+    list(keys: string[], architecture?: string, callback?: Function): Stream;
+};
 if (os.platform() === "win32") {
     // tslint:disable-next-line:no-require-imports
     // tslint:disable-next-line:no-var-requires
