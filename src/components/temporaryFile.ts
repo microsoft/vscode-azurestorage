@@ -11,7 +11,7 @@ import * as os from 'os';
 export class TemporaryFile {
     private static randomFolderNameLength: number = 12;
 
-    static async create(fileName: string): Promise<string> {
+    static async Create(fileName: string): Promise<string> {
         const buffer: Buffer = crypto.randomBytes(Math.ceil(TemporaryFile.randomFolderNameLength / 2));
         let folderName = buffer.toString('hex').slice(0, TemporaryFile.randomFolderNameLength);
         let filePath = path.join(os.tmpdir(), folderName, fileName);

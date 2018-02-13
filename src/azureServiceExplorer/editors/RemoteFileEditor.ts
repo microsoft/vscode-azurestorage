@@ -38,7 +38,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
         this.appendLineToOutput(`Opening '${fileName}' ...`);
         try {
             let parsedPath: path.ParsedPath = path.posix.parse(fileName);
-            let temporaryFilePath = await TemporaryFile.create(parsedPath.base);
+            let temporaryFilePath = await TemporaryFile.Create(parsedPath.base);
             await this.remoteFileHandler.downloadFile(context, temporaryFilePath);
             await this.showEditorFromFile(context, temporaryFilePath);
             this.appendLineToOutput(`Successfully opened '${fileName}'`);
