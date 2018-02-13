@@ -54,7 +54,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
             this.appendLineToOutput(`Unable to open '${fileName}'`);
             this.appendLineToOutput(`Error Details: ${details}`);
 
-            await window.showWarningMessage(`Unable to open "${fileName}". Please check Output for more information.`, DialogOptions.ok);
+            await window.showWarningMessage(`Unable to open "${fileName}". Please check Output for more information.`);
         }
     }
 
