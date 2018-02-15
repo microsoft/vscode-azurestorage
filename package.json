@@ -409,7 +409,7 @@
 		"watch": "tsc -watch -p ./"
 	},
 	"optionalDependencies": {
-		"regedit": "^2.2.7"
+		"winreg": "^1.2.3"
 	},
 	"devDependencies": {
 		"@types/copy-paste": "^1.1.30",
@@ -418,7 +418,8 @@
 		"tslint-microsoft-contrib": "5.0.1",
 		"vscode": "^1.1.5",
 		"@types/node": "^7.0.43",
-		"@types/mocha": "^2.2.42"
+		"@types/mocha": "^2.2.42",
+		"@types/winreg": "1.2.30"
 	},
 	"extensionDependencies": [
 		"ms-vscode.azure-account"
