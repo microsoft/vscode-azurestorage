@@ -5,17 +5,9 @@
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { Launcher } from "../components/launcher/launcher";
 import * as fs from "fs";
-import * as os from "os";
 import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
-
-// winreg doesn't exist for Mac. I have to import like this so it builds.
-let winreg: WinregStatic;
-if (os.platform() === "win32") {
-    // tslint:disable-next-line:no-require-imports
-    // tslint:disable-next-line:no-var-requires
-    winreg = require("winreg");
-}
+import * as winreg from "winreg";
 
 const downloadPageUrl: string = "https://go.microsoft.com/fwlink/?LinkId=723579";
 const regKey: { hive: string, key: string } = { hive: "HKCR", key: "\\storageexplorer\\shell\\open\\command" };
