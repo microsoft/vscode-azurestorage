@@ -408,9 +408,6 @@
 		"test": "npm run compile && node ./node_modules/vscode/bin/test",
 		"watch": "tsc -watch -p ./"
 	},
-	"optionalDependencies": {
-		"winreg": "^1.2.3"
-	},
 	"devDependencies": {
 		"@types/copy-paste": "^1.1.30",
 		"typescript": "^2.5.3",
@@ -433,6 +430,7 @@
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
 		"vscode-extension-telemetry": "^0.0.10",
-		"vscode-azureextensionui": "~0.7.0"
+		"vscode-azureextensionui": "~0.7.0",
+		"winreg": "^1.2.3"
 	}
 }
