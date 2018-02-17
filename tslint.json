@@ -117,8 +117,17 @@
             false, // changed
             "classes"
         ],
-        "export-name": false /*TODO: true*/,
-        "function-name": false /*TODO: true*/,
+        "export-name": false, // changed
+        "function-name": [
+            true,
+            {
+                "method-regex": "^[a-z][\\w\\d]+$",
+                "private-method-regex": "^[a-z][\\w\\d]+$",
+                "protected-method-regex": "^[a-z][\\w\\d]+$",
+                "static-method-regex": "^[a-z][a-zA-Z_\\d]+$", // changed
+                "function-regex": "^[a-z][\\w\\d]+$"
+            }
+        ],
         "import-name": false, // changed
         "interface-name": true,
         "jsdoc-format": true,
@@ -160,7 +169,7 @@
         "no-relative-imports": false, // changed
         "no-require-imports": false /*TODO: true*/,
         "no-shadowed-variable": false /*TODO: true*/,
-        "no-suspicious-comment": false /*TODO: true*/,
+        "no-suspicious-comment": true,
         "no-typeof-undefined": true,
         "no-unnecessary-field-initialization": false /*TODO: true*/,
         "no-unnecessary-local-variable": false /*TODO: true*/,

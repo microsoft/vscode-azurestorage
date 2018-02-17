@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { DialogBoxResponses } from '../../constants';
+import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
@@ -65,8 +65,8 @@ export class BlobContainerNode implements IAzureParentTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
-        const result = await vscode.window.showWarningMessage(message, DialogBoxResponses.yes, DialogBoxResponses.cancel);
-        if (result === DialogBoxResponses.yes) {
+        const result = await vscode.window.showWarningMessage(message, DialogOptions.yes, DialogOptions.cancel);
+        if (result === DialogOptions.yes) {
             const blobService = this.createBlobService();
             await new Promise((resolve, reject) => {
                 blobService.deleteContainer(this.container.name, err => {
