@@ -8,7 +8,7 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
-import { DialogBoxResponses } from '../../constants';
+import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import { deleteFile } from './fileUtils';
 
 export class FileNode implements IAzureTreeItem {
@@ -32,8 +32,8 @@ export class FileNode implements IAzureTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete the file '${this.label}'?`;
-        const result = await window.showWarningMessage(message, DialogBoxResponses.yes, DialogBoxResponses.cancel);
-        if (result === DialogBoxResponses.yes) {
+        const result = await window.showWarningMessage(message, DialogOptions.yes, DialogOptions.cancel);
+        if (result === DialogOptions.yes) {
             await deleteFile(this.directoryPath, this.file.name, this.share.name, this.storageAccount.name, this.key.value);
         } else {
             throw new UserCancelledError();

@@ -83,11 +83,11 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
 
     private static async downloadStorageExplorer(): Promise<void> {
         //I'm not sure why running start directly doesn't work. Opening seperate cmd to run the command works well
-        await Launcher.Launch("cmd", "/c", "start", downloadPageUrl);
+        await Launcher.launch("cmd", "/c", "start", downloadPageUrl);
     }
 
     private static async launchStorageExplorer(args: string[] = []): Promise<void> {
         let storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
-        await Launcher.Launch(storageExplorerExecutable, ...args);
+        await Launcher.launch(storageExplorerExecutable, ...args);
     }
 }
