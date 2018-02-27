@@ -205,7 +205,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
             if (blobPath) {
                 if (await this.doesBlobExist(blobPath)) {
                     const result = await vscode.window.showWarningMessage(
-                        `A blob with the name ${blobPath} already exists. Do you want to overwrite it?`,
+                        `A blob with the name "${blobPath}" already exists. Do you want to overwrite it?`,
                         DialogOptions.yes, DialogOptions.cancel);
                     if (result !== DialogOptions.yes) {
                         throw new UserCancelledError();
