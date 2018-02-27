@@ -14,6 +14,7 @@ import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { awaitWithProgress } from '../../components/progress';
 import * as fs from 'fs';
 import { BlobContainerNode } from './blobContainerNode';
+import * as fse from 'fs-extra';
 
 export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>> {
     private _channel: OutputChannel = azureStorageOutputChannel;
@@ -52,16 +53,9 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         }
     }
 
-    private getLocalFileSize(localPath: string): Promise<number> {
-        return new Promise<number>((resolve, reject) => {
-            fs.stat(localPath, (err, stats) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(stats.size);
-                }
-            });
-        });
+    private async getLocalFileSize(localPath: string): Promise<number> {
+        let stat = await fse.stat(localPath);
+        return stat.size;
     }
 
     public async downloadFile(node: IAzureNode<BlobNode>, filePath: string): Promise<void> {
