@@ -187,7 +187,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                         'xml',
                     ]
                 },
-                openLabel: "Select file to upload"
+                openLabel: "Upload"
             }
         );
         if (uris && uris[0]) {
