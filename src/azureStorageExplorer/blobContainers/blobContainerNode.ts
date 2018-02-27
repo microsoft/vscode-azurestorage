@@ -157,8 +157,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                             await this.uploadFileToBlockBlob(filePath, blobPath);
                             return;
                         }
-                    }
-                    catch (err) {
+                    } catch (err) {
                         // https://github.com/Microsoft/vscode-azuretools/issues/85
                     }
                 }
