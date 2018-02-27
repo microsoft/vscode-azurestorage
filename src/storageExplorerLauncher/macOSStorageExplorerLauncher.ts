@@ -8,6 +8,7 @@ import { Launcher } from "../components/launcher/launcher";
 import * as vscode from 'vscode';
 import * as fs from "fs";
 import { UserCancelledError } from "vscode-azureextensionui";
+import { ResourceType } from "./ResourceType";
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     private static subExecutableLocation: string = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
@@ -36,11 +37,11 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         return selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation;
     }
 
-    public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string): Promise<void> {
+    public async openResource(accountId: string, subscriptionid: string, resourceType: ResourceType, resourceName: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
-            + encodeURIComponent(resourceId)
+            + encodeURIComponent(accountId)
             + "&subscriptionid="
             + encodeURIComponent(subscriptionid)
             + "&source="
