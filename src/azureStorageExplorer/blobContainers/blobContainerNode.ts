@@ -224,7 +224,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         throw new UserCancelledError();
     }
 
-    private async uploadBlockBlob(filePath: string, blob: string) {
+    private async uploadBlockBlob(filePath: string, blob: string): Promise<void> {
         let blobFullDisplayPath = `${this.storageAccount.name}/${this.container.name}/${blob}`;
         channel.show();
         channel.appendLine(`Uploading ${filePath} as ${blobFullDisplayPath}`);
@@ -258,4 +258,3 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         });
     }
 }
-
