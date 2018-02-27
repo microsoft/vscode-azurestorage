@@ -106,7 +106,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
     }
 
     // This is the public entrypoint for azureStorage.uploadBlockBlob
-    public async uploadBlockBlob(node: IAzureParentNode<BlobContainerNode>): Promise<IAzureTreeItem> {
+    public async uploadBlockBlob(node: IAzureParentNode<BlobContainerNode>): Promise<void> {
         let uris = await vscode.window.showOpenDialog(
             <vscode.OpenDialogOptions>{
                 canSelectFiles: true,
@@ -149,10 +149,21 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                         throw new UserCancelledError();
                     }
 
-                    // TODO
-                } else {
-                    await node.createChild(<ICreateChildOptions>{ childType: ChildType.uploadedBlob, blobPath, filePath });
+                    let blobId = `${node.id}/${blobPath}`;
+                    try {
+                        let blobNode = await node.treeDataProvider.findNode(blobId);
+                        if (blobNode) {
+                            // A node for this blob already exists, no need to do anything with the tree, just upload
+                            await this.uploadFileToBlockBlob(filePath, blobPath);
+                            return;
+                        }
+                    }
+                    catch (err) {
+                        // https://github.com/Microsoft/vscode-azuretools/issues/85
+                    }
                 }
+
+                await node.createChild(<ICreateChildOptions>{ childType: ChildType.uploadedBlob, blobPath, filePath });
             }
         }
 
@@ -166,22 +177,22 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         return new BlobNode(actualBlob, this.container, this.storageAccount, this.key);
     }
 
-    private async uploadFileToBlockBlob(filePath: string, blob: string): Promise<void> {
-        let blobFullDisplayPath = `${this.storageAccount.name}/${this.container.name}/${blob}`;
+    private async uploadFileToBlockBlob(filePath: string, blobPath: string): Promise<void> {
+        let blobFullDisplayPath = `${this.storageAccount.name}/${this.container.name}/${blobPath}`;
         channel.show();
         channel.appendLine(`Uploading ${filePath} as ${blobFullDisplayPath}`);
         const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
         let speedSummary;
         const promise = new Promise((resolve, reject) => {
-            speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blob, filePath, function (err: any): void {
+            speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blobPath, filePath, function (err: any): void {
                 err ? reject(err) : resolve();
             });
         });
-        await awaitWithProgress(`Uploading ${blob}`, channel, promise, () => {
+        await awaitWithProgress(`Uploading ${blobPath}`, channel, promise, () => {
             const completed = <string>speedSummary.getCompleteSize(true);
             const total = <string>speedSummary.getTotalSize(true);
             const percent = speedSummary.getCompletePercent(0);
-            const msg = `${blob}: ${completed}/${total} (${percent}%)`;
+            const msg = `${blobPath}: ${completed}/${total} (${percent}%)`;
             return msg;
         });
         channel.appendLine(`Successfully uploaded ${blobFullDisplayPath}.`);
