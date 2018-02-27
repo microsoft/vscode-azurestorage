@@ -9,7 +9,7 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { BlobNode } from './blobNode';
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError, IAzureParentNode } from 'vscode-azureextensionui';
 import { Uri } from 'vscode';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { awaitWithProgress } from '../../components/progress';
@@ -21,6 +21,12 @@ let lastUploadFolder: Uri;
 export enum ChildType {
     newBlockBlob,
     uploadedBlob
+}
+
+interface ICreateChildOptions {
+    childType: ChildType;
+    filePath: string;
+    blobPath: string;
 }
 
 export class BlobContainerNode implements IAzureParentTreeItem {
@@ -88,14 +94,10 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         }
     }
 
-    public async createChild(
-        node: IAzureNode<BlobContainerNode>,
-        showCreatingNode: (label: string) => void,
-        userOptions: { childType: ChildType }
-    ): Promise<IAzureTreeItem> {
+    public async createChild(_node: IAzureNode<BlobContainerNode>, showCreatingNode: (label: string) => void, userOptions: ICreateChildOptions): Promise<IAzureTreeItem> {
         switch (userOptions.childType) {
             case ChildType.uploadedBlob:
-                return this.createChildFromUpload(node, showCreatingNode);
+                return this.createChildAsUpload(userOptions, showCreatingNode);
             case ChildType.newBlockBlob:
                 return this.createChildAsNewBlockBlob(showCreatingNode);
             default:
@@ -103,8 +105,90 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         }
     }
 
+    // This is the public entrypoint for azureStorage.uploadBlockBlob
+    public async uploadBlockBlob(node: IAzureParentNode<BlobContainerNode>): Promise<IAzureTreeItem> {
+        let uris = await vscode.window.showOpenDialog(
+            <vscode.OpenDialogOptions>{
+                canSelectFiles: true,
+                canSelectFolders: false,
+                canSelectMany: false,
+                defaultUri: lastUploadFolder,
+                filters: {
+                    "Text files": [
+                        'csv',
+                        'json',
+                        'log',
+                        'md',
+                        'rtf',
+                        'txt',
+                        'text',
+                        'xml',
+                    ]
+                },
+                openLabel: "Upload"
+            }
+        );
+        if (uris && uris[0]) {
+            let uri = uris[0];
+            lastUploadFolder = uri;
+            let filePath = uri.fsPath;
+
+            let handler = new BlobFileHandler();
+            await handler.checkCanUpload(node, filePath);
+
+            let blobPath = await vscode.window.showInputBox({
+                prompt: 'Enter a name for the uploaded block blob (may include a path)',
+                value: path.basename(filePath)
+            });
+            if (blobPath) {
+                if (await this.doesBlobExist(blobPath)) {
+                    const result = await vscode.window.showWarningMessage(
+                        `A blob with the name "${blobPath}" already exists. Do you want to overwrite it?`,
+                        DialogOptions.yes, DialogOptions.cancel);
+                    if (result !== DialogOptions.yes) {
+                        throw new UserCancelledError();
+                    }
+
+                    // TODO
+                } else {
+                    await node.createChild(<ICreateChildOptions>{ childType: ChildType.uploadedBlob, blobPath, filePath });
+                }
+            }
+        }
+
+        throw new UserCancelledError();
+    }
+
+    private async createChildAsUpload(options: ICreateChildOptions, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+        showCreatingNode(options.blobPath);
+        await this.uploadFileToBlockBlob(options.filePath, options.blobPath);
+        const actualBlob = await this.getBlob(options.blobPath);
+        return new BlobNode(actualBlob, this.container, this.storageAccount, this.key);
+    }
+
+    private async uploadFileToBlockBlob(filePath: string, blob: string): Promise<void> {
+        let blobFullDisplayPath = `${this.storageAccount.name}/${this.container.name}/${blob}`;
+        channel.show();
+        channel.appendLine(`Uploading ${filePath} as ${blobFullDisplayPath}`);
+        const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+        let speedSummary;
+        const promise = new Promise((resolve, reject) => {
+            speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blob, filePath, function (err: any): void {
+                err ? reject(err) : resolve();
+            });
+        });
+        await awaitWithProgress(`Uploading ${blob}`, channel, promise, () => {
+            const completed = <string>speedSummary.getCompleteSize(true);
+            const total = <string>speedSummary.getTotalSize(true);
+            const percent = speedSummary.getCompletePercent(0);
+            const msg = `${blob}: ${completed}/${total} (${percent}%)`;
+            return msg;
+        });
+        channel.appendLine(`Successfully uploaded ${blobFullDisplayPath}.`);
+    }
+
     // Currently only supports creating block blobs
-    public async createChildAsNewBlockBlob(showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+    private async createChildAsNewBlockBlob(showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         const blobName = await vscode.window.showInputBox({
             placeHolder: 'Enter a name for the new block blob',
             validateInput: BlobContainerNode.validateBlobName
@@ -166,83 +250,6 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         }
 
         return undefined;
-    }
-
-    private async createChildFromUpload(node: IAzureNode<BlobContainerNode>, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
-        let uris = await vscode.window.showOpenDialog(
-            <vscode.OpenDialogOptions>{
-                canSelectFiles: true,
-                canSelectFolders: false,
-                canSelectMany: false,
-                defaultUri: lastUploadFolder,
-                filters: {
-                    "Text files": [
-                        'csv',
-                        'json',
-                        'log',
-                        'md',
-                        'rtf',
-                        'txt',
-                        'text',
-                        'xml',
-                    ]
-                },
-                openLabel: "Upload"
-            }
-        );
-        if (uris && uris[0]) {
-            let uri = uris[0];
-            lastUploadFolder = uri;
-            let filePath = uri.fsPath;
-
-            let handler = new BlobFileHandler();
-            await handler.checkCanUpload(node, filePath);
-
-            let blobPath = await vscode.window.showInputBox({
-                prompt: 'Enter a name for the uploaded block blob (may include a path)',
-                value: path.basename(filePath)
-            });
-            if (blobPath) {
-                if (await this.doesBlobExist(blobPath)) {
-                    const result = await vscode.window.showWarningMessage(
-                        `A blob with the name "${blobPath}" already exists. Do you want to overwrite it?`,
-                        DialogOptions.yes, DialogOptions.cancel);
-                    if (result !== DialogOptions.yes) {
-                        throw new UserCancelledError();
-                    }
-                } else {
-                    showCreatingNode(blobPath);
-                }
-
-                await this.uploadBlockBlob(filePath, blobPath);
-
-                const actualBlob = await this.getBlob(blobPath);
-                return new BlobNode(actualBlob, this.container, this.storageAccount, this.key);
-            }
-        }
-
-        throw new UserCancelledError();
-    }
-
-    private async uploadBlockBlob(filePath: string, blob: string): Promise<void> {
-        let blobFullDisplayPath = `${this.storageAccount.name}/${this.container.name}/${blob}`;
-        channel.show();
-        channel.appendLine(`Uploading ${filePath} as ${blobFullDisplayPath}`);
-        const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-        let speedSummary;
-        const promise = new Promise((resolve, reject) => {
-            speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blob, filePath, function (err: any): void {
-                err ? reject(err) : resolve();
-            });
-        });
-        await awaitWithProgress(`Uploading ${blob}`, channel, promise, () => {
-            const completed = <string>speedSummary.getCompleteSize(true);
-            const total = <string>speedSummary.getTotalSize(true);
-            const percent = speedSummary.getCompletePercent(0);
-            const msg = `${blob}: ${completed}/${total} (${percent}%)`;
-            return msg;
-        });
-        channel.appendLine(`Successfully uploaded ${blobFullDisplayPath}.`);
     }
 
     private async doesBlobExist(blobPath: string): Promise<boolean> {

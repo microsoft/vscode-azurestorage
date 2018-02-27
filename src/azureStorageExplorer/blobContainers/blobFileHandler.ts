@@ -12,7 +12,6 @@ import { Limits } from '../limits';
 import { Uri, OutputChannel } from 'vscode';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { awaitWithProgress } from '../../components/progress';
-import * as fs from 'fs';
 import { BlobContainerNode } from './blobContainerNode';
 import * as fse from 'fs-extra';
 
