@@ -151,10 +151,13 @@ export class BlobContainerNode implements IAzureParentTreeItem {
 
                     let blobId = `${node.id}/${blobPath}`;
                     try {
-                        let blobNode = await node.treeDataProvider.findNode(blobId);
+                        let blobNode: IAzureNode<IAzureTreeItem> = await node.treeDataProvider.findNode(blobId);
                         if (blobNode) {
                             // A node for this blob already exists, no need to do anything with the tree, just upload
-                            await this.uploadFileToBlockBlob(filePath, blobPath);
+                            let blobTreeItem = blobNode.treeItem;
+                            await (<BlobNode>blobTreeItem).runWithTemporaryState("Updating...", blobNode, async () => {
+                                await this.uploadFileToBlockBlob(filePath, blobPath);
+                            });
                             return;
                         }
                     } catch (err) {

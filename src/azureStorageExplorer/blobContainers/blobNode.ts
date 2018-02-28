@@ -11,16 +11,19 @@ import { IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureexte
 import { Uri, window, SaveDialogOptions } from 'vscode';
 import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import { BlobFileHandler } from './blobFileHandler';
+import { BaseNode } from '../baseNode';
 
-export class BlobNode implements IAzureTreeItem {
+export class BlobNode extends BaseNode implements IAzureTreeItem {
   constructor(
     public readonly blob: azureStorage.BlobService.BlobResult,
     public readonly container: azureStorage.BlobService.ContainerResult,
     public readonly storageAccount: StorageAccount,
-    public readonly key: StorageAccountKey) {
+    public readonly key: StorageAccountKey
+  ) {
+    super();
   }
 
-  public label: string = this.blob.name;
+  public baseLabel: string = this.blob.name;
   public contextValue: string = 'azureBlob';
   public iconPath: { light: string | Uri; dark: string | Uri } = {
     light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'document.svg'),
