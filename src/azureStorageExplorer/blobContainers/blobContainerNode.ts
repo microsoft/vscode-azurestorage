@@ -123,7 +123,8 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                         'txt',
                         'text',
                         'xml',
-                    ]
+                    ],
+                    "All files": ['*']
                 },
                 openLabel: "Upload"
             }
