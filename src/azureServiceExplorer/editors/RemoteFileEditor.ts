@@ -9,7 +9,7 @@ import * as path from "path";
 import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import * as vscode from "vscode";
 import { IRemoteFileHandler } from './IRemoteFileHandler';
-import { UserCancelledError } from 'vscode-azureextensionui';
+import { UserCancelledError, IActionContext } from 'vscode-azureextensionui';
 import * as fse from 'fs-extra';
 
 export class RemoteFileEditor<ContextT> implements vscode.Disposable {
@@ -22,10 +22,11 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
         Object.keys(this.fileMap).forEach(async (key) => await fse.remove(path.dirname(key)));
     }
 
-    public async onDidSaveTextDocument(trackTelemetry: () => void, doc: vscode.TextDocument): Promise<void> {
+    public async onDidSaveTextDocument(actionContext: IActionContext, doc: vscode.TextDocument): Promise<void> {
+        actionContext.suppressTelemetry = true;
         const filePath = Object.keys(this.fileMap).find((filePath) => path.relative(doc.uri.fsPath, filePath) === '');
         if (filePath) {
-            trackTelemetry();
+            actionContext.suppressTelemetry = false;
             const context: ContextT = this.fileMap[filePath][1];
             await this.confirmSaveDocument(context);
             await this.saveDocument(context, doc);

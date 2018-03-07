@@ -36,7 +36,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const actionHandler: AzureActionHandler = new AzureActionHandler(context, azureStorageOutputChannel, reporter);
 
-    const azureTreeDataProvider = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
+    const azureTreeDataProvider = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode', undefined, reporter);
     registerBlobActionHandlers(actionHandler);
     registerBlobContainerActionHandlers(actionHandler, context);
     registerBlobContainerGroupActionHandlers(actionHandler);
