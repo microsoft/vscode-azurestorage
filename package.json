@@ -192,6 +192,10 @@
 					"group": "inline"
 				},
 				{
+					"command": "azureStorage.refresh",
+					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription"
+				},
+				{
 					"command": "azureStorage.openBlobContainer",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
@@ -209,6 +213,10 @@
 				},
 				{
 					"command": "azureStorage.createQueue",
+					"when": "view == azureStorage && viewItem == azureQueueGroup"
+				},
+				{
+					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureQueueGroup"
 				},
 				{
@@ -235,6 +243,10 @@
 					"when": "view == azureStorage && viewItem == azureBlobContainerGroup"
 				},
 				{
+					"command": "azureStorage.refresh",
+					"when": "view == azureStorage && viewItem == azureBlobContainerGroup"
+				},
+				{
 					"command": "azureStorage.deleteBlobContainer",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
@@ -244,6 +256,10 @@
 				},
 				{
 					"command": "azureStorage.uploadBlockBlob",
+					"when": "view == azureStorage && viewItem == azureBlobContainer"
+				},
+				{
+					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
 				{
@@ -259,11 +275,19 @@
 					"when": "view == azureStorage && viewItem == azureFileShare"
 				},
 				{
+					"command": "azureStorage.refresh",
+					"when": "view == azureStorage && viewItem == azureFileShare"
+				},
+				{
 					"command": "azureStorage.createSubdirectory",
 					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
 				},
 				{
 					"command": "azureStorage.deleteDirectory",
+					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
+				},
+				{
+					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
 				},
 				{
@@ -283,11 +307,19 @@
 					"when": "view == azureStorage && viewItem == azureFileShareGroup"
 				},
 				{
+					"command": "azureStorage.refresh",
+					"when": "view == azureStorage && viewItem == azureFileShareGroup"
+				},
+				{
 					"command": "azureStorage.deleteFileShare",
 					"when": "view == azureStorage && viewItem == azureFileShare"
 				},
 				{
 					"command": "azureStorage.createTable",
+					"when": "view == azureStorage && viewItem == azureTableGroup"
+				},
+				{
+					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureTableGroup"
 				},
 				{

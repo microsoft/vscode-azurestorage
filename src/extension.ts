@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { AzureStorgeProvider } from './explorer/azureStorage'
 */
 
-import { AzureTreeDataProvider, AzureActionHandler } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, AzureActionHandler, IAzureNode } from 'vscode-azureextensionui';
 import { StorageAccountProvider } from './azureStorageExplorer/storageAccountProvider';
 import { azureStorageOutputChannel } from './azureStorageExplorer/azureStorageOutputChannel';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
@@ -52,6 +52,6 @@ export function activate(context: vscode.ExtensionContext): void {
     registerTableGroupActionHandlers(actionHandler);
 
     vscode.window.registerTreeDataProvider('azureStorage', azureTreeDataProvider);
-    vscode.commands.registerCommand('azureStorage.refresh', () => azureTreeDataProvider.refresh());
+    vscode.commands.registerCommand('azureStorage.refresh', (node?: IAzureNode) => azureTreeDataProvider.refresh(node));
     vscode.commands.registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
 }
