@@ -30,11 +30,11 @@ If you are not signed in to Azure, you will see a "Sign in to Azure..." link. Al
 
 ![Sign in to Azure](resources/SignInScreenshot.png)
 
-If you don't have an Azure Account, you can sign up for one today for free and receive $200 in credits by selecting "View->Command Palette" and searching for "Azure: Create an Account".
+If you don't have an Azure Account, you can sign up for one today for free and receive $200 in credits by selecting "Create a Free Azure Account..." or selecting "View->Command Palette" and searching for "Azure: Create an Account".
 
 You may sign out of Azure by selecting "View->Command Palette" and searching for "Azure: Sign Out".
 
-To select which subscriptions show up in the extension's explorer, click on the "Select Subscriptions..." button on any subscription node (indicated by a "key" icon when you hover over it), or select "View->Command Palette" and search for "Azure: Select Subscriptions". Note that this selection affects all VS Code extensions that support the [Azure Account and Sign-In](https://github.com/Microsoft/vscode-azure-account) extension.
+To select which subscriptions show up in the extension's explorer, click on the "Select Subscriptions..." button on any subscription node (indicated by a "filter" icon when you hover over it), or select "View->Command Palette" and search for "Azure: Select Subscriptions". Note that this selection affects all VS Code extensions that support the [Azure Account and Sign-In](https://github.com/Microsoft/vscode-azure-account) extension.
 
 ![Select Azure Subscriptions](resources/SelectSubscriptionsScreenshot.png)
 
