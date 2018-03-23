@@ -8,6 +8,7 @@ import { Launcher } from "../components/launcher/launcher";
 import * as vscode from 'vscode';
 import * as fs from "fs";
 import { UserCancelledError } from "vscode-azureextensionui";
+import { ResourceType } from "./ResourceType";
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     private static subExecutableLocation: string = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
@@ -36,11 +37,11 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         return selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation;
     }
 
-    public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string): Promise<void> {
+    public async openResource(accountId: string, subscriptionid: string, resourceType: ResourceType, resourceName: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
-            + encodeURIComponent(resourceId)
+            + encodeURIComponent(accountId)
             + "&subscriptionid="
             + encodeURIComponent(subscriptionid)
             + "&source="
@@ -60,13 +61,13 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     }
 
     private static async downloadStorageExplorer(): Promise<void> {
-        await Launcher.Launch("open", MacOSStorageExplorerLauncher.downloadPageUrl);
+        await Launcher.launch("open", MacOSStorageExplorerLauncher.downloadPageUrl);
     }
 
     private async launchStorageExplorer(extraArgs: string[] = []): Promise<void> {
         let storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
 
-        return Launcher.Launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
+        return Launcher.launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
     }
 
     private static async fileExists(path: string): Promise<boolean> {

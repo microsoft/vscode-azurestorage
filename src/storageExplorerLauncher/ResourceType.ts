@@ -3,8 +3,4 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceType } from "./ResourceType";
-
-export interface IStorageExplorerLauncher {
-    openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void>;
-}
+export type ResourceType = 'Azure.BlobContainer' | 'Azure.FileShare' | 'Azure.Queue' | 'Azure.Table';

@@ -8,7 +8,7 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
-import { DialogBoxResponses } from '../../constants';
+import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 
 export class QueueNode implements IAzureTreeItem {
     constructor(
@@ -26,8 +26,8 @@ export class QueueNode implements IAzureTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete queue '${this.label}' and all its contents?`;
-        const result = await window.showWarningMessage(message, DialogBoxResponses.yes, DialogBoxResponses.cancel);
-        if (result === DialogBoxResponses.yes) {
+        const result = await window.showWarningMessage(message, DialogOptions.yes, DialogOptions.cancel);
+        if (result === DialogOptions.yes) {
             const queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
                 queueService.deleteQueue(this.queue.name, err => {

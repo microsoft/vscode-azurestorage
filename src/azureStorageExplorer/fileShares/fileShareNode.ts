@@ -10,7 +10,7 @@ import * as path from 'path';
 import { DirectoryNode } from './directoryNode';
 import { FileNode } from './fileNode';
 import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
-import { DialogBoxResponses } from '../../constants';
+import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import { askAndCreateChildDirectory } from './directoryUtils';
 import { askAndCreateEmptyTextFile } from './fileUtils';
 
@@ -66,8 +66,8 @@ export class FileShareNode implements IAzureParentTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
-        const result = await window.showWarningMessage(message, DialogBoxResponses.yes, DialogBoxResponses.cancel);
-        if (result === DialogBoxResponses.yes) {
+        const result = await window.showWarningMessage(message, DialogOptions.yes, DialogOptions.cancel);
+        if (result === DialogOptions.yes) {
             const fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
                 fileService.deleteShare(this.share.name, err => {

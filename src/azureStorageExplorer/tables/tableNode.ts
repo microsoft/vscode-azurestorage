@@ -8,7 +8,7 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
-import { DialogBoxResponses } from '../../constants';
+import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 
 export class TableNode implements IAzureTreeItem {
     constructor(
@@ -26,8 +26,8 @@ export class TableNode implements IAzureTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete table '${this.label}' and all its contents?`;
-        const result = await window.showWarningMessage(message, DialogBoxResponses.yes, DialogBoxResponses.cancel);
-        if (result === DialogBoxResponses.yes) {
+        const result = await window.showWarningMessage(message, DialogOptions.yes, DialogOptions.cancel);
+        if (result === DialogOptions.yes) {
             const tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
                 tableService.deleteTable(this.tableName, err => {

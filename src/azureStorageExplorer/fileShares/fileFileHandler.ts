@@ -45,7 +45,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
                     // tslint:disable-next-line:no-any
                     let errorAny = <any>error;
                     if (!!errorAny.code) {
-                        let humanReadableMessage = `Unable to save '${node.treeItem.file.name}' file service returned error code "${errorAny.code}"`;
+                        let humanReadableMessage = `Unable to save '${node.treeItem.file.name}', file service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {
                             case "ENOTFOUND":
                                 humanReadableMessage += " - Please check connection.";
@@ -73,7 +73,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
                     // tslint:disable-next-line:no-any
                     let errorAny = <any>error;
                     if (!!errorAny.code) {
-                        let humanReadableMessage = `Unable to retrieve properties for '${node.treeItem.file.name}' file service returned error code "${errorAny.code}"`;
+                        let humanReadableMessage = `Unable to retrieve properties for '${node.treeItem.file.name}', file service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {
                             case "ENOTFOUND":
                                 humanReadableMessage += " - Please check connection.";

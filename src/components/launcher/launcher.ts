@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 export class Launcher {
-    public static async Launch(command: string, ...args: string[]): Promise<void> {
+    public static async launch(command: string, ...args: string[]): Promise<void> {
         return await new Promise<void>((resolve, _reject) => {
             let spawnEnv = JSON.parse(JSON.stringify(process.env));
             // remove those env vars

@@ -13,10 +13,10 @@ export function registerTableActionHandlers(actionHandler: AzureActionHandler): 
 }
 
 function openTableInStorageExplorer(node: IAzureNode<TableNode>): Promise<void> {
-    let resourceId = node.treeItem.storageAccount.id;
+    let accountId = node.treeItem.storageAccount.id;
     let subscriptionid = node.subscription.subscriptionId;
-    let resourceType = "Azure.Table";
+    const resourceType = "Azure.Table";
     let resourceName = node.treeItem.tableName;
 
-    return storageExplorerLauncher.openResource(resourceId, subscriptionid, resourceType, resourceName);
+    return storageExplorerLauncher.openResource(accountId, subscriptionid, resourceType, resourceName);
 }

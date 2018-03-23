@@ -5,30 +5,21 @@
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { Launcher } from "../components/launcher/launcher";
 import * as fs from "fs";
-import * as os from "os";
 import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
-import { Stream } from 'stream';
+import * as winreg from "winreg";
+import { ResourceType } from "./ResourceType";
 
-// regedit doesn't exist for Mac. I have to import like this so it builds.
-let regedit: {
-    list(keys: string[], architecture?: string, callback?: Function): Stream;
-};
-if (os.platform() === "win32") {
-    // tslint:disable-next-line:no-require-imports
-    // tslint:disable-next-line:no-var-requires
-    regedit = require("regedit");
-}
+const downloadPageUrl: string = "https://go.microsoft.com/fwlink/?LinkId=723579";
+const regKey: { hive: string, key: string } = { hive: "HKCR", key: "\\storageexplorer\\shell\\open\\command" };
 
 export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher {
-    public static downloadPageUrl: string = "https://go.microsoft.com/fwlink/?LinkId=723579";
-    private static _regKey: string = "HKCR\\storageexplorer\\shell\\open\\command";
 
-    public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string): Promise<void> {
+    public async openResource(accountId: string, subscriptionid: string, resourceType: ResourceType, resourceName: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
-            + encodeURIComponent(resourceId)
+            + encodeURIComponent(accountId)
             + "&subscriptionid="
             + encodeURIComponent(subscriptionid)
             + "&source="
@@ -48,12 +39,18 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     private static async getStorageExplorerExecutable(): Promise<string> {
         let regVal: string;
         try {
-            regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(WindowsStorageExplorerLauncher._regKey);
-        } catch (_err) {
+            regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(regKey.hive, regKey.key);
+        } catch (err) {
             // ignore and prompt to download.
+            console.error(err);
         } finally {
-            if (regVal && await WindowsStorageExplorerLauncher.fileExists(regVal)) {
-                return regVal;
+            let exePath: string;
+            if (regVal) {
+                // Parse from e.g.: "C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe" -- "%1"
+                exePath = regVal.split("\"")[1];
+            }
+            if (exePath && await WindowsStorageExplorerLauncher.fileExists(exePath)) {
+                return exePath;
             } else {
                 let selected: "Download" = <"Download">await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
                 if (selected === "Download") {
@@ -73,26 +70,26 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
         });
     }
 
-    private static getWindowsRegistryValue(key: string): Promise<string> {
+    private static getWindowsRegistryValue(hive: string, key: string): Promise<string> {
         return new Promise((resolve, reject) => {
-            regedit.list([key])
-                .on('data', (entry) => {
-                    let value = <string>entry.data.values[""].value.split("\"")[1];
-                    resolve(value);
-                })
-                .on('error', (err) => {
+            let regKey = new winreg({ hive, key });
+            regKey.values((err: any, items: Winreg.RegistryItem[]) => {
+                if (err) {
                     reject(err);
-                });
+                } else {
+                    resolve(items && items.length > 0 && items[0].value);
+                }
+            });
         });
     }
 
     private static async downloadStorageExplorer(): Promise<void> {
         //I'm not sure why running start directly doesn't work. Opening seperate cmd to run the command works well
-        await Launcher.Launch("cmd", "/c", "start", WindowsStorageExplorerLauncher.downloadPageUrl);
+        await Launcher.launch("cmd", "/c", "start", downloadPageUrl);
     }
 
     private static async launchStorageExplorer(args: string[] = []): Promise<void> {
         let storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
-        await Launcher.Launch(storageExplorerExecutable, ...args);
+        await Launcher.launch(storageExplorerExecutable, ...args);
     }
 }
