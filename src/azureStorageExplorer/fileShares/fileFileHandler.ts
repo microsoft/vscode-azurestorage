@@ -42,8 +42,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         await new Promise<void>((resolve, reject) => {
             fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
-                    // tslint:disable-next-line:no-any
-                    let errorAny = <any>error;
+                    let errorAny = <{ code?: string }>error;
                     if (!!errorAny.code) {
                         let humanReadableMessage = `Unable to save '${node.treeItem.file.name}', file service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {
@@ -70,8 +69,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         return await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
             fileService.getFileProperties(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, (error: Error, result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
-                    // tslint:disable-next-line:no-any
-                    let errorAny = <any>error;
+                    let errorAny = <{ code?: string }>error;
                     if (!!errorAny.code) {
                         let humanReadableMessage = `Unable to retrieve properties for '${node.treeItem.file.name}', file service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {

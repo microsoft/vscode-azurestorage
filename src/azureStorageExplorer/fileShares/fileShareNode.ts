@@ -79,8 +79,7 @@ export class FileShareNode implements IAzureParentTreeItem {
         }
     }
 
-    // tslint:disable-next-line:no-any
-    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem> {
+    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: {}): Promise<IAzureTreeItem> {
         if (userOptions === FileNode.contextValue) {
             return askAndCreateEmptyTextFile('', this.share, this.storageAccount, this.key, showCreatingNode);
         } else {

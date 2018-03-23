@@ -184,7 +184,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
         let speedSummary;
         const promise = new Promise((resolve, reject) => {
-            speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blobPath, filePath, function (err: any): void {
+            speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blobPath, filePath, function (err: {}): void {
                 err ? reject(err) : resolve();
             });
         });
