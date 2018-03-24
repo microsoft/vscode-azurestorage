@@ -6,10 +6,10 @@
 import { TextDocument, window } from 'vscode';
 import { TemporaryFile } from '../../components/temporaryFile';
 import * as path from "path";
-import DialogOptions from '../../azureServiceExplorer/messageItems/dialogOptions';
+import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import * as vscode from "vscode";
 import { IRemoteFileHandler } from './IRemoteFileHandler';
-import { UserCancelledError } from 'vscode-azureextensionui';
+import { UserCancelledError, IActionContext } from 'vscode-azureextensionui';
 import * as fse from 'fs-extra';
 
 export class RemoteFileEditor<ContextT> implements vscode.Disposable {
@@ -22,10 +22,11 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
         Object.keys(this.fileMap).forEach(async (key) => await fse.remove(path.dirname(key)));
     }
 
-    public async onDidSaveTextDocument(trackTelemetry: () => void, doc: vscode.TextDocument): Promise<void> {
+    public async onDidSaveTextDocument(actionContext: IActionContext, doc: vscode.TextDocument): Promise<void> {
+        actionContext.suppressTelemetry = true;
         const filePath = Object.keys(this.fileMap).find((filePath) => path.relative(doc.uri.fsPath, filePath) === '');
         if (filePath) {
-            trackTelemetry();
+            actionContext.suppressTelemetry = false;
             const context: ContextT = this.fileMap[filePath][1];
             await this.confirmSaveDocument(context);
             await this.saveDocument(context, doc);
@@ -33,28 +34,28 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     }
 
     async showEditor(context: ContextT): Promise<void> {
-        var fileName = await this.remoteFileHandler.getFilename(context);
+        let fileName = await this.remoteFileHandler.getFilename(context);
 
-        this.appendLineToOutput(`Opening '${fileName}' ...`);
         try {
             let parsedPath: path.ParsedPath = path.posix.parse(fileName);
             let temporaryFilePath = await TemporaryFile.create(parsedPath.base);
             await this.remoteFileHandler.downloadFile(context, temporaryFilePath);
             await this.showEditorFromFile(context, temporaryFilePath);
-            this.appendLineToOutput(`Successfully opened '${fileName}'`);
         } catch (error) {
-            var details: string;
+            if (!(error instanceof UserCancelledError)) {
+                let details: string;
 
-            if (!!error.message) {
-                details = error.message;
-            } else {
-                details = JSON.stringify(error);
+                if (!!error.message) {
+                    details = error.message;
+                } else {
+                    details = JSON.stringify(error);
+                }
+
+                this.appendLineToOutput(`Unable to open '${fileName}'`);
+                this.appendLineToOutput(`Error Details: ${details}`);
+
+                await window.showWarningMessage(`Unable to open "${fileName}". Please check Output for more information.`);
             }
-
-            this.appendLineToOutput(`Unable to open '${fileName}'`);
-            this.appendLineToOutput(`Error Details: ${details}`);
-
-            await window.showWarningMessage(`Unable to open "${fileName}". Please check Output for more information.`, DialogOptions.OK);
         }
     }
 
@@ -63,18 +64,18 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
 
         if (showSaveWarning) {
             const message: string = await this.remoteFileHandler.getSaveConfirmationText(context);
-            const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogOptions.OK, DialogOptions.UploadDontShowAgain, DialogOptions.Cancel);
+            const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogOptions.ok, DialogOptions.uploadDontShowAgain, DialogOptions.cancel);
 
-            if (!result || result === DialogOptions.Cancel) {
+            if (!result || result === DialogOptions.cancel) {
                 throw new UserCancelledError();
-            } else if (result === DialogOptions.UploadDontShowAgain) {
+            } else if (result === DialogOptions.uploadDontShowAgain) {
                 await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
             }
         }
     }
 
     private async saveDocument(context: ContextT, document: TextDocument): Promise<void> {
-        var fileName = await this.remoteFileHandler.getFilename(context);
+        let fileName = await this.remoteFileHandler.getFilename(context);
         this.appendLineToOutput(`Updating '${fileName}' ...`);
         try {
             await this.remoteFileHandler.uploadFile(context, document.fileName);
@@ -86,12 +87,19 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     }
 
     private async showEditorFromFile(context: ContextT, localFilePath: string): Promise<void> {
+        this.appendLineToOutput("Opening...");
         const document = await vscode.workspace.openTextDocument(localFilePath);
-        this.fileMap[localFilePath] = [document, context];
-        await vscode.window.showTextDocument(document);
+        if (document) {
+            this.fileMap[localFilePath] = [document, context];
+            await vscode.window.showTextDocument(document);
+            this.appendLineToOutput(`Successfully opened '${localFilePath}'`);
+        } else {
+            // This tends to fail if the file is too large: https://github.com/Microsoft/vscode/issues/43861
+            throw new Error(`Unable to open ${localFilePath}.`);
+        }
     }
 
-    protected appendLineToOutput(value: string) {
+    protected appendLineToOutput(value: string): void {
         if (!!this.outputChanel) {
             this.outputChanel.appendLine(value);
             this.outputChanel.show(true);

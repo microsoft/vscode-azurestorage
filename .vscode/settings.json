@@ -7,5 +7,16 @@
     "search.exclude": {
         "out": true,
         "**/node_modules": true
-    }
+    },
+    "tslint.autoFixOnSave": true,
+    "tslint.ignoreDefinitionFiles": true,
+    "cSpell.words": [
+        "azureextensionui",
+        "azurestorage",
+        "azuretools",
+        "mailto",
+        "norequired",
+        "opencode",
+        "repo"
+    ]
 }

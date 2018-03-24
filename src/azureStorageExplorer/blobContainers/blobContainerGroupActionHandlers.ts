@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceType } from "./ResourceType";
+import { AzureActionHandler } from 'vscode-azureextensionui';
 
-export interface IStorageExplorerLauncher {
-    openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void>;
+export function registerBlobContainerGroupActionHandlers(actionHandler: AzureActionHandler): void {
+    actionHandler.registerCommand("azureStorage.createBlobContainer", (node) => node.createChild());
 }

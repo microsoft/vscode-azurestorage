@@ -8,21 +8,22 @@ import { Launcher } from "../components/launcher/launcher";
 import * as vscode from 'vscode';
 import * as fs from "fs";
 import { UserCancelledError } from "vscode-azureextensionui";
+import { ResourceType } from "./ResourceType";
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
-    private static subExecutableLocation = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
-    public static downloadPageUrl = "https://go.microsoft.com/fwlink/?LinkId=723579";
+    private static subExecutableLocation: string = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
+    public static downloadPageUrl: string = "https://go.microsoft.com/fwlink/?LinkId=723579";
 
     private static async getStorageExplorerExecutable(
         warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer."): Promise<string> {
 
-        var selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
+        let selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
 
         if (!(await MacOSStorageExplorerLauncher.fileExists(selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation))) {
-            var selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
+            let selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
 
             if (selected === "Browse") {
-                var userSelectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
+                let userSelectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
                 await vscode.workspace.getConfiguration('azureStorage').update('storageExplorerLocation', userSelectedAppLocation, vscode.ConfigurationTarget.Global);
                 return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected app is not a valid Storage Explorer installation. Browse to existing installation location or download and install Storage Explorer.");
             } else if (selected === "Download") {
@@ -36,24 +37,22 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         return selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation;
     }
 
-    public async openResource(resourceId: string, subscriptionid: string, resourceType: string, resourceName: string) {
-        var url = "storageexplorer://v=1"
+    public async openResource(accountId: string, subscriptionid: string, resourceType: ResourceType, resourceName: string): Promise<void> {
+        // tslint:disable-next-line:prefer-template
+        let url = "storageexplorer://v=1"
             + "&accountid="
-            + encodeURIComponent(resourceId)
+            + encodeURIComponent(accountId)
             + "&subscriptionid="
             + encodeURIComponent(subscriptionid)
             + "&source="
             + encodeURIComponent("VSCODE-AzureStorage");
 
-
         if (!!resourceType) {
-            url = url + "&resourcetype="
-                + resourceType
+            url = `${url}&resourcetype=${resourceType}`;
         }
 
         if (!!resourceName) {
-            url = url + "&resourcename="
-                + resourceName;
+            url = `${url}&resourcename=${resourceName}`;
         }
 
         await this.launchStorageExplorer([
@@ -61,12 +60,12 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         ]);
     }
 
-    private static async downloadStorageExplorer() {
+    private static async downloadStorageExplorer(): Promise<void> {
         await Launcher.launch("open", MacOSStorageExplorerLauncher.downloadPageUrl);
     }
 
-    private async launchStorageExplorer(extraArgs: string[] = []) {
-        var storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
+    private async launchStorageExplorer(extraArgs: string[] = []): Promise<void> {
+        let storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
 
         return Launcher.launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
     }

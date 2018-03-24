@@ -6,7 +6,7 @@
 	"publisher": "ms-azuretools",
 	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 	"engines": {
-		"vscode": "^1.17.0"
+		"vscode": "^1.20.0"
 	},
 	"repository": {
 		"type": "git",
@@ -53,8 +53,16 @@
 				}
 			},
 			{
+				"command": "azureStorage.selectSubscriptions",
+				"title": "Select Subscriptions...",
+				"icon": {
+					"light": "resources/light/filter.svg",
+					"dark": "resources/dark/filter.svg"
+				}
+			},
+			{
 				"command": "azureStorage.openBlobContainer",
-				"title": "Open Blob Container In Explorer",
+				"title": "Open Blob Container in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -62,7 +70,7 @@
 			},
 			{
 				"command": "azureStorage.openTable",
-				"title": "Open Table In Explorer",
+				"title": "Open Table in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -70,7 +78,7 @@
 			},
 			{
 				"command": "azureStorage.openFileShare",
-				"title": "Open File Share In Explorer",
+				"title": "Open File Share in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -78,7 +86,7 @@
 			},
 			{
 				"command": "azureStorage.openQueue",
-				"title": "Open Queue In Explorer",
+				"title": "Open Queue in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -86,7 +94,7 @@
 			},
 			{
 				"command": "azureStorage.openStorageAccount",
-				"title": "Open Storage Account In Explorer",
+				"title": "Open Storage Account in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -113,8 +121,16 @@
 				"title": "Create Empty Text Blob"
 			},
 			{
+				"command": "azureStorage.uploadBlockBlob",
+				"title": "Upload block blob..."
+			},
+			{
 				"command": "azureStorage.deleteBlob",
-				"title": "Delete Blob"
+				"title": "Delete"
+			},
+			{
+				"command": "azureStorage.downloadBlob",
+				"title": "Download..."
 			},
 			{
 				"command": "azureStorage.createFileShare",
@@ -142,7 +158,7 @@
 			},
 			{
 				"command": "azureStorage.deleteFile",
-				"title": "Delete File"
+				"title": "Delete"
 			},
 			{
 				"command": "azureStorage.createTable",
@@ -171,6 +187,15 @@
 			],
 			"view/item/context": [
 				{
+					"command": "azureStorage.selectSubscriptions",
+					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+					"group": "inline"
+				},
+				{
+					"command": "azureStorage.refresh",
+					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription"
+				},
+				{
 					"command": "azureStorage.openBlobContainer",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
@@ -188,6 +213,10 @@
 				},
 				{
 					"command": "azureStorage.createQueue",
+					"when": "view == azureStorage && viewItem == azureQueueGroup"
+				},
+				{
+					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureQueueGroup"
 				},
 				{
@@ -214,6 +243,10 @@
 					"when": "view == azureStorage && viewItem == azureBlobContainerGroup"
 				},
 				{
+					"command": "azureStorage.refresh",
+					"when": "view == azureStorage && viewItem == azureBlobContainerGroup"
+				},
+				{
 					"command": "azureStorage.deleteBlobContainer",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
@@ -222,11 +255,27 @@
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
 				{
+					"command": "azureStorage.uploadBlockBlob",
+					"when": "view == azureStorage && viewItem == azureBlobContainer"
+				},
+				{
+					"command": "azureStorage.refresh",
+					"when": "view == azureStorage && viewItem == azureBlobContainer"
+				},
+				{
 					"command": "azureStorage.deleteBlob",
 					"when": "view == azureStorage && viewItem == azureBlob"
 				},
 				{
+					"command": "azureStorage.downloadBlob",
+					"when": "view == azureStorage && viewItem == azureBlob"
+				},
+				{
 					"command": "azureStorage.createDirectory",
+					"when": "view == azureStorage && viewItem == azureFileShare"
+				},
+				{
+					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureFileShare"
 				},
 				{
@@ -235,6 +284,10 @@
 				},
 				{
 					"command": "azureStorage.deleteDirectory",
+					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
+				},
+				{
+					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
 				},
 				{
@@ -254,11 +307,19 @@
 					"when": "view == azureStorage && viewItem == azureFileShareGroup"
 				},
 				{
+					"command": "azureStorage.refresh",
+					"when": "view == azureStorage && viewItem == azureFileShareGroup"
+				},
+				{
 					"command": "azureStorage.deleteFileShare",
 					"when": "view == azureStorage && viewItem == azureFileShare"
 				},
 				{
 					"command": "azureStorage.createTable",
+					"when": "view == azureStorage && viewItem == azureTableGroup"
+				},
+				{
+					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureTableGroup"
 				},
 				{
@@ -288,7 +349,15 @@
 					"when": "never"
 				},
 				{
+					"command": "azureStorage.uploadBlockBlob",
+					"when": "never"
+				},
+				{
 					"command": "azureStorage.deleteBlob",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.downloadBlob",
 					"when": "never"
 				},
 				{
@@ -390,19 +459,22 @@
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
-		"watch": "tsc -watch -p ./",
+		"lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
 		"postinstall": "node ./node_modules/vscode/bin/install",
-		"test": "npm run compile && node ./node_modules/vscode/bin/test"
-	},
-	"optionalDependencies": {
-		"regedit": "^2.2.7"
+		"test": "npm run compile && node ./node_modules/vscode/bin/test",
+		"watch": "tsc -watch -p ./"
 	},
 	"devDependencies": {
 		"@types/copy-paste": "^1.1.30",
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^7.0.43",
+		"@types/winreg": "1.2.30",
+		"gulp": "^3.9.1",
+		"tslint": "^5.7.0",
+		"tslint-microsoft-contrib": "5.0.1",
 		"typescript": "^2.5.3",
 		"vscode": "^1.1.5",
-		"@types/node": "^7.0.43",
-		"@types/mocha": "^2.2.42"
+		"vsce": "^1.37.5"
 	},
 	"extensionDependencies": [
 		"ms-vscode.azure-account"
@@ -412,10 +484,11 @@
 		"azure-arm-storage": "^3.1.0",
 		"azure-storage": "^2.6.0",
 		"copy-paste": "^1.3.0",
-		"fs-extra": "4.0.2",
+		"fs-extra": "^4.0.2",
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
-		"vscode-extension-telemetry": "^0.0.10",
-		"vscode-azureextensionui": "~0.5.5"
+		"vscode-extension-telemetry": "^0.0.15",
+		"vscode-azureextensionui": "~0.8.2",
+		"winreg": "^1.2.3"
 	}
 }

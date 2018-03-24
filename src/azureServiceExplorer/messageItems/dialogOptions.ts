@@ -5,8 +5,11 @@
 
 import * as vscode from "vscode";
 
-export default class DialogOptions {
-    static readonly OK: vscode.MessageItem = { title: "OK" };
-    static readonly UploadDontShowAgain: vscode.MessageItem = { title: "Always Upload" };
-    static readonly Cancel: vscode.MessageItem = { title: "Cancel", isCloseAffordance: true };
+export namespace DialogOptions {
+    export const cancel: vscode.MessageItem = { title: "Cancel", isCloseAffordance: true };
+    export const no: vscode.MessageItem = { title: "No" };
+    export const ok: vscode.MessageItem = { title: "OK" };
+    export const yes: vscode.MessageItem = { title: "Yes" };
+    export const upload: vscode.MessageItem = { title: "Upload" };
+    export const uploadDontShowAgain: vscode.MessageItem = { title: "Always Upload" };
 }
