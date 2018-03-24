@@ -3,20 +3,20 @@
 The Azure Storage extension for VS Code lets you browse Azure Blob Containers, File Shares, Tables, and Queues.
 
 ## Features
+
 * Explore/Create/Delete Blob Containers, File Shares, Queues and Tables
 
-   ![Explore Containers, Shares, Queues, and Tables](resources/exploreScreenshot.png)
-   ![Create Blob Containers](resources/createBlobContainerScreenshot.png)
+  ![Create Blob Containers](resources/createBlobContainerScreenshot.png)
 
- * Access Connection String and Primary Key
+* Access Connection String and Primary Key
 
    ![Copy Connection String and Primary Key](resources/storageActionsScreenshot.png)
 
- * Create/Edit/Delete Block Blobs and Files
+* Create/Edit/Delete Block Blobs and Files
 
    ![Create Block Blobs](resources/blobContainerActionsScreenshot.png)
 
- * Open in Storage Explorer for memory or computationally heavy tasks, or for upload/download of large or non-text files.
+* Open in Storage Explorer for memory or computationally heavy tasks, or for upload/download of large or non-text files.
 
    ![Open In Storage Explorer](resources/openBlobContainerScreenshot.png)
 
@@ -31,7 +31,7 @@ The Azure Storage extension for VS Code lets you browse Azure Blob Containers, F
 
 If you are not signed in to Azure, you will see a "Sign in to Azure..." link. Alternatively, you can select "View->Command Palette" in the VS Code menu, and search for "Azure: Sign In".
 
-![Sign in to Azure](resources/SignInScreenshot.png)
+![Sign in to Azure](resources/SignIn.gif)
 
 If you don't have an Azure Account, you can sign up for one today for free and receive $200 in credits by selecting "Create a Free Azure Account..." or selecting "View->Command Palette" and searching for "Azure: Create an Account".
 
@@ -39,7 +39,7 @@ You may sign out of Azure by selecting "View->Command Palette" and searching for
 
 To select which subscriptions show up in the extension's explorer, click on the "Select Subscriptions..." button on any subscription node (indicated by a "filter" icon when you hover over it), or select "View->Command Palette" and search for "Azure: Select Subscriptions". Note that this selection affects all VS Code extensions that support the [Azure Account and Sign-In](https://github.com/Microsoft/vscode-azure-account) extension.
 
-![Select Azure Subscriptions](resources/SelectSubscriptionsScreenshot.png)
+![Select Azure Subscriptions](resources/SelectSubscriptions.gif)
 
 ## Known Issues
 
