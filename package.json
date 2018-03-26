@@ -329,7 +329,7 @@
 			],
 			"commandPalette": [
 				{
-					"command": "cosmosDB.selectSubscriptions",
+					"command": "azureStorage.selectSubscriptions",
 					"when": "never"
 				},
 				{
