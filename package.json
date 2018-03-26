@@ -329,6 +329,10 @@
 			],
 			"commandPalette": [
 				{
+					"command": "azureStorage.selectSubscriptions",
+					"when": "never"
+				},
+				{
 					"command": "azureStorage.refresh",
 					"when": "never"
 				},
