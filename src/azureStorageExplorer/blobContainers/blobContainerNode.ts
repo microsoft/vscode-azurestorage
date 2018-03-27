@@ -202,7 +202,18 @@ export class BlobContainerNode implements IAzureParentTreeItem {
     private async createChildAsNewBlockBlob(showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         const blobName = await vscode.window.showInputBox({
             placeHolder: 'Enter a name for the new block blob',
-            validateInput: BlobContainerNode.validateBlobName
+            validateInput: async (name: string) => {
+                let nameError = BlobContainerNode.validateBlobName(name);
+                if (nameError) {
+                    return nameError;
+                } else {
+                    if (await this.doesBlobExist(name)) {
+                        return "A blob with this path and name already exists";
+                    }
+                }
+
+                return undefined;
+            }
         });
 
         if (blobName) {
