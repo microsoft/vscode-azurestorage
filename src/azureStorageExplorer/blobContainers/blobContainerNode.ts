@@ -206,10 +206,8 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                 let nameError = BlobContainerNode.validateBlobName(name);
                 if (nameError) {
                     return nameError;
-                } else {
-                    if (await this.doesBlobExist(name)) {
-                        return "A blob with this path and name already exists";
-                    }
+                } else if (await this.doesBlobExist(name)) {
+                    return "A blob with this path and name already exists";
                 }
 
                 return undefined;
