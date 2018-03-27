@@ -139,7 +139,8 @@ export class BlobContainerNode implements IAzureParentTreeItem {
 
             let blobPath = await vscode.window.showInputBox({
                 prompt: 'Enter a name for the uploaded block blob (may include a path)',
-                value: path.basename(filePath)
+                value: path.basename(filePath),
+                validateInput: BlobContainerNode.validateBlobName
             });
             if (blobPath) {
                 if (await this.doesBlobExist(blobPath)) {
@@ -202,7 +203,16 @@ export class BlobContainerNode implements IAzureParentTreeItem {
     private async createChildAsNewBlockBlob(showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         const blobName = await vscode.window.showInputBox({
             placeHolder: 'Enter a name for the new block blob',
-            validateInput: BlobContainerNode.validateBlobName
+            validateInput: async (name: string) => {
+                let nameError = BlobContainerNode.validateBlobName(name);
+                if (nameError) {
+                    return nameError;
+                } else if (await this.doesBlobExist(name)) {
+                    return "A blob with this path and name already exists";
+                }
+
+                return undefined;
+            }
         });
 
         if (blobName) {
@@ -257,7 +267,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
             return 'Blob name must contain between 1 and 1024 characters';
         }
         if (/[/\\.]$/.test(name)) {
-            return 'Blob name cannot end with a forward or backward slash or a period.';
+            return 'Avoid blob names that end with a forward or backward slash or a period.';
         }
 
         return undefined;
