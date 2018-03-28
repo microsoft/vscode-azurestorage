@@ -27,9 +27,8 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
 
 function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>): Promise<void> {
     let accountId = node.treeItem.storageAccount.id;
-    let subscriptionid = node.subscription.subscriptionId;
     const resourceType = 'Azure.BlobContainer';
     let resourceName = node.treeItem.container.name;
 
-    return storageExplorerLauncher.openResource(accountId, subscriptionid, resourceType, resourceName);
+    return storageExplorerLauncher.openResource(accountId, node.subscriptionId, resourceType, resourceName);
 }
