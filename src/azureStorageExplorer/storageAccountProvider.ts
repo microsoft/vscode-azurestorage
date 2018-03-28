@@ -11,7 +11,7 @@ import { StorageAccountNode } from './storageAccounts/storageAccountNode';
 
 export class StorageAccountProvider implements IChildProvider {
     async loadMoreChildren(node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
-        let storageManagementClient = new StorageManagementClient(node.credentials, node.subscription.subscriptionId);
+        let storageManagementClient = new StorageManagementClient(node.credentials, node.subscriptionId);
 
         let accounts = await storageManagementClient.storageAccounts.list();
         let accountNodes = accounts.map((storageAccount: StorageAccount) => {

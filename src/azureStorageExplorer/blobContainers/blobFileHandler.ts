@@ -36,7 +36,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         }
 
         if (message) {
-            await Limits.askOpenInStorageExplorer(message, node.treeItem.storageAccount.id, node.subscription.subscriptionId, 'Azure.BlobContainer', node.treeItem.container.name);
+            await Limits.askOpenInStorageExplorer(message, node.treeItem.storageAccount.id, node.subscriptionId, 'Azure.BlobContainer', node.treeItem.container.name);
         }
     }
 
@@ -46,7 +46,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
             await Limits.askOpenInStorageExplorer(
                 `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
                 node.treeItem.storageAccount.id,
-                node.subscription.subscriptionId,
+                node.subscriptionId,
                 'Azure.BlobContainer',
                 node.treeItem.container.name);
         }

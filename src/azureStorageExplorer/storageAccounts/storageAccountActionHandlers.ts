@@ -16,9 +16,8 @@ export function registerStorageAccountActionHandlers(actionHandler: AzureActionH
 
 function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>): Promise<void> {
     let accountId = node.treeItem.storageAccount.id;
-    let subscriptionid = node.subscription.subscriptionId;
 
-    return storageExplorerLauncher.openResource(accountId, subscriptionid);
+    return storageExplorerLauncher.openResource(accountId, node.subscriptionId);
 }
 
 async function copyPrimaryKey(node: IAzureNode<StorageAccountNode>): Promise<void> {
