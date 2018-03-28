@@ -6,7 +6,7 @@
 import { BlobNode } from './blobNode';
 import * as azureStorage from "azure-storage";
 
-import { IAzureNode } from 'vscode-azureextensionui';
+import { IAzureNode, TelemetryProperties } from 'vscode-azureextensionui';
 import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
 import { Limits } from '../limits';
 import { Uri, OutputChannel } from 'vscode';
@@ -26,12 +26,16 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         return node.treeItem.blob.name;
     }
 
-    public async checkCanDownload(node: IAzureNode<BlobNode>): Promise<void> {
+    public async checkCanDownload(node: IAzureNode<BlobNode>, properties: TelemetryProperties): Promise<void> {
         let message: string;
+        let blobType = node.treeItem.blob.blobType;
 
         if (Number(node.treeItem.blob.contentLength) > Limits.maxUploadDownloadSizeBytes) {
+            properties.cancelStep = 'MustOpenInStorageExplorer:TooLarge';
             message = `Please use Storage Explorer for blobs larger than ${Limits.maxUploadDownloadSizeMB}MB.`;
-        } else if (!node.treeItem.blob.blobType.toLocaleLowerCase().startsWith("block")) {
+        } else if (!blobType.startsWith("block")) {
+            properties.cancelStep = 'MustOpenInStorageExplorer:WrongBlobType';
+            properties.blobType = blobType;
             message = `Please use Storage Explorer for blobs of type '${node.treeItem.blob.blobType}'.`;
         }
 
@@ -40,9 +44,10 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         }
     }
 
-    public async checkCanUpload(node: IAzureNode<BlobContainerNode> | IAzureNode<BlobNode>, localPath: string): Promise<void> {
+    public async checkCanUpload(node: IAzureNode<BlobContainerNode> | IAzureNode<BlobNode>, localPath: string, properties: TelemetryProperties): Promise<void> {
         let size = await this.getLocalFileSize(localPath);
         if (size > Limits.maxUploadDownloadSizeBytes) {
+            properties.cancelStep = 'MustOpenInStorageExplorer:TooLarge';
             await Limits.askOpenInStorageExplorer(
                 `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
                 node.treeItem.storageAccount.id,
@@ -52,13 +57,15 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         }
     }
 
-    private async getLocalFileSize(localPath: string): Promise<number> {
+    public async getLocalFileSize(localPath: string): Promise<number> {
         let stat = await fse.stat(localPath);
         return stat.size;
     }
 
-    public async downloadFile(node: IAzureNode<BlobNode>, filePath: string): Promise<void> {
-        await this.checkCanDownload(node);
+    public async downloadFile(node: IAzureNode<BlobNode>, filePath: string, properties: TelemetryProperties): Promise<void> {
+        properties.size = node.treeItem.blob.contentLength;
+
+        await this.checkCanDownload(node, properties);
 
         const blob = node.treeItem.blob;
         const treeItem = node.treeItem;
@@ -89,8 +96,8 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         this._channel.appendLine(`Successfully downloaded ${linkablePath}.`);
     }
 
-    async uploadFile(node: IAzureNode<BlobNode>, filePath: string): Promise<void> {
-        await this.checkCanUpload(node, filePath);
+    async uploadFile(node: IAzureNode<BlobNode>, filePath: string, properties: TelemetryProperties): Promise<void> {
+        await this.checkCanUpload(node, filePath, properties);
 
         let blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         let createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};

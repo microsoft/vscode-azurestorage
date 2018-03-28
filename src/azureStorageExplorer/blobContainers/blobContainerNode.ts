@@ -9,7 +9,8 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { BlobNode } from './blobNode';
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError, IAzureParentNode } from 'vscode-azureextensionui';
+import * as fse from 'fs-extra';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError, IAzureParentNode, TelemetryProperties, TelemetryMeasurements } from 'vscode-azureextensionui';
 import { Uri } from 'vscode';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { awaitWithProgress } from '../../components/progress';
@@ -106,7 +107,7 @@ export class BlobContainerNode implements IAzureParentTreeItem {
     }
 
     // This is the public entrypoint for azureStorage.uploadBlockBlob
-    public async uploadBlockBlob(node: IAzureParentNode<BlobContainerNode>): Promise<void> {
+    public async uploadBlockBlob(node: IAzureParentNode<BlobContainerNode>, properties: TelemetryProperties): Promise<void> {
         let uris = await vscode.window.showOpenDialog(
             <vscode.OpenDialogOptions>{
                 canSelectFiles: true,
@@ -135,7 +136,9 @@ export class BlobContainerNode implements IAzureParentTreeItem {
             let filePath = uri.fsPath;
 
             let handler = new BlobFileHandler();
-            await handler.checkCanUpload(node, filePath);
+            this.setTelemetryProperty(properties, 'size', String(await handler.getLocalFileSize(filePath)));
+
+            await handler.checkCanUpload(node, filePath, properties);
 
             let blobPath = await vscode.window.showInputBox({
                 prompt: 'Enter a name for the uploaded block blob (may include a path)',
@@ -148,7 +151,10 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                         `A blob with the name "${blobPath}" already exists. Do you want to overwrite it?`,
                         DialogOptions.yes, DialogOptions.cancel);
                     if (result !== DialogOptions.yes) {
+                        this.setTelemetryProperty(properties, 'cancelStep', 'BlobAlreadyExists');
                         throw new UserCancelledError();
+                    } else {
+                        this.setTelemetryProperty(properties, 'blobExists', 'true');
                     }
 
                     let blobId = `${node.id}/${blobPath}`;
@@ -162,6 +168,8 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                     } catch (err) {
                         // https://github.com/Microsoft/vscode-azuretools/issues/85
                     }
+                } else {
+                    this.setTelemetryProperty(properties, 'blobExists', 'false');
                 }
 
                 await node.createChild(<ICreateChildOptions>{ childType: ChildType.uploadedBlob, blobPath, filePath });
@@ -169,6 +177,12 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         }
 
         throw new UserCancelledError();
+    }
+
+    private setTelemetryProperty(properties: TelemetryProperties | undefined, key: keyof TelemetryProperties, value: string | undefined): void {
+        if (properties) {
+            properties[key] = value;
+        }
     }
 
     private async createChildAsUpload(options: ICreateChildOptions, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {

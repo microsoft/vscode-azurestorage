@@ -9,7 +9,7 @@ import * as path from "path";
 import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import * as vscode from "vscode";
 import { IRemoteFileHandler } from './IRemoteFileHandler';
-import { UserCancelledError, IActionContext } from 'vscode-azureextensionui';
+import { UserCancelledError, IActionContext, TelemetryProperties } from 'vscode-azureextensionui';
 import * as fse from 'fs-extra';
 
 export class RemoteFileEditor<ContextT> implements vscode.Disposable {
