@@ -95,8 +95,9 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         let blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         let createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
 
-        if (node.treeItem.blob && node.treeItem.blob.contentSettings && node.treeItem.blob.contentSettings.contentType) {
-            createOptions.contentSettings = { contentType: node.treeItem.blob.contentSettings.contentType };
+        if (node.treeItem.blob && node.treeItem.blob.contentSettings) {
+            createOptions.contentSettings = node.treeItem.blob.contentSettings;
+            createOptions.contentSettings.contentMD5 = undefined; // Needs to be filled in by SDK
         }
 
         await new Promise<void>((resolve, reject) => {
