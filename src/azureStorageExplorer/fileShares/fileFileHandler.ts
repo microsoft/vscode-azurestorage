@@ -36,7 +36,8 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         let createOptions: azureStorage.FileService.CreateFileRequestOptions = {};
 
         if (fileProperties && fileProperties.contentSettings && fileProperties.contentSettings.contentType) {
-            createOptions.contentSettings = { contentType: fileProperties.contentSettings.contentType };
+            createOptions.contentSettings = fileProperties.contentSettings;
+            createOptions.contentSettings.contentMD5 = undefined; // Needs to be filled in by SDK
         }
 
         await new Promise<void>((resolve, reject) => {
