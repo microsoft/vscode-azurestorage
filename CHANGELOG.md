@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.3.0 - 2018-04-05
+### Added
+- Upload and download block blobs with text contents, up to 4MB
+- Refresh menu added to additional nodes in the tree
+- New filter button on subscription nodes to make selecting Azure subscriptions easier
+
+### Fixed
+- Saving a blob from the editor will no longer cause loss of content type and other properties
+- Will no longer overwrite an existing blob when creating a new one with the same name
+- Removed redundant Close button in some dialogs
+
 ## 0.2.0 - 2018-02-02
 ### Added
 - Create and delete blob containers, file shares, queues and tables
