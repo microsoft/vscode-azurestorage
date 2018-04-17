@@ -70,7 +70,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
 
         let speedSummary;
         const promise = new Promise((resolve, reject): void => {
-            speedSummary = blobService.getBlobToLocalFile(treeItem.container.name, blob.name, filePath, function (err: any): void {
+            speedSummary = blobService.getBlobToLocalFile(treeItem.container.name, blob.name, filePath, function (err: {}): void {
                 err ? reject(err) : resolve();
             });
         });
@@ -103,7 +103,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         await new Promise<void>((resolve, reject) => {
             blobService.createBlockBlobFromLocalFile(node.treeItem.container.name, node.treeItem.blob.name, filePath, createOptions, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
-                    let errorAny = <any>error;
+                    let errorAny = <{ code?: string }>error;
                     if (!!errorAny.code) {
                         let humanReadableMessage = `Unable to save '${node.treeItem.blob.name}', blob service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {

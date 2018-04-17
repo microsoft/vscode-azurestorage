@@ -73,7 +73,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     private static getWindowsRegistryValue(hive: string, key: string): Promise<string> {
         return new Promise((resolve, reject) => {
             let regKey = new winreg({ hive, key });
-            regKey.values((err: any, items: Winreg.RegistryItem[]) => {
+            regKey.values((err: {}, items: Winreg.RegistryItem[]) => {
                 if (err) {
                     reject(err);
                 } else {

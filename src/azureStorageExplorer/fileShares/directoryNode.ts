@@ -63,7 +63,7 @@ export class DirectoryNode implements IAzureParentTreeItem {
         return listFilesInDirectory(this.fullPath, this.share.name, this.storageAccount.name, this.key.value, 50, currentToken);
     }
 
-    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: any): Promise<IAzureTreeItem> {
+    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: {}): Promise<IAzureTreeItem> {
         if (userOptions === FileNode.contextValue) {
             return askAndCreateEmptyTextFile(this.fullPath, this.share, this.storageAccount, this.key, showCreatingNode);
         } else {

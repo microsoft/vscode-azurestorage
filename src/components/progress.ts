@@ -10,7 +10,7 @@ type StatusBarProgress = Progress<{ message: string }>;
 /**
  * Shows progress in both the output window and the status bar
  */
-export async function awaitWithProgress(title: string, channel: OutputChannel, promise: Promise<any>, getProgress: () => string): Promise<any> {
+export async function awaitWithProgress<T>(title: string, channel: OutputChannel, promise: Promise<T>, getProgress: () => string): Promise<T> {
     const uiIntervalMs = 1 * 500;
     const uiUpdatesPerChannelUpdate = 5000 / uiIntervalMs;
     let nextChannelUpdate = uiUpdatesPerChannelUpdate;
@@ -22,12 +22,12 @@ export async function awaitWithProgress(title: string, channel: OutputChannel, p
             location: ProgressLocation.Window,
             title: title
         },
-        (progress: StatusBarProgress): Promise<any> => {
+        (progress: StatusBarProgress): Promise<T> => {
             thisProgress = progress;
             return promise;
         });
 
-    pollDuringPromise(uiIntervalMs, promise, () => {
+    pollDuringPromise<T>(uiIntervalMs, promise, () => {
         const msg = getProgress();
 
         nextChannelUpdate -= 1;
@@ -47,7 +47,7 @@ export async function awaitWithProgress(title: string, channel: OutputChannel, p
 /**
  * Runs the given poll function repeatedly until the given promise is resolved or rejected
  */
-function pollDuringPromise(intervalMs: number, promise: Promise<any>, poll: () => void): void {
+function pollDuringPromise<T>(intervalMs: number, promise: Promise<T>, poll: () => void): void {
     let inProgress = true;
     promise.then(
         () => {
