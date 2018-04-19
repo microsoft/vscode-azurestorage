@@ -492,7 +492,7 @@
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
 		"vscode-extension-telemetry": "^0.0.15",
-		"vscode-azureextensionui": "~0.11.2",
+		"vscode-azureextensionui": "~0.12.0",
 		"winreg": "^1.2.3"
 	}
 }
