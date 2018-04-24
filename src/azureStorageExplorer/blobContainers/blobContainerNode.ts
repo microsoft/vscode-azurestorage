@@ -4,12 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { BlobNode } from './blobNode';
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError, IAzureParentNode } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError, IAzureParentNode, DialogResponses } from 'vscode-azureextensionui';
 import { Uri } from 'vscode';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { awaitWithProgress } from '../../components/progress';
@@ -81,8 +80,8 @@ export class BlobContainerNode implements IAzureParentTreeItem {
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
-        const result = await vscode.window.showWarningMessage(message, DialogOptions.yes, DialogOptions.cancel);
-        if (result === DialogOptions.yes) {
+        const result = await vscode.window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        if (result === DialogResponses.deleteResponse) {
             const blobService = this.createBlobService();
             await new Promise((resolve, reject) => {
                 blobService.deleteContainer(this.container.name, err => {
@@ -146,8 +145,9 @@ export class BlobContainerNode implements IAzureParentTreeItem {
                 if (await this.doesBlobExist(blobPath)) {
                     const result = await vscode.window.showWarningMessage(
                         `A blob with the name "${blobPath}" already exists. Do you want to overwrite it?`,
-                        DialogOptions.yes, DialogOptions.cancel);
-                    if (result !== DialogOptions.yes) {
+                        { modal: true },
+                        DialogResponses.yes, DialogResponses.cancel);
+                    if (result !== DialogResponses.yes) {
                         throw new UserCancelledError();
                     }
 

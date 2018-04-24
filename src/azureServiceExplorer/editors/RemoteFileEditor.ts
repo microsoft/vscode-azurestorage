@@ -6,10 +6,9 @@
 import { TextDocument, window } from 'vscode';
 import { TemporaryFile } from '../../components/temporaryFile';
 import * as path from "path";
-import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import * as vscode from "vscode";
 import { IRemoteFileHandler } from './IRemoteFileHandler';
-import { UserCancelledError, IActionContext } from 'vscode-azureextensionui';
+import { UserCancelledError, IActionContext, DialogResponses } from 'vscode-azureextensionui';
 import * as fse from 'fs-extra';
 
 export class RemoteFileEditor<ContextT> implements vscode.Disposable {
@@ -64,11 +63,11 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
 
         if (showSaveWarning) {
             const message: string = await this.remoteFileHandler.getSaveConfirmationText(context);
-            const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogOptions.ok, DialogOptions.uploadDontShowAgain, DialogOptions.cancel);
+            const result: vscode.MessageItem | undefined = await vscode.window.showWarningMessage(message, DialogResponses.upload, DialogResponses.alwaysUpload, DialogResponses.cancel);
 
-            if (!result || result === DialogOptions.cancel) {
+            if (!result || result === DialogResponses.cancel) {
                 throw new UserCancelledError();
-            } else if (result === DialogOptions.uploadDontShowAgain) {
+            } else if (result === DialogResponses.alwaysUpload) {
                 await vscode.workspace.getConfiguration().update(this.showSavePromptKey, false, vscode.ConfigurationTarget.Global);
             }
         }
