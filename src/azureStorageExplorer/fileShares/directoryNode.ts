@@ -8,9 +8,8 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError, DialogResponses } from 'vscode-azureextensionui';
 import { askAndCreateChildDirectory, listFilesInDirectory, deleteDirectoryAndContents } from './directoryUtils';
-import { DialogOptions } from '../../azureServiceExplorer/messageItems/dialogOptions';
 import { askAndCreateEmptyTextFile } from './fileUtils';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 
@@ -74,8 +73,8 @@ export class DirectoryNode implements IAzureParentTreeItem {
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         // Note: Azure will fail the directory delete if it's not empty, so no need to ask about deleting contents
         const message: string = `Are you sure you want to delete the directory '${this.label}' and all of its files and subdirectories?`;
-        const result = await window.showWarningMessage(message, DialogOptions.yes, DialogOptions.cancel);
-        if (result === DialogOptions.yes) {
+        const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        if (result === DialogResponses.deleteResponse) {
             azureStorageOutputChannel.show();
             await deleteDirectoryAndContents(this.fullPath, this.share.name, this.storageAccount.name, this.key.value, azureStorageOutputChannel);
         } else {
