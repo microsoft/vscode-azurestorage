@@ -7,10 +7,14 @@ import { Uri, window } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureTreeItem, IAzureNode, UserCancelledError, DialogResponses } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureNode, UserCancelledError, DialogResponses, IAzureParentNode } from 'vscode-azureextensionui';
 import { deleteFile } from './fileUtils';
 
-export class FileNode implements IAzureTreeItem {
+import * as copypaste from 'copy-paste';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import { ICopyUrl } from '../../ICopyUrl';
+
+export class FileNode implements IAzureTreeItem, ICopyUrl {
     constructor(
         public readonly file: azureStorage.FileService.FileResult,
         public readonly directoryPath: string,
@@ -28,6 +32,14 @@ export class FileNode implements IAzureTreeItem {
     };
 
     public commandId: string = 'azureStorage.editFile';
+
+    public async copyUrl(_node: IAzureParentNode): Promise<void> {
+        let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+        let url = blobService.getUrl(this.share.name, this.file.name);
+        copypaste.copy(url);
+        azureStorageOutputChannel.show();
+        azureStorageOutputChannel.appendLine(`File URL copied to clipboard: ${url}`);
+    }
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {
         const message: string = `Are you sure you want to delete the file '${this.label}'?`;

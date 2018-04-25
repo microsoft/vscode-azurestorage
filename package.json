@@ -61,6 +61,10 @@
 				}
 			},
 			{
+				"command": "azureStorage.copyUrl",
+				"title": "Copy URL"
+			},
+			{
 				"command": "azureStorage.openBlobContainer",
 				"title": "Open Blob Container in Storage Explorer",
 				"icon": {
@@ -121,20 +125,12 @@
 				"title": "Create Empty Text Blob"
 			},
 			{
-				"command": "azureStorage.getContainerUrl",
-				"title": "Get URL"
-			},
-			{
 				"command": "azureStorage.uploadBlockBlob",
 				"title": "Upload block blob..."
 			},
 			{
 				"command": "azureStorage.deleteBlob",
 				"title": "Delete"
-			},
-			{
-				"command": "azureStorage.getBlobUrl",
-				"title": "Get URL"
 			},
 			{
 				"command": "azureStorage.downloadBlob",
@@ -259,7 +255,7 @@
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
 				{
-					"command": "azureStorage.getContainerUrl",
+					"command": "azureStorage.copyUrl",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
 				{
@@ -279,7 +275,7 @@
 					"when": "view == azureStorage && viewItem == azureBlob"
 				},
 				{
-					"command": "azureStorage.getBlobUrl",
+					"command": "azureStorage.copyUrl",
 					"when": "view == azureStorage && viewItem == azureBlob"
 				},
 				{
@@ -319,6 +315,10 @@
 					"when": "view == azureStorage && viewItem == azureFile"
 				},
 				{
+					"command": "azureStorage.copyUrl",
+					"when": "view == azureStorage && viewItem == azureFile"
+				},
+				{
 					"command": "azureStorage.createFileShare",
 					"when": "view == azureStorage && viewItem == azureFileShareGroup"
 				},
@@ -328,6 +328,10 @@
 				},
 				{
 					"command": "azureStorage.deleteFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShare"
+				},
+				{
+					"command": "azureStorage.copyUrl",
 					"when": "view == azureStorage && viewItem == azureFileShare"
 				},
 				{
@@ -350,6 +354,10 @@
 				},
 				{
 					"command": "azureStorage.refresh",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.copyUrl",
 					"when": "never"
 				},
 				{
@@ -482,7 +490,8 @@
 		"lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "npm run compile && node ./node_modules/vscode/bin/test",
-		"watch": "tsc -watch -p ./"
+		"watch": "tsc -watch -p ./",
+		"all": "npm i && npm run build && npm run lint && npm test"
 	},
 	"devDependencies": {
 		"@types/copy-paste": "^1.1.30",

@@ -9,11 +9,15 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { DirectoryNode } from './directoryNode';
 import { FileNode } from './fileNode';
-import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError, DialogResponses } from 'vscode-azureextensionui';
+import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError, DialogResponses, IAzureParentNode } from 'vscode-azureextensionui';
 import { askAndCreateChildDirectory } from './directoryUtils';
 import { askAndCreateEmptyTextFile } from './fileUtils';
 
-export class FileShareNode implements IAzureParentTreeItem {
+import * as copypaste from 'copy-paste';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import { ICopyUrl } from '../../ICopyUrl';
+
+export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken;
 
     constructor(
@@ -48,6 +52,14 @@ export class FileShareNode implements IAzureParentTreeItem {
             .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
                 return new FileNode(file, '', this.share, this.storageAccount, this.key);
             }));
+    }
+
+    public async copyUrl(_node: IAzureParentNode): Promise<void> {
+        let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+        let url = blobService.getUrl(this.share.name);
+        copypaste.copy(url);
+        azureStorageOutputChannel.show();
+        azureStorageOutputChannel.appendLine(`Share URL copied to clipboard: ${url}`);
     }
 
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {

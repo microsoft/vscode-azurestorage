@@ -13,6 +13,8 @@ import { Uri } from 'vscode';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { awaitWithProgress } from '../../components/progress';
 import { BlobFileHandler } from './blobFileHandler';
+import * as copypaste from 'copy-paste';
+import { ICopyUrl } from '../../ICopyUrl';
 
 const channel = azureStorageOutputChannel;
 let lastUploadFolder: Uri;
@@ -28,7 +30,7 @@ interface ICreateChildOptions {
     blobPath: string;
 }
 
-export class BlobContainerNode implements IAzureParentTreeItem {
+export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken;
 
     constructor(
@@ -104,12 +106,12 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         }
     }
 
-    public async getUrl(_node: IAzureParentNode<BlobContainerNode>): Promise<void> {
+    public async copyUrl(_node: IAzureParentNode<BlobContainerNode>): Promise<void> {
         let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-        let uri = blobService.getUrl(this.container.name);
+        let url = blobService.getUrl(this.container.name);
+        copypaste.copy(url);
         azureStorageOutputChannel.show();
-        let msg = `The URL for blob container '${this.container.name}' is ${uri}`;
-        azureStorageOutputChannel.appendLine(msg);
+        azureStorageOutputChannel.appendLine(`Container URL copied to clipboard: ${url}`);
     }
 
     // This is the public entrypoint for azureStorage.uploadBlockBlob

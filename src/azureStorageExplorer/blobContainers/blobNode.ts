@@ -11,8 +11,10 @@ import { IAzureTreeItem, IAzureNode, UserCancelledError, DialogResponses } from 
 import { Uri, window, SaveDialogOptions } from 'vscode';
 import { BlobFileHandler } from './blobFileHandler';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import * as copypaste from 'copy-paste';
+import { ICopyUrl } from '../../ICopyUrl';
 
-export class BlobNode implements IAzureTreeItem {
+export class BlobNode implements IAzureTreeItem, ICopyUrl {
   constructor(
     public readonly blob: azureStorage.BlobService.BlobResult,
     public readonly container: azureStorage.BlobService.ContainerResult,
@@ -29,42 +31,12 @@ export class BlobNode implements IAzureTreeItem {
 
   public commandId: string = 'azureStorage.editBlob';
 
-  public async getUrl(_node: IAzureNode): Promise<void> {
+  public async copyUrl(_node: IAzureNode): Promise<void> {
     let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-    let uri = blobService.getUrl(this.container.name, this.blob.name);
-
-    let accessLevel = await this.getContainerpublicAccessLevel();
-    let friendlyAccessLevel: string;
-    let canAccessPublicy: boolean;
-    switch (accessLevel) {
-      case "blob":
-        friendlyAccessLevel = "Blob (anonymous read access for blobs only)";
-        canAccessPublicy = true;
-      case "container":
-        friendlyAccessLevel = "Container (anonymous read access for containers and blobs)";
-        canAccessPublicy = true;
-      default:
-        friendlyAccessLevel = "Private (no anonymous access)";
-        canAccessPublicy = false;
-    }
-
+    let url = blobService.getUrl(this.container.name, this.blob.name);
+    copypaste.copy(url);
     azureStorageOutputChannel.show();
-    let msg: string;
-    if (canAccessPublicy) {
-      msg = `The URL for blob '${this.blob.name}' is ${uri}, and it is publicly accessible because the container's public access level is set to '${friendlyAccessLevel}'`;
-    } else {
-      msg = `The URL for blob '${this.blob.name}' is ${uri}, but it is not publicly accessible because the container's public access level is set to '${friendlyAccessLevel}'`;
-    }
-    azureStorageOutputChannel.appendLine(msg);
-  }
-
-  private async getContainerpublicAccessLevel(): Promise<string> {
-    return await new Promise<string>((resolve, reject) => {
-      let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-      blobService.getContainerProperties(this.container.name, (err, result) => {
-        err ? reject(err) : resolve(result.publicAccessLevel);
-      });
-    });
+    azureStorageOutputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
   }
 
   public async deleteTreeItem(_node: IAzureNode): Promise<void> {
