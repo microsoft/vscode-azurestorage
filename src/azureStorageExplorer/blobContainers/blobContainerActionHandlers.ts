@@ -19,7 +19,6 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
 
     actionHandler.registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
     actionHandler.registerCommand("azureStorage.editBlob", (node: IAzureParentNode<BlobNode>) => _editor.showEditor(node));
-    actionHandler.registerCommand("azureStorage.copyContainerUrl", (node: IAzureParentNode<BlobContainerNode>) => node.treeItem.copyUrl(node));
     actionHandler.registerCommand("azureStorage.deleteBlobContainer", (node: IAzureParentNode<BlobContainerNode>) => node.deleteNode());
     actionHandler.registerCommand("azureStorage.createBlockTextBlob", (node: IAzureParentNode<BlobContainerNode>) => node.createChild({ childType: ChildType.newBlockBlob }));
     actionHandler.registerCommand("azureStorage.uploadBlockBlob", (node: IAzureParentNode<BlobContainerNode>) => node.treeItem.uploadBlockBlob(node));

@@ -8,5 +8,4 @@ import { FileNode } from './fileNode';
 
 export function registerFileActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.deleteFile", (node: IAzureNode<FileNode>) => node.deleteNode());
-    actionHandler.registerCommand("azureStorage.copyFileUrl", (node: IAzureNode<FileNode>) => node.treeItem.copyUrl(node));
 }
