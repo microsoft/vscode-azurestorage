@@ -122,7 +122,7 @@
 			},
 			{
 				"command": "azureStorage.uploadBlockBlob",
-				"title": "Upload block blob..."
+				"title": "Upload Block Blob..."
 			},
 			{
 				"command": "azureStorage.deleteBlob",
