@@ -10,6 +10,7 @@ import * as path from 'path';
 import { IAzureTreeItem, IAzureNode, UserCancelledError, DialogResponses } from 'vscode-azureextensionui';
 import { Uri, window, SaveDialogOptions } from 'vscode';
 import { BlobFileHandler } from './blobFileHandler';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 
 export class BlobNode implements IAzureTreeItem {
   constructor(
@@ -27,6 +28,44 @@ export class BlobNode implements IAzureTreeItem {
   };
 
   public commandId: string = 'azureStorage.editBlob';
+
+  public async getUrl(_node: IAzureNode): Promise<void> {
+    let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+    let uri = blobService.getUrl(this.container.name, this.blob.name);
+
+    let accessLevel = await this.getContainerpublicAccessLevel();
+    let friendlyAccessLevel: string;
+    let canAccessPublicy: boolean;
+    switch (accessLevel) {
+      case "blob":
+        friendlyAccessLevel = "Blob (anonymous read access for blobs only)";
+        canAccessPublicy = true;
+      case "container":
+        friendlyAccessLevel = "Container (anonymous read access for containers and blobs)";
+        canAccessPublicy = true;
+      default:
+        friendlyAccessLevel = "Private (no anonymous access)";
+        canAccessPublicy = false;
+    }
+
+    azureStorageOutputChannel.show();
+    let msg: string;
+    if (canAccessPublicy) {
+      msg = `The URL for blob '${this.blob.name}' is ${uri}, and it is publicly accessible because the container's public access level is set to '${friendlyAccessLevel}'`;
+    } else {
+      msg = `The URL for blob '${this.blob.name}' is ${uri}, but it is not publicly accessible because the container's public access level is set to '${friendlyAccessLevel}'`;
+    }
+    azureStorageOutputChannel.appendLine(msg);
+  }
+
+  private async getContainerpublicAccessLevel(): Promise<string> {
+    return await new Promise<string>((resolve, reject) => {
+      let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+      blobService.getContainerProperties(this.container.name, (err, result) => {
+        err ? reject(err) : resolve(result.publicAccessLevel);
+      });
+    });
+  }
 
   public async deleteTreeItem(_node: IAzureNode): Promise<void> {
     const message: string = `Are you sure you want to delete the blob '${this.label}'?`;

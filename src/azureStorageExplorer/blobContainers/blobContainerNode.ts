@@ -104,6 +104,14 @@ export class BlobContainerNode implements IAzureParentTreeItem {
         }
     }
 
+    public async getUrl(_node: IAzureParentNode<BlobContainerNode>): Promise<void> {
+        let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+        let uri = blobService.getUrl(this.container.name);
+        azureStorageOutputChannel.show();
+        let msg = `The URL for blob container '${this.container.name}' is ${uri}`;
+        azureStorageOutputChannel.appendLine(msg);
+    }
+
     // This is the public entrypoint for azureStorage.uploadBlockBlob
     public async uploadBlockBlob(node: IAzureParentNode<BlobContainerNode>): Promise<void> {
         let uris = await vscode.window.showOpenDialog(

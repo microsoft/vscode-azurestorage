@@ -121,12 +121,20 @@
 				"title": "Create Empty Text Blob"
 			},
 			{
+				"command": "azureStorage.getContainerUrl",
+				"title": "Get URL"
+			},
+			{
 				"command": "azureStorage.uploadBlockBlob",
 				"title": "Upload block blob..."
 			},
 			{
 				"command": "azureStorage.deleteBlob",
 				"title": "Delete"
+			},
+			{
+				"command": "azureStorage.getBlobUrl",
+				"title": "Get URL"
 			},
 			{
 				"command": "azureStorage.downloadBlob",
@@ -251,6 +259,10 @@
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
 				{
+					"command": "azureStorage.getContainerUrl",
+					"when": "view == azureStorage && viewItem == azureBlobContainer"
+				},
+				{
 					"command": "azureStorage.createBlockTextBlob",
 					"when": "view == azureStorage && viewItem == azureBlobContainer"
 				},
@@ -264,6 +276,10 @@
 				},
 				{
 					"command": "azureStorage.deleteBlob",
+					"when": "view == azureStorage && viewItem == azureBlob"
+				},
+				{
+					"command": "azureStorage.getBlobUrl",
 					"when": "view == azureStorage && viewItem == azureBlob"
 				},
 				{
