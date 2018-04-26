@@ -12,8 +12,10 @@ import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError, D
 import { askAndCreateChildDirectory, listFilesInDirectory, deleteDirectoryAndContents } from './directoryUtils';
 import { askAndCreateEmptyTextFile } from './fileUtils';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import { ICopyUrl } from '../../ICopyUrl';
+import * as copypaste from 'copy-paste';
 
-export class DirectoryNode implements IAzureParentTreeItem {
+export class DirectoryNode implements IAzureParentTreeItem, ICopyUrl {
     constructor(
         public readonly parentPath: string,
         public readonly directory: azureStorage.FileService.DirectoryResult, // directory.name should not include parent path
@@ -56,6 +58,14 @@ export class DirectoryNode implements IAzureParentTreeItem {
             .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
                 return new FileNode(file, this.fullPath, this.share, this.storageAccount, this.key);
             }));
+    }
+
+    public async copyUrl(_node: IAzureNode): Promise<void> {
+        let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+        let url = fileService.getUrl(this.share.name, this.fullPath);
+        copypaste.copy(url);
+        azureStorageOutputChannel.show();
+        azureStorageOutputChannel.appendLine(`Directory URL copied to clipboard: ${url}`);
     }
 
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {

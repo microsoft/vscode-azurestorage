@@ -34,8 +34,8 @@ export class FileNode implements IAzureTreeItem, ICopyUrl {
     public commandId: string = 'azureStorage.editFile';
 
     public async copyUrl(_node: IAzureParentNode): Promise<void> {
-        let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-        let url = blobService.getUrl(this.share.name, this.file.name);
+        let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+        let url = fileService.getUrl(this.share.name, this.directoryPath, this.file.name);
         copypaste.copy(url);
         azureStorageOutputChannel.show();
         azureStorageOutputChannel.appendLine(`File URL copied to clipboard: ${url}`);

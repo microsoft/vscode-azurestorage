@@ -55,8 +55,8 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
     }
 
     public async copyUrl(_node: IAzureParentNode): Promise<void> {
-        let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-        let url = blobService.getUrl(this.share.name);
+        let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+        let url = fileService.getUrl(this.share.name, "");
         copypaste.copy(url);
         azureStorageOutputChannel.show();
         azureStorageOutputChannel.appendLine(`Share URL copied to clipboard: ${url}`);

@@ -299,6 +299,10 @@
 					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
 				},
 				{
+					"command": "azureStorage.copyUrl",
+					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
+				},
+				{
 					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureFileShareDirectory"
 				},
@@ -487,10 +491,10 @@
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"build": "tsc -p ./",
-		"compile": "tsc -watch -p ./",
 		"lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
 		"postinstall": "node ./node_modules/vscode/bin/install",
 		"test": "npm run compile && node ./node_modules/vscode/bin/test",
+		"watch": "tsc -watch -p ./",
 		"all": "npm i && npm run build && npm run lint && npm test"
 	},
 	"devDependencies": {
