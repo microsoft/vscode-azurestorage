@@ -20,7 +20,10 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
     actionHandler.registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
     actionHandler.registerCommand("azureStorage.editBlob", (node: IAzureParentNode<BlobNode>) => _editor.showEditor(node));
     actionHandler.registerCommand("azureStorage.deleteBlobContainer", (node: IAzureParentNode<BlobContainerNode>) => node.deleteNode());
-    actionHandler.registerCommand("azureStorage.createBlockTextBlob", (node: IAzureParentNode<BlobContainerNode>) => node.createChild({ childType: ChildType.newBlockBlob }));
+    actionHandler.registerCommand("azureStorage.createBlockTextBlob", async (node: IAzureParentNode<BlobContainerNode>) => {
+        let childNode = await node.createChild({ childType: ChildType.newBlockBlob });
+        await vscode.commands.executeCommand("azureStorage.editBlob", childNode);
+    });
     actionHandler.registerCommand("azureStorage.uploadBlockBlob", (node: IAzureParentNode<BlobContainerNode>) => node.treeItem.uploadBlockBlob(node));
     actionHandler.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { _editor.onDidSaveTextDocument(this, doc); });
 }

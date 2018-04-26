@@ -21,7 +21,11 @@ export function registerFileShareActionHandlers(actionHandler: AzureActionHandle
     actionHandler.registerCommand("azureStorage.editFile", (node) => _editor.showEditor(node));
     actionHandler.registerCommand("azureStorage.deleteFileShare", (node: IAzureParentNode<FileShareNode>) => node.deleteNode());
     actionHandler.registerCommand("azureStorage.createDirectory", (node: IAzureParentNode<FileShareNode>) => node.createChild(DirectoryNode.contextValue));
-    actionHandler.registerCommand("azureStorage.createTextFile", (node: IAzureParentNode<FileShareNode>) => node.createChild(FileNode.contextValue));
+    actionHandler.registerCommand("azureStorage.createTextFile", async (node: IAzureParentNode<FileShareNode>) => {
+        let childNode = await node.createChild(FileNode.contextValue);
+        await vscode.commands.executeCommand("azureStorage.editFile", childNode);
+
+    });
     actionHandler.registerEvent('azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { await _editor.onDidSaveTextDocument(this, doc); });
 }
 
