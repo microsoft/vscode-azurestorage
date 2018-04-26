@@ -489,7 +489,7 @@
 		}
 	},
 	"scripts": {
-		"vscode:prepublish": "npm run compile",
+		"vscode:prepublish": "npm run build",
 		"build": "tsc -p ./",
 		"lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
 		"postinstall": "node ./node_modules/vscode/bin/install",
