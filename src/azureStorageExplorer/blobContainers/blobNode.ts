@@ -10,8 +10,11 @@ import * as path from 'path';
 import { IAzureTreeItem, IAzureNode, UserCancelledError, DialogResponses } from 'vscode-azureextensionui';
 import { Uri, window, SaveDialogOptions } from 'vscode';
 import { BlobFileHandler } from './blobFileHandler';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import * as copypaste from 'copy-paste';
+import { ICopyUrl } from '../../ICopyUrl';
 
-export class BlobNode implements IAzureTreeItem {
+export class BlobNode implements IAzureTreeItem, ICopyUrl {
   constructor(
     public readonly blob: azureStorage.BlobService.BlobResult,
     public readonly container: azureStorage.BlobService.ContainerResult,
@@ -27,6 +30,14 @@ export class BlobNode implements IAzureTreeItem {
   };
 
   public commandId: string = 'azureStorage.editBlob';
+
+  public async copyUrl(_node: IAzureNode): Promise<void> {
+    let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+    let url = blobService.getUrl(this.container.name, this.blob.name);
+    copypaste.copy(url);
+    azureStorageOutputChannel.show();
+    azureStorageOutputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
+  }
 
   public async deleteTreeItem(_node: IAzureNode): Promise<void> {
     const message: string = `Are you sure you want to delete the blob '${this.label}'?`;

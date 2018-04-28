@@ -3,9 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureActionHandler, IAzureNode } from 'vscode-azureextensionui';
-import { FileNode } from './fileNode';
+'use strict';
 
-export function registerFileActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.deleteFile", (node: IAzureNode<FileNode>) => node.deleteNode());
+import { IAzureNode } from "vscode-azureextensionui";
+
+export interface ICopyUrl {
+    copyUrl(_node: IAzureNode): void;
 }
