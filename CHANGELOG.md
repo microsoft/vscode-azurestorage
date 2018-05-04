@@ -1,6 +1,15 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.3.1 - 2018-05-09
+
+### Added
+- Newly-created blobs and files are now opened immediately in the editor
+- Copy URL to clipboard (blob, blob container, file, directory, or file share)
+
+### Changed
+- Moved Azure CosmosDB Explorer to new Azure view container instead of file explorer
+
 ## 0.3.0 - 2018-04-05
 ### Added
 - Upload and download block blobs with text contents, up to 4MB
