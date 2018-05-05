@@ -8,7 +8,7 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 - Copy URL to clipboard (blob, blob container, file, directory, or file share)
 
 ### Changed
-- Moved Azure CosmosDB Explorer to new Azure view container instead of file explorer
+- Moved Azure Storage Explorer to new Azure view container instead of file explorer
 
 ## 0.3.0 - 2018-04-05
 ### Added
