@@ -62,6 +62,10 @@
 				}
 			},
 			{
+				"command": "azureStorage.openInPortal",
+				"title": "Open in Portal"
+			},
+			{
 				"command": "azureStorage.selectSubscriptions",
 				"title": "Select Subscriptions...",
 				"icon": {
@@ -75,7 +79,7 @@
 			},
 			{
 				"command": "azureStorage.openBlobContainer",
-				"title": "Open Blob Container in Storage Explorer",
+				"title": "Open in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -83,7 +87,7 @@
 			},
 			{
 				"command": "azureStorage.openTable",
-				"title": "Open Table in Storage Explorer",
+				"title": "Open in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -91,7 +95,7 @@
 			},
 			{
 				"command": "azureStorage.openFileShare",
-				"title": "Open File Share in Storage Explorer",
+				"title": "Open in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -99,7 +103,7 @@
 			},
 			{
 				"command": "azureStorage.openQueue",
-				"title": "Open Queue in Storage Explorer",
+				"title": "Open in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -107,7 +111,7 @@
 			},
 			{
 				"command": "azureStorage.openStorageAccount",
-				"title": "Open Storage Account in Storage Explorer",
+				"title": "Open in Storage Explorer",
 				"icon": {
 					"light": "resources/light/AzureStorageAccount_16x.png",
 					"dark": "resources/dark/AzureStorageAccount_16x.png"
@@ -215,6 +219,11 @@
 					"command": "azureStorage.openStorageAccount",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "navigation@1"
+				},
+				{
+					"command": "azureStorage.openInPortal",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "navigation@2"
 				},
 				{
 					"command": "azureStorage.copyConnectionString",
@@ -519,6 +528,10 @@
 				},
 				{
 					"command": "azureStorage.deleteQueue",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openInPortal",
 					"when": "never"
 				}
 			]
