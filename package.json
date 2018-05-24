@@ -28,8 +28,10 @@
 		"Storage Account"
 	],
 	"preview": true,
+	"$activationEvents.asdf": true,
 	"activationEvents": [
-		"onView:azureStorage"
+		"onView:azureStorage",
+		"onCommand:azureStorage.deployStaticWebsite"
 	],
 	"main": "./out/src/extension",
 	"icon": "media/azureStorageIcon.png",
@@ -71,6 +73,15 @@
 				"icon": {
 					"light": "resources/light/filter.svg",
 					"dark": "resources/dark/filter.svg"
+				}
+			},
+			{
+				"command": "azureStorage.deployStaticWebsite",
+				"title": "Deploy to Static Website...",
+				"category": "Azure Storage",
+				"icon": {
+					"light": "resources/light/Deploy.svg",
+					"dark": "resources/dark/Deploy.svg"
 				}
 			},
 			{
@@ -197,9 +208,21 @@
 		"menus": {
 			"view/title": [
 				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "view == azureStorage",
+					"group": "navigation@2"
+				},
+				{
 					"command": "azureStorage.refresh",
 					"when": "view == azureStorage",
-					"group": "navigation"
+					"group": "navigation@99"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "explorerResourceIsFolder == true",
+					"group": "zzz_appStorageDeployCommands"
 				}
 			],
 			"view/item/context": [
@@ -234,6 +257,11 @@
 					"command": "azureStorage.copyPrimaryKey",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "5_cutcopypaste@2"
+				},
+				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "7_deploy"
 				},
 				{
 					"command": "azureStorage.refresh",
@@ -573,6 +601,8 @@
 	},
 	"devDependencies": {
 		"@types/copy-paste": "^1.1.30",
+		"@types/fs-extra": "^5.0.2",
+		"@types/glob": "^5.0.35",
 		"@types/mocha": "^2.2.42",
 		"@types/node": "^7.0.43",
 		"@types/winreg": "1.2.30",
@@ -580,8 +610,8 @@
 		"tslint": "^5.7.0",
 		"tslint-microsoft-contrib": "5.0.1",
 		"typescript": "^2.5.3",
-		"vscode": "^1.1.5",
-		"vsce": "^1.37.5"
+		"vsce": "^1.37.5",
+		"vscode": "^1.1.5"
 	},
 	"extensionDependencies": [
 		"ms-vscode.azure-account"
@@ -589,13 +619,14 @@
 	"dependencies": {
 		"azure-arm-resource": "^2.0.0-preview",
 		"azure-arm-storage": "^3.1.0",
-		"azure-storage": "^2.6.0",
+		"azure-storage": "^2.9.0-preview",
 		"copy-paste": "^1.3.0",
 		"fs-extra": "^4.0.2",
+		"glob": "^7.1.2",
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
-		"vscode-extension-telemetry": "^0.0.15",
 		"vscode-azureextensionui": "~0.13.0",
+		"vscode-extension-telemetry": "^0.0.15",
 		"winreg": "^1.2.3"
 	}
 }

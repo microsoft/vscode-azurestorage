@@ -50,7 +50,7 @@ export function activate(context: vscode.ExtensionContext): void {
     registerLoadMoreActionHandler(actionHandler, azureTreeDataProvider);
     registerQueueActionHandlers(actionHandler);
     registerQueueGroupActionHandlers(actionHandler);
-    registerStorageAccountActionHandlers(actionHandler);
+    registerStorageAccountActionHandlers(actionHandler, azureTreeDataProvider);
     registerTableActionHandlers(actionHandler);
     registerTableGroupActionHandlers(actionHandler);
 

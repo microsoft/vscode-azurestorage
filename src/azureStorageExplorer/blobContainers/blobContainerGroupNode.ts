@@ -10,6 +10,7 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
 import { Uri } from 'vscode';
+import * as ext from "../../constants";
 
 export class BlobContainerGroupNode implements IAzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken;
@@ -26,7 +27,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
     };
 
-    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+    public async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -40,11 +41,11 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         });
     }
 
-    hasMoreChildren(): boolean {
+    public hasMoreChildren(): boolean {
         return !!this._continuationToken;
     }
 
-    listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {
+    private listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise((resolve, reject) => {
             let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
             blobService.listContainersSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.BlobService.ListContainerResult) => {
@@ -91,6 +92,9 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
     private static validateContainerName(name: string): string | undefined | null {
         const validLength = { min: 3, max: 63 };
 
+        if (name === ext.staticWebsiteContainerName) {
+            return undefined;
+        }
         if (!name) {
             return "Container name cannot be empty";
         }
