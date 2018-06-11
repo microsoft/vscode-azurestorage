@@ -265,7 +265,7 @@
 				{
 					"command": "azureStorage.deployStaticWebsite",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "7_deploy"
+					"group": "6_staticwebsites@1"
 				},
 				{
 					"command": "azureStorage.configureStaticWebsite",
@@ -614,7 +614,7 @@
 	},
 	"devDependencies": {
 		"@types/copy-paste": "^1.1.30",
-		"@types/fs-extra": "^5.0.2",
+		"@types/fs-extra": "=5.0.2",
 		"@types/glob": "^5.0.35",
 		"@types/mocha": "^2.2.42",
 		"@types/node": "^7.0.43",
