@@ -58,5 +58,15 @@ export function activate(context: vscode.ExtensionContext): void {
     actionHandler.registerCommand('azureStorage.refresh', (node?: IAzureNode) => azureTreeDataProvider.refresh(node));
     actionHandler.registerCommand('azureStorage.copyUrl', (node?: IAzureNode<IAzureTreeItem & ICopyUrl>) => node.treeItem.copyUrl(node));
     actionHandler.registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
-    actionHandler.registerCommand("azureStorage.openInPortal", (node: IAzureNode<IAzureTreeItem>) => node.openInPortal());
+    actionHandler.registerCommand("azureStorage.openInPortal", (node: IAzureNode<IAzureTreeItem>) => {
+        node.openInPortal();
+    }
+    );
+    actionHandler.registerCommand("azureStorage.configureStaticWebsite", (node: IAzureNode<IAzureTreeItem>) => {
+        if (node) {
+            let featureQuery = "feature.staticwebsites=true"; // Needed until preview is public
+            let resourceId = `${node.id}/staticWebsite`;
+            node.openInPortal(resourceId, { queryPrefix: featureQuery });
+        }
+    });
 }
