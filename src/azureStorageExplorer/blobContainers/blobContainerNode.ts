@@ -4,12 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import * as fse from 'fs-extra';
+import * as glob from 'glob';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { BlobNode } from './blobNode';
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError, IAzureParentNode, DialogResponses } from 'vscode-azureextensionui';
-import { Uri } from 'vscode';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError, IAzureParentNode, DialogResponses, IActionContext, parseError, TelemetryProperties } from 'vscode-azureextensionui';
+import { Uri, ProgressLocation } from 'vscode';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { awaitWithProgress } from '../../components/progress';
 import { BlobFileHandler } from './blobFileHandler';
@@ -40,17 +42,18 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
     }
 
     public label: string = this.container.name;
-    public contextValue: string = 'azureBlobContainer';
+    public static contextValue: string = 'azureBlobContainer';
+    public contextValue: string = BlobContainerNode.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
     };
 
-    hasMoreChildren(): boolean {
+    public hasMoreChildren(): boolean {
         return !!this._continuationToken;
     }
 
-    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+    public async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -63,10 +66,10 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         });
     }
 
-    listBlobs(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListBlobsResult> {
+    private listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.createBlobService();
-            blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.BlobService.ListBlobsResult) => {
+            blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults }, (err: Error, result: azureStorage.BlobService.ListBlobsResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -74,6 +77,25 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
                 }
             });
         });
+    }
+
+    private async listAllBlobs(cancellationToken?: vscode.CancellationToken, properties?: TelemetryProperties): Promise<azureStorage.BlobService.BlobResult[]> {
+        // tslint:disable-next-line:no-any
+        let currentToken: any;
+        let blobs: azureStorage.BlobService.BlobResult[] = [];
+
+        // tslint:disable-next-line:no-constant-condition
+        while (true) {
+            this.throwIfCanceled(cancellationToken, properties, "listAllBlobs");
+            let result = await this.listBlobs(currentToken, 5000);
+            blobs.push(...result.entries);
+            currentToken = result.continuationToken;
+            if (!currentToken) {
+                break;
+            }
+        }
+
+        return blobs;
     }
 
     private createBlobService(): azureStorage.BlobService {
@@ -115,7 +137,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
     }
 
     // This is the public entrypoint for azureStorage.uploadBlockBlob
-    public async uploadBlockBlob(node: IAzureParentNode<BlobContainerNode>): Promise<void> {
+    public async uploadBlockBlob(node: IAzureParentNode<BlobContainerNode>, output: vscode.OutputChannel): Promise<void> {
         let uris = await vscode.window.showOpenDialog(
             <vscode.OpenDialogOptions>{
                 canSelectFiles: true,
@@ -166,7 +188,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
                         let blobNode = await node.treeDataProvider.findNode(blobId);
                         if (blobNode) {
                             // A node for this blob already exists, no need to do anything with the tree, just upload
-                            await this.uploadFileToBlockBlob(filePath, blobPath);
+                            await this.uploadFileToBlockBlob(filePath, blobPath, output);
                             return;
                         }
                     } catch (err) {
@@ -181,32 +203,239 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         throw new UserCancelledError();
     }
 
+    public async deployStaticWebsite(node: IAzureParentNode<BlobContainerNode>, _actionContext: IActionContext, sourceFolderPath: string): Promise<void> {
+        let destBlobFolder = "";
+
+        await vscode.window.withProgress(
+            {
+                cancellable: true,
+                location: ProgressLocation.Notification,
+                title: `Deploying to ${this.friendlyContainerName} from ${sourceFolderPath}`,
+
+            },
+            async (progress, cancellationToken) => await this.deployStaticWebsiteCore(_actionContext, sourceFolderPath, destBlobFolder, azureStorageOutputChannel, progress, cancellationToken),
+        );
+
+        let goToPortal: vscode.MessageItem = { title: "Retrieve primary endpoint from portal" };
+        let result = await vscode.window.showInformationMessage(
+            `Deployment to ${this.friendlyContainerName} complete. To view the website, you need to browse to the primary web endpoint. You can find the primary endpoint by going to the configure tab on the Azure portal.`,
+            goToPortal
+        );
+        if (result === goToPortal) {
+            vscode.commands.executeCommand("azureStorage.configureStaticWebsite", node);
+        }
+    }
+
+    private get friendlyContainerName(): string {
+        return `${this.storageAccount.name}/${this.container.name}`;
+    }
+
+    private async deployStaticWebsiteCore(
+        _actionContext: IActionContext,
+        sourceFolderPath: string,
+        destBlobFolder: string,
+        output: vscode.OutputChannel,
+        progress: vscode.Progress<{ message?: string, increment?: number }>,
+        cancellationToken: vscode.CancellationToken
+    ): Promise<void> {
+        let properties = <TelemetryProperties & {
+            removeExistingBlobs: boolean; // asdf
+            blobsToDelete: number;
+            filesToUpload: number;
+            fileLengths: number[];
+        }>_actionContext.properties;
+
+        try {
+            properties.fileLengths = [];
+
+            const isFolder = (file: string): boolean => file.endsWith("/");
+
+            // Find existing blobs
+            let blobsToDelete: azureStorage.BlobService.BlobResult[] = [];
+            let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            blobsToDelete = await this.listAllBlobs(cancellationToken);
+            properties.blobsToDelete = blobsToDelete.length;
+
+            if (blobsToDelete.length) {
+                let message = `Are you sure you want to deploy to ${this.friendlyContainerName}?  This will delete all ${blobsToDelete.length} files currently in the ${this.friendlyContainerName} blob container.`;
+                let deleteAndDeploy: vscode.MessageItem = { title: 'Delete and Deploy' };
+                const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteAndDeploy, DialogResponses.cancel);
+                if (result !== deleteAndDeploy) {
+                    properties.cancelStep = 'AreYouSureYouWantToDeleteExistingBlobs';
+                    throw new UserCancelledError();
+                }
+            }
+
+            // azureStorageOutputChannel.show();
+            output.appendLine(`Deploying to static website ${this.storageAccount.name}/${this.container.name}`);
+
+            // Find source files
+            // Note: glob always returns paths with '/' separator, even on Windows, which also is the main
+            // separator used by Azure.
+            let filePathsWithAzureSeparator = await new Promise<string[]>(
+                (resolve, reject) => {
+                    glob(
+                        path.join(sourceFolderPath, '**'),
+                        {
+                            mark: true // Add '/' to folders
+                        },
+                        (err, matches) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                // Remove folders from source list
+                                let files = matches.filter(file => !isFolder(file));
+
+                                resolve(files);
+                            }
+                        });
+                });
+            properties.filesToUpload = filePathsWithAzureSeparator.length;
+
+            // Set up progress indicator
+            let totalWork = blobsToDelete.length + filePathsWithAzureSeparator.length;
+            let completedPercentage = 0;
+            let lastTimeReported: number;
+            const msBetweenReports = 1000;
+            const updateProgress = () => {
+                let increment = 1 / (totalWork || 1) * 100;
+
+                // Work-around for https://github.com/Microsoft/vscode/issues/50479
+                if (!lastTimeReported || Date.now() > lastTimeReported + msBetweenReports) {
+                    let message = `Deploying ${filePathsWithAzureSeparator.length} files to ${this.friendlyContainerName}`;
+                    if (completedPercentage) {
+                        message = `${message} (${completedPercentage.toFixed(0)}% complete)`;
+                    }
+                    progress.report({ message });
+                    lastTimeReported = Date.now();
+                }
+
+                // Increment after so we can show an initial 0% message
+                completedPercentage += increment;
+            };
+
+            // Show initial progress indication before any work
+            updateProgress();
+
+            // Delete existing blobs (if requested)
+            await this.deleteBlobs(blobService, blobsToDelete, updateProgress, cancellationToken, properties, output);
+
+            // Upload files as blobs
+            await this.uploadFiles(sourceFolderPath, filePathsWithAzureSeparator, destBlobFolder, properties, updateProgress, output, cancellationToken);
+
+            output.appendLine("Deployment to static website complete.");
+        } catch (error) {
+            if (parseError(error).isUserCancelledError) {
+                output.appendLine("Deployment canceled.");
+                throw error;
+            }
+        }
+    }
+
+    private async uploadFiles(
+        sourceFolderPath: string,
+        filePathsWithAzureSeparator: string[],
+        destBlobFolder: string,
+        properties: TelemetryProperties & { fileLengths: number[] },
+        incrementProgress: () => void,
+        output: vscode.OutputChannel,
+        cancellationToken: vscode.CancellationToken
+    ): Promise<void> {
+        for (let filePath of filePathsWithAzureSeparator) {
+            this.throwIfCanceled(cancellationToken, properties, "uploadFiles");
+
+            try {
+                let stat = await fse.stat(filePath);
+                properties.fileLengths.push(stat.size);
+            } catch (error) {
+                // asdf save exception
+            }
+
+            let relativeFile = path.relative(sourceFolderPath, filePath);
+            let blobPath = path.join(destBlobFolder, relativeFile);
+            output.appendLine(`Uploading ${filePath}...`);
+            try {
+                await this.uploadFileToBlockBlob(filePath, blobPath, undefined);
+            } catch (error) {
+                // asdf todo inner exception
+                throw new Error(`Error uploading "${filePath}" to $;{ this.friendlyContainerName; }: $;{ parseError(error).message; } `);
+            }
+            incrementProgress();
+        }
+    }
+
+    private async deleteBlobs(
+        blobService: azureStorage.BlobService,
+        blobsToDelete: azureStorage.BlobService.BlobResult[],
+        incrementProgress: () => void,
+        cancellationToken: vscode.CancellationToken,
+        properties: TelemetryProperties,
+        output: vscode.OutputChannel
+    ): Promise<void> {
+        for (let blob of blobsToDelete) {
+            try {
+                await new Promise((resolve, reject) => {
+                    output.appendLine(`Deleting blob "${blob.name}"...`);
+                    blobService.deleteBlob(this.container.name, blob.name, (err) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            if (cancellationToken.isCancellationRequested) {
+                                reject(new UserCancelledError());
+                            } else {
+                                incrementProgress();
+                                resolve();
+                            }
+                        }
+                    });
+                });
+            } catch (error) {
+                if (parseError(error).isUserCancelledError) {
+                    properties.cancelStep = "deleteBlobs";
+                    throw error;
+                }
+
+                throw new Error(`Error deleting blob "${blob.name}" : ${parseError(error).message}`);
+            }
+        }
+    }
+
     private async createChildAsUpload(options: ICreateChildOptions, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         showCreatingNode(options.blobPath);
-        await this.uploadFileToBlockBlob(options.filePath, options.blobPath);
+        await this.uploadFileToBlockBlob(options.filePath, options.blobPath, azureStorageOutputChannel);
         const actualBlob = await this.getBlob(options.blobPath);
         return new BlobNode(actualBlob, this.container, this.storageAccount, this.key);
     }
 
-    private async uploadFileToBlockBlob(filePath: string, blobPath: string): Promise<void> {
-        let blobFullDisplayPath = `${this.storageAccount.name}/${this.container.name}/${blobPath}`;
-        channel.show();
-        channel.appendLine(`Uploading ${filePath} as ${blobFullDisplayPath}`);
+    private async uploadFileToBlockBlob(filePath: string, blobPath: string, output: vscode.OutputChannel): Promise<void> {
+        let blobFriendlyPath = `${this.friendlyContainerName}${blobPath}`;
+        if (output) {
+            // output.show();
+            output.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
+        }
         const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
         let speedSummary;
-        const promise = new Promise((resolve, reject) => {
+        const uploadPromise = new Promise((resolve, reject) => {
             speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blobPath, filePath, function (err: {}): void {
                 err ? reject(err) : resolve();
             });
         });
-        await awaitWithProgress(`Uploading ${blobPath}`, channel, promise, () => {
-            const completed = <string>speedSummary.getCompleteSize(true);
-            const total = <string>speedSummary.getTotalSize(true);
-            const percent = speedSummary.getCompletePercent(0);
-            const msg = `${blobPath}: ${completed}/${total} (${percent}%)`;
-            return msg;
-        });
-        channel.appendLine(`Successfully uploaded ${blobFullDisplayPath}.`);
+
+        if (output) {
+            await awaitWithProgress(`Uploading ${blobPath}`, channel, uploadPromise, () => {
+                const completed = <string>speedSummary.getCompleteSize(true);
+                const total = <string>speedSummary.getTotalSize(true);
+                const percent = speedSummary.getCompletePercent(0);
+                const msg = `${blobPath}: ${completed}/${total} bytes (${percent}%)`;
+                return msg;
+            });
+        } else {
+            await uploadPromise;
+        }
+
+        if (output) {
+            output.appendLine(`Successfully uploaded ${blobFriendlyPath}.`);
+        }
     }
 
     // Currently only supports creating block blobs
@@ -295,4 +524,14 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             });
         });
     }
+
+    private throwIfCanceled(cancellationToken: vscode.CancellationToken | undefined, properties: TelemetryProperties, cancelStep: string): void {
+        if (cancellationToken && cancellationToken.isCancellationRequested) {
+            if (properties && cancelStep) {
+                properties.cancelStep = cancelStep;
+            }
+            throw new UserCancelledError();
+        }
+    }
+
 }

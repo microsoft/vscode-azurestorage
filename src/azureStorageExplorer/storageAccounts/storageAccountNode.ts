@@ -4,16 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 // tslint:disable-next-line:no-require-imports
-import StorageManagementClient = require('azure-arm-storage');
+import * as ext from "../../constants";
+import * as path from 'path';
 import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
-import * as path from 'path';
+import StorageManagementClient = require('azure-arm-storage');
 
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, IAzureParentNode } from 'vscode-azureextensionui';
 import { FileShareGroupNode } from '../fileShares/fileShareGroupNode';
 import { QueueGroupNode } from '../queues/queueGroupNode';
 import { TableGroupNode } from '../tables/tableGroupNode';
+import { BlobContainerNode } from "../blobContainers/blobContainerNode";
 
 export class StorageAccountNode implements IAzureParentTreeItem {
     constructor(
@@ -23,11 +25,27 @@ export class StorageAccountNode implements IAzureParentTreeItem {
 
     public id: string = this.storageAccount.id;
     public label: string = this.storageAccount.name;
-    public contextValue: string = 'azureStorageAccount';
+    public static contextValue: string = 'azureStorageAccount';
+    public contextValue: string = StorageAccountNode.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount_16x.png'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount_16x.png')
     };
+
+    private _blobContainerGroupNodePromise: Promise<BlobContainerGroupNode>;
+
+    private async getBlobContainerGroupNode(): Promise<BlobContainerGroupNode> {
+        const createBlobContainerGroupNode = async (): Promise<BlobContainerGroupNode> => {
+            let primaryKey = await this.getPrimaryKey();
+            return new BlobContainerGroupNode(this.storageAccount, primaryKey);
+        };
+
+        if (!this._blobContainerGroupNodePromise) {
+            this._blobContainerGroupNodePromise = createBlobContainerGroupNode();
+        }
+
+        return await this._blobContainerGroupNodePromise;
+    }
 
     async loadMoreChildren(_node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
         let primaryKey = await this.getPrimaryKey();
@@ -35,7 +53,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         let groupNodes = [];
 
         if (!!primaryEndpoints.blob) {
-            groupNodes.push(new BlobContainerGroupNode(this.storageAccount, primaryKey));
+            groupNodes.push(await this.getBlobContainerGroupNode());
         }
 
         if (!!primaryEndpoints.file) {
@@ -104,5 +122,14 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         }
 
         return result;
+    }
+
+    public async getWebsiteEnabledContainers(node: IAzureParentNode<StorageAccountNode>): Promise<IAzureParentNode<BlobContainerNode>[]> {
+        let groupTreeItem = <IAzureTreeItem>await this.getBlobContainerGroupNode(); // asdf
+
+        // Currently only the child with the name "$web" is supported for hosting websites
+        let id = `${this.id}/${groupTreeItem.id || groupTreeItem.label}/${ext.staticWebsiteContainerName}`;
+        let containerNode = <IAzureParentNode<BlobContainerNode>>await node.treeDataProvider.findNode(id); // asdf does this load more?
+        return containerNode ? [containerNode] : [];
     }
 }

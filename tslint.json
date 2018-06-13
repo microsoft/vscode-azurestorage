@@ -60,7 +60,7 @@
         "no-floating-promises": false /*TODO: true*/,
         "no-for-in-array": true,
         "no-import-side-effect": true,
-        "no-increment-decrement": true,
+        "no-increment-decrement": false, // changed
         "no-invalid-regexp": true,
         "no-invalid-template-strings": true,
         "no-invalid-this": true,
@@ -92,7 +92,8 @@
             true,
             "allow-string", // changed
             "allow-undefined-union", // changed
-            "allow-mix" // changed
+            "allow-mix", // changed
+            "allow-number" // changed
         ],
         "switch-default": true,
         "triple-equals": [

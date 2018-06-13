@@ -24,7 +24,7 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
         let childNode = await node.createChild({ childType: ChildType.newBlockBlob });
         await vscode.commands.executeCommand("azureStorage.editBlob", childNode);
     });
-    actionHandler.registerCommand("azureStorage.uploadBlockBlob", (node: IAzureParentNode<BlobContainerNode>) => node.treeItem.uploadBlockBlob(node));
+    actionHandler.registerCommand("azureStorage.uploadBlockBlob", (node: IAzureParentNode<BlobContainerNode>) => node.treeItem.uploadBlockBlob(node, azureStorageOutputChannel));
     actionHandler.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { _editor.onDidSaveTextDocument(this, doc); });
 }
 
