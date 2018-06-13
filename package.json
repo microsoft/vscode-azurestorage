@@ -31,7 +31,8 @@
 	"$activationEvents.asdf": true,
 	"activationEvents": [
 		"onView:azureStorage",
-		"onCommand:azureStorage.deployStaticWebsite"
+		"onCommand:azureStorage.deployStaticWebsite",
+		"onCommand:azureStorage.configureStaticWebsite"
 	],
 	"main": "./out/src/extension",
 	"icon": "media/azureStorageIcon.png",
@@ -69,7 +70,8 @@
 			},
 			{
 				"command": "azureStorage.configureStaticWebsite",
-				"title": "Configure Static Website..."
+				"title": "Configure Static Website...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.selectSubscriptions",
@@ -213,7 +215,7 @@
 			"view/title": [
 				{
 					"command": "azureStorage.deployStaticWebsite",
-					"when": "view == azureStorage",
+					"when": "view == azureStorage && config.azureStorage.preview.staticWebsites",
 					"group": "navigation@2"
 				},
 				{
@@ -225,7 +227,7 @@
 			"explorer/context": [
 				{
 					"command": "azureStorage.deployStaticWebsite",
-					"when": "explorerResourceIsFolder == true",
+					"when": "explorerResourceIsFolder == true && config.azureStorage.preview.staticWebsites",
 					"group": "zzz_appStorageDeployCommands"
 				}
 			],
@@ -264,12 +266,12 @@
 				},
 				{
 					"command": "azureStorage.deployStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"when": "view == azureStorage && viewItem == azureStorageAccount && config.azureStorage.preview.staticWebsites",
 					"group": "6_staticwebsites@1"
 				},
 				{
 					"command": "azureStorage.configureStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"when": "view == azureStorage && viewItem == azureStorageAccount && config.azureStorage.preview.staticWebsites",
 					"group": "6_staticwebsites@2"
 				},
 				{
@@ -573,7 +575,11 @@
 				},
 				{
 					"command": "azureStorage.configureStaticWebsite",
-					"when": "never"
+					"when": "config.azureStorage.preview.staticWebsites"
+				},
+				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "config.azureStorage.preview.staticWebsites"
 				}
 			]
 		},
@@ -588,7 +594,7 @@
 				"azureStorage.storageExplorerLocation": {
 					"type": "string",
 					"default": "/Applications/Microsoft Azure Storage Explorer.app",
-					"description": "Show or hide the Azure Storage Explorer"
+					"description": "[Mac only] Set to \"Path/To/Microsoft Azure Storage Explorer.app\" to the location of Storage Explorer. Default is \"/Applications/Microsoft Azure Storage Explorer.app\"."
 				},
 				"azureStorage.file.showSavePrompt": {
 					"type": "boolean",
@@ -599,6 +605,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Show warning dialog on Blob file save."
+				},
+				"azureStorage.preview.staticWebsites": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enables deploying to static websites in Azure Storage. Static websites are an Azure preview feature that is not supported in all regions, and only for GPv2 storage accounts."
 				}
 			}
 		}
