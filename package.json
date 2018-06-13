@@ -66,6 +66,10 @@
 				"title": "Open in Portal"
 			},
 			{
+				"command": "azureStorage.configureStaticWebsite",
+				"title": "Configure Static Website..."
+			},
+			{
 				"command": "azureStorage.selectSubscriptions",
 				"title": "Select Subscriptions...",
 				"icon": {
@@ -234,6 +238,11 @@
 					"command": "azureStorage.copyPrimaryKey",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "5_cutcopypaste@2"
+				},
+				{
+					"command": "azureStorage.configureStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "6_staticwebsites@2"
 				},
 				{
 					"command": "azureStorage.refresh",
@@ -533,6 +542,10 @@
 				{
 					"command": "azureStorage.openInPortal",
 					"when": "never"
+				},
+				{
+					"command": "azureStorage.configureStaticWebsite",
+					"when": "never"
 				}
 			]
 		},
@@ -595,7 +608,7 @@
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
 		"vscode-extension-telemetry": "^0.0.15",
-		"vscode-azureextensionui": "~0.13.0",
+		"vscode-azureextensionui": "~0.14.0",
 		"winreg": "^1.2.3"
 	}
 }
