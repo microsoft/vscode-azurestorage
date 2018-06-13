@@ -11,7 +11,7 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
 import StorageManagementClient = require('azure-arm-storage');
 
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, IActionContext, IAzureParentNode } from 'vscode-azureextensionui';
+import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, IAzureParentNode } from 'vscode-azureextensionui';
 import { FileShareGroupNode } from '../fileShares/fileShareGroupNode';
 import { QueueGroupNode } from '../queues/queueGroupNode';
 import { TableGroupNode } from '../tables/tableGroupNode';
@@ -124,21 +124,12 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         return result;
     }
 
-    public async deployStaticWebsite(node: IAzureParentNode<StorageAccountNode>, actionContext: IActionContext, sourcePath: string): Promise<void> {
+    public async getWebsiteEnabledContainers(node: IAzureParentNode<StorageAccountNode>): Promise<IAzureParentNode<BlobContainerNode>[]> {
         let groupTreeItem = <IAzureTreeItem>await this.getBlobContainerGroupNode(); // asdf
+
+        // Currently only the child with the name "$web" is supported for hosting websites
         let id = `${this.id}/${groupTreeItem.id || groupTreeItem.label}/${ext.staticWebsiteContainerName}`;
         let containerNode = <IAzureParentNode<BlobContainerNode>>await node.treeDataProvider.findNode(id); // asdf does this load more?
-        if (containerNode) {
-            return await containerNode.treeItem.deployStaticWebsite(containerNode, actionContext, sourcePath);
-        }
-
-        // asdf: enable web hosting
-        // this.storageAccount;
-
+        return containerNode ? [containerNode] : [];
     }
-
-    // private async getWebsiteHostingContainers(): Promise<BlobContainerNode[]> {
-    //     let groupNode = await this.getBlobContainerGroupNode();
-    //     let a = await groupNode.loadMoreChildren(groupNode, true); // asdf
-    // }
 }

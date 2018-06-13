@@ -42,7 +42,8 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
     }
 
     public label: string = this.container.name;
-    public contextValue: string = 'azureBlobContainer';
+    public static contextValue: string = 'azureBlobContainer';
+    public contextValue: string = BlobContainerNode.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
@@ -202,18 +203,27 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         throw new UserCancelledError();
     }
 
-    public async deployStaticWebsite(_node: IAzureParentNode<BlobContainerNode>, _actionContext: IActionContext, sourceFolderPath: string): Promise<void> {
+    public async deployStaticWebsite(node: IAzureParentNode<BlobContainerNode>, _actionContext: IActionContext, sourceFolderPath: string): Promise<void> {
         let destBlobFolder = "";
 
         await vscode.window.withProgress(
             {
                 cancellable: true,
                 location: ProgressLocation.Notification,
-                title: `Deploying ${sourceFolderPath} to ${this.storageAccount.name}/${this.container.name}`,
+                title: `Deploying to ${this.friendlyContainerName} from ${sourceFolderPath}`,
 
             },
             async (progress, cancellationToken) => await this.deployStaticWebsiteCore(_actionContext, sourceFolderPath, destBlobFolder, azureStorageOutputChannel, progress, cancellationToken),
         );
+
+        let goToPortal: vscode.MessageItem = { title: "Retrieve primary endpoint from portal" };
+        let result = await vscode.window.showInformationMessage(
+            `Deployment to ${this.friendlyContainerName} complete. To view the website, you need to browse to the primary web endpoint. You can find the primary endpoint by going to the configure tab on the Azure portal.`,
+            goToPortal
+        );
+        if (result === goToPortal) {
+            vscode.commands.executeCommand("azureStorage.configureStaticWebsite", node);
+        }
     }
 
     private get friendlyContainerName(): string {
@@ -247,7 +257,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             properties.blobsToDelete = blobsToDelete.length;
 
             if (blobsToDelete.length) {
-                let message = `Are you sure you want to deploy ${sourceFolderPath} to ${this.friendlyContainerName}?  This will delete all ${blobsToDelete.length} blobs currently in the ${this.friendlyContainerName} container.`;
+                let message = `Are you sure you want to deploy to ${this.friendlyContainerName}?  This will delete all ${blobsToDelete.length} files currently in the ${this.friendlyContainerName} blob container.`;
                 let deleteAndDeploy: vscode.MessageItem = { title: 'Delete and Deploy' };
                 const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteAndDeploy, DialogResponses.cancel);
                 if (result !== deleteAndDeploy) {

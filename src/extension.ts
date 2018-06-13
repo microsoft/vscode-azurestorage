@@ -29,6 +29,7 @@ import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/
 import { commands } from 'vscode';
 import { ICopyUrl } from './ICopyUrl';
 import { StorageAccountNode } from './azureStorageExplorer/storageAccounts/storageAccountNode';
+import { BlobContainerNode } from './azureStorageExplorer/blobContainers/blobContainerNode';
 
 export function activate(context: vscode.ExtensionContext): void {
     console.log('Extension "Azure Storage Tools" is now active.');
@@ -63,9 +64,20 @@ export function activate(context: vscode.ExtensionContext): void {
         node.openInPortal();
     });
     actionHandler.registerCommand("azureStorage.configureStaticWebsite", async (node: IAzureNode<IAzureTreeItem>) => {
+        // asdf handle on $web container
         if (!node) {
             node = <IAzureNode<StorageAccountNode>>await tree.showNodePicker(StorageAccountNode.contextValue);
         }
+
+        if (node) {
+            if (node.treeItem.contextValue === BlobContainerNode.contextValue) {
+                // Currently the portal only allows configuring at the storage account level testpoint, so retrieve the storage account node
+                let storageAccountNode = node.parent && node.parent.parent;
+                console.assert(!!storageAccountNode && storageAccountNode.treeItem.contextValue === StorageAccountNode.contextValue, "Couldn't find storage account node for container");
+                node = storageAccountNode;
+            }
+        }
+
         if (node) {
             let featureQuery = "feature.staticwebsites=true"; // Needed until preview is public
             let resourceId = `${node.id}/staticWebsite`;

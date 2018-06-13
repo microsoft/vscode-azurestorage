@@ -312,6 +312,16 @@
 					"group": "5_cutcopypaste"
 				},
 				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureBlobContainer && config.azureStorage.preview.staticWebsites",
+					"group": "6_staticwebsites@1"
+				},
+				{
+					"command": "azureStorage.configureStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureBlobContainer && config.azureStorage.preview.staticWebsites",
+					"group": "6_staticwebsites@2"
+				},
+				{
 					"command": "azureStorage.deleteBlobContainer",
 					"when": "view == azureStorage && viewItem == azureBlobContainer",
 					"group": "7_modification"
