@@ -10,6 +10,8 @@ import { IChildProvider, IAzureTreeItem, IAzureNode } from 'vscode-azureextensio
 import { StorageAccountNode } from './storageAccounts/storageAccountNode';
 
 export class StorageAccountProvider implements IChildProvider {
+    public childTypeLabel: string = "storage account";
+
     async loadMoreChildren(node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
         let storageManagementClient = new StorageManagementClient(node.credentials, node.subscriptionId);
 
