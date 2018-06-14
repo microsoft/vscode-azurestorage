@@ -92,7 +92,7 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
             properties.enableResponse = String(enableResponse);
             properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
             if (enableResponse) {
-                await vscode.commands.executeCommand("azureStorage.configureStaticWebsite", destNode);
+                await vscode.commands.executeCommand("azureStorage.configureStaticWebsite", destAccountNode);
             }
 
             // Either way can't continue
