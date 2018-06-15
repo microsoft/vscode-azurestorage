@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-export const extensionPrefix: string = 'appService';
-
 export const staticWebsiteContainerName = '$web';
 
 export enum configurationSettingsKeys {
