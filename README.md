@@ -29,9 +29,15 @@ You will now find us by clicking in the new Azure view container instead of the 
 ## Extension Settings
 
 * `azureStorage.showExplorer`: Set to `false` to hide Azure Storage Explorer
-* `azureStorage.storageExplorerLocation`: Set to `"Path/To/Microsoft Azure Storage Explorer.app"` to override the default location.
+* `azureStorage.storageExplorerLocation`:  [Mac only] Set to `"Path/To/Microsoft Azure Storage Explorer.app"` to override the default location.
 * `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing a warning dialog on File file save.
 * `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing a warning dialog on Blob file save.
+
+## Preview Features
+
+* Deploy to static website
+  * To enable this feature, click File > Preferences > Settings and edit the setting `azureStorage.preview.staticWebsites` to be true.
+    Static websites are an Azure preview feature that is not supported in all regions, and only for GPv2 storage accounts."
 
 ## Managing Azure Subscriptions
 

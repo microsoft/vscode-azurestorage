@@ -8,6 +8,7 @@ are grateful to these developers for their contribution to open source.
 1. node-winreg (https://github.com/fresc81/node-winreg)
 2. fs-extra (https://github.com/jprichardson/node-fs-extra)
 3. copy-paste (https://github.com/xavi-/node-copy-paste)
+4. glob (https://github.com/isaacs/node-glob)
 
 node-winreg NOTICES BEGIN HERE
 =============================
@@ -70,4 +71,26 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 END OF copy-paste NOTICES AND INFORMATION
+==================================
+
+glob NOTICES BEGIN HERE
+=============================
+
+The ISC License
+
+Copyright (c) Isaac Z. Schlueter and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+END OF glob NOTICES AND INFORMATION
 ==================================

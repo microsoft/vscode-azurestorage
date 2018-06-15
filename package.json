@@ -29,7 +29,9 @@
 	],
 	"preview": true,
 	"activationEvents": [
-		"onView:azureStorage"
+		"onView:azureStorage",
+		"onCommand:azureStorage.deployStaticWebsite",
+		"onCommand:azureStorage.configureStaticWebsite"
 	],
 	"main": "./out/src/extension",
 	"icon": "media/azureStorageIcon.png",
@@ -67,7 +69,8 @@
 			},
 			{
 				"command": "azureStorage.configureStaticWebsite",
-				"title": "Configure Static Website..."
+				"title": "Configure Static Website...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.selectSubscriptions",
@@ -75,6 +78,15 @@
 				"icon": {
 					"light": "resources/light/filter.svg",
 					"dark": "resources/dark/filter.svg"
+				}
+			},
+			{
+				"command": "azureStorage.deployStaticWebsite",
+				"title": "Deploy to Static Website...",
+				"category": "Azure Storage",
+				"icon": {
+					"light": "resources/light/Deploy.svg",
+					"dark": "resources/dark/Deploy.svg"
 				}
 			},
 			{
@@ -201,9 +213,21 @@
 		"menus": {
 			"view/title": [
 				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "view == azureStorage && config.azureStorage.preview.staticWebsites",
+					"group": "navigation@2"
+				},
+				{
 					"command": "azureStorage.refresh",
 					"when": "view == azureStorage",
-					"group": "navigation"
+					"group": "navigation@99"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "explorerResourceIsFolder == true && config.azureStorage.preview.staticWebsites",
+					"group": "zzz_staticwebsites"
 				}
 			],
 			"view/item/context": [
@@ -240,8 +264,13 @@
 					"group": "5_cutcopypaste@2"
 				},
 				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureStorageAccount && config.azureStorage.preview.staticWebsites",
+					"group": "6_staticwebsites@1"
+				},
+				{
 					"command": "azureStorage.configureStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"when": "view == azureStorage && viewItem == azureStorageAccount && config.azureStorage.preview.staticWebsites",
 					"group": "6_staticwebsites@2"
 				},
 				{
@@ -280,6 +309,16 @@
 					"command": "azureStorage.copyUrl",
 					"when": "view == azureStorage && viewItem == azureBlobContainer",
 					"group": "5_cutcopypaste"
+				},
+				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureBlobContainer && config.azureStorage.preview.staticWebsites",
+					"group": "6_staticwebsites@1"
+				},
+				{
+					"command": "azureStorage.configureStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureBlobContainer && config.azureStorage.preview.staticWebsites",
+					"group": "6_staticwebsites@2"
 				},
 				{
 					"command": "azureStorage.deleteBlobContainer",
@@ -545,7 +584,11 @@
 				},
 				{
 					"command": "azureStorage.configureStaticWebsite",
-					"when": "never"
+					"when": "config.azureStorage.preview.staticWebsites"
+				},
+				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "config.azureStorage.preview.staticWebsites"
 				}
 			]
 		},
@@ -560,7 +603,7 @@
 				"azureStorage.storageExplorerLocation": {
 					"type": "string",
 					"default": "/Applications/Microsoft Azure Storage Explorer.app",
-					"description": "Show or hide the Azure Storage Explorer"
+					"description": "[Mac only] Set to \"Path/To/Microsoft Azure Storage Explorer.app\" to the location of Storage Explorer. Default is \"/Applications/Microsoft Azure Storage Explorer.app\"."
 				},
 				"azureStorage.file.showSavePrompt": {
 					"type": "boolean",
@@ -571,6 +614,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Show warning dialog on Blob file save."
+				},
+				"azureStorage.preview.staticWebsites": {
+					"type": "boolean",
+					"default": false,
+					"description": "Enables deploying to static websites in Azure Storage. Static websites are an Azure preview feature that is not supported in all regions, and only for GPv2 storage accounts."
 				}
 			}
 		}
@@ -586,6 +634,8 @@
 	},
 	"devDependencies": {
 		"@types/copy-paste": "^1.1.30",
+		"@types/fs-extra": "=5.0.2",
+		"@types/glob": "^5.0.35",
 		"@types/mocha": "^2.2.42",
 		"@types/node": "^7.0.43",
 		"@types/winreg": "1.2.30",
@@ -593,8 +643,8 @@
 		"tslint": "^5.7.0",
 		"tslint-microsoft-contrib": "5.0.1",
 		"typescript": "^2.5.3",
-		"vscode": "^1.1.5",
-		"vsce": "^1.37.5"
+		"vsce": "^1.37.5",
+		"vscode": "^1.1.5"
 	},
 	"extensionDependencies": [
 		"ms-vscode.azure-account"
@@ -605,6 +655,7 @@
 		"azure-storage": "^2.9.0-preview",
 		"copy-paste": "^1.3.0",
 		"fs-extra": "^4.0.2",
+		"glob": "^7.1.2",
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
 		"vscode-extension-telemetry": "^0.0.15",

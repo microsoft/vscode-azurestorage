@@ -26,7 +26,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
     };
 
-    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+    public async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -40,11 +40,11 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         });
     }
 
-    hasMoreChildren(): boolean {
+    public hasMoreChildren(): boolean {
         return !!this._continuationToken;
     }
 
-    listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {
+    private listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise((resolve, reject) => {
             let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
             blobService.listContainersSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.BlobService.ListContainerResult) => {
