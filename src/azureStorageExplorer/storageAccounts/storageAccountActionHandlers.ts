@@ -102,7 +102,7 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
             destContainerNode = enabledContainers[0];
         }
     }
-    console.assert(!destContainerNode, "Should have a destination container node by now");
+    console.assert(!!destContainerNode, "Should have a destination container node by now");
 
     //  Ask for source if needed
     if (!sourcePath) {
