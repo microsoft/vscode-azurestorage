@@ -78,9 +78,9 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
         destAccountNode = <IAzureParentNode<StorageAccountNode>>await _tree.showNodePicker(StorageAccountNode.contextValue);
     }
 
+    // Determine destination container node if we only have account ndoe
+    console.assert(!!destAccountNode || !!destContainerNode, "Should have a storage account or container node by now");
     if (!destContainerNode) {
-        // Determine destination container node
-        console.assert(!!destAccountNode, "Should have a storage account node");
         let enabledContainers = await destAccountNode.treeItem.getWebsiteEnabledContainers(destAccountNode);
         if (enabledContainers.length === 0) {
             let result = await vscode.window.showInformationMessage(

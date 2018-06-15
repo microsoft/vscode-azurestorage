@@ -408,7 +408,6 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
     private async uploadFileToBlockBlob(filePath: string, blobPath: string, output: vscode.OutputChannel): Promise<void> {
         let blobFriendlyPath = `${this.friendlyContainerName}${blobPath}`;
         if (output) {
-            // output.show();
             output.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
         const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
@@ -420,13 +419,16 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         });
 
         if (output) {
-            await awaitWithProgress(`Uploading ${blobPath}`, channel, uploadPromise, () => {
-                const completed = <string>speedSummary.getCompleteSize(true);
-                const total = <string>speedSummary.getTotalSize(true);
-                const percent = speedSummary.getCompletePercent(0);
-                const msg = `${blobPath}: ${completed}/${total} bytes (${percent}%)`;
-                return msg;
-            });
+            await awaitWithProgress(
+                `Uploading ${blobPath}`,
+                channel,
+                uploadPromise, () => {
+                    const completed = <string>speedSummary.getCompleteSize(true);
+                    const total = <string>speedSummary.getTotalSize(true);
+                    const percent = speedSummary.getCompletePercent(0);
+                    const msg = `${blobPath}: ${completed}/${total} bytes (${percent}%)`;
+                    return msg;
+                });
         } else {
             await uploadPromise;
         }
