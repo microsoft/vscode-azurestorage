@@ -36,8 +36,8 @@ You will now find us by clicking in the new Azure view container instead of the 
 ## Preview Features
 
 * Deploy to static website
-  * To enable this feature, click File > Preferences > Settings and edit the setting `azureStorage.preview.staticWebsites` to be true.
-    Static websites are an Azure preview feature that is not supported in all regions, and only for GPv2 storage accounts."
+  * To enable this feature, click File (Code for Mac) > Preferences > Settings and edit the setting `azureStorage.preview.staticWebsites` to be true.
+    Static websites are an Azure preview feature that is only supported in some regions (e.g. West Central US), and only for GPv2 storage accounts."
 
 ## Managing Azure Subscriptions
 
