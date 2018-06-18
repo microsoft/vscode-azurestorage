@@ -81,6 +81,8 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
     // Determine destination container node if we only have account ndoe
     console.assert(!!destAccountNode || !!destContainerNode, "Should have a storage account or container node by now");
     if (!destContainerNode) {
+        // Refresh the storage account so we see new containers (required since we're sending users to the portal to enable, so we won't see the change)
+        await destAccountNode.refresh();
         let enabledContainers = await destAccountNode.treeItem.getWebsiteEnabledContainers(destAccountNode);
         if (enabledContainers.length === 0) {
             let result = await vscode.window.showInformationMessage(
