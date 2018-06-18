@@ -39,6 +39,9 @@ You will now find us by clicking in the new Azure view container instead of the 
   * To enable this feature, click File (Code for Mac) > Preferences > Settings and edit the setting `azureStorage.preview.staticWebsites` to be true.
     Static websites are an Azure preview feature that is only supported in some regions (e.g. West Central US), and only for GPv2 storage accounts."
 
+  * Known issue: If "Configure Static Websites..." displays a blank web page on the Azure portal, the storage account probably does not support static web pages.
+    Create a new storage account in West Central US with account kind set to "StorageV2" and try again.
+
 ## Managing Azure Subscriptions
 
 If you are not signed in to Azure, you will see a "Sign in to Azure..." link. Alternatively, you can select "View->Command Palette" in the VS Code menu, and search for "Azure: Sign In".
