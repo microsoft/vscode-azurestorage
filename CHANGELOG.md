@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.4.0 - 2018-06-18
+
+### Added
+- Deploy to static websites (preview feature, must be [enabled](README.md/#preview-features) first)
+
 ## 0.3.1 - 2018-05-09
 
 ### Added
