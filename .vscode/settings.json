@@ -6,7 +6,8 @@
     "files.trimTrailingWhitespace": true,
     "search.exclude": {
         "out": true,
-        "**/node_modules": true
+        "**/node_modules": true,
+        ".vscode-test": true
     },
     "tslint.autoFixOnSave": true,
     "tslint.ignoreDefinitionFiles": true,
@@ -18,5 +19,15 @@
         "norequired",
         "opencode",
         "repo"
-    ]
+    ],
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        ".vscode-test/**": true,
+        "out": false, // set this to true to hide the "out" folder with the compiled JS files
+        ".vscode-test": true
+    }
 }
