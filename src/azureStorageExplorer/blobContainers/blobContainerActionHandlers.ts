@@ -18,20 +18,20 @@ export function registerBlobContainerActionHandlers(actionHandler: AzureActionHa
     context.subscriptions.push(_editor);
 
     actionHandler.registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
-    actionHandler.registerCommand("azureStorage.editBlob", (node: IAzureParentNode<BlobNode>) => _editor.showEditor(node));
-    actionHandler.registerCommand("azureStorage.deleteBlobContainer", (node: IAzureParentNode<BlobContainerNode>) => node.deleteNode());
+    actionHandler.registerCommand("azureStorage.editBlob", async (node: IAzureParentNode<BlobNode>) => await _editor.showEditor(node));
+    actionHandler.registerCommand("azureStorage.deleteBlobContainer", async (node: IAzureParentNode<BlobContainerNode>) => await node.deleteNode());
     actionHandler.registerCommand("azureStorage.createBlockTextBlob", async (node: IAzureParentNode<BlobContainerNode>) => {
         let childNode = await node.createChild({ childType: ChildType.newBlockBlob });
         await vscode.commands.executeCommand("azureStorage.editBlob", childNode);
     });
-    actionHandler.registerCommand("azureStorage.uploadBlockBlob", (node: IAzureParentNode<BlobContainerNode>) => node.treeItem.uploadBlockBlob(node, azureStorageOutputChannel));
-    actionHandler.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { _editor.onDidSaveTextDocument(this, doc); });
+    actionHandler.registerCommand("azureStorage.uploadBlockBlob", async (node: IAzureParentNode<BlobContainerNode>) => await node.treeItem.uploadBlockBlob(node, azureStorageOutputChannel));
+    actionHandler.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { await _editor.onDidSaveTextDocument(this, doc); });
 }
 
-function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>): Promise<void> {
+async function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>): Promise<void> {
     let accountId = node.treeItem.storageAccount.id;
     const resourceType = 'Azure.BlobContainer';
     let resourceName = node.treeItem.container.name;
 
-    return storageExplorerLauncher.openResource(accountId, node.subscriptionId, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(accountId, node.subscriptionId, resourceType, resourceName);
 }

@@ -12,6 +12,7 @@ export function registerTableActionHandlers(actionHandler: AzureActionHandler): 
     actionHandler.registerCommand("azureStorage.deleteTable", (node) => node.deleteNode());
 }
 
+// tslint:disable-next-line:promise-function-async // Grandfathered in
 function openTableInStorageExplorer(node: IAzureNode<TableNode>): Promise<void> {
     let accountId = node.treeItem.storageAccount.id;
     const resourceType = "Azure.Table";

@@ -44,6 +44,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         return !!this._continuationToken;
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     private listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise((resolve, reject) => {
             let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
@@ -75,6 +76,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         throw new UserCancelledError();
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     private createBlobContainer(name: string): Promise<azureStorage.BlobService.ContainerResult> {
         return new Promise((resolve, reject) => {
             let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);

@@ -22,6 +22,7 @@ export async function awaitWithProgress<T>(title: string, channel: OutputChannel
             location: ProgressLocation.Window,
             title: title
         },
+        // tslint:disable-next-line:promise-function-async // Grandfathered in
         (progress: StatusBarProgress): Promise<T> => {
             thisProgress = progress;
             return promise;
@@ -61,7 +62,7 @@ function pollDuringPromise<T>(intervalMs: number, promise: Promise<T>, poll: () 
     const pollFunction = () => {
         if (inProgress) {
             poll();
-            setTimeout(() => pollFunction(), intervalMs);
+            setTimeout(pollFunction, intervalMs);
         }
     };
 

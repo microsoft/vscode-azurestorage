@@ -8,6 +8,7 @@ import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
 
+// tslint:disable:no-stateless-class // Grandfathered in
 export class TemporaryFile {
     private static randomFolderNameLength: number = 12;
 

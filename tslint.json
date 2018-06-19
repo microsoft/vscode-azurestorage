@@ -57,7 +57,7 @@
         "no-duplicate-super": true,
         "no-duplicate-variable": true,
         "no-empty": true,
-        "no-floating-promises": false /*TODO: true*/,
+        "no-floating-promises": true,
         "no-for-in-array": true,
         "no-import-side-effect": true,
         "no-increment-decrement": false, // changed
@@ -70,19 +70,19 @@
         "no-reference-import": true,
         "no-regex-spaces": true,
         "no-sparse-arrays": true,
-        "no-stateless-class": false /*TODO: true*/,
-        "no-string-literal": false /*TODO: true*/,
+        "no-stateless-class": true,
+        "no-string-literal": true,
         "no-string-throw": true,
         "no-unnecessary-bind": true,
-        "no-unnecessary-callback-wrapper": false /*TODO: true*/,
+        "no-unnecessary-callback-wrapper": true,
         "no-unnecessary-initializer": true,
         "no-unnecessary-override": true,
         "no-unsafe-any": false /*TODO: true*/,
-        "no-unsafe-finally": false /*TODO: true*/,
+        "no-unsafe-finally": true,
         "no-unused-expression": true,
         "no-use-before-declare": true,
         "no-with-statement": true,
-        "promise-function-async": false /*TODO: true*/,
+        "promise-function-async": true,
         "promise-must-complete": true,
         "radix": true,
         "react-this-binding-issue": true,
@@ -148,7 +148,7 @@
             false, // changed
             140
         ],
-        "member-access": false /*TODO: true*/,
+        "member-access": false,
         "member-ordering": [
             false /*TODO: true*/,
             {
@@ -159,21 +159,21 @@
         "mocha-unneeded-done": true,
         "new-parens": true,
         "no-construct": true,
-        "no-default-export": false /*TODO: true*/,
+        "no-default-export": true,
         "no-empty-interface": true,
         "no-for-in": true,
-        "no-function-expression": false /*TODO: true*/,
+        "no-function-expression": true,
         "no-inferrable-types": false,
         "no-multiline-string": true,
         "no-null-keyword": false,
-        "no-parameter-properties": false /*TODO: true*/,
+        "no-parameter-properties": false, // changed
         "no-relative-imports": false, // changed
-        "no-require-imports": false /*TODO: true*/,
-        "no-shadowed-variable": false /*TODO: true*/,
+        "no-require-imports": true,
+        "no-shadowed-variable": true,
         "no-suspicious-comment": true,
         "no-typeof-undefined": true,
-        "no-unnecessary-field-initialization": false /*TODO: true*/,
-        "no-unnecessary-local-variable": false /*TODO: true*/,
+        "no-unnecessary-field-initialization": true,
+        "no-unnecessary-local-variable": false, // changed
         "no-unnecessary-qualifier": true,
         "no-unsupported-browser-code": true,
         "no-useless-files": true,
@@ -181,7 +181,7 @@
         "no-var-requires": true,
         "no-var-self": true,
         "no-void-expression": [
-            false /*TODO: true*/,
+            true,
             "ignore-arrow-function-shorthand" // changed
         ],
         "object-literal-sort-keys": false,
@@ -189,10 +189,10 @@
         "only-arrow-functions": false,
         "ordered-imports": false /*TODO: true*/,
         "prefer-array-literal": true,
-        "prefer-const": false /*TODO: true*/,
+        "prefer-const": false, // changed
         "prefer-for-of": true,
         "prefer-method-signature": true,
-        "prefer-template": false /*TODO: true*/,
+        "prefer-template": true,
         "return-undefined": false,
         "typedef": [
             true,
@@ -207,7 +207,7 @@
         "underscore-consistent-invocation": true,
         "unified-signatures": true,
         "variable-name": [ // changed
-            false /*TODO: true*/,
+            true,
             "ban-keywords",
             "check-format",
             "allow-leading-underscore"
@@ -247,7 +247,7 @@
         "no-trailing-whitespace": true,
         "no-unnecessary-semicolons": true,
         "object-literal-key-quotes": [
-            false /*TODO: true*/,
+            true,
             "as-needed"
         ],
         "one-line": [
@@ -296,7 +296,7 @@
         "no-namespace": false,
         "no-reference": true,
         "no-unexternalized-strings": [ // changed
-            false /*TODO: true*/,
+            false, // changed
             {
                 "signatures": [
                     "localize",

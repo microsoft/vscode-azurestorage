@@ -47,6 +47,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
         return !!this._continuationToken;
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
             let tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
@@ -78,6 +79,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
         throw new UserCancelledError();
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     private createTable(name: string): Promise<azureStorage.TableService.TableResult> {
         return new Promise((resolve, reject) => {
             let tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);

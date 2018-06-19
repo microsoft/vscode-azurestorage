@@ -62,6 +62,7 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
         azureStorageOutputChannel.appendLine(`Share URL copied to clipboard: ${url}`);
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return new Promise((resolve, reject) => {
             let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
@@ -82,6 +83,7 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
             const fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
                 fileService.deleteShare(this.share.name, err => {
+                    // tslint:disable-next-line:no-void-expression // Grandfathered in
                     err ? reject(err) : resolve();
                 });
             });

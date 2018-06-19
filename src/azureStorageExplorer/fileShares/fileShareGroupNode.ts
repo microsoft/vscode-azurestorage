@@ -50,6 +50,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
         return !!this._continuationToken;
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
         return new Promise((resolve, reject) => {
             let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
@@ -89,6 +90,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
         throw new UserCancelledError();
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     private createFileShare(name: string, quotaGB: number): Promise<azureStorage.FileService.ShareResult> {
         return new Promise((resolve, reject) => {
             let shareService = azureStorage.createFileService(this.storageAccount.name, this.key.value);

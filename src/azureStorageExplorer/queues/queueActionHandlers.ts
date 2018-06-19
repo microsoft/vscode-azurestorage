@@ -12,6 +12,7 @@ export function registerQueueActionHandlers(actionHandler: AzureActionHandler): 
     actionHandler.registerCommand("azureStorage.deleteQueue", (node) => node.deleteNode());
 }
 
+// tslint:disable-next-line:promise-function-async // Grandfathered in
 function openQueueInStorageExplorer(node: IAzureNode<QueueNode>): Promise<void> {
     let accountId = node.treeItem.storageAccount.id;
     const resourceType = "Azure.Queue";

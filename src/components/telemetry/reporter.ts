@@ -10,6 +10,7 @@ export let reporter: TelemetryReporter;
 
 export class Reporter extends vscode.Disposable {
     constructor(ctx: vscode.ExtensionContext) {
+        // tslint:disable-next-line:promise-function-async // Grandfathered in
         super(() => reporter.dispose());
 
         let packageInfo = getPackageInfo(ctx);

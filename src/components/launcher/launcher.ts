@@ -1,7 +1,13 @@
+/*
+  *  Copyright (c) Microsoft Corporation. All rights reserved.
+  *  Licensed under the MIT License. See License.txt in the project root for license information.
+  **/
+
 import { spawn } from "child_process";
 export class Launcher {
+    // tslint:disable:no-stateless-class // Grandfathered in
     public static async launch(command: string, ...args: string[]): Promise<void> {
-        return await new Promise<void>((resolve, _reject) => {
+        await new Promise<void>((resolve, _reject) => {
             let spawnEnv = JSON.parse(JSON.stringify(process.env));
             // remove those env vars
             delete spawnEnv.ATOM_SHELL_INTERNAL_RUN_AS_NODE;

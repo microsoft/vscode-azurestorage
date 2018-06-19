@@ -31,6 +31,7 @@ export async function askAndCreateEmptyTextFile(directoryPath: string, share: Fi
     throw new UserCancelledError();
 }
 
+// tslint:disable-next-line:promise-function-async // Grandfathered in
 function getFile(directoryPath: string, name: string, share: FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey): Promise<azureStorage.FileService.FileResult> {
     let fileService = azureStorage.createFileService(storageAccount.name, key.value);
     return new Promise((resolve, reject) => {
@@ -44,6 +45,7 @@ function getFile(directoryPath: string, name: string, share: FileService.ShareRe
     });
 }
 
+// tslint:disable-next-line:promise-function-async // Grandfathered in
 function createFile(directoryPath: string, name: string, share: FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey): Promise<azureStorage.FileService.FileResult> {
     return new Promise((resolve, reject) => {
         let fileService = azureStorage.createFileService(storageAccount.name, key.value);
@@ -61,6 +63,7 @@ export async function deleteFile(directory: string, name: string, share: string,
     const fileService = azureStorage.createFileService(storageAccount, key);
     await new Promise((resolve, reject) => {
         fileService.deleteFile(share, directory, name, (err) => {
+            // tslint:disable-next-line:no-void-expression // Grandfathered in
             err ? reject(err) : resolve();
         });
     });

@@ -57,7 +57,7 @@ export function activate(context: vscode.ExtensionContext): void {
     registerTableGroupActionHandlers(actionHandler);
 
     vscode.window.registerTreeDataProvider('azureStorage', tree);
-    actionHandler.registerCommand('azureStorage.refresh', (node?: IAzureNode) => tree.refresh(node));
+    actionHandler.registerCommand('azureStorage.refresh', async (node?: IAzureNode) => await tree.refresh(node));
     actionHandler.registerCommand('azureStorage.copyUrl', (node?: IAzureNode<IAzureTreeItem & ICopyUrl>) => node.treeItem.copyUrl(node));
     actionHandler.registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
     actionHandler.registerCommand("azureStorage.openInPortal", (node: IAzureNode<IAzureTreeItem>) => {
