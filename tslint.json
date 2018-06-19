@@ -150,7 +150,7 @@
         ],
         "member-access": false,
         "member-ordering": [
-            false /*TODO: true*/,
+            false, // changed
             {
                 "order": "fields-first"
             }
