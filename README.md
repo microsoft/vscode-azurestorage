@@ -39,6 +39,8 @@ You will now find us by clicking in the new Azure view container instead of the 
   * To enable this feature, click File (Code for Mac) > Preferences > Settings (`CTRL+,` or `CMD+,`) and add the setting `azureStorage.preview.staticWebsites` set to true.
     Static websites are an Azure preview feature that is only supported in some regions (e.g. West Central US), and only for GPv2 storage accounts.
 
+  * When configuring your storage account for static site hosting, you **must** set the *index document name*.
+
   * Known issue: If "Configure Static Websites..." displays a blank web page on the Azure portal, the storage account does not support static web pages.
     Create a new storage account in West Central US with account kind set to "StorageV2" and try again.
 
