@@ -44,7 +44,9 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
             if (!(error instanceof UserCancelledError)) {
                 let details: string;
 
+                // tslint:disable-next-line:no-unsafe-any // Grandfathered in
                 if (!!error.message) {
+                    // tslint:disable-next-line:no-unsafe-any // Grandfathered in
                     details = error.message;
                 } else {
                     details = JSON.stringify(error);

@@ -68,7 +68,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         this._channel.show();
         this._channel.appendLine(`Downloading ${blob.name} to ${filePath}...`);
 
-        let speedSummary;
+        let speedSummary: azureStorage.common.streams.speedsummary.SpeedSummary;
         const promise = new Promise((resolve, reject): void => {
             speedSummary = blobService.getBlobToLocalFile(treeItem.container.name, blob.name, filePath, function (err: {}): void {
                 err ? reject(err) : resolve();

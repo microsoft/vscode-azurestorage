@@ -81,7 +81,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
 
     private async listAllBlobs(cancellationToken?: vscode.CancellationToken, properties?: TelemetryProperties): Promise<azureStorage.BlobService.BlobResult[]> {
         // tslint:disable-next-line:no-any
-        let currentToken: any;
+        let currentToken: azureStorage.common.ContinuationToken;
         let blobs: azureStorage.BlobService.BlobResult[] = [];
 
         // tslint:disable-next-line:no-constant-condition
@@ -411,7 +411,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             output.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
         const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-        let speedSummary;
+        let speedSummary: azureStorage.common.streams.speedsummary.SpeedSummary;
         const uploadPromise = new Promise((resolve, reject) => {
             speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blobPath, filePath, function (err: {}): void {
                 err ? reject(err) : resolve();

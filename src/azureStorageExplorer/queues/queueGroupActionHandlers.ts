@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureActionHandler } from 'vscode-azureextensionui';
+import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
+import { QueueGroupNode } from './queueGroupNode';
 
 export function registerQueueGroupActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.createQueue", (node) => node.createChild());
+    actionHandler.registerCommand("azureStorage.createQueue", (node: IAzureParentNode<QueueGroupNode>) => node.createChild());
 }
