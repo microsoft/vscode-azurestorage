@@ -18,7 +18,7 @@ export function registerFileShareActionHandlers(actionHandler: AzureActionHandle
     context.subscriptions.push(_editor);
 
     actionHandler.registerCommand("azureStorage.openFileShare", openFileShareInStorageExplorer);
-    actionHandler.registerCommand("azureStorage.editFile", async (node) => await _editor.showEditor(node));
+    actionHandler.registerCommand("azureStorage.editFile", async (node: IAzureNode<FileNode>) => await _editor.showEditor(node));
     actionHandler.registerCommand("azureStorage.deleteFileShare", async (node: IAzureParentNode<FileShareNode>) => await node.deleteNode());
     actionHandler.registerCommand("azureStorage.createDirectory", async (node: IAzureParentNode<FileShareNode>) => await node.createChild(DirectoryNode.contextValue));
     actionHandler.registerCommand("azureStorage.createTextFile", async (node: IAzureParentNode<FileShareNode>) => {
