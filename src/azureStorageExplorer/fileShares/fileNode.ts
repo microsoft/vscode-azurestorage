@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Uri, window } from 'vscode';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureTreeItem, IAzureNode, UserCancelledError, DialogResponses, IAzureParentNode } from 'vscode-azureextensionui';
+import { Uri, window } from 'vscode';
+import { DialogResponses, IAzureNode, IAzureParentNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { deleteFile } from './fileUtils';
 
 import * as copypaste from 'copy-paste';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { ICopyUrl } from '../../ICopyUrl';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 
 export class FileNode implements IAzureTreeItem, ICopyUrl {
     constructor(

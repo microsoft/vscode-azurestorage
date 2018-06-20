@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { QueueNode } from './queueNode';
+import { AzureActionHandler, IAzureNode } from 'vscode-azureextensionui';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
-import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
+import { QueueNode } from './queueNode';
 
 export function registerQueueActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);

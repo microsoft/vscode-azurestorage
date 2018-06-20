@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TextDocument, window } from 'vscode';
-import { TemporaryFile } from '../../components/temporaryFile';
-import * as path from "path";
-import * as vscode from "vscode";
-import { IRemoteFileHandler } from './IRemoteFileHandler';
-import { UserCancelledError, IActionContext, DialogResponses } from 'vscode-azureextensionui';
 import * as fse from 'fs-extra';
+import * as path from "path";
+import { TextDocument, window } from 'vscode';
+import * as vscode from "vscode";
+import { DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { TemporaryFile } from '../../components/temporaryFile';
+import { IRemoteFileHandler } from './IRemoteFileHandler';
 
 export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};

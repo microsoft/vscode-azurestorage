@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Uri, window } from 'vscode';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { IAzureTreeItem, IAzureNode, UserCancelledError, DialogResponses } from 'vscode-azureextensionui';
+import { Uri, window } from 'vscode';
+import { DialogResponses, IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 
 export class TableNode implements IAzureTreeItem {
     constructor(

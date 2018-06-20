@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BlobNode } from './blobNode';
 import * as azureStorage from "azure-storage";
+import { BlobNode } from './blobNode';
 
+import * as fse from 'fs-extra';
+import { OutputChannel, Uri } from 'vscode';
 import { IAzureNode } from 'vscode-azureextensionui';
 import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
-import { Limits } from '../limits';
-import { Uri, OutputChannel } from 'vscode';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { awaitWithProgress } from '../../components/progress';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import { Limits } from '../limits';
 import { BlobContainerNode } from './blobContainerNode';
-import * as fse from 'fs-extra';
 
 export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>> {
     private _channel: OutputChannel = azureStorageOutputChannel;

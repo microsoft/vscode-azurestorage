@@ -3,16 +3,16 @@
   *  Licensed under the MIT License. See License.txt in the project root for license information.
   **/
 
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
+import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 
-import { IAzureTreeItem, IAzureNode, UserCancelledError, DialogResponses } from 'vscode-azureextensionui';
-import { Uri, window, SaveDialogOptions } from 'vscode';
-import { BlobFileHandler } from './blobFileHandler';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import * as copypaste from 'copy-paste';
+import { SaveDialogOptions, Uri, window } from 'vscode';
+import { DialogResponses, IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { ICopyUrl } from '../../ICopyUrl';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import { BlobFileHandler } from './blobFileHandler';
 
 export class BlobNode implements IAzureTreeItem, ICopyUrl {
   constructor(

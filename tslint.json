@@ -187,7 +187,7 @@
         "object-literal-sort-keys": false,
         "one-variable-per-declaration": true,
         "only-arrow-functions": false,
-        "ordered-imports": false /*TODO: true*/,
+        "ordered-imports": true,
         "prefer-array-literal": true,
         "prefer-const": false, // changed
         "prefer-for-of": true,

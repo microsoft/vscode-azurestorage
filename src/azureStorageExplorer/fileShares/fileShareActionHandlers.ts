@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as vscode from 'vscode';
-import { FileShareNode } from './fileShareNode';
-import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
-import { IAzureNode, AzureActionHandler, IAzureParentNode, IActionContext } from 'vscode-azureextensionui';
+import { AzureActionHandler, IActionContext, IAzureNode, IAzureParentNode } from 'vscode-azureextensionui';
 import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileEditor';
-import { FileFileHandler } from './fileFileHandler';
+import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { DirectoryNode } from './directoryNode';
+import { FileFileHandler } from './fileFileHandler';
 import { FileNode } from './fileNode';
+import { FileShareNode } from './fileShareNode';
 
 export function registerFileShareActionHandlers(actionHandler: AzureActionHandler, context: vscode.ExtensionContext): void {
     const _editor = new RemoteFileEditor(new FileFileHandler(), "azureStorage.file.showSavePrompt", azureStorageOutputChannel);

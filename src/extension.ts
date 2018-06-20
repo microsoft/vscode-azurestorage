@@ -4,18 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 'use strict';
-import { Reporter, reporter } from './components/telemetry/reporter';
 import * as vscode from 'vscode';
+import { Reporter, reporter } from './components/telemetry/reporter';
 /*
 import { AzureStorgeProvider } from './explorer/azureStorage'
 */
 
-import { AzureTreeDataProvider, AzureActionHandler, IAzureNode, IAzureUserInput, AzureUserInput, IAzureTreeItem } from 'vscode-azureextensionui';
-import { StorageAccountProvider } from './azureStorageExplorer/storageAccountProvider';
+import { commands } from 'vscode';
+import { AzureActionHandler, AzureTreeDataProvider, AzureUserInput, IAzureNode, IAzureTreeItem, IAzureUserInput } from 'vscode-azureextensionui';
 import { azureStorageOutputChannel } from './azureStorageExplorer/azureStorageOutputChannel';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
+import { BlobContainerNode } from './azureStorageExplorer/blobContainers/blobContainerNode';
 import { registerDirectoryActionHandlers } from './azureStorageExplorer/fileShares/directoryActionHandlers';
 import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fileActionHandlers';
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
@@ -23,13 +24,12 @@ import { registerFileShareGroupActionHandlers } from './azureStorageExplorer/fil
 import { registerLoadMoreActionHandler } from './azureStorageExplorer/loadMoreActionHandler';
 import { registerQueueActionHandlers } from './azureStorageExplorer/queues/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './azureStorageExplorer/queues/queueGroupActionHandlers';
+import { StorageAccountProvider } from './azureStorageExplorer/storageAccountProvider';
 import { registerStorageAccountActionHandlers } from './azureStorageExplorer/storageAccounts/storageAccountActionHandlers';
+import { StorageAccountNode } from './azureStorageExplorer/storageAccounts/storageAccountNode';
 import { registerTableActionHandlers } from './azureStorageExplorer/tables/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/tableGroupActionHandlers';
-import { commands } from 'vscode';
 import { ICopyUrl } from './ICopyUrl';
-import { StorageAccountNode } from './azureStorageExplorer/storageAccounts/storageAccountNode';
-import { BlobContainerNode } from './azureStorageExplorer/blobContainers/blobContainerNode';
 
 export function activate(context: vscode.ExtensionContext): void {
     console.log('Extension "Azure Storage Tools" is now active.');

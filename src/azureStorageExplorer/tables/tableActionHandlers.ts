@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TableNode } from './tableNode';
+import { AzureActionHandler, IAzureNode } from 'vscode-azureextensionui';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
-import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
+import { TableNode } from './tableNode';
 
 export function registerTableActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.openTable", openTableInStorageExplorer);

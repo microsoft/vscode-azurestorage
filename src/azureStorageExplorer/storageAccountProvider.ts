@@ -5,8 +5,8 @@
 
 // tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
+import { IAzureNode, IAzureTreeItem, IChildProvider } from 'vscode-azureextensionui';
 import { StorageAccount } from '../../node_modules/azure-arm-storage/lib/models';
-import { IChildProvider, IAzureTreeItem, IAzureNode } from 'vscode-azureextensionui';
 import { StorageAccountNode } from './storageAccounts/storageAccountNode';
 
 export class StorageAccountProvider implements IChildProvider {

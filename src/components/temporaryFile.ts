@@ -5,8 +5,8 @@
 
 import * as crypto from "crypto";
 import * as fse from 'fs-extra';
-import * as path from 'path';
 import * as os from 'os';
+import * as path from 'path';
 
 // tslint:disable:no-stateless-class // Grandfathered in
 export class TemporaryFile {

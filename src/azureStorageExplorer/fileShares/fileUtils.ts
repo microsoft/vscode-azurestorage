@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
-import { IAzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
-import { window, ProgressLocation } from "vscode";
-import { validateFileName } from "./validateNames";
-import { FileNode } from "./fileNode";
-import { FileService } from "azure-storage";
 import { StorageAccount, StorageAccountKey } from "azure-arm-storage/lib/models";
+import * as azureStorage from "azure-storage";
+import { FileService } from "azure-storage";
+import { ProgressLocation, window } from "vscode";
+import { IAzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { FileNode } from "./fileNode";
+import { validateFileName } from "./validateNames";
 
 // Currently only supports creating block blobs
 export async function askAndCreateEmptyTextFile(directoryPath: string, share: FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {

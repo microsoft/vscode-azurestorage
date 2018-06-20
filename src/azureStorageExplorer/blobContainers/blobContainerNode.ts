@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
+import * as azureStorage from "azure-storage";
+import * as copypaste from 'copy-paste';
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { BlobNode } from './blobNode';
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, UserCancelledError, IAzureParentNode, DialogResponses, IActionContext, parseError, TelemetryProperties } from 'vscode-azureextensionui';
-import { Uri, ProgressLocation } from 'vscode';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import * as vscode from 'vscode';
+import { ProgressLocation, Uri } from 'vscode';
+import { DialogResponses, IActionContext, IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { awaitWithProgress } from '../../components/progress';
-import { BlobFileHandler } from './blobFileHandler';
-import * as copypaste from 'copy-paste';
 import { ICopyUrl } from '../../ICopyUrl';
+import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import { BlobFileHandler } from './blobFileHandler';
+import { BlobNode } from './blobNode';
 
 const channel = azureStorageOutputChannel;
 let lastUploadFolder: Uri;
