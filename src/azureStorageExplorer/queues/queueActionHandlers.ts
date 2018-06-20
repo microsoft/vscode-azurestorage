@@ -9,7 +9,7 @@ import { IAzureNode, AzureActionHandler } from 'vscode-azureextensionui';
 
 export function registerQueueActionHandlers(actionHandler: AzureActionHandler): void {
     actionHandler.registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);
-    actionHandler.registerCommand("azureStorage.deleteQueue", (node: IAzureNode<QueueNode>) => node.deleteNode());
+    actionHandler.registerCommand("azureStorage.deleteQueue", async (node: IAzureNode<QueueNode>) => await node.deleteNode());
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in

@@ -7,5 +7,5 @@ import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
 import { FileShareGroupNode } from './fileShareGroupNode';
 
 export function registerFileShareGroupActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.createFileShare", (node: IAzureParentNode<FileShareGroupNode>) => node.createChild());
+    actionHandler.registerCommand("azureStorage.createFileShare", async (node: IAzureParentNode<FileShareGroupNode>) => await node.createChild());
 }

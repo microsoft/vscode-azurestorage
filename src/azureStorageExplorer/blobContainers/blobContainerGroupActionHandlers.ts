@@ -7,5 +7,5 @@ import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
 import { BlobContainerGroupNode } from './blobContainerGroupNode';
 
 export function registerBlobContainerGroupActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.createBlobContainer", (node: IAzureParentNode<BlobContainerGroupNode>) => node.createChild());
+    actionHandler.registerCommand("azureStorage.createBlobContainer", async (node: IAzureParentNode<BlobContainerGroupNode>) => await node.createChild());
 }

@@ -7,5 +7,5 @@ import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
 import { TableGroupNode } from './tableGroupNode';
 
 export function registerTableGroupActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.createTable", (node: IAzureParentNode<TableGroupNode>) => node.createChild());
+    actionHandler.registerCommand("azureStorage.createTable", async (node: IAzureParentNode<TableGroupNode>) => await node.createChild());
 }
