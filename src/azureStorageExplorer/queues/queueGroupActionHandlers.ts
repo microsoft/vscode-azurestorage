@@ -7,5 +7,5 @@ import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
 import { QueueGroupNode } from './queueGroupNode';
 
 export function registerQueueGroupActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.createQueue", (node: IAzureParentNode<QueueGroupNode>) => node.createChild());
+    actionHandler.registerCommand("azureStorage.createQueue", async (node: IAzureParentNode<QueueGroupNode>) => await node.createChild());
 }

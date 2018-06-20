@@ -18,9 +18,9 @@ export function registerFileShareActionHandlers(actionHandler: AzureActionHandle
     context.subscriptions.push(_editor);
 
     actionHandler.registerCommand("azureStorage.openFileShare", openFileShareInStorageExplorer);
-    actionHandler.registerCommand("azureStorage.editFile", (node: IAzureNode<FileNode>) => _editor.showEditor(node));
-    actionHandler.registerCommand("azureStorage.deleteFileShare", (node: IAzureParentNode<FileShareNode>) => node.deleteNode());
-    actionHandler.registerCommand("azureStorage.createDirectory", (node: IAzureParentNode<FileShareNode>) => node.createChild(DirectoryNode.contextValue));
+    actionHandler.registerCommand("azureStorage.editFile", async (node: IAzureNode<FileNode>) => await _editor.showEditor(node));
+    actionHandler.registerCommand("azureStorage.deleteFileShare", async (node: IAzureParentNode<FileShareNode>) => await node.deleteNode());
+    actionHandler.registerCommand("azureStorage.createDirectory", async (node: IAzureParentNode<FileShareNode>) => await node.createChild(DirectoryNode.contextValue));
     actionHandler.registerCommand("azureStorage.createTextFile", async (node: IAzureParentNode<FileShareNode>) => {
         let childNode = await node.createChild(FileNode.contextValue);
         await vscode.commands.executeCommand("azureStorage.editFile", childNode);
@@ -28,11 +28,11 @@ export function registerFileShareActionHandlers(actionHandler: AzureActionHandle
     actionHandler.registerEvent('azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { await _editor.onDidSaveTextDocument(this, doc); });
 }
 
-function openFileShareInStorageExplorer(node: IAzureNode<FileShareNode>): Promise<void> {
+async function openFileShareInStorageExplorer(node: IAzureNode<FileShareNode>): Promise<void> {
     let accountId = node.treeItem.storageAccount.id;
     let subscriptionid = node.subscriptionId;
     const resourceType = 'Azure.FileShare';
     let resourceName = node.treeItem.share.name;
 
-    return storageExplorerLauncher.openResource(accountId, subscriptionid, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(accountId, subscriptionid, resourceType, resourceName);
 }

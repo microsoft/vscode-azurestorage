@@ -66,6 +66,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         });
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     private listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.createBlobService();
@@ -109,6 +110,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             const blobService = this.createBlobService();
             await new Promise((resolve, reject) => {
                 blobService.deleteContainer(this.container.name, err => {
+                    // tslint:disable-next-line:no-void-expression // Grandfathered in
                     err ? reject(err) : resolve();
                 });
             });
@@ -413,7 +415,9 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
         let speedSummary: azureStorage.common.streams.speedsummary.SpeedSummary;
         const uploadPromise = new Promise((resolve, reject) => {
+            // tslint:disable-next-line:no-function-expression // Grandfathered in
             speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blobPath, filePath, function (err: {}): void {
+                // tslint:disable-next-line:no-void-expression // Grandfathered in
                 err ? reject(err) : resolve();
             });
         });
@@ -467,6 +471,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         throw new UserCancelledError();
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     private getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         const blobService = this.createBlobService();
         return new Promise((resolve, reject) => {
@@ -480,6 +485,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         });
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     private createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.createBlobService();

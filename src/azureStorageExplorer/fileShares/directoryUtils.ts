@@ -37,6 +37,7 @@ export async function askAndCreateChildDirectory(parentPath: string, share: azur
     throw new UserCancelledError();
 }
 
+// tslint:disable-next-line:promise-function-async // Grandfathered in
 function createDirectory(share: azureStorage.FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey, parentPath: string, name: string): Promise<azureStorage.BlobService.BlobResult> {
     return new Promise((resolve, reject) => {
         const fileService = azureStorage.createFileService(storageAccount.name, key.value);
@@ -50,6 +51,7 @@ function createDirectory(share: azureStorage.FileService.ShareResult, storageAcc
     });
 }
 
+// tslint:disable-next-line:promise-function-async // Grandfathered in
 export function listFilesInDirectory(directory: string, share: string, storageAccount: string, key: string, maxResults: number, currentToken?: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
     return new Promise((resolve, reject) => {
         const fileService = azureStorage.createFileService(storageAccount, key);
@@ -103,6 +105,7 @@ async function deleteDirectoryOnly(directory: string, share: string, storageAcco
     const fileService = azureStorage.createFileService(storageAccount, key);
     await new Promise((resolve, reject) => {
         fileService.deleteDirectory(share, directory, err => {
+            // tslint:disable-next-line:no-void-expression // Grandfathered in
             err ? reject(err) : resolve();
         });
     });

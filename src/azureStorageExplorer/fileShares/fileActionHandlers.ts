@@ -7,5 +7,5 @@ import { AzureActionHandler, IAzureNode } from 'vscode-azureextensionui';
 import { FileNode } from './fileNode';
 
 export function registerFileActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.deleteFile", (node: IAzureNode<FileNode>) => node.deleteNode());
+    actionHandler.registerCommand("azureStorage.deleteFile", async (node: IAzureNode<FileNode>) => await node.deleteNode());
 }

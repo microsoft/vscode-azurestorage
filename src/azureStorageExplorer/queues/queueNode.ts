@@ -30,6 +30,7 @@ export class QueueNode implements IAzureTreeItem {
             const queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
                 queueService.deleteQueue(this.queue.name, err => {
+                    // tslint:disable-next-line:no-void-expression // Grandfathered in
                     err ? reject(err) : resolve();
                 });
             });

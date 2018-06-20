@@ -7,6 +7,6 @@ import { AzureActionHandler, IAzureNode } from "vscode-azureextensionui";
 import { BlobNode } from "./blobNode";
 
 export function registerBlobActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.deleteBlob", (node: IAzureNode<BlobNode>) => node.deleteNode());
-    actionHandler.registerCommand("azureStorage.downloadBlob", (node: IAzureNode<BlobNode>) => node.treeItem.download(node));
+    actionHandler.registerCommand("azureStorage.deleteBlob", async (node: IAzureNode<BlobNode>) => await node.deleteNode());
+    actionHandler.registerCommand("azureStorage.downloadBlob", async (node: IAzureNode<BlobNode>) => await node.treeItem.download(node));
 }

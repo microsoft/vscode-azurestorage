@@ -19,7 +19,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
 
     async downloadFile(node: IAzureNode<FileNode>, filePath: string): Promise<void> {
         let fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
-        return await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             fileService.getFileToLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     reject(error);

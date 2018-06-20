@@ -50,6 +50,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 exePath = regVal.split("\"")[1];
             }
             if (exePath && await WindowsStorageExplorerLauncher.fileExists(exePath)) {
+                // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
                 return exePath;
             } else {
                 let selected: "Download" = <"Download">await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
@@ -57,6 +58,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                     await WindowsStorageExplorerLauncher.downloadStorageExplorer();
                 }
 
+                // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
                 throw new UserCancelledError();
             }
         }
@@ -70,10 +72,11 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
         });
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     private static getWindowsRegistryValue(hive: string, key: string): Promise<string> {
         return new Promise((resolve, reject) => {
-            let regKey = new winreg({ hive, key });
-            regKey.values((err: {}, items: Winreg.RegistryItem[]) => {
+            let rgKey = new winreg({ hive, key });
+            rgKey.values((err: {}, items: Winreg.RegistryItem[]) => {
                 if (err) {
                     reject(err);
                 } else {

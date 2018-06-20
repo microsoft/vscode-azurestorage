@@ -23,7 +23,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
 
     public async onDidSaveTextDocument(actionContext: IActionContext, doc: vscode.TextDocument): Promise<void> {
         actionContext.suppressTelemetry = true;
-        const filePath = Object.keys(this.fileMap).find((filePath) => path.relative(doc.uri.fsPath, filePath) === '');
+        const filePath = Object.keys(this.fileMap).find(fp => path.relative(doc.uri.fsPath, fp) === '');
         if (filePath) {
             actionContext.suppressTelemetry = false;
             const context: ContextT = this.fileMap[filePath][1];

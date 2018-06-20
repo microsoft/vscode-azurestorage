@@ -68,6 +68,7 @@ export class DirectoryNode implements IAzureParentTreeItem, ICopyUrl {
         azureStorageOutputChannel.appendLine(`Directory URL copied to clipboard: ${url}`);
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return listFilesInDirectory(this.fullPath, this.share.name, this.storageAccount.name, this.key.value, 50, currentToken);
     }

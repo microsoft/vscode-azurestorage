@@ -30,6 +30,7 @@ export class TableNode implements IAzureTreeItem {
             const tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
                 tableService.deleteTable(this.tableName, err => {
+                    // tslint:disable-next-line:no-void-expression // Grandfathered in
                     err ? reject(err) : resolve();
                 });
             });

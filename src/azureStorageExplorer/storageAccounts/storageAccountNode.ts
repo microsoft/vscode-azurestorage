@@ -9,6 +9,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
+// tslint:disable-next-line:no-require-imports
 import StorageManagementClient = require('azure-arm-storage');
 
 import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, IAzureParentNode } from 'vscode-azureextensionui';
@@ -91,7 +92,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
 
     async getKeys(): Promise<StorageAccountKey[]> {
         let parsedId = this.parseAzureResourceId(this.storageAccount.id);
-        let resourceGroupName = parsedId["resourceGroups"];
+        let resourceGroupName = parsedId.resourceGroups;
         let keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
         return keyResult.keys;
     }

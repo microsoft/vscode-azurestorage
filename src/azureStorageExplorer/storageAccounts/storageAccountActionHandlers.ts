@@ -23,10 +23,10 @@ export function registerStorageAccountActionHandlers(actionHandler: AzureActionH
     actionHandler.registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
 }
 
-function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>): Promise<void> {
+async function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>): Promise<void> {
     let accountId = node.treeItem.storageAccount.id;
 
-    return storageExplorerLauncher.openResource(accountId, node.subscriptionId);
+    await storageExplorerLauncher.openResource(accountId, node.subscriptionId);
 }
 
 async function copyPrimaryKey(node: IAzureNode<StorageAccountNode>): Promise<void> {

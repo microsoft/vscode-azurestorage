@@ -48,6 +48,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
         return !!this._continuationToken;
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise((resolve, reject) => {
             let queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
@@ -79,6 +80,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
         throw new UserCancelledError();
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
     private createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
         return new Promise((resolve, reject) => {
             let queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);

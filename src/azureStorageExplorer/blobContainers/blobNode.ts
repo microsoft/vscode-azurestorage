@@ -46,6 +46,7 @@ export class BlobNode implements IAzureTreeItem, ICopyUrl {
       const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
       await new Promise((resolve, reject) => {
         blobService.deleteBlob(this.container.name, this.blob.name, err => {
+          // tslint:disable-next-line:no-void-expression // Grandfathered in
           err ? reject(err) : resolve();
         });
       });
@@ -64,7 +65,7 @@ export class BlobNode implements IAzureTreeItem, ICopyUrl {
     };
     if (extension) {
       // This is needed to ensure the file extension is added in the Save dialog, since the filename will be displayed without it by default on Windows
-      filters['*' + extension] = [extension];
+      filters[`*${extension}`] = [extension];
     }
 
     const uri: Uri | undefined = await window.showSaveDialog(<SaveDialogOptions>{
