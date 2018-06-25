@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { FileNode } from './fileNode';
 import * as azureStorage from "azure-storage";
 import { IAzureNode } from 'vscode-azureextensionui';
 import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
+import { FileNode } from './fileNode';
 
 export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>> {
     async getSaveConfirmationText(node: IAzureNode<FileNode>): Promise<string> {

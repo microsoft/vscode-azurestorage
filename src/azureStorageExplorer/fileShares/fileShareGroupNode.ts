@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as azureStorage from "azure-storage";
+import { FileService } from 'azure-storage';
+import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
+import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { FileShareNode } from './fileShareNode';
-import * as azureStorage from "azure-storage";
-import * as path from 'path';
-import { IAzureTreeItem, IAzureParentTreeItem, IAzureNode, UserCancelledError } from 'vscode-azureextensionui';
-import { FileService } from 'azure-storage';
 
 const minQuotaGB = 1;
 const maxQuotaGB = 5120;

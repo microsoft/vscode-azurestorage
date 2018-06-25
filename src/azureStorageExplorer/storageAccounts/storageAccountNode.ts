@@ -4,19 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 // tslint:disable-next-line:no-require-imports
-import * as ext from "../../constants";
+// tslint:disable-next-line:no-require-imports
+import StorageManagementClient = require('azure-arm-storage');
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import * as ext from "../../constants";
 import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
-// tslint:disable-next-line:no-require-imports
-import StorageManagementClient = require('azure-arm-storage');
 
-import { IAzureParentTreeItem, IAzureTreeItem, IAzureNode, IAzureParentNode } from 'vscode-azureextensionui';
+import { IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem } from 'vscode-azureextensionui';
+import { BlobContainerNode } from "../blobContainers/blobContainerNode";
 import { FileShareGroupNode } from '../fileShares/fileShareGroupNode';
 import { QueueGroupNode } from '../queues/queueGroupNode';
 import { TableGroupNode } from '../tables/tableGroupNode';
-import { BlobContainerNode } from "../blobContainers/blobContainerNode";
 
 export class StorageAccountNode implements IAzureParentTreeItem {
     constructor(

@@ -2,12 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
-import { Launcher } from "../components/launcher/launcher";
 import * as fs from "fs";
 import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
+import { Launcher } from "../components/launcher/launcher";
+import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
 const downloadPageUrl: string = "https://go.microsoft.com/fwlink/?LinkId=723579";

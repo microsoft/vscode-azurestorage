@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Progress, window, OutputChannel, ProgressOptions, ProgressLocation } from "vscode";
+import { OutputChannel, Progress, ProgressLocation, ProgressOptions, window } from "vscode";
 
 type StatusBarProgress = Progress<{ message: string }>;
 

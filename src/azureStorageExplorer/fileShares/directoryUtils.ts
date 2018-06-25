@@ -6,12 +6,12 @@
 import * as azureStorage from "azure-storage";
 import * as path from "path";
 
-import { IAzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
-import { window, ProgressLocation, OutputChannel } from "vscode";
-import { DirectoryNode } from "./directoryNode";
 import { StorageAccount, StorageAccountKey } from "azure-arm-storage/lib/models";
-import { validateDirectoryName } from "./validateNames";
+import { OutputChannel, ProgressLocation, window } from "vscode";
+import { IAzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { DirectoryNode } from "./directoryNode";
 import { deleteFile } from "./fileUtils";
+import { validateDirectoryName } from "./validateNames";
 
 // Supports both file share and directory parents
 export async function askAndCreateChildDirectory(parentPath: string, share: azureStorage.FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {

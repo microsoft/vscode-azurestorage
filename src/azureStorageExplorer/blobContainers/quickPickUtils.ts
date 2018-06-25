@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IAzureQuickPickItem, UserCancelledError, TelemetryProperties } from 'vscode-azureextensionui';
+import { IAzureQuickPickItem, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 
 export const extensionPrefix: string = 'azureStorage';
 

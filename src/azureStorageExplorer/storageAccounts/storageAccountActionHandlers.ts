@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from "vscode";
-import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
-import { StorageAccountNode } from './storageAccountNode';
 import * as copypaste from 'copy-paste';
-import { IAzureNode, AzureActionHandler, IAzureParentNode, IActionContext, TelemetryProperties, AzureTreeDataProvider, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
+import * as vscode from "vscode";
+import { AzureActionHandler, AzureTreeDataProvider, DialogResponses, IActionContext, IAzureNode, IAzureParentNode, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import * as ext from "../../constants";
-import { showWorkspaceFoldersQuickPick } from "../blobContainers/quickPickUtils";
+import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerNode } from "../blobContainers/blobContainerNode";
+import { showWorkspaceFoldersQuickPick } from "../blobContainers/quickPickUtils";
+import { StorageAccountNode } from './storageAccountNode';
 
 let _tree: AzureTreeDataProvider;
 
