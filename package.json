@@ -227,7 +227,7 @@
 				{
 					"command": "azureStorage.deployStaticWebsite",
 					"when": "explorerResourceIsFolder == true && config.azureStorage.preview.staticWebsites",
-					"group": "zzz_"
+					"group": "zzz_@deploy"
 				}
 			],
 			"view/item/context": [
