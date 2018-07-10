@@ -14,8 +14,8 @@ import { FileNode } from './fileNode';
 import { askAndCreateEmptyTextFile } from './fileUtils';
 
 import * as copypaste from 'copy-paste';
+import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 
 export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken;
@@ -58,8 +58,8 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
         let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
         let url = fileService.getUrl(this.share.name, "");
         copypaste.copy(url);
-        azureStorageOutputChannel.show();
-        azureStorageOutputChannel.appendLine(`Share URL copied to clipboard: ${url}`);
+        ext.outputChannel.show();
+        ext.outputChannel.appendLine(`Share URL copied to clipboard: ${url}`);
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in

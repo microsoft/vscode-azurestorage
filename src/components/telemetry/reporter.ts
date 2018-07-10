@@ -5,17 +5,16 @@
 
 import * as vscode from 'vscode';
 import TelemetryReporter from 'vscode-extension-telemetry';
-
-export let reporter: TelemetryReporter;
+import { ext } from '../../extensionVariables';
 
 export class Reporter extends vscode.Disposable {
     constructor(ctx: vscode.ExtensionContext) {
         // tslint:disable-next-line:promise-function-async // Grandfathered in
-        super(() => reporter.dispose());
+        super(() => ext.reporter.dispose());
 
         let packageInfo = getPackageInfo(ctx);
         if (packageInfo) {
-            reporter = new TelemetryReporter(packageInfo.name, packageInfo.version, packageInfo.aiKey);
+            ext.reporter = new TelemetryReporter(packageInfo.name, packageInfo.version, packageInfo.aiKey);
         }
     }
 }

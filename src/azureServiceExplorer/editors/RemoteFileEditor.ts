@@ -9,12 +9,13 @@ import { TextDocument, window } from 'vscode';
 import * as vscode from "vscode";
 import { DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { TemporaryFile } from '../../components/temporaryFile';
+import { ext } from '../../extensionVariables';
 import { IRemoteFileHandler } from './IRemoteFileHandler';
 
 export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     private fileMap: { [key: string]: [vscode.TextDocument, ContextT] } = {};
 
-    constructor(private readonly remoteFileHandler: IRemoteFileHandler<ContextT>, private readonly showSavePromptKey: string, private readonly outputChanel?: vscode.OutputChannel) {
+    constructor(private readonly remoteFileHandler: IRemoteFileHandler<ContextT>, private readonly showSavePromptKey: string) {
     }
 
     public async dispose(): Promise<void> {
@@ -101,9 +102,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
     }
 
     protected appendLineToOutput(value: string): void {
-        if (!!this.outputChanel) {
-            this.outputChanel.appendLine(value);
-            this.outputChanel.show(true);
-        }
+        ext.outputChannel.appendLine(value);
+        ext.outputChannel.show(true);
     }
 }

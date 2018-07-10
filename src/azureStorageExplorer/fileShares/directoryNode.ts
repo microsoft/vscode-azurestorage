@@ -9,8 +9,8 @@ import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { DialogResponses, IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from './directoryUtils';
 import { FileNode } from './fileNode';
 import { askAndCreateEmptyTextFile } from './fileUtils';
@@ -64,8 +64,8 @@ export class DirectoryNode implements IAzureParentTreeItem, ICopyUrl {
         let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
         let url = fileService.getUrl(this.share.name, this.fullPath);
         copypaste.copy(url);
-        azureStorageOutputChannel.show();
-        azureStorageOutputChannel.appendLine(`Directory URL copied to clipboard: ${url}`);
+        ext.outputChannel.show();
+        ext.outputChannel.appendLine(`Directory URL copied to clipboard: ${url}`);
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
@@ -86,8 +86,8 @@ export class DirectoryNode implements IAzureParentTreeItem, ICopyUrl {
         const message: string = `Are you sure you want to delete the directory '${this.label}' and all of its files and subdirectories?`;
         const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            azureStorageOutputChannel.show();
-            await deleteDirectoryAndContents(this.fullPath, this.share.name, this.storageAccount.name, this.key.value, azureStorageOutputChannel);
+            ext.outputChannel.show();
+            await deleteDirectoryAndContents(this.fullPath, this.share.name, this.storageAccount.name, this.key.value);
         } else {
             throw new UserCancelledError();
         }

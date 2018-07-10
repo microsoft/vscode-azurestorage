@@ -5,7 +5,7 @@
 
 import * as copypaste from 'copy-paste';
 import * as vscode from "vscode";
-import { AzureActionHandler, AzureTreeDataProvider, DialogResponses, IActionContext, IAzureNode, IAzureParentNode, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, DialogResponses, IActionContext, IAzureNode, IAzureParentNode, registerCommand, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import * as ext from "../../constants";
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerNode } from "../blobContainers/blobContainerNode";
@@ -14,13 +14,13 @@ import { StorageAccountNode } from './storageAccountNode';
 
 let _tree: AzureTreeDataProvider;
 
-export function registerStorageAccountActionHandlers(actionHandler: AzureActionHandler, tree: AzureTreeDataProvider): void {
+export function registerStorageAccountActionHandlers(tree: AzureTreeDataProvider): void {
     _tree = tree;
 
-    actionHandler.registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
-    actionHandler.registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
-    actionHandler.registerCommand("azureStorage.copyConnectionString", copyConnectionString);
-    actionHandler.registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
+    registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
+    registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
+    registerCommand("azureStorage.copyConnectionString", copyConnectionString);
+    registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
 }
 
 async function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>): Promise<void> {

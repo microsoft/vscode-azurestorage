@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureActionHandler, IAzureNode } from 'vscode-azureextensionui';
+import { IAzureNode, registerCommand } from 'vscode-azureextensionui';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { TableNode } from './tableNode';
 
-export function registerTableActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.openTable", openTableInStorageExplorer);
-    actionHandler.registerCommand("azureStorage.deleteTable", async (node: IAzureNode<TableNode>) => await node.deleteNode());
+export function registerTableActionHandlers(): void {
+    registerCommand("azureStorage.openTable", openTableInStorageExplorer);
+    registerCommand("azureStorage.deleteTable", async (node: IAzureNode<TableNode>) => await node.deleteNode());
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in

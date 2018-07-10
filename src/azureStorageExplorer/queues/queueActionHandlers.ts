@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureActionHandler, IAzureNode } from 'vscode-azureextensionui';
+import { IAzureNode, registerCommand } from 'vscode-azureextensionui';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { QueueNode } from './queueNode';
 
-export function registerQueueActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);
-    actionHandler.registerCommand("azureStorage.deleteQueue", async (node: IAzureNode<QueueNode>) => await node.deleteNode());
+export function registerQueueActionHandlers(): void {
+    registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);
+    registerCommand("azureStorage.deleteQueue", async (node: IAzureNode<QueueNode>) => await node.deleteNode());
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in

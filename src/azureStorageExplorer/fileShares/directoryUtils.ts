@@ -7,8 +7,9 @@ import * as azureStorage from "azure-storage";
 import * as path from "path";
 
 import { StorageAccount, StorageAccountKey } from "azure-arm-storage/lib/models";
-import { OutputChannel, ProgressLocation, window } from "vscode";
+import { ProgressLocation, window } from "vscode";
 import { IAzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { ext } from "../../extensionVariables";
 import { DirectoryNode } from "./directoryNode";
 import { deleteFile } from "./fileUtils";
 import { validateDirectoryName } from "./validateNames";
@@ -65,7 +66,7 @@ export function listFilesInDirectory(directory: string, share: string, storageAc
     });
 }
 
-export async function deleteDirectoryAndContents(directory: string, share: string, storageAccount: string, key: string, channel: OutputChannel): Promise<void> {
+export async function deleteDirectoryAndContents(directory: string, share: string, storageAccount: string, key: string): Promise<void> {
     const parallelOperations = 5;
     const maxResults = 50;
 
@@ -78,7 +79,7 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
         for (let file of entries.files) {
             let promise = deleteFile(directory, file.name, share, storageAccount, key);
             promises.push(promise);
-            channel.appendLine(`Deleted file "${directory}/${file.name}"`);
+            ext.outputChannel.appendLine(`Deleted file "${directory}/${file.name}"`);
 
             if (promises.length >= parallelOperations) {
                 await Promise.all(promises);
@@ -88,7 +89,7 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
         await Promise.all(promises);
 
         for (let dir of entries.directories) {
-            await deleteDirectoryAndContents(path.posix.join(directory, dir.name), share, storageAccount, key, channel);
+            await deleteDirectoryAndContents(path.posix.join(directory, dir.name), share, storageAccount, key);
         }
 
         currentToken = continuationToken;
@@ -98,7 +99,7 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
     }
 
     await deleteDirectoryOnly(directory, share, storageAccount, key);
-    channel.appendLine(`Deleted directory "${directory}"`);
+    ext.outputChannel.appendLine(`Deleted directory "${directory}"`);
 }
 
 async function deleteDirectoryOnly(directory: string, share: string, storageAccount: string, key: string): Promise<void> {
