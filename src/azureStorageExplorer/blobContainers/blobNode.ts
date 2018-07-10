@@ -10,8 +10,8 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import * as copypaste from 'copy-paste';
 import { SaveDialogOptions, Uri, window } from 'vscode';
 import { DialogResponses, IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { BlobFileHandler } from './blobFileHandler';
 
 export class BlobNode implements IAzureTreeItem, ICopyUrl {
@@ -35,8 +35,8 @@ export class BlobNode implements IAzureTreeItem, ICopyUrl {
     let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
     let url = blobService.getUrl(this.container.name, this.blob.name);
     copypaste.copy(url);
-    azureStorageOutputChannel.show();
-    azureStorageOutputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
+    ext.outputChannel.show();
+    ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
   }
 
   public async deleteTreeItem(_node: IAzureNode): Promise<void> {

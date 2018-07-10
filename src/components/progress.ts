@@ -3,14 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { OutputChannel, Progress, ProgressLocation, ProgressOptions, window } from "vscode";
+import { Progress, ProgressLocation, ProgressOptions, window } from "vscode";
+import { ext } from "../extensionVariables";
 
 type StatusBarProgress = Progress<{ message: string }>;
 
 /**
  * Shows progress in both the output window and the status bar
  */
-export async function awaitWithProgress<T>(title: string, channel: OutputChannel, promise: Promise<T>, getProgress: () => string): Promise<T> {
+export async function awaitWithProgress<T>(title: string, promise: Promise<T>, getProgress: () => string): Promise<T> {
     const uiIntervalMs = 1 * 500;
     const uiUpdatesPerChannelUpdate = 5000 / uiIntervalMs;
     let nextChannelUpdate = uiUpdatesPerChannelUpdate;
@@ -34,7 +35,7 @@ export async function awaitWithProgress<T>(title: string, channel: OutputChannel
         nextChannelUpdate -= 1;
         if (nextChannelUpdate <= 0) {
             nextChannelUpdate = uiUpdatesPerChannelUpdate;
-            channel.appendLine(`${title}: ${msg}`);
+            ext.outputChannel.appendLine(`${title}: ${msg}`);
         }
 
         if (thisProgress) {

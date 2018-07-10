@@ -5,27 +5,27 @@
 
 import * as vscode from 'vscode';
 
-import { AzureActionHandler, IActionContext, IAzureNode, IAzureParentNode } from 'vscode-azureextensionui';
+import { IActionContext, IAzureNode, IAzureParentNode, registerCommand, registerEvent } from 'vscode-azureextensionui';
 import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileEditor';
+import { ext } from '../../extensionVariables';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 import { BlobContainerNode, ChildType } from './blobContainerNode';
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobNode } from './blobNode';
 
-export function registerBlobContainerActionHandlers(actionHandler: AzureActionHandler, context: vscode.ExtensionContext): void {
-    const _editor: RemoteFileEditor<IAzureNode<BlobNode>> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt", azureStorageOutputChannel);
-    context.subscriptions.push(_editor);
+export function registerBlobContainerActionHandlers(): void {
+    const _editor: RemoteFileEditor<IAzureNode<BlobNode>> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt");
+    ext.context.subscriptions.push(_editor);
 
-    actionHandler.registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
-    actionHandler.registerCommand("azureStorage.editBlob", async (node: IAzureParentNode<BlobNode>) => await _editor.showEditor(node));
-    actionHandler.registerCommand("azureStorage.deleteBlobContainer", async (node: IAzureParentNode<BlobContainerNode>) => await node.deleteNode());
-    actionHandler.registerCommand("azureStorage.createBlockTextBlob", async (node: IAzureParentNode<BlobContainerNode>) => {
+    registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
+    registerCommand("azureStorage.editBlob", async (node: IAzureParentNode<BlobNode>) => await _editor.showEditor(node));
+    registerCommand("azureStorage.deleteBlobContainer", async (node: IAzureParentNode<BlobContainerNode>) => await node.deleteNode());
+    registerCommand("azureStorage.createBlockTextBlob", async (node: IAzureParentNode<BlobContainerNode>) => {
         let childNode = await node.createChild({ childType: ChildType.newBlockBlob });
         await vscode.commands.executeCommand("azureStorage.editBlob", childNode);
     });
-    actionHandler.registerCommand("azureStorage.uploadBlockBlob", async (node: IAzureParentNode<BlobContainerNode>) => await node.treeItem.uploadBlockBlob(node, azureStorageOutputChannel));
-    actionHandler.registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { await _editor.onDidSaveTextDocument(this, doc); });
+    registerCommand("azureStorage.uploadBlockBlob", async (node: IAzureParentNode<BlobContainerNode>) => await node.treeItem.uploadBlockBlob(node));
+    registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { await _editor.onDidSaveTextDocument(this, doc); });
 }
 
 async function openBlobContainerInStorageExplorer(node: IAzureNode<BlobContainerNode>): Promise<void> {

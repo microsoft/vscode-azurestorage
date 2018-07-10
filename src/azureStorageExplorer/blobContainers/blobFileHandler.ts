@@ -7,17 +7,15 @@ import * as azureStorage from "azure-storage";
 import { BlobNode } from './blobNode';
 
 import * as fse from 'fs-extra';
-import { OutputChannel, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IAzureNode } from 'vscode-azureextensionui';
 import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
 import { awaitWithProgress } from '../../components/progress';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
+import { ext } from "../../extensionVariables";
 import { Limits } from '../limits';
 import { BlobContainerNode } from './blobContainerNode';
 
 export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>> {
-    private _channel: OutputChannel = azureStorageOutputChannel;
-
     async getSaveConfirmationText(node: IAzureNode<BlobNode>): Promise<string> {
         return `Saving '${node.treeItem.blob.name}' will update the blob "${node.treeItem.blob.name}" in Blob Container "${node.treeItem.container.name}"`;
     }
@@ -65,8 +63,8 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         const linkablePath = Uri.file(filePath); // Allows CTRL+Click in Output panel
         const blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, treeItem.key.value);
 
-        this._channel.show();
-        this._channel.appendLine(`Downloading ${blob.name} to ${filePath}...`);
+        ext.outputChannel.show();
+        ext.outputChannel.appendLine(`Downloading ${blob.name} to ${filePath}...`);
 
         let speedSummary: azureStorage.common.streams.speedsummary.SpeedSummary;
         const promise = new Promise((resolve, reject): void => {
@@ -79,7 +77,6 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
 
         await awaitWithProgress(
             `Downloading ${blob.name}`,
-            this._channel,
             promise, () => {
                 const completed = <string>speedSummary.getCompleteSize(true);
                 const total = <string>speedSummary.getTotalSize(true);
@@ -88,7 +85,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
                 return msg;
             });
 
-        this._channel.appendLine(`Successfully downloaded ${linkablePath}.`);
+        ext.outputChannel.appendLine(`Successfully downloaded ${linkablePath}.`);
     }
 
     async uploadFile(node: IAzureNode<BlobNode>, filePath: string): Promise<void> {

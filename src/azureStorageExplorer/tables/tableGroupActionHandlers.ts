@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
+import { IAzureParentNode, registerCommand } from 'vscode-azureextensionui';
 import { TableGroupNode } from './tableGroupNode';
 
-export function registerTableGroupActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.createTable", async (node: IAzureParentNode<TableGroupNode>) => await node.createChild());
+export function registerTableGroupActionHandlers(): void {
+    registerCommand("azureStorage.createTable", async (node: IAzureParentNode<TableGroupNode>) => await node.createChild());
 }

@@ -11,8 +11,8 @@ import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-a
 import { deleteFile } from './fileUtils';
 
 import * as copypaste from 'copy-paste';
+import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
-import { azureStorageOutputChannel } from '../azureStorageOutputChannel';
 
 export class FileNode implements IAzureTreeItem, ICopyUrl {
     constructor(
@@ -37,8 +37,8 @@ export class FileNode implements IAzureTreeItem, ICopyUrl {
         let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
         let url = fileService.getUrl(this.share.name, this.directoryPath, this.file.name);
         copypaste.copy(url);
-        azureStorageOutputChannel.show();
-        azureStorageOutputChannel.appendLine(`File URL copied to clipboard: ${url}`);
+        ext.outputChannel.show();
+        ext.outputChannel.appendLine(`File URL copied to clipboard: ${url}`);
     }
 
     public async deleteTreeItem(_node: IAzureNode): Promise<void> {

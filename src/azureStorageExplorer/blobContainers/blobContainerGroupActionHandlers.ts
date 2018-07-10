@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureActionHandler, IAzureParentNode } from 'vscode-azureextensionui';
+import { IAzureParentNode, registerCommand } from 'vscode-azureextensionui';
 import { BlobContainerGroupNode } from './blobContainerGroupNode';
 
-export function registerBlobContainerGroupActionHandlers(actionHandler: AzureActionHandler): void {
-    actionHandler.registerCommand("azureStorage.createBlobContainer", async (node: IAzureParentNode<BlobContainerGroupNode>) => await node.createChild());
+export function registerBlobContainerGroupActionHandlers(): void {
+    registerCommand("azureStorage.createBlobContainer", async (node: IAzureParentNode<BlobContainerGroupNode>) => await node.createChild());
 }

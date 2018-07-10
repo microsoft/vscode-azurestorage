@@ -5,14 +5,13 @@
 
 'use strict';
 import * as vscode from 'vscode';
-import { Reporter, reporter } from './components/telemetry/reporter';
+import { Reporter } from './components/telemetry/reporter';
 /*
 import { AzureStorgeProvider } from './explorer/azureStorage'
 */
 
 import { commands } from 'vscode';
-import { AzureActionHandler, AzureTreeDataProvider, AzureUserInput, IAzureNode, IAzureTreeItem, IAzureUserInput } from 'vscode-azureextensionui';
-import { azureStorageOutputChannel } from './azureStorageExplorer/azureStorageOutputChannel';
+import { AzureTreeDataProvider, AzureUserInput, IAzureNode, IAzureTreeItem, IAzureUserInput, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
@@ -29,41 +28,46 @@ import { registerStorageAccountActionHandlers } from './azureStorageExplorer/sto
 import { StorageAccountNode } from './azureStorageExplorer/storageAccounts/storageAccountNode';
 import { registerTableActionHandlers } from './azureStorageExplorer/tables/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/tableGroupActionHandlers';
+import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
 export function activate(context: vscode.ExtensionContext): void {
     console.log('Extension "Azure Storage Tools" is now active.');
-    // const rootPath = vscode.workspace.rootPath;
+
+    registerUIExtensionVariables(ext);
+
+    ext.context = context;
+    ext.outputChannel = vscode.window.createOutputChannel("Azure Storage");
+    context.subscriptions.push(ext.outputChannel);
 
     context.subscriptions.push(new Reporter(context));
 
-    const actionHandler: AzureActionHandler = new AzureActionHandler(context, azureStorageOutputChannel, reporter);
-
     const ui: IAzureUserInput = new AzureUserInput(context.globalState);
+    ext.ui = ui;
 
-    const tree = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode', ui, reporter);
-    registerBlobActionHandlers(actionHandler);
-    registerBlobContainerActionHandlers(actionHandler, context);
-    registerBlobContainerGroupActionHandlers(actionHandler);
-    registerFileActionHandlers(actionHandler);
-    registerDirectoryActionHandlers(actionHandler);
-    registerFileShareActionHandlers(actionHandler, context);
-    registerFileShareGroupActionHandlers(actionHandler);
-    registerLoadMoreActionHandler(actionHandler, tree);
-    registerQueueActionHandlers(actionHandler);
-    registerQueueGroupActionHandlers(actionHandler);
-    registerStorageAccountActionHandlers(actionHandler, tree);
-    registerTableActionHandlers(actionHandler);
-    registerTableGroupActionHandlers(actionHandler);
+    const tree = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
+    registerBlobActionHandlers();
+    registerBlobContainerActionHandlers();
+    registerBlobContainerGroupActionHandlers();
+    registerFileActionHandlers();
+    registerDirectoryActionHandlers();
+    registerFileShareActionHandlers();
+    registerFileShareGroupActionHandlers();
+    registerLoadMoreActionHandler(tree);
+    registerQueueActionHandlers();
+    registerQueueGroupActionHandlers();
+    registerStorageAccountActionHandlers(tree);
+    registerTableActionHandlers();
+    registerTableGroupActionHandlers();
 
     vscode.window.registerTreeDataProvider('azureStorage', tree);
-    actionHandler.registerCommand('azureStorage.refresh', async (node?: IAzureNode) => await tree.refresh(node));
-    actionHandler.registerCommand('azureStorage.copyUrl', (node?: IAzureNode<IAzureTreeItem & ICopyUrl>) => node.treeItem.copyUrl(node));
-    actionHandler.registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
-    actionHandler.registerCommand("azureStorage.openInPortal", (node: IAzureNode<IAzureTreeItem>) => {
+    registerCommand('azureStorage.refresh', async (node?: IAzureNode) => await tree.refresh(node));
+    registerCommand('azureStorage.copyUrl', (node?: IAzureNode<IAzureTreeItem & ICopyUrl>) => node.treeItem.copyUrl(node));
+    registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
+    registerCommand("azureStorage.openInPortal", (node: IAzureNode<IAzureTreeItem>) => {
         node.openInPortal();
     });
-    actionHandler.registerCommand("azureStorage.configureStaticWebsite", async (node: IAzureNode<IAzureTreeItem>) => {
+    registerCommand("azureStorage.configureStaticWebsite", async (node: IAzureNode<IAzureTreeItem>) => {
         if (!node) {
             node = <IAzureNode<StorageAccountNode>>await tree.showNodePicker(StorageAccountNode.contextValue);
         }

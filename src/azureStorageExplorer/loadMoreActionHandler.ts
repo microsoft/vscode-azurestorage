@@ -3,8 +3,8 @@
   *  Licensed under the MIT License. See License.txt in the project root for license information.
   **/
 
-import { AzureActionHandler, AzureTreeDataProvider, IAzureNode } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, IAzureNode, registerCommand } from 'vscode-azureextensionui';
 
-export function registerLoadMoreActionHandler(actionHandler: AzureActionHandler, treeDataProvider: AzureTreeDataProvider): void {
-  actionHandler.registerCommand("azureStorage.loadMoreNode", async (node: IAzureNode) => await treeDataProvider.loadMore(node));
+export function registerLoadMoreActionHandler(treeDataProvider: AzureTreeDataProvider): void {
+  registerCommand("azureStorage.loadMoreNode", async (node: IAzureNode) => await treeDataProvider.loadMore(node));
 }
