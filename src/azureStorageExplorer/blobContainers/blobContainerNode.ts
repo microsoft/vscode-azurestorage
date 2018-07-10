@@ -189,7 +189,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
                         let blobNode = await node.treeDataProvider.findNode(blobId);
                         if (blobNode) {
                             // A node for this blob already exists, no need to do anything with the tree, just upload
-                            await this.uploadFileToBlockBlob(filePath, blobPath, ext.outputChannel);
+                            await this.uploadFileToBlockBlob(filePath, blobPath);
                             return;
                         }
                     } catch (err) {
@@ -353,7 +353,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             let blobPath = path.join(destBlobFolder, relativeFile);
             ext.outputChannel.appendLine(`Uploading ${filePath}...`);
             try {
-                await this.uploadFileToBlockBlob(filePath, blobPath, undefined);
+                await this.uploadFileToBlockBlob(filePath, blobPath, true /* suppressLogs */);
             } catch (error) {
                 throw new Error(`Error uploading "${filePath}": ${parseError(error).message} `);
             }
@@ -398,14 +398,14 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
 
     private async createChildAsUpload(options: ICreateChildOptions, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
         showCreatingNode(options.blobPath);
-        await this.uploadFileToBlockBlob(options.filePath, options.blobPath, ext.outputChannel);
+        await this.uploadFileToBlockBlob(options.filePath, options.blobPath);
         const actualBlob = await this.getBlob(options.blobPath);
         return new BlobNode(actualBlob, this.container, this.storageAccount, this.key);
     }
 
-    private async uploadFileToBlockBlob(filePath: string, blobPath: string, output: vscode.OutputChannel | undefined): Promise<void> {
+    private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
         let blobFriendlyPath = `${this.friendlyContainerName}${blobPath}`;
-        if (output) {
+        if (!suppressLogs) {
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
         const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
@@ -418,7 +418,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             });
         });
 
-        if (output) {
+        if (!suppressLogs) {
             await awaitWithProgress(
                 `Uploading ${blobPath}`,
                 uploadPromise, () => {
@@ -432,7 +432,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             await uploadPromise;
         }
 
-        if (output) {
+        if (!suppressLogs) {
             ext.outputChannel.appendLine(`Successfully uploaded ${blobFriendlyPath}.`);
         }
     }
