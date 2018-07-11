@@ -1,5 +1,7 @@
 # Azure Storage for Visual Studio Code (Preview)
 
+[![Build Status](https://travis-ci.org/Microsoft/vscode-azurestorage.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-azurestorage) [![Release Status](https://img.shields.io/github/tag/Microsoft/vscode-azurestorage.svg?label=prerelease&colorB=0E7FC0)](https://github.com/Microsoft/vscode-azurestorage/releases)
+
 The Azure Storage extension for VS Code lets you deploy static websites and browse Azure Blob Containers, File Shares, Tables, and Queues. Follow [this tutorial](https://code.visualstudio.com/tutorials/static-website/getting-started) to deploy your web apps to Azure Storage from VS Code.
 
 ## Features
