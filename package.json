@@ -2,7 +2,7 @@
 	"name": "vscode-azurestorage",
 	"displayName": "Azure Storage",
 	"description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
-	"version": "0.4.0",
+	"version": "0.4.1-alpha",
 	"publisher": "ms-azuretools",
 	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 	"engines": {
@@ -214,7 +214,7 @@
 			"view/title": [
 				{
 					"command": "azureStorage.deployStaticWebsite",
-					"when": "view == azureStorage && config.azureStorage.preview.staticWebsites",
+					"when": "view == azureStorage",
 					"group": "navigation@2"
 				},
 				{
@@ -226,7 +226,7 @@
 			"explorer/context": [
 				{
 					"command": "azureStorage.deployStaticWebsite",
-					"when": "explorerResourceIsFolder == true && config.azureStorage.preview.staticWebsites",
+					"when": "explorerResourceIsFolder == true",
 					"group": "zzz_staticwebsites"
 				}
 			],
@@ -265,12 +265,12 @@
 				},
 				{
 					"command": "azureStorage.deployStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureStorageAccount && config.azureStorage.preview.staticWebsites",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "6_staticwebsites@1"
 				},
 				{
 					"command": "azureStorage.configureStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureStorageAccount && config.azureStorage.preview.staticWebsites",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "6_staticwebsites@2"
 				},
 				{
@@ -312,12 +312,12 @@
 				},
 				{
 					"command": "azureStorage.deployStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureBlobContainer && config.azureStorage.preview.staticWebsites",
+					"when": "view == azureStorage && viewItem == azureBlobContainer",
 					"group": "6_staticwebsites@1"
 				},
 				{
 					"command": "azureStorage.configureStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureBlobContainer && config.azureStorage.preview.staticWebsites",
+					"when": "view == azureStorage && viewItem == azureBlobContainer",
 					"group": "6_staticwebsites@2"
 				},
 				{
@@ -583,12 +583,10 @@
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.configureStaticWebsite",
-					"when": "config.azureStorage.preview.staticWebsites"
+					"command": "azureStorage.configureStaticWebsite"
 				},
 				{
-					"command": "azureStorage.deployStaticWebsite",
-					"when": "config.azureStorage.preview.staticWebsites"
+					"command": "azureStorage.deployStaticWebsite"
 				}
 			]
 		},
@@ -614,11 +612,6 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Show warning dialog on Blob file save."
-				},
-				"azureStorage.preview.staticWebsites": {
-					"type": "boolean",
-					"default": false,
-					"description": "Enables deploying to static websites in Azure Storage. Static websites are an Azure preview feature that is not supported in all regions, and only for GPv2 storage accounts."
 				}
 			}
 		}
