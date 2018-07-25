@@ -5,18 +5,15 @@
 
 import * as copypaste from 'copy-paste';
 import * as vscode from "vscode";
-import { AzureTreeDataProvider, DialogResponses, IActionContext, IAzureNode, IAzureParentNode, registerCommand, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { IActionContext, IAzureNode, IAzureParentNode, registerCommand, TelemetryProperties } from 'vscode-azureextensionui';
 import * as ext from "../../constants";
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerNode } from "../blobContainers/blobContainerNode";
 import { showWorkspaceFoldersQuickPick } from "../blobContainers/quickPickUtils";
+import { selectStorageAccountNodeForCommand } from '../selectStorageAccountNodeForCommand';
 import { StorageAccountNode } from './storageAccountNode';
 
-let _tree: AzureTreeDataProvider;
-
-export function registerStorageAccountActionHandlers(tree: AzureTreeDataProvider): void {
-    _tree = tree;
-
+export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
     registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
     registerCommand("azureStorage.copyConnectionString", copyConnectionString);
@@ -47,8 +44,6 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
 
     let sourcePath: string;
     let destNode: IAzureParentNode<StorageAccountNode> | IAzureParentNode<BlobContainerNode>;
-    let destAccountNode: IAzureParentNode<StorageAccountNode>;
-    let destContainerNode: IAzureParentNode<BlobContainerNode>;
 
     // Disambiguate context this was executed from
     if (target instanceof vscode.Uri) {
@@ -59,56 +54,28 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
         // Command called command palette or from storage account/container node
         destNode = target;
         properties.contextValue = (destNode && destNode.treeItem.contextValue) || 'CommandPalette';
-
-        if (destNode) {
-            let contextValue = destNode.treeItem.contextValue;
-            if (contextValue === StorageAccountNode.contextValue) {
-                // Called from storage account node
-                destAccountNode = <IAzureParentNode<StorageAccountNode>>destNode;
-            } else if (contextValue === BlobContainerNode.contextValue) {
-                // Called from blob container node
-                destContainerNode = <IAzureParentNode<BlobContainerNode>>destNode;
-            }
-        }
     }
 
-    // Ask first for destination account/container if needed since it might require configuration and don't want to have user
+    // Ask first for destination account if needed since it might require configuration and don't want to have user
     // select source location only to have to possibly cancel.
-    if (!destNode) {
-        destAccountNode = <IAzureParentNode<StorageAccountNode>>await _tree.showNodePicker(StorageAccountNode.contextValue);
-    }
 
-    // Determine destination container node if we only have account ndoe
-    console.assert(!!destAccountNode || !!destContainerNode, "Should have a storage account or container node by now");
-    if (!destContainerNode) {
-        // Refresh the storage account so we see new containers (required since we're sending users to the portal to enable, so we won't see the change)
-        await destAccountNode.refresh();
-        let enabledContainers = await destAccountNode.treeItem.getWebsiteEnabledContainers(destAccountNode);
-        if (enabledContainers.length === 0) {
-            let result = await vscode.window.showInformationMessage(
-                "Website hosting is not enabled on this storage account. Would you like to go to the portal to enable it?",
-                DialogResponses.yes,
-                DialogResponses.no
-            );
-            let enableResponse = (result === DialogResponses.yes);
-            properties.enableResponse = String(enableResponse);
-            properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
-            if (enableResponse) {
-                await vscode.commands.executeCommand("azureStorage.configureStaticWebsite", destAccountNode);
-            }
+    let destAccountNode: IAzureParentNode<StorageAccountNode> = await selectStorageAccountNodeForCommand(
+        destNode,
+        this, // actionContext
+        {
+            mustBeWebsiteCapable: true,
+            askToConfigureWebsite: true
+        });
 
-            // Either way can't continue
-            throw new UserCancelledError();
-        } else {
-            // Currently only a single enabled container is supported by Azure
-            destContainerNode = enabledContainers[0];
-        }
-    }
-    console.assert(!!destContainerNode, "Should have a destination container node by now");
-
-    //  Ask for source if needed
+    //  Ask for source folder if needed
     if (!sourcePath) {
         sourcePath = await showWorkspaceFoldersQuickPick("Select the folder to deploy", this.properties, ext.configurationSettingsKeys.deployPath);
+    }
+
+    // Get the $web container
+    let destContainerNode = await destAccountNode.treeItem.getWebsiteCapableContainer(destAccountNode);
+    if (!destContainerNode) {
+        throw new Error(`Could not find $web blob container for storage account "${destAccountNode.treeItem.label}"`);
     }
 
     return destContainerNode.treeItem.deployStaticWebsite(destContainerNode, this, sourcePath);

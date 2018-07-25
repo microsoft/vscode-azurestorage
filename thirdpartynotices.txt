@@ -9,6 +9,7 @@ are grateful to these developers for their contribution to open source.
 2. fs-extra (https://github.com/jprichardson/node-fs-extra)
 3. copy-paste (https://github.com/xavi-/node-copy-paste)
 4. glob (https://github.com/isaacs/node-glob)
+5. opn (https://github.com/sindresorhus/opn)
 
 node-winreg NOTICES BEGIN HERE
 =============================
@@ -91,6 +92,12 @@ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
 WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+END OF glob NOTICES AND INFORMATION
+==================================
+
+opn NOTICES BEGIN HERE
+=============================
 
 END OF glob NOTICES AND INFORMATION
 ==================================

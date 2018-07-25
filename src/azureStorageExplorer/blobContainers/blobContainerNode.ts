@@ -7,14 +7,17 @@ import * as azureStorage from "azure-storage";
 import * as copypaste from 'copy-paste';
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
+// tslint:disable-next-line:no-require-imports
+import opn = require('opn');
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
+import * as vscode from 'vscode';
 import { DialogResponses, IActionContext, IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { awaitWithProgress } from '../../components/progress';
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
+import { StorageAccountNode } from "../storageAccounts/storageAccountNode";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobNode } from './blobNode';
 
@@ -206,8 +209,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
 
     public async deployStaticWebsite(node: IAzureParentNode<BlobContainerNode>, _actionContext: IActionContext, sourceFolderPath: string): Promise<void> {
         let destBlobFolder = "";
-
-        await vscode.window.withProgress(
+        let webEndpoint = await vscode.window.withProgress(
             {
                 cancellable: true,
                 location: ProgressLocation.Notification,
@@ -217,13 +219,13 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             async (progress, cancellationToken) => await this.deployStaticWebsiteCore(_actionContext, sourceFolderPath, destBlobFolder, progress, cancellationToken),
         );
 
-        let goToPortal: vscode.MessageItem = { title: "Retrieve primary endpoint from portal" };
+        let browseWebsite: vscode.MessageItem = { title: "Browse to website" };
         let result = await vscode.window.showInformationMessage(
-            "Deployment complete. View the website using the primary web endpoint URL, which is available in the configure tab on the Azure portal.",
-            goToPortal
+            `Deployment complete. The primary web endpoint is ${webEndpoint}`,
+            browseWebsite
         );
-        if (result === goToPortal) {
-            vscode.commands.executeCommand("azureStorage.configureStaticWebsite", node);
+        if (result === browseWebsite) {
+            await vscode.commands.executeCommand('azureStorage.browseStaticWebsite', node);
         }
     }
 
@@ -231,13 +233,18 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         return `${this.storageAccount.name}/${this.container.name}`;
     }
 
+    /**
+     * deployStaticWebsiteCore
+     *
+     * @returns The primary web endpoint
+     */
     private async deployStaticWebsiteCore(
         _actionContext: IActionContext,
         sourceFolderPath: string,
         destBlobFolder: string,
         progress: vscode.Progress<{ message?: string, increment?: number }>,
         cancellationToken: vscode.CancellationToken
-    ): Promise<void> {
+    ): Promise<string> {
         let properties = <TelemetryProperties & {
             blobsToDelete: number;
             filesToUpload: number;
@@ -256,7 +263,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             properties.blobsToDelete = blobsToDelete.length;
 
             if (blobsToDelete.length) {
-                let message = `Are you sure you want to deploy to ${this.friendlyContainerName}?  This will delete all ${blobsToDelete.length} files currently in the ${this.friendlyContainerName} blob container.`;
+                let message = `The storage container "${this.friendlyContainerName}" contains ${blobsToDelete.length} files. Deploying will delete all of these existing files.  Continue?`;
                 let deleteAndDeploy: vscode.MessageItem = { title: 'Delete and Deploy' };
                 const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteAndDeploy, DialogResponses.cancel);
                 if (result !== deleteAndDeploy) {
@@ -322,15 +329,39 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             // Upload files as blobs
             await this.uploadFiles(sourceFolderPath, filePathsWithAzureSeparator, destBlobFolder, properties, updateProgress, cancellationToken);
 
-            ext.outputChannel.appendLine("Deployment to static website complete.");
+            let webEndpoint = this.getPrimaryWebEndpoint();
+            if (!webEndpoint) {
+                throw new Error(`Could not obtain the primary web endpoint for ${this.storageAccount.name}`);
+            }
+
+            ext.outputChannel.appendLine(`Deployment to static website complete. CTRL+Click to browse: ${webEndpoint}`);
+
+            return webEndpoint;
         } catch (error) {
             if (parseError(error).isUserCancelledError) {
                 ext.outputChannel.appendLine("Deployment canceled.");
-                throw error;
             }
+            throw error;
         }
     }
 
+    public getPrimaryWebEndpoint(): string | undefined {
+        // Right now we only support only web endpoint per storage account
+        return this.storageAccount.primaryEndpoints.web;
+    }
+
+    public getStorageAccountNode(node: IAzureNode<IAzureTreeItem>): IAzureParentNode<StorageAccountNode> {
+        if (!(node.treeItem instanceof BlobContainerNode)) {
+            throw new Error(`Unexpected node type: ${node.treeItem.contextValue}`);
+        }
+
+        let storageAccountNode = node.parent && node.parent.parent;
+        if (storageAccountNode && storageAccountNode.treeItem instanceof StorageAccountNode) {
+            return <IAzureParentNode<StorageAccountNode>>storageAccountNode;
+        } else {
+            throw new Error("Couldn't find storage account node for container");
+        }
+    }
     private async uploadFiles(
         sourceFolderPath: string,
         filePathsWithAzureSeparator: string[],
