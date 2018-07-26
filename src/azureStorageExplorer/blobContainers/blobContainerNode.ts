@@ -7,8 +7,6 @@ import * as azureStorage from "azure-storage";
 import * as copypaste from 'copy-paste';
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
-// tslint:disable-next-line:no-require-imports
-import opn = require('opn');
 import * as path from 'path';
 import { ProgressLocation, Uri } from 'vscode';
 import * as vscode from 'vscode';
