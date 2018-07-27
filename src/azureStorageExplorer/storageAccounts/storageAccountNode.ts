@@ -197,7 +197,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
     public async configureStaticWebsite(node: IAzureNode): Promise<void> {
         assert(node.treeItem === this);
         let hostingStatus = await this.getWebsiteHostingStatus();
-        await this.ensureHostingEnabled(hostingStatus);
+        await this.ensureHostingCapable(hostingStatus);
 
         let resourceId = `${node.id}/staticWebsite`;
         node.openInPortal(resourceId);
@@ -210,7 +210,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         };
 
         let hostingStatus = await this.getWebsiteHostingStatus();
-        await this.ensureHostingEnabled(hostingStatus);
+        await this.ensureHostingCapable(hostingStatus);
 
         if (!hostingStatus.enabled) {
             let msg = "Static website hosting is not enabled for this storage account.";
@@ -238,7 +238,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         }
     }
 
-    public async ensureHostingEnabled(hostingStatus: WebsiteHostingStatus): Promise<void> {
+    public async ensureHostingCapable(hostingStatus: WebsiteHostingStatus): Promise<void> {
         if (!hostingStatus.capable) {
             // Doesn't support static website hosting. Try to narrow it down.
             let accountType: StorageTypes;
