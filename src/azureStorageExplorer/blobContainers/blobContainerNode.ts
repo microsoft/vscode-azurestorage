@@ -332,7 +332,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
                 throw new Error(`Could not obtain the primary web endpoint for ${this.storageAccount.name}`);
             }
 
-            ext.outputChannel.appendLine(`Deployment to static website complete. CTRL+Click to browse: ${webEndpoint}`);
+            ext.outputChannel.appendLine(`Deployment to static website complete. Primary web endpoint is ${webEndpoint}`);
 
             return webEndpoint;
         } catch (error) {
@@ -344,7 +344,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
     }
 
     public getPrimaryWebEndpoint(): string | undefined {
-        // Right now we only support only web endpoint per storage account
+        // Right now only one web endpoint is supported per storage account
         return this.storageAccount.primaryEndpoints.web;
     }
 
@@ -357,7 +357,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         if (storageAccountNode && storageAccountNode.treeItem instanceof StorageAccountNode) {
             return <IAzureParentNode<StorageAccountNode>>storageAccountNode;
         } else {
-            throw new Error("Couldn't find storage account node for container");
+            throw new Error("Internal error: Couldn't find storage account node for container");
         }
     }
     private async uploadFiles(

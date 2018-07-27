@@ -135,7 +135,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         return result;
     }
 
-    public async getWebsiteCapableContainer(node: IAzureParentNode<StorageAccountNode>): Promise<IAzureParentNode<BlobContainerNode>> {
+    public async getWebsiteCapableContainer(node: IAzureParentNode<StorageAccountNode>): Promise<IAzureParentNode<BlobContainerNode> | undefined> {
         assert(node.treeItem === this);
 
         // Refresh the storage account first to make sure $web has been picked up if new
@@ -151,7 +151,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
 
     // This is the URL to use for browsing the website
     public getPrimaryWebEndpoint(): string | undefined {
-        // Right now we only support only web endpoint per storage account
+        // Right now Azure only supports one web endpoint per storage account
         return this.storageAccount.primaryEndpoints.web;
     }
 
