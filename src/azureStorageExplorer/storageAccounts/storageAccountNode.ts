@@ -3,20 +3,30 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as assert from 'assert';
+import { StorageManagementClient } from 'azure-arm-storage';
+import * as azureStorage from "azure-storage";
 // tslint:disable-next-line:no-require-imports
-// tslint:disable-next-line:no-require-imports
-import StorageManagementClient = require('azure-arm-storage');
+import opn = require('opn');
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { commands, MessageItem, Uri, window } from 'vscode';
+import { IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import * as ext from "../../constants";
 import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
-
-import { IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem } from 'vscode-azureextensionui';
 import { BlobContainerNode } from "../blobContainers/blobContainerNode";
 import { FileShareGroupNode } from '../fileShares/fileShareGroupNode';
 import { QueueGroupNode } from '../queues/queueGroupNode';
 import { TableGroupNode } from '../tables/tableGroupNode';
+
+export type WebsiteHostingStatus = {
+    capable: boolean;
+    enabled: boolean;
+    indexDocument: string;
+    errorDocument404Path: string;
+};
+
+type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
 
 export class StorageAccountNode implements IAzureParentTreeItem {
     constructor(
@@ -125,12 +135,123 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         return result;
     }
 
-    public async getWebsiteEnabledContainers(node: IAzureParentNode<StorageAccountNode>): Promise<IAzureParentNode<BlobContainerNode>[]> {
+    public async getWebsiteCapableContainer(node: IAzureParentNode<StorageAccountNode>): Promise<IAzureParentNode<BlobContainerNode> | undefined> {
+        assert(node.treeItem === this);
+
+        // Refresh the storage account first to make sure $web has been picked up if new
+        await node.refresh();
+
         let groupTreeItem = <IAzureTreeItem>await this.getBlobContainerGroupNode();
 
         // Currently only the child with the name "$web" is supported for hosting websites
         let id = `${this.id}/${groupTreeItem.id || groupTreeItem.label}/${ext.staticWebsiteContainerName}`;
         let containerNode = <IAzureParentNode<BlobContainerNode>>await node.treeDataProvider.findNode(id);
-        return containerNode ? [containerNode] : [];
+        return containerNode;
+    }
+
+    // This is the URL to use for browsing the website
+    public getPrimaryWebEndpoint(): string | undefined {
+        // Right now Azure only supports one web endpoint per storage account
+        return this.storageAccount.primaryEndpoints.web;
+    }
+
+    public async createBlobService(): Promise<azureStorage.BlobService> {
+        let primaryKey = await this.getPrimaryKey();
+        let blobService = azureStorage.createBlobService(this.storageAccount.name, primaryKey.value);
+        return blobService;
+    }
+
+    public async getWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
+        let blobService = await this.createBlobService();
+
+        return await new Promise<WebsiteHostingStatus>((resolve, reject) => {
+            blobService.getServiceProperties((err, result: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({
+                        capable: !!result.StaticWebsite,
+                        enabled: result.StaticWebsite && result.StaticWebsite.Enabled,
+                        indexDocument: result.StaticWebsite && result.StaticWebsite.IndexDocument,
+                        errorDocument404Path: result.StaticWebsite && result.StaticWebsite.ErrorDocument404Path
+                    });
+                }
+            });
+        });
+
+    }
+
+    private async getAccountType(): Promise<StorageTypes> {
+        let blobService = await this.createBlobService();
+        return await new Promise<StorageTypes>((resolve, reject) => {
+            blobService.getAccountProperties(undefined, undefined, undefined, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(<StorageTypes>result.AccountKind);
+                }
+            });
+        });
+    }
+
+    public async configureStaticWebsite(node: IAzureNode): Promise<void> {
+        assert(node.treeItem === this);
+        let hostingStatus = await this.getWebsiteHostingStatus();
+        await this.ensureHostingCapable(hostingStatus);
+
+        let resourceId = `${node.id}/staticWebsite`;
+        node.openInPortal(resourceId);
+    }
+
+    public async browseStaticWebsite(node: IAzureNode): Promise<void> {
+        assert(node.treeItem === this);
+        const configure: MessageItem = {
+            title: "Configure website hosting"
+        };
+
+        let hostingStatus = await this.getWebsiteHostingStatus();
+        await this.ensureHostingCapable(hostingStatus);
+
+        if (!hostingStatus.enabled) {
+            let msg = "Static website hosting is not enabled for this storage account.";
+            let result = await window.showErrorMessage(msg, configure);
+            if (result === configure) {
+                await commands.executeCommand('azureStorage.configureStaticWebsite', node);
+            }
+            throw new UserCancelledError(msg);
+        }
+
+        if (!hostingStatus.indexDocument) {
+            let msg = "No index document has been set for this website.";
+            let result = await window.showErrorMessage(msg, configure);
+            if (result === configure) {
+                await commands.executeCommand('azureStorage.configureStaticWebsite', node);
+            }
+            throw new UserCancelledError(msg);
+        }
+
+        let endpoint = this.getPrimaryWebEndpoint();
+        if (endpoint) {
+            await opn(endpoint);
+        } else {
+            throw new Error(`Could not retrieve the primary web endpoint for ${this.label}`);
+        }
+    }
+
+    public async ensureHostingCapable(hostingStatus: WebsiteHostingStatus): Promise<void> {
+        if (!hostingStatus.capable) {
+            // Doesn't support static website hosting. Try to narrow it down.
+            let accountType: StorageTypes;
+            try {
+                accountType = await this.getAccountType();
+            } catch (error) {
+                // Ignore errors
+            }
+            if (accountType !== 'StorageV2') {
+                throw new Error("Only general purpose V2 storage accounts support static website hosting.");
+            }
+
+            throw new Error("This storage account does not support static website hosting.");
+        }
     }
 }

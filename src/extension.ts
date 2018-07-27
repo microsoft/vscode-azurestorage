@@ -4,18 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 'use strict';
-import * as vscode from 'vscode';
-import { Reporter } from './components/telemetry/reporter';
-/*
-import { AzureStorgeProvider } from './explorer/azureStorage'
-*/
 
+import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzureTreeDataProvider, AzureUserInput, IAzureNode, IAzureTreeItem, IAzureUserInput, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, AzureUserInput, IActionContext, IAzureNode, IAzureTreeItem, IAzureUserInput, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
-import { BlobContainerNode } from './azureStorageExplorer/blobContainers/blobContainerNode';
 import { registerDirectoryActionHandlers } from './azureStorageExplorer/fileShares/directoryActionHandlers';
 import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fileActionHandlers';
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
@@ -23,11 +18,12 @@ import { registerFileShareGroupActionHandlers } from './azureStorageExplorer/fil
 import { registerLoadMoreActionHandler } from './azureStorageExplorer/loadMoreActionHandler';
 import { registerQueueActionHandlers } from './azureStorageExplorer/queues/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './azureStorageExplorer/queues/queueGroupActionHandlers';
+import { selectStorageAccountNodeForCommand } from './azureStorageExplorer/selectStorageAccountNodeForCommand';
 import { StorageAccountProvider } from './azureStorageExplorer/storageAccountProvider';
 import { registerStorageAccountActionHandlers } from './azureStorageExplorer/storageAccounts/storageAccountActionHandlers';
-import { StorageAccountNode } from './azureStorageExplorer/storageAccounts/storageAccountNode';
 import { registerTableActionHandlers } from './azureStorageExplorer/tables/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/tableGroupActionHandlers';
+import { Reporter } from './components/telemetry/reporter';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
@@ -46,6 +42,8 @@ export function activate(context: vscode.ExtensionContext): void {
     ext.ui = ui;
 
     const tree = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
+    ext.tree = tree;
+
     registerBlobActionHandlers();
     registerBlobContainerActionHandlers();
     registerBlobContainerGroupActionHandlers();
@@ -56,7 +54,7 @@ export function activate(context: vscode.ExtensionContext): void {
     registerLoadMoreActionHandler(tree);
     registerQueueActionHandlers();
     registerQueueGroupActionHandlers();
-    registerStorageAccountActionHandlers(tree);
+    registerStorageAccountActionHandlers();
     registerTableActionHandlers();
     registerTableGroupActionHandlers();
 
@@ -67,19 +65,24 @@ export function activate(context: vscode.ExtensionContext): void {
     registerCommand("azureStorage.openInPortal", (node: IAzureNode<IAzureTreeItem>) => {
         node.openInPortal();
     });
-    registerCommand("azureStorage.configureStaticWebsite", async (node: IAzureNode<IAzureTreeItem>) => {
-        if (!node) {
-            node = <IAzureNode<StorageAccountNode>>await tree.showNodePicker(StorageAccountNode.contextValue);
-        }
-        if (node.treeItem.contextValue === BlobContainerNode.contextValue) {
-            // Currently the portal only allows configuring at the storage account level, so retrieve the storage account node
-            let storageAccountNode = node.parent && node.parent.parent;
-            console.assert(!!storageAccountNode && storageAccountNode.treeItem.contextValue === StorageAccountNode.contextValue, "Couldn't find storage account node for container");
-            node = storageAccountNode;
-        }
-
-        let featureQuery = "feature.staticwebsites=true"; // Needed until preview is public
-        let resourceId = `${node.id}/staticWebsite`;
-        node.openInPortal(resourceId, { queryPrefix: featureQuery });
+    registerCommand("azureStorage.configureStaticWebsite", async function (this: IActionContext, node: IAzureNode<IAzureTreeItem>): Promise<void> {
+        let accountNode = await selectStorageAccountNodeForCommand(
+            node,
+            this,
+            {
+                mustBeWebsiteCapable: true,
+                askToConfigureWebsite: false
+            });
+        await accountNode.treeItem.configureStaticWebsite(accountNode);
+    });
+    registerCommand('azureStorage.browseStaticWebsite', async function (this: IActionContext, node: IAzureNode<IAzureTreeItem>): Promise<void> {
+        let accountNode = await selectStorageAccountNodeForCommand(
+            node,
+            this,
+            {
+                mustBeWebsiteCapable: true,
+                askToConfigureWebsite: true
+            });
+        await accountNode.treeItem.browseStaticWebsite(accountNode);
     });
 }
