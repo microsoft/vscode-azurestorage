@@ -43,7 +43,7 @@ export async function selectStorageAccountNodeForCommand(
 
     if (options.mustBeWebsiteCapable) {
         let hostingStatus = await accountNode.treeItem.getWebsiteHostingStatus();
-        await accountNode.treeItem.ensureHostingEnabled(hostingStatus);
+        await accountNode.treeItem.ensureHostingCapable(hostingStatus);
 
         if (options.askToConfigureWebsite && !hostingStatus.enabled) {
             let result = await window.showInformationMessage(
