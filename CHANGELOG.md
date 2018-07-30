@@ -7,7 +7,7 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 - Static website functionality is now enabled always in the extension (azureStorage.preview.staticWebsites setting has been removed)
 
 ### Added
-- "Browse Static Website…"
+- "Browse Static Website…" will bring up a storage account's primary web endpoint in a browser (see [Deploy to Static Website](README.md/#deploy-to-static-website))
 
 ### Fixed
 - Can now browse directly after deploying (no need to go to Portal to get primary web endpoint)
