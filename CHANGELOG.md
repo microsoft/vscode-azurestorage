@@ -11,7 +11,7 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 
 ### Fixed
 - Can now browse directly after deploying (no need to go to Portal to get primary web endpoint)
-- Ensure storage account can support hosted websites and that it is enabled when deploying, browsing etc., fixes [#174}(https://github.com/Microsoft/vscode-azurestorage/issues/174), [#175](https://github.com/Microsoft/vscode-azurestorage/issues/175)
+- Ensure storage account can support hosted websites and that it is enabled when deploying, browsing etc., fixes [#174](https://github.com/Microsoft/vscode-azurestorage/issues/174), [#175](https://github.com/Microsoft/vscode-azurestorage/issues/175)
 - Ensure website hosting has an index document set when browsing (to avoid getting a 404 error)
 
 ## 0.4.0 - 2018-06-18
