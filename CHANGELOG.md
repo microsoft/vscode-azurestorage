@@ -1,6 +1,19 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.4.1 - 2018-07-30
+
+### Changed
+- Static website functionality is now enabled always in the extension (azureStorage.preview.staticWebsites setting has been removed)
+
+### Added
+- "Browse Static Website…"
+
+### Fixed
+- Can now browse directly after deploying (no need to go to Portal to get primary web endpoint)
+- Ensure storage account can support hosted websites and that it is enabled when deploying, browsing etc., fixes [#174}(https://github.com/Microsoft/vscode-azurestorage/issues/174), [#175](https://github.com/Microsoft/vscode-azurestorage/issues/175)
+- Ensure website hosting has an index document set when browsing (to avoid getting a 404 error)
+
 ## 0.4.0 - 2018-06-18
 
 ### Added
