@@ -37,9 +37,6 @@ The Azure Storage extension for VS Code lets you deploy static websites and brow
 
 * When configuring your storage account for static site hosting, you **must** set the *index document name*. Do not leave it empty, even if the watermark says "index.html" (you must actually type "index.html" into the textbox and click Save).
 
-* Known issue: If "Configure Static Websites..." displays a blank web page on the Azure portal, the storage account does not support static web pages.
-  Create a new storage account with account kind set to "StorageV2" and try again.
-
 * See the [tutorial](https://code.visualstudio.com/tutorials/static-website/getting-started)
 
 ## Managing Azure Subscriptions
