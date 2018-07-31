@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageAccount, StorageAccountKey } from "azure-arm-storage/lib/models";
 import * as azureStorage from "azure-storage";
 import { FileService } from "azure-storage";
 import { ProgressLocation, window } from "vscode";
 import { IAzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { FileNode } from "./fileNode";
 import { validateFileName } from "./validateNames";
 
 // Currently only supports creating block blobs
-export async function askAndCreateEmptyTextFile(directoryPath: string, share: FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+export async function askAndCreateEmptyTextFile(directoryPath: string, share: FileService.ShareResult, storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
     const fileName = await window.showInputBox({
         placeHolder: 'Enter a name for the new file',
         validateInput: validateFileName
@@ -32,10 +32,10 @@ export async function askAndCreateEmptyTextFile(directoryPath: string, share: Fi
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-function getFile(directoryPath: string, name: string, share: FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey): Promise<azureStorage.FileService.FileResult> {
+function getFile(directoryPath: string, name: string, share: FileService.ShareResult, storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): Promise<azureStorage.FileService.FileResult> {
     let fileService = azureStorage.createFileService(storageAccount.name, key.value);
     return new Promise((resolve, reject) => {
-        fileService.getFileProperties(share.name, directoryPath, name, (err: Error, result: azureStorage.FileService.FileResult) => {
+        fileService.getFileProperties(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
             if (err) {
                 reject(err);
             } else {
@@ -46,10 +46,10 @@ function getFile(directoryPath: string, name: string, share: FileService.ShareRe
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-function createFile(directoryPath: string, name: string, share: FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey): Promise<azureStorage.FileService.FileResult> {
+function createFile(directoryPath: string, name: string, share: FileService.ShareResult, storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): Promise<azureStorage.FileService.FileResult> {
     return new Promise((resolve, reject) => {
         let fileService = azureStorage.createFileService(storageAccount.name, key.value);
-        fileService.createFile(share.name, directoryPath, name, 0, (err: Error, result: azureStorage.FileService.FileResult) => {
+        fileService.createFile(share.name, directoryPath, name, 0, (err?: Error, result?: azureStorage.FileService.FileResult) => {
             if (err) {
                 reject(err);
             } else {
@@ -62,7 +62,8 @@ function createFile(directoryPath: string, name: string, share: FileService.Shar
 export async function deleteFile(directory: string, name: string, share: string, storageAccount: string, key: string): Promise<void> {
     const fileService = azureStorage.createFileService(storageAccount, key);
     await new Promise((resolve, reject) => {
-        fileService.deleteFile(share, directory, name, (err) => {
+        // tslint:disable-next-line:no-any
+        fileService.deleteFile(share, directory, name, (err?: any) => {
             // tslint:disable-next-line:no-void-expression // Grandfathered in
             err ? reject(err) : resolve();
         });

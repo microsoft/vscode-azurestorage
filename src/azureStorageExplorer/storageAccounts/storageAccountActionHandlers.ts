@@ -42,8 +42,8 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
         enableResponse?: string;
     } = this.properties;
 
-    let sourcePath: string;
-    let destNode: IAzureParentNode<StorageAccountNode> | IAzureParentNode<BlobContainerNode>;
+    let sourcePath: string | undefined;
+    let destNode: IAzureParentNode<StorageAccountNode> | IAzureParentNode<BlobContainerNode> | undefined;
 
     // Disambiguate context this was executed from
     if (target instanceof vscode.Uri) {
@@ -52,7 +52,8 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
         properties.contextValue = 'Folder';
     } else {
         // Command called command palette or from storage account/container node
-        destNode = target;
+        destNode = <IAzureParentNode<StorageAccountNode> | IAzureParentNode<BlobContainerNode>>target;
+        // tslint:disable-next-line:strict-boolean-expressions
         properties.contextValue = (destNode && destNode.treeItem.contextValue) || 'CommandPalette';
     }
 

@@ -5,17 +5,16 @@
 
 import * as azureStorage from "azure-storage";
 import * as path from "path";
-
-import { StorageAccount, StorageAccountKey } from "azure-arm-storage/lib/models";
 import { ProgressLocation, window } from "vscode";
 import { IAzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { DirectoryNode } from "./directoryNode";
 import { deleteFile } from "./fileUtils";
 import { validateDirectoryName } from "./validateNames";
 
 // Supports both file share and directory parents
-export async function askAndCreateChildDirectory(parentPath: string, share: azureStorage.FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+export async function askAndCreateChildDirectory(parentPath: string, share: azureStorage.FileService.ShareResult, storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
     const dirName = await window.showInputBox({
         placeHolder: 'Enter a name for the new directory',
         validateInput: validateDirectoryName
@@ -39,10 +38,11 @@ export async function askAndCreateChildDirectory(parentPath: string, share: azur
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-function createDirectory(share: azureStorage.FileService.ShareResult, storageAccount: StorageAccount, key: StorageAccountKey, parentPath: string, name: string): Promise<azureStorage.BlobService.BlobResult> {
+function createDirectory(share: azureStorage.FileService.ShareResult, storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper, parentPath: string, name: string): Promise<azureStorage.BlobService.BlobResult> {
     return new Promise((resolve, reject) => {
         const fileService = azureStorage.createFileService(storageAccount.name, key.value);
         fileService.createDirectory(share.name, path.posix.join(parentPath, name), (err: Error, result: azureStorage.BlobService.BlobResult) => {
+            // tslint:disable-next-line:strict-boolean-expressions // SDK is not strict-null-checking enabled, can't type err as optional
             if (err) {
                 reject(err);
             } else {
@@ -56,7 +56,8 @@ function createDirectory(share: azureStorage.FileService.ShareResult, storageAcc
 export function listFilesInDirectory(directory: string, share: string, storageAccount: string, key: string, maxResults: number, currentToken?: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
     return new Promise((resolve, reject) => {
         const fileService = azureStorage.createFileService(storageAccount, key);
-        fileService.listFilesAndDirectoriesSegmented(share, directory, currentToken, { maxResults: maxResults }, (err: Error, result: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
+        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
+        fileService.listFilesAndDirectoriesSegmented(share, directory, currentToken!, { maxResults: maxResults }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
             if (err) {
                 reject(err);
             } else {
@@ -92,6 +93,7 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
             await deleteDirectoryAndContents(path.posix.join(directory, dir.name), share, storageAccount, key);
         }
 
+        // tslint:disable-next-line:no-unsafe-any // false positive
         currentToken = continuationToken;
         if (!currentToken) {
             break;
@@ -105,7 +107,8 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
 async function deleteDirectoryOnly(directory: string, share: string, storageAccount: string, key: string): Promise<void> {
     const fileService = azureStorage.createFileService(storageAccount, key);
     await new Promise((resolve, reject) => {
-        fileService.deleteDirectory(share, directory, err => {
+        // tslint:disable-next-line:no-any
+        fileService.deleteDirectory(share, directory, (err?: any) => {
             // tslint:disable-next-line:no-void-expression // Grandfathered in
             err ? reject(err) : resolve();
         });

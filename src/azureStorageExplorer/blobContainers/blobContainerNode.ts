@@ -11,8 +11,8 @@ import * as path from 'path';
 import { ProgressLocation, Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { DialogResponses, IActionContext, IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { awaitWithProgress } from '../../components/progress';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { StorageAccountNode } from "../storageAccounts/storageAccountNode";
@@ -33,12 +33,12 @@ interface ICreateChildOptions {
 }
 
 export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
-    private _continuationToken: azureStorage.common.ContinuationToken;
+    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
         public readonly container: azureStorage.BlobService.ContainerResult,
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
     }
 
     public label: string = this.container.name;
@@ -58,7 +58,8 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             this._continuationToken = undefined;
         }
 
-        let blobs = await this.listBlobs(this._continuationToken);
+        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
+        let blobs = await this.listBlobs(this._continuationToken!);
         let { entries, continuationToken } = blobs;
         this._continuationToken = continuationToken;
         return entries.map((blob: azureStorage.BlobService.BlobResult) => {
@@ -70,7 +71,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
     private listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.createBlobService();
-            blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults }, (err: Error, result: azureStorage.BlobService.ListBlobsResult) => {
+            blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults }, (err?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -82,13 +83,14 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
 
     private async listAllBlobs(cancellationToken?: vscode.CancellationToken, properties?: TelemetryProperties): Promise<azureStorage.BlobService.BlobResult[]> {
         // tslint:disable-next-line:no-any
-        let currentToken: azureStorage.common.ContinuationToken;
+        let currentToken: azureStorage.common.ContinuationToken | undefined;
         let blobs: azureStorage.BlobService.BlobResult[] = [];
 
         // tslint:disable-next-line:no-constant-condition
         while (true) {
             this.throwIfCanceled(cancellationToken, properties, "listAllBlobs");
-            let result = await this.listBlobs(currentToken, 5000);
+            // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
+            let result = await this.listBlobs(currentToken!, 5000);
             blobs.push(...result.entries);
             currentToken = result.continuationToken;
             if (!currentToken) {
@@ -109,7 +111,8 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         if (result === DialogResponses.deleteResponse) {
             const blobService = this.createBlobService();
             await new Promise((resolve, reject) => {
-                blobService.deleteContainer(this.container.name, err => {
+                // tslint:disable-next-line:no-any
+                blobService.deleteContainer(this.container.name, (err?: any) => {
                     // tslint:disable-next-line:no-void-expression // Grandfathered in
                     err ? reject(err) : resolve();
                 });
@@ -162,6 +165,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
                 openLabel: "Upload"
             }
         );
+        // tslint:disable-next-line:strict-boolean-expressions
         if (uris && uris[0]) {
             let uri = uris[0];
             lastUploadFolder = uri;
@@ -302,6 +306,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             let lastTimeReported: number;
             const msBetweenReports = 1000;
             const updateProgress = () => {
+                // tslint:disable-next-line:strict-boolean-expressions
                 let increment = 1 / (totalWork || 1) * 100;
 
                 // Work-around for https://github.com/Microsoft/vscode/issues/50479
@@ -345,7 +350,8 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
 
     public getPrimaryWebEndpoint(): string | undefined {
         // Right now only one web endpoint is supported per storage account
-        return this.storageAccount.primaryEndpoints.web;
+        // tslint:disable-next-line:strict-boolean-expressions
+        return this.storageAccount.primaryEndpoints && this.storageAccount.primaryEndpoints.web;
     }
 
     public getStorageAccountNode(node: IAzureNode<IAzureTreeItem>): IAzureParentNode<StorageAccountNode> {
@@ -401,7 +407,8 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             try {
                 await new Promise((resolve, reject) => {
                     ext.outputChannel.appendLine(`Deleting blob "${blob.name}"...`);
-                    blobService.deleteBlob(this.container.name, blob.name, (err) => {
+                    // tslint:disable-next-line:no-any
+                    blobService.deleteBlob(this.container.name, blob.name, (err?: any) => {
                         if (err) {
                             reject(err);
                         } else {
@@ -437,11 +444,12 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         if (!suppressLogs) {
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
+
         const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
         let speedSummary: azureStorage.common.streams.speedsummary.SpeedSummary;
         const uploadPromise = new Promise((resolve, reject) => {
             // tslint:disable-next-line:no-function-expression // Grandfathered in
-            speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blobPath, filePath, function (err: {}): void {
+            speedSummary = blobService.createBlockBlobFromLocalFile(this.container.name, blobPath, filePath, function (err?: {}): void {
                 // tslint:disable-next-line:no-void-expression // Grandfathered in
                 err ? reject(err) : resolve();
             });
@@ -450,7 +458,8 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         if (!suppressLogs) {
             await awaitWithProgress(
                 `Uploading ${blobPath}`,
-                uploadPromise, () => {
+                uploadPromise,
+                () => {
                     const completed = <string>speedSummary.getCompleteSize(true);
                     const total = <string>speedSummary.getTotalSize(true);
                     const percent = speedSummary.getCompletePercent(0);
@@ -499,7 +508,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
     private getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         const blobService = this.createBlobService();
         return new Promise((resolve, reject) => {
-            blobService.getBlobProperties(this.container.name, name, (err: Error, result: azureStorage.BlobService.BlobResult) => {
+            blobService.getBlobProperties(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -518,7 +527,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
                     contentType: 'text/plain'
                 }
             };
-            blobService.createBlockBlobFromText(this.container.name, name, '', options, (err: Error, result: azureStorage.BlobService.BlobResult) => {
+            blobService.createBlockBlobFromText(this.container.name, name, '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -545,17 +554,17 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
     private async doesBlobExist(blobPath: string): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
             const blobService = this.createBlobService();
-            blobService.doesBlobExist(this.container.name, blobPath, (err: Error, result: azureStorage.BlobService.BlobResult) => {
+            blobService.doesBlobExist(this.container.name, blobPath, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(result.exists === true);
+                    resolve(result && result.exists === true);
                 }
             });
         });
     }
 
-    private throwIfCanceled(cancellationToken: vscode.CancellationToken | undefined, properties: TelemetryProperties, cancelStep: string): void {
+    private throwIfCanceled(cancellationToken: vscode.CancellationToken | undefined, properties: TelemetryProperties | undefined, cancelStep: string): void {
         if (cancellationToken && cancellationToken.isCancellationRequested) {
             if (properties && cancelStep) {
                 properties.cancelStep = cancelStep;

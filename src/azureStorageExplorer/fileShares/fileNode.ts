@@ -4,23 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
+import * as copypaste from 'copy-paste';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { DialogResponses, IAzureNode, IAzureParentNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-import { deleteFile } from './fileUtils';
-
-import * as copypaste from 'copy-paste';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
+import { deleteFile } from './fileUtils';
 
 export class FileNode implements IAzureTreeItem, ICopyUrl {
     constructor(
         public readonly file: azureStorage.FileService.FileResult,
         public readonly directoryPath: string,
         public readonly share: azureStorage.FileService.ShareResult,
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
     }
 
     public label: string = this.file.name;

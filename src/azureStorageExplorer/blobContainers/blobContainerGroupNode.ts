@@ -8,15 +8,15 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { BlobContainerNode } from './blobContainerNode';
 
 export class BlobContainerGroupNode implements IAzureParentTreeItem {
-    private _continuationToken: azureStorage.common.ContinuationToken;
+    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
     }
 
     public label: string = "Blob Containers";
@@ -45,10 +45,11 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private listContainers(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.BlobService.ListContainerResult> {
+    private listContainers(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise((resolve, reject) => {
             let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-            blobService.listContainersSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.BlobService.ListContainerResult) => {
+            // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
+            blobService.listContainersSegmented(currentToken!, { maxResults: 50 }, (err?: Error, result?: azureStorage.BlobService.ListContainerResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -80,7 +81,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
     private createBlobContainer(name: string): Promise<azureStorage.BlobService.ContainerResult> {
         return new Promise((resolve, reject) => {
             let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-            blobService.createContainer(name, (err: Error, result: azureStorage.BlobService.ContainerResult) => {
+            blobService.createContainer(name, (err?: Error, result?: azureStorage.BlobService.ContainerResult) => {
                 if (err) {
                     reject(err);
                 } else {

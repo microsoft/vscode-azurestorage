@@ -26,7 +26,7 @@ export async function selectStorageAccountNodeForCommand(
     //   a storage account node
     //   a blob container node
 
-    let storageOrContainerNode = <IAzureNode<StorageAccountNode> | IAzureNode<BlobContainerNode>>node;
+    let storageOrContainerNode = <IAzureNode<StorageAccountNode> | IAzureNode<BlobContainerNode> | undefined>node;
     if (!storageOrContainerNode) {
         storageOrContainerNode = <IAzureNode<StorageAccountNode>>await ext.tree.showNodePicker(StorageAccountNode.contextValue);
     }
@@ -34,11 +34,12 @@ export async function selectStorageAccountNodeForCommand(
     let accountNode: IAzureParentNode<StorageAccountNode>;
     if (storageOrContainerNode.treeItem instanceof BlobContainerNode) {
         // Currently the portal only allows configuring at the storage account level, so retrieve the storage account node
-        accountNode = storageOrContainerNode.treeItem.getStorageAccountNode(node);
+        accountNode = storageOrContainerNode.treeItem.getStorageAccountNode(storageOrContainerNode);
     } else if (storageOrContainerNode.treeItem instanceof StorageAccountNode) {
         accountNode = <IAzureParentNode<StorageAccountNode>>storageOrContainerNode;
     } else {
-        throw new Error(`Internal error: Unexpected node type: ${node.treeItem.contextValue}`);
+        let treeItem: { contextValue: string } = storageOrContainerNode.treeItem;
+        throw new Error(`Internal error: Unexpected node type: ${treeItem.contextValue}`);
     }
 
     if (options.mustBeWebsiteCapable) {

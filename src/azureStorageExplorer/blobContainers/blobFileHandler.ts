@@ -25,7 +25,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
     }
 
     public async checkCanDownload(node: IAzureNode<BlobNode>): Promise<void> {
-        let message: string;
+        let message: string | undefined;
 
         if (Number(node.treeItem.blob.contentLength) > Limits.maxUploadDownloadSizeBytes) {
             message = `Please use Storage Explorer for blobs larger than ${Limits.maxUploadDownloadSizeMB}MB.`;
@@ -69,7 +69,7 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         let speedSummary: azureStorage.common.streams.speedsummary.SpeedSummary;
         const promise = new Promise((resolve, reject): void => {
             // tslint:disable-next-line:no-function-expression // Grandfathered in
-            speedSummary = blobService.getBlobToLocalFile(treeItem.container.name, blob.name, filePath, function (err: {}): void {
+            speedSummary = blobService.getBlobToLocalFile(treeItem.container.name, blob.name, filePath, function (err?: {}): void {
                 // tslint:disable-next-line:no-void-expression // Grandfathered in
                 err ? reject(err) : resolve();
             });
@@ -77,7 +77,8 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
 
         await awaitWithProgress(
             `Downloading ${blob.name}`,
-            promise, () => {
+            promise,
+            () => {
                 const completed = <string>speedSummary.getCompleteSize(true);
                 const total = <string>speedSummary.getTotalSize(true);
                 const percent = speedSummary.getCompletePercent(0);
@@ -94,13 +95,14 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         let blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         let createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
 
+        // tslint:disable-next-line:strict-boolean-expressions
         if (node.treeItem.blob && node.treeItem.blob.contentSettings) {
             createOptions.contentSettings = node.treeItem.blob.contentSettings;
             createOptions.contentSettings.contentMD5 = undefined; // Needs to be filled in by SDK
         }
 
         await new Promise<void>((resolve, reject) => {
-            blobService.createBlockBlobFromLocalFile(node.treeItem.container.name, node.treeItem.blob.name, filePath, createOptions, (error: Error, _result: azureStorage.BlobService.BlobResult, _response: azureStorage.ServiceResponse) => {
+            blobService.createBlockBlobFromLocalFile(node.treeItem.container.name, node.treeItem.blob.name, filePath, createOptions, (error?: Error, _result?: azureStorage.BlobService.BlobResult, _response?: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     let errorAny = <{ code?: string }>error;
                     if (!!errorAny.code) {

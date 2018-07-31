@@ -7,13 +7,13 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { DialogResponses, IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 
 export class TableNode implements IAzureTreeItem {
     constructor(
         public readonly tableName: string,
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
     }
 
     public label: string = this.tableName;
@@ -29,7 +29,8 @@ export class TableNode implements IAzureTreeItem {
         if (result === DialogResponses.deleteResponse) {
             const tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
-                tableService.deleteTable(this.tableName, err => {
+                // tslint:disable-next-line:no-any
+                tableService.deleteTable(this.tableName, (err?: any) => {
                     // tslint:disable-next-line:no-void-expression // Grandfathered in
                     err ? reject(err) : resolve();
                 });
