@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// Wrappers around storage SDK objects that guarantees certain properties are not undefined/null
+
 import { isNullOrUndefined } from 'util';
 import { Endpoints, StorageAccount, StorageAccountKey } from '../../node_modules/azure-arm-storage/lib/models';
 
