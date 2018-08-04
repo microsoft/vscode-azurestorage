@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from "fs";
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
 import { Launcher } from "../components/launcher/launcher";
@@ -19,8 +20,8 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
 
         let selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
         // tslint:disable-next-line:no-non-null-assertion // storageExplorerLocation has default value, can't be undefined
-        let path = (selectedLocation! + MacOSStorageExplorerLauncher.subExecutableLocation);
-        if (!(await MacOSStorageExplorerLauncher.fileExists(path))) {
+        let exePath = path.join(selectedLocation!, MacOSStorageExplorerLauncher.subExecutableLocation);
+        if (!(await MacOSStorageExplorerLauncher.fileExists(exePath))) {
             let selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
 
             if (selected === "Browse") {
@@ -35,7 +36,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             }
         }
 
-        return path;
+        return exePath;
     }
 
     public async openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void> {
@@ -71,9 +72,9 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         return Launcher.launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
     }
 
-    private static async fileExists(path: string): Promise<boolean> {
+    private static async fileExists(filePath: string): Promise<boolean> {
         return await new Promise<boolean>((resolve, _reject) => {
-            fs.exists(path, (exists: boolean) => {
+            fs.exists(filePath, (exists: boolean) => {
                 resolve(exists);
             });
         });

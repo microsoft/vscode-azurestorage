@@ -34,8 +34,8 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-        let fileShares = await this.listFileShares(this._continuationToken!);
+        // currentToken argument typed incorrectly in SDK
+        let fileShares = await this.listFileShares(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileShares;
         this._continuationToken = continuationToken;
 

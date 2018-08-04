@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// Wrappers around storage SDK objects that guarantees certain properties are not undefined/null
-
 import { isNullOrUndefined } from 'util';
 import { Endpoints, StorageAccount, StorageAccountKey } from '../../node_modules/azure-arm-storage/lib/models';
 
@@ -26,6 +24,9 @@ function copyNonNullProperty<TSource, TDest>(source: TSource, dest: { [key: stri
     dest[<string>name] = value;
 }
 
+/**
+ * Wrappers around StorageAccountWrapper that guarantees certain properties are not undefined/null
+ */
 export class StorageAccountWrapper {
     constructor(_account: StorageAccount) {
         copyNonNullProperty(_account, this, 'id');
@@ -41,6 +42,9 @@ export class StorageAccountWrapper {
     readonly primaryEndpoints: Endpoints;
 }
 
+/**
+ * Wrappers around StorageAccountKeyWrapper that guarantees certain properties are not undefined/null
+ */
 export class StorageAccountKeyWrapper {
     constructor(_key: StorageAccountKey) {
         copyNonNullProperty(_key, this, 'value');

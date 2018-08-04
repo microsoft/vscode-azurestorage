@@ -58,8 +58,8 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
             this._continuationToken = undefined;
         }
 
-        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-        let blobs = await this.listBlobs(this._continuationToken!);
+        // currentToken argument typed incorrectly in SDK
+        let blobs = await this.listBlobs(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = blobs;
         this._continuationToken = continuationToken;
         return entries.map((blob: azureStorage.BlobService.BlobResult) => {
@@ -89,8 +89,8 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
         // tslint:disable-next-line:no-constant-condition
         while (true) {
             this.throwIfCanceled(cancellationToken, properties, "listAllBlobs");
-            // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-            let result = await this.listBlobs(currentToken!, 5000);
+            // currentToken argument typed incorrectly in SDK
+            let result = await this.listBlobs(<azureStorage.common.ContinuationToken>currentToken, 5000);
             blobs.push(...result.entries);
             currentToken = result.continuationToken;
             if (!currentToken) {

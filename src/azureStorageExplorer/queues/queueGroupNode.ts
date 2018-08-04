@@ -30,8 +30,8 @@ export class QueueGroupNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-        let containers = await this.listQueues(this._continuationToken!);
+        // currentToken argument typed incorrectly in SDK
+        let containers = await this.listQueues(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 

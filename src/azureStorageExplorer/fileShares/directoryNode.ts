@@ -48,7 +48,7 @@ export class DirectoryNode implements IAzureParentTreeItem, ICopyUrl {
         }
 
         // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-        let fileResults = await this.listFiles(this._continuationToken!);
+        let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken!);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
 

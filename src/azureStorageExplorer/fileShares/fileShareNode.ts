@@ -41,8 +41,8 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
             this._continuationToken = undefined;
         }
 
-        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-        let fileResults = await this.listFiles(this._continuationToken!);
+        // currentToken argument typed incorrectly in SDK
+        let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
         return (<IAzureTreeItem[]>[])

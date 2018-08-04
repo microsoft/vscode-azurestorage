@@ -56,8 +56,8 @@ function createDirectory(share: azureStorage.FileService.ShareResult, storageAcc
 export function listFilesInDirectory(directory: string, share: string, storageAccount: string, key: string, maxResults: number, currentToken?: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
     return new Promise((resolve, reject) => {
         const fileService = azureStorage.createFileService(storageAccount, key);
-        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-        fileService.listFilesAndDirectoriesSegmented(share, directory, currentToken!, { maxResults: maxResults }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
+        // currentToken argument typed incorrectly in SDK
+        fileService.listFilesAndDirectoriesSegmented(share, directory, <azureStorage.common.ContinuationToken>currentToken, { maxResults: maxResults }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
             if (err) {
                 reject(err);
             } else {

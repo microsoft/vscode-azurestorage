@@ -48,8 +48,8 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
     private listContainers(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise((resolve, reject) => {
             let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-            // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-            blobService.listContainersSegmented(currentToken!, { maxResults: 50 }, (err?: Error, result?: azureStorage.BlobService.ListContainerResult) => {
+            // currentToken argument typed incorrectly in SDK
+            blobService.listContainersSegmented(<azureStorage.common.ContinuationToken>currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.BlobService.ListContainerResult) => {
                 if (err) {
                     reject(err);
                 } else {
