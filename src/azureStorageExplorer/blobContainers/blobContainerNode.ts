@@ -165,8 +165,7 @@ export class BlobContainerNode implements IAzureParentTreeItem, ICopyUrl {
                 openLabel: "Upload"
             }
         );
-        // tslint:disable-next-line:strict-boolean-expressions
-        if (uris && uris[0]) {
+        if (uris && uris.length) {
             let uri = uris[0];
             lastUploadFolder = uri;
             let filePath = uri.fsPath;

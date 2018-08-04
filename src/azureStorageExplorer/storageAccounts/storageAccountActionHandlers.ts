@@ -51,7 +51,7 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
         sourcePath = target.fsPath;
         properties.contextValue = 'Folder';
     } else {
-        // Command called command palette or from storage account/container node
+        // Command called from command palette or from storage account/container node
         destNode = <IAzureParentNode<StorageAccountNode> | IAzureParentNode<BlobContainerNode>>target;
         // tslint:disable-next-line:strict-boolean-expressions
         properties.contextValue = (destNode && destNode.treeItem.contextValue) || 'CommandPalette';
