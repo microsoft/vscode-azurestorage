@@ -75,7 +75,7 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
     let currentToken: azureStorage.common.ContinuationToken | undefined = undefined;
     // tslint:disable-next-line:no-constant-condition
     while (true) {
-        let { entries, continuationToken } = await listFilesInDirectory(directory, share, storageAccount, key, maxResults, currentToken);
+        let { entries, continuationToken }: azureStorage.FileService.ListFilesAndDirectoriesResult = await listFilesInDirectory(directory, share, storageAccount, key, maxResults, currentToken);
         let promises: Promise<void>[] = [];
         for (let file of entries.files) {
             let promise = deleteFile(directory, file.name, share, storageAccount, key);
@@ -93,7 +93,6 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
             await deleteDirectoryAndContents(path.posix.join(directory, dir.name), share, storageAccount, key);
         }
 
-        // tslint:disable-next-line:no-unsafe-any // false positive
         currentToken = continuationToken;
         if (!currentToken) {
             break;
