@@ -15,7 +15,7 @@ const regKey: { hive: string, key: string } = { hive: "HKCR", key: "\\storageexp
 
 export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher {
 
-    public async openResource(accountId: string, subscriptionid: string, resourceType: ResourceType, resourceName: string): Promise<void> {
+    public async openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
@@ -37,14 +37,14 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async getStorageExplorerExecutable(): Promise<string> {
-        let regVal: string;
+        let regVal: string | undefined;
         try {
             regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(regKey.hive, regKey.key);
         } catch (err) {
             // ignore and prompt to download.
             console.error(err);
         } finally {
-            let exePath: string;
+            let exePath: string | undefined;
             if (regVal) {
                 // Parse from e.g.: "C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe" -- "%1"
                 exePath = regVal.split("\"")[1];
@@ -73,14 +73,14 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private static getWindowsRegistryValue(hive: string, key: string): Promise<string> {
+    private static getWindowsRegistryValue(hive: string, key: string): Promise<string | undefined> {
         return new Promise((resolve, reject) => {
             let rgKey = new winreg({ hive, key });
-            rgKey.values((err: {}, items: Winreg.RegistryItem[]) => {
+            rgKey.values((err?: {}, items?: Winreg.RegistryItem[]) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(items && items.length > 0 && items[0].value);
+                    resolve(items && items.length > 0 ? items[0].value : undefined);
                 }
             });
         });

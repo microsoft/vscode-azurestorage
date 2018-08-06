@@ -8,18 +8,18 @@ import { FileService } from 'azure-storage';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { FileShareNode } from './fileShareNode';
 
 const minQuotaGB = 1;
 const maxQuotaGB = 5120;
 
 export class FileShareGroupNode implements IAzureParentTreeItem {
-    private _continuationToken: azureStorage.common.ContinuationToken;
+    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
     }
 
     public label: string = "File Shares";
@@ -34,7 +34,8 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        let fileShares = await this.listFileShares(this._continuationToken);
+        // currentToken argument typed incorrectly in SDK
+        let fileShares = await this.listFileShares(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileShares;
         this._continuationToken = continuationToken;
 
@@ -54,7 +55,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
     listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
         return new Promise((resolve, reject) => {
             let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
-            fileService.listSharesSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.FileService.ListSharesResult) => {
+            fileService.listSharesSegmented(currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.FileService.ListSharesResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -97,7 +98,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
             const options = <FileService.CreateShareRequestOptions>{
                 quota: quotaGB
             };
-            shareService.createShare(name, options, (err: Error, result: azureStorage.FileService.ShareResult) => {
+            shareService.createShare(name, options, (err?: Error, result?: azureStorage.FileService.ShareResult) => {
                 if (err) {
                     reject(err);
                 } else {

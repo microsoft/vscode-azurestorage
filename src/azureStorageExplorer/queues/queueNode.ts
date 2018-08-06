@@ -7,13 +7,13 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { DialogResponses, IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 
 export class QueueNode implements IAzureTreeItem {
     constructor(
         public readonly queue: azureStorage.QueueService.QueueResult,
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
     }
 
     public label: string = this.queue.name;
@@ -29,7 +29,8 @@ export class QueueNode implements IAzureTreeItem {
         if (result === DialogResponses.deleteResponse) {
             const queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
-                queueService.deleteQueue(this.queue.name, err => {
+                // tslint:disable-next-line:no-any
+                queueService.deleteQueue(this.queue.name, (err?: any) => {
                     // tslint:disable-next-line:no-void-expression // Grandfathered in
                     err ? reject(err) : resolve();
                 });

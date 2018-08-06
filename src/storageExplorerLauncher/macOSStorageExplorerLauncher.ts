@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fs from "fs";
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
 import { Launcher } from "../components/launcher/launcher";
@@ -18,8 +19,9 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer."): Promise<string> {
 
         let selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
-
-        if (!(await MacOSStorageExplorerLauncher.fileExists(selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation))) {
+        // tslint:disable-next-line:no-non-null-assertion // storageExplorerLocation has default value, can't be undefined
+        let exePath = path.join(selectedLocation!, MacOSStorageExplorerLauncher.subExecutableLocation);
+        if (!(await MacOSStorageExplorerLauncher.fileExists(exePath))) {
             let selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
 
             if (selected === "Browse") {
@@ -34,10 +36,10 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             }
         }
 
-        return selectedLocation + MacOSStorageExplorerLauncher.subExecutableLocation;
+        return exePath;
     }
 
-    public async openResource(accountId: string, subscriptionid: string, resourceType: ResourceType, resourceName: string): Promise<void> {
+    public async openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
@@ -70,9 +72,9 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         return Launcher.launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
     }
 
-    private static async fileExists(path: string): Promise<boolean> {
+    private static async fileExists(filePath: string): Promise<boolean> {
         return await new Promise<boolean>((resolve, _reject) => {
-            fs.exists(path, (exists: boolean) => {
+            fs.exists(filePath, (exists: boolean) => {
                 resolve(exists);
             });
         });

@@ -38,9 +38,7 @@ export async function awaitWithProgress<T>(title: string, promise: Promise<T>, g
             ext.outputChannel.appendLine(`${title}: ${msg}`);
         }
 
-        if (thisProgress) {
-            thisProgress.report({ message: msg });
-        }
+        thisProgress.report({ message: msg });
     });
 
     return await promise;

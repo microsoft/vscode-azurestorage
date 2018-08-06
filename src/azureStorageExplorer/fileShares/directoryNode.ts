@@ -8,7 +8,7 @@ import * as copypaste from 'copy-paste';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { DialogResponses, IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from './directoryUtils';
@@ -20,12 +20,12 @@ export class DirectoryNode implements IAzureParentTreeItem, ICopyUrl {
         public readonly parentPath: string,
         public readonly directory: azureStorage.FileService.DirectoryResult, // directory.name should not include parent path
         public readonly share: azureStorage.FileService.ShareResult,
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
 
     }
 
-    private _continuationToken: azureStorage.common.ContinuationToken;
+    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
     public label: string = this.directory.name;
     public static contextValue: string = 'azureFileShareDirectory';
     public contextValue: string = DirectoryNode.contextValue;
@@ -47,11 +47,12 @@ export class DirectoryNode implements IAzureParentTreeItem, ICopyUrl {
             this._continuationToken = undefined;
         }
 
-        let fileResults = await this.listFiles(this._continuationToken);
+        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
+        let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken!);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
 
-        return []
+        return (<IAzureTreeItem[]>[])
             .concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
                 return new DirectoryNode(this.fullPath, directory, this.share, this.storageAccount, this.key);
             }))
@@ -69,7 +70,7 @@ export class DirectoryNode implements IAzureParentTreeItem, ICopyUrl {
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
+    listFiles(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return listFilesInDirectory(this.fullPath, this.share.name, this.storageAccount.name, this.key.value, 50, currentToken);
     }
 

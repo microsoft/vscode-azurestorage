@@ -11,7 +11,8 @@ import opn = require('opn');
 import * as path from 'path';
 import { commands, MessageItem, Uri, window } from 'vscode';
 import { IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
 import * as ext from "../../constants";
 import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
 import { BlobContainerNode } from "../blobContainers/blobContainerNode";
@@ -22,15 +23,15 @@ import { TableGroupNode } from '../tables/tableGroupNode';
 export type WebsiteHostingStatus = {
     capable: boolean;
     enabled: boolean;
-    indexDocument: string;
-    errorDocument404Path: string;
+    indexDocument?: string;
+    errorDocument404Path?: string;
 };
 
 type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
 
 export class StorageAccountNode implements IAzureParentTreeItem {
     constructor(
-        public readonly storageAccount: StorageAccount,
+        public readonly storageAccount: StorageAccountWrapper,
         public readonly storageManagementClient: StorageManagementClient) {
     }
 
@@ -43,12 +44,12 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount_16x.png')
     };
 
-    private _blobContainerGroupNodePromise: Promise<BlobContainerGroupNode>;
+    private _blobContainerGroupNodePromise: Promise<BlobContainerGroupNode> | undefined;
 
     private async getBlobContainerGroupNode(): Promise<BlobContainerGroupNode> {
         const createBlobContainerGroupNode = async (): Promise<BlobContainerGroupNode> => {
             let primaryKey = await this.getPrimaryKey();
-            return new BlobContainerGroupNode(this.storageAccount, primaryKey);
+            return new BlobContainerGroupNode(this.storageAccount, new StorageAccountKeyWrapper(primaryKey));
         };
 
         if (!this._blobContainerGroupNodePromise) {
@@ -61,7 +62,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
     async loadMoreChildren(_node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
         let primaryKey = await this.getPrimaryKey();
         let primaryEndpoints = this.storageAccount.primaryEndpoints;
-        let groupNodes = [];
+        let groupNodes: IAzureTreeItem[] = [];
 
         if (!!primaryEndpoints.blob) {
             groupNodes.push(await this.getBlobContainerGroupNode());
@@ -86,13 +87,17 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         return false;
     }
 
-    async getPrimaryKey(): Promise<StorageAccountKey> {
-        let keys: StorageAccountKey[] = await this.getKeys();
-        let primaryKey = keys.find((key: StorageAccountKey) => {
+    async getPrimaryKey(): Promise<StorageAccountKeyWrapper> {
+        let keys: StorageAccountKeyWrapper[] = await this.getKeys();
+        let primaryKey = keys.find(key => {
             return key.keyName === "key1" || key.keyName === "primaryKey";
         });
 
-        return primaryKey;
+        if (primaryKey) {
+            return new StorageAccountKeyWrapper(primaryKey);
+        } else {
+            throw new Error("Could not find primary key");
+        }
     }
 
     async getConnectionString(): Promise<string> {
@@ -100,11 +105,12 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${primaryKey.value}`;
     }
 
-    async getKeys(): Promise<StorageAccountKey[]> {
+    async getKeys(): Promise<StorageAccountKeyWrapper[]> {
         let parsedId = this.parseAzureResourceId(this.storageAccount.id);
         let resourceGroupName = parsedId.resourceGroups;
         let keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
-        return keyResult.keys;
+        // tslint:disable-next-line:strict-boolean-expressions
+        return (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
     }
 
     parseAzureResourceId(resourceId: string): { [key: string]: string } {
@@ -165,15 +171,18 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         let blobService = await this.createBlobService();
 
         return await new Promise<WebsiteHostingStatus>((resolve, reject) => {
-            blobService.getServiceProperties((err, result: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties) => {
+            // tslint:disable-next-line:no-any
+            blobService.getServiceProperties((err?: any, result?: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve({
-                        capable: !!result.StaticWebsite,
-                        enabled: result.StaticWebsite && result.StaticWebsite.Enabled,
-                        indexDocument: result.StaticWebsite && result.StaticWebsite.IndexDocument,
-                        errorDocument404Path: result.StaticWebsite && result.StaticWebsite.ErrorDocument404Path
+                    let staticWebsite: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties | undefined =
+                        result && result.StaticWebsite;
+                    resolve(<WebsiteHostingStatus>{
+                        capable: !!staticWebsite,
+                        enabled: !!staticWebsite && staticWebsite.Enabled,
+                        indexDocument: staticWebsite && staticWebsite.IndexDocument,
+                        errorDocument404Path: staticWebsite && staticWebsite.ErrorDocument404Path
                     });
                 }
             });
@@ -184,7 +193,8 @@ export class StorageAccountNode implements IAzureParentTreeItem {
     private async getAccountType(): Promise<StorageTypes> {
         let blobService = await this.createBlobService();
         return await new Promise<StorageTypes>((resolve, reject) => {
-            blobService.getAccountProperties(undefined, undefined, undefined, (err, result) => {
+            // tslint:disable-next-line:no-any
+            blobService.getAccountProperties(undefined, undefined, undefined, (err?: any, result?) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -241,7 +251,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
     public async ensureHostingCapable(hostingStatus: WebsiteHostingStatus): Promise<void> {
         if (!hostingStatus.capable) {
             // Doesn't support static website hosting. Try to narrow it down.
-            let accountType: StorageTypes;
+            let accountType: StorageTypes | undefined;
             try {
                 accountType = await this.getAccountType();
             } catch (error) {

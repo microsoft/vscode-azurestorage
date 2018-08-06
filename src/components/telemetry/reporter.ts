@@ -28,12 +28,9 @@ interface IPackageInfo {
 function getPackageInfo(context: vscode.ExtensionContext): IPackageInfo | undefined {
     // tslint:disable-next-line:non-literal-require
     let extensionPackage = <{ [key: string]: string }>require(context.asAbsolutePath('./package.json'));
-    if (extensionPackage) {
-        return {
-            name: extensionPackage.name,
-            version: extensionPackage.version,
-            aiKey: extensionPackage.aiKey
-        };
-    }
-    return undefined;
+    return {
+        name: extensionPackage.name,
+        version: extensionPackage.version,
+        aiKey: extensionPackage.aiKey
+    };
 }

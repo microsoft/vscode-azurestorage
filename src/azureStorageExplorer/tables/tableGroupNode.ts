@@ -7,15 +7,15 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { nonNull, StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { TableNode } from './tableNode';
 
 export class TableGroupNode implements IAzureParentTreeItem {
-    private _continuationToken: azureStorage.TableService.ListTablesContinuationToken;
+    private _continuationToken: azureStorage.TableService.ListTablesContinuationToken | undefined;
 
     constructor(
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
     }
 
     public label: string = "Tables";
@@ -30,7 +30,8 @@ export class TableGroupNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        let containers = await this.listContainers(this._continuationToken);
+        // currentToken argument typed incorrectly in SDK
+        let containers = await this.listContainers(<azureStorage.TableService.ListTablesContinuationToken>this._continuationToken);
         let { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 
@@ -51,7 +52,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
     listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
             let tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
-            tableService.listTablesSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.TableService.ListTablesResponse) => {
+            tableService.listTablesSegmented(currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -72,7 +73,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
                 showCreatingNode(tableName);
                 progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
                 const table = await this.createTable(tableName);
-                return new TableNode(table.TableName, this.storageAccount, this.key);
+                return new TableNode(nonNull(table.TableName, "TableName"), this.storageAccount, this.key);
             });
         }
 
@@ -83,7 +84,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
     private createTable(name: string): Promise<azureStorage.TableService.TableResult> {
         return new Promise((resolve, reject) => {
             let tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
-            tableService.createTable(name, (err: Error, result: azureStorage.TableService.TableResult) => {
+            tableService.createTable(name, (err?: Error, result?: azureStorage.TableService.TableResult) => {
                 if (err) {
                     reject(err);
                 } else {

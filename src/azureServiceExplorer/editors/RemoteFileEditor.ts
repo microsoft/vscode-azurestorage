@@ -90,7 +90,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
 
     private async showEditorFromFile(context: ContextT, localFilePath: string): Promise<void> {
         this.appendLineToOutput("Opening...");
-        const document = await vscode.workspace.openTextDocument(localFilePath);
+        const document: TextDocument | undefined = <TextDocument | undefined>await vscode.workspace.openTextDocument(localFilePath);
         if (document) {
             this.fileMap[localFilePath] = [document, context];
             await vscode.window.showTextDocument(document);

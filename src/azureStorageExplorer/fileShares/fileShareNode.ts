@@ -4,26 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
+import * as copypaste from 'copy-paste';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { DialogResponses, IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
+import { ext } from "../../extensionVariables";
+import { ICopyUrl } from '../../ICopyUrl';
 import { DirectoryNode } from './directoryNode';
 import { askAndCreateChildDirectory } from './directoryUtils';
 import { FileNode } from './fileNode';
 import { askAndCreateEmptyTextFile } from './fileUtils';
 
-import * as copypaste from 'copy-paste';
-import { ext } from "../../extensionVariables";
-import { ICopyUrl } from '../../ICopyUrl';
-
 export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
-    private _continuationToken: azureStorage.common.ContinuationToken;
+    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
         public readonly share: azureStorage.FileService.ShareResult,
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
     }
 
     public label: string = this.share.name;
@@ -42,10 +41,11 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
             this._continuationToken = undefined;
         }
 
-        let fileResults = await this.listFiles(this._continuationToken);
+        // currentToken argument typed incorrectly in SDK
+        let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
-        return []
+        return (<IAzureTreeItem[]>[])
             .concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
                 return new DirectoryNode('', directory, this.share, this.storageAccount, this.key);
             }))
@@ -66,7 +66,7 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return new Promise((resolve, reject) => {
             let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
-            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
+            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -82,7 +82,8 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
         if (result === DialogResponses.deleteResponse) {
             const fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
             await new Promise((resolve, reject) => {
-                fileService.deleteShare(this.share.name, err => {
+                // tslint:disable-next-line:no-any
+                fileService.deleteShare(this.share.name, (err?: any) => {
                     // tslint:disable-next-line:no-void-expression // Grandfathered in
                     err ? reject(err) : resolve();
                 });

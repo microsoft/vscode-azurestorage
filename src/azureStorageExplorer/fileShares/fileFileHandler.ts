@@ -20,7 +20,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
     async downloadFile(node: IAzureNode<FileNode>, filePath: string): Promise<void> {
         let fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
         await new Promise<void>((resolve, reject) => {
-            fileService.getFileToLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+            fileService.getFileToLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, (error?: Error, _result?: azureStorage.FileService.FileResult, _response?: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     reject(error);
                 } else {
@@ -35,13 +35,13 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         let fileProperties = await this.getProperties(node);
         let createOptions: azureStorage.FileService.CreateFileRequestOptions = {};
 
-        if (fileProperties && fileProperties.contentSettings) {
+        if (fileProperties.contentSettings) {
             createOptions.contentSettings = fileProperties.contentSettings;
             createOptions.contentSettings.contentMD5 = undefined; // Needs to be filled in by SDK
         }
 
         await new Promise<void>((resolve, reject) => {
-            fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, createOptions, async (error: Error, _result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+            fileService.createFileFromLocalFile(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, filePath, createOptions, async (error?: Error, _result?: azureStorage.FileService.FileResult, _response?: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     let errorAny = <{ code?: string }>error;
                     if (!!errorAny.code) {
@@ -68,7 +68,7 @@ export class FileFileHandler implements IRemoteFileHandler<IAzureNode<FileNode>>
         let fileService = azureStorage.createFileService(node.treeItem.storageAccount.name, node.treeItem.key.value);
 
         return await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
-            fileService.getFileProperties(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, (error: Error, result: azureStorage.FileService.FileResult, _response: azureStorage.ServiceResponse) => {
+            fileService.getFileProperties(node.treeItem.share.name, node.treeItem.directoryPath, node.treeItem.file.name, (error?: Error, result?: azureStorage.FileService.FileResult, _response?: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     let errorAny = <{ code?: string }>error;
                     if (!!errorAny.code) {

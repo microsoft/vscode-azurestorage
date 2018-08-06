@@ -4,12 +4,11 @@
   **/
 
 import * as azureStorage from "azure-storage";
-import * as path from 'path';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
-
 import * as copypaste from 'copy-paste';
+import * as path from 'path';
 import { SaveDialogOptions, Uri, window } from 'vscode';
 import { DialogResponses, IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { BlobFileHandler } from './blobFileHandler';
@@ -18,8 +17,8 @@ export class BlobNode implements IAzureTreeItem, ICopyUrl {
   constructor(
     public readonly blob: azureStorage.BlobService.BlobResult,
     public readonly container: azureStorage.BlobService.ContainerResult,
-    public readonly storageAccount: StorageAccount,
-    public readonly key: StorageAccountKey) {
+    public readonly storageAccount: StorageAccountWrapper,
+    public readonly key: StorageAccountKeyWrapper) {
   }
 
   public label: string = this.blob.name;
@@ -45,7 +44,8 @@ export class BlobNode implements IAzureTreeItem, ICopyUrl {
     if (result === DialogResponses.deleteResponse) {
       const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
       await new Promise((resolve, reject) => {
-        blobService.deleteBlob(this.container.name, this.blob.name, err => {
+        // tslint:disable-next-line:no-any
+        blobService.deleteBlob(this.container.name, this.blob.name, (err?: any) => {
           // tslint:disable-next-line:no-void-expression // Grandfathered in
           err ? reject(err) : resolve();
         });

@@ -6,17 +6,16 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { StorageAccount, StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
+import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { QueueNode } from './queueNode';
 
-import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-
 export class QueueGroupNode implements IAzureParentTreeItem {
-    private _continuationToken: azureStorage.common.ContinuationToken;
+    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
-        public readonly storageAccount: StorageAccount,
-        public readonly key: StorageAccountKey) {
+        public readonly storageAccount: StorageAccountWrapper,
+        public readonly key: StorageAccountKeyWrapper) {
     }
 
     public label: string = "Queues";
@@ -31,7 +30,8 @@ export class QueueGroupNode implements IAzureParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        let containers = await this.listQueues(this._continuationToken);
+        // currentToken argument typed incorrectly in SDK
+        let containers = await this.listQueues(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 
@@ -52,7 +52,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
     listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise((resolve, reject) => {
             let queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
-            queueService.listQueuesSegmented(currentToken, { maxResults: 50 }, (err: Error, result: azureStorage.QueueService.ListQueueResult) => {
+            queueService.listQueuesSegmented(currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.QueueService.ListQueueResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -84,7 +84,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
     private createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
         return new Promise((resolve, reject) => {
             let queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
-            queueService.createQueue(name, (err: Error, result: azureStorage.QueueService.QueueResult) => {
+            queueService.createQueue(name, (err?: Error, result?: azureStorage.QueueService.QueueResult) => {
                 if (err) {
                     reject(err);
                 } else {
