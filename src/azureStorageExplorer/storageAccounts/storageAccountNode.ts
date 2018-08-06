@@ -88,8 +88,8 @@ export class StorageAccountNode implements IAzureParentTreeItem {
     }
 
     async getPrimaryKey(): Promise<StorageAccountKeyWrapper> {
-        let keys: StorageAccountKey[] = await this.getKeys();
-        let primaryKey = keys.find((key: StorageAccountKey) => {
+        let keys: StorageAccountKeyWrapper[] = await this.getKeys();
+        let primaryKey = keys.find(key => {
             return key.keyName === "key1" || key.keyName === "primaryKey";
         });
 

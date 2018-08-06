@@ -48,7 +48,9 @@ export class StorageAccountWrapper {
 export class StorageAccountKeyWrapper {
     constructor(_key: StorageAccountKey) {
         copyNonNullProperty(_key, this, 'value');
+        copyNonNullProperty(_key, this, 'keyName');
     }
 
     readonly value: string;
+    readonly keyName: string;
 }
