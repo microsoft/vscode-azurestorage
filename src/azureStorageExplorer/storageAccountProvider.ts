@@ -14,7 +14,7 @@ export class StorageAccountProvider implements IChildProvider {
     public childTypeLabel: string = "Storage Account";
 
     async loadMoreChildren(node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
-        let storageManagementClient = new StorageManagementClient(node.credentials, node.subscriptionId);
+        let storageManagementClient = new StorageManagementClient(node.credentials, node.subscriptionId, node.environment.resourceManagerEndpointUrl);
 
         let accounts = await storageManagementClient.storageAccounts.list();
         let accountNodes = accounts.map((storageAccount: StorageAccount) => {
