@@ -10,6 +10,9 @@
             "args": [
                 "--extensionDevelopmentPath=${workspaceRoot}"
             ],
+            "env": {
+                "DEBUGTELEMETRY": "1"
+            },
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [
@@ -26,6 +29,11 @@
                 "--extensionDevelopmentPath=${workspaceRoot}",
                 "--extensionTestsPath=${workspaceRoot}/out/test"
             ],
+            "env": {
+                "MOCHA_grep": "", // RegExp of tests to run (empty for all)
+                "MOCHA_enableTimeouts": "0", // Disable time-outs
+                "DEBUGTELEMETRY": "1"
+            },
             "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": [

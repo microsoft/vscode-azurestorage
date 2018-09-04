@@ -640,7 +640,7 @@
 		"lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
 		"lint-fix": "tslint --project tsconfig.json -t verbose --fix",
 		"postinstall": "node ./node_modules/vscode/bin/install",
-		"test": "npm run build && node ./node_modules/vscode/bin/test",
+		"test": "npm run build && cross-env DEBUGTELEMETRY=1 node ./node_modules/vscode/bin/test",
 		"watch": "tsc -watch -p ./",
 		"all": "npm i && npm run lint && npm test"
 	},
@@ -652,6 +652,7 @@
 		"@types/node": "^7.0.43",
 		"@types/opn": "5.1.0",
 		"@types/winreg": "1.2.30",
+		"cross-env": "^5.2.0",
 		"gulp": "^3.9.1",
 		"tslint": "^5.7.0",
 		"tslint-microsoft-contrib": "5.0.1",
@@ -672,8 +673,8 @@
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
 		"opn": "^5.3.0",
-		"vscode-extension-telemetry": "^0.0.18",
 		"vscode-azureextensionui": "^0.17.0",
+		"vscode-extension-telemetry": "^0.0.18",
 		"winreg": "^1.2.3"
 	}
 }
