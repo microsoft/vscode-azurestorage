@@ -7,7 +7,7 @@
 
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzureTreeDataProvider, AzureUserInput, IActionContext, IAzureNode, IAzureTreeItem, IAzureUserInput, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, AzureUserInput, createTelemetryReporter, IActionContext, IAzureNode, IAzureTreeItem, IAzureUserInput, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
@@ -23,7 +23,6 @@ import { StorageAccountProvider } from './azureStorageExplorer/storageAccountPro
 import { registerStorageAccountActionHandlers } from './azureStorageExplorer/storageAccounts/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './azureStorageExplorer/tables/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/tableGroupActionHandlers';
-import { Reporter } from './components/telemetry/reporter';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
@@ -36,13 +35,13 @@ export function activate(context: vscode.ExtensionContext): void {
     ext.outputChannel = vscode.window.createOutputChannel("Azure Storage");
     context.subscriptions.push(ext.outputChannel);
 
-    context.subscriptions.push(new Reporter(context));
-
     const ui: IAzureUserInput = new AzureUserInput(context.globalState);
     ext.ui = ui;
 
     const tree = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNode');
     ext.tree = tree;
+
+    ext.reporter = createTelemetryReporter(context);
 
     registerBlobActionHandlers();
     registerBlobContainerActionHandlers();
