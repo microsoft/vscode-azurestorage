@@ -37,11 +37,12 @@ let options: { [key: string]: string | boolean | number } = {
 //
 // See https://github.com/mochajs/mocha/wiki/Using-mocha-programmatically#set-options for all available options
 
-for (let envVar of Object.keys(process.env)) {
+let environmentVariables = <{ [key: string]: string }>process.env;
+for (let envVar of Object.keys(environmentVariables)) {
     let match = envVar.match(/^mocha_(.+)/i);
     if (match) {
         let [, option] = match;
-        let value: string | number = process.env[envVar];
+        let value: string | number = environmentVariables[envVar];
         if (typeof value === 'string' && !isNaN(parseInt(value, undefined))) {
             value = parseInt(value, undefined);
         }
@@ -50,6 +51,7 @@ for (let envVar of Object.keys(process.env)) {
 }
 console.warn(`Mocha options: ${JSON.stringify(options, null, 2)}`);
 
+// tslint:disable-next-line: no-unsafe-any
 testRunner.configure(options);
 
 module.exports = testRunner;
