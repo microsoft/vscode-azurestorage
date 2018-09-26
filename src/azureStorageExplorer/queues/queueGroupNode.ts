@@ -6,16 +6,18 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
-import { QueueNode } from './queueNode';
+import { QueueTreeItem } from './queueNode';
 
-export class QueueGroupNode implements IAzureParentTreeItem {
+export class QueueGroupTreeItem extends AzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
+        parent: AzureParentTreeItem,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly key: StorageAccountKeyWrapper) {
+        super(parent);
     }
 
     public label: string = "Queues";
@@ -25,7 +27,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
     };
 
-    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -36,7 +38,8 @@ export class QueueGroupNode implements IAzureParentTreeItem {
         this._continuationToken = continuationToken;
 
         return entries.map((queue: azureStorage.QueueService.QueueResult) => {
-            return new QueueNode(
+            return new QueueTreeItem(
+                this,
                 queue,
                 this.storageAccount,
                 this.key);
@@ -44,7 +47,7 @@ export class QueueGroupNode implements IAzureParentTreeItem {
 
     }
 
-    hasMoreChildren(): boolean {
+    hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
     }
 
@@ -62,18 +65,18 @@ export class QueueGroupNode implements IAzureParentTreeItem {
         });
     }
 
-    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
         const queueName = await window.showInputBox({
             placeHolder: 'Enter a name for the new queue',
-            validateInput: QueueGroupNode.validateQueueName
+            validateInput: QueueGroupTreeItem.validateQueueName
         });
 
         if (queueName) {
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-                showCreatingNode(queueName);
+                showCreatingTreeItem(queueName);
                 progress.report({ message: `Azure Storage: Creating queue '${queueName}'` });
                 const share = await this.createQueue(queueName);
-                return new QueueNode(share, this.storageAccount, this.key);
+                return new QueueTreeItem(this, share, this.storageAccount, this.key);
             });
         }
 

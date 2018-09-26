@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAzureNode, registerCommand } from 'vscode-azureextensionui';
+import { registerCommand } from 'vscode-azureextensionui';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
-import { QueueNode } from './queueNode';
+import { QueueTreeItem } from './queueNode';
 
 export function registerQueueActionHandlers(): void {
     registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);
-    registerCommand("azureStorage.deleteQueue", async (node: IAzureNode<QueueNode>) => await node.deleteNode());
+    registerCommand("azureStorage.deleteQueue", async (treeItem: QueueTreeItem) => await treeItem.deleteTreeItem());
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-function openQueueInStorageExplorer(node: IAzureNode<QueueNode>): Promise<void> {
-    let accountId = node.treeItem.storageAccount.id;
+function openQueueInStorageExplorer(treeItem: QueueTreeItem): Promise<void> {
+    let accountId = treeItem.storageAccount.id;
     const resourceType = "Azure.Queue";
-    let resourceName = node.treeItem.queue.name;
+    let resourceName = treeItem.queue.name;
 
-    return storageExplorerLauncher.openResource(accountId, node.subscriptionId, resourceType, resourceName);
+    return storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
 }

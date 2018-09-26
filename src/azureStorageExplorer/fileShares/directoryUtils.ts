@@ -6,15 +6,15 @@
 import * as azureStorage from "azure-storage";
 import * as path from "path";
 import { ProgressLocation, window } from "vscode";
-import { IAzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
-import { DirectoryNode } from "./directoryNode";
+import { DirectoryTreeItem } from "./directoryNode";
 import { deleteFile } from "./fileUtils";
 import { validateDirectoryName } from "./validateNames";
 
 // Supports both file share and directory parents
-export async function askAndCreateChildDirectory(parentPath: string, share: azureStorage.FileService.ShareResult, storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+export async function askAndCreateChildDirectory(parent: AzureParentTreeItem, parentPath: string, share: azureStorage.FileService.ShareResult, storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper, showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
     const dirName = await window.showInputBox({
         placeHolder: 'Enter a name for the new directory',
         validateInput: validateDirectoryName
@@ -22,7 +22,7 @@ export async function askAndCreateChildDirectory(parentPath: string, share: azur
 
     if (dirName) {
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-            showCreatingNode(dirName);
+            showCreatingTreeItem(dirName);
             progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
             let dir = await createDirectory(share, storageAccount, key, parentPath, dirName);
 
@@ -30,7 +30,7 @@ export async function askAndCreateChildDirectory(parentPath: string, share: azur
             // Remove it here to be consistent.
             dir.name = path.basename(dir.name);
 
-            return new DirectoryNode(parentPath, dir, share, storageAccount, key);
+            return new DirectoryTreeItem(parent, parentPath, dir, share, storageAccount, key);
         });
     }
 

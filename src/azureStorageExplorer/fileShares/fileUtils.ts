@@ -6,13 +6,13 @@
 import * as azureStorage from "azure-storage";
 import { FileService } from "azure-storage";
 import { ProgressLocation, window } from "vscode";
-import { IAzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from "vscode-azureextensionui";
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
-import { FileNode } from "./fileNode";
+import { FileTreeItem } from "./fileNode";
 import { validateFileName } from "./validateNames";
 
 // Currently only supports creating block blobs
-export async function askAndCreateEmptyTextFile(directoryPath: string, share: FileService.ShareResult, storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem, directoryPath: string, share: FileService.ShareResult, storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper, showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
     const fileName = await window.showInputBox({
         placeHolder: 'Enter a name for the new file',
         validateInput: validateFileName
@@ -20,11 +20,11 @@ export async function askAndCreateEmptyTextFile(directoryPath: string, share: Fi
 
     if (fileName) {
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-            showCreatingNode(fileName);
+            showCreatingTreeItem(fileName);
             progress.report({ message: `Azure Storage: Creating file '${fileName}'` });
             const file = await createFile(directoryPath, fileName, share, storageAccount, key);
             const actualFile = await getFile(directoryPath, file.name, share, storageAccount, key);
-            return new FileNode(actualFile, directoryPath, share, storageAccount, key);
+            return new FileTreeItem(parent, actualFile, directoryPath, share, storageAccount, key);
         });
     }
 

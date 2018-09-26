@@ -5,60 +5,60 @@
 
 import * as assert from 'assert';
 import { commands, window } from 'vscode';
-import { DialogResponses, IActionContext, IAzureNode, IAzureParentNode, UserCancelledError } from "vscode-azureextensionui";
+import { AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
-import { BlobContainerNode } from "./blobContainers/blobContainerNode";
-import { StorageAccountNode } from "./storageAccounts/storageAccountNode";
+import { BlobContainerTreeItem } from "./blobContainers/blobContainerNode";
+import { StorageAccountTreeItem } from "./storageAccounts/storageAccountNode";
 
 /**
- * Given a node argument for a command, if it is:
+ * Given a treeItem argument for a command, if it is:
  *   1) undefined, then query the user for a storage account
- *   2) a storage account node, then return it
- *   3) a blob container node, then return the storage account node
+ *   2) a storage account treeItem, then return it
+ *   3) a blob container treeItem, then return the storage account treeItem
  *   4) anything else, then throw an internal error
  */
-export async function selectStorageAccountNodeForCommand(
-    node: IAzureNode | undefined,
+export async function selectStorageAccountTreeItemForCommand(
+    treeItem: AzureTreeItem | undefined,
     actionContext: IActionContext,
     options: { mustBeWebsiteCapable: boolean, askToConfigureWebsite: boolean }
-): Promise<IAzureParentNode<StorageAccountNode>> {
-    // Node should be one of:
+): Promise<StorageAccountTreeItem> {
+    // treeItem should be one of:
     //   undefined
-    //   a storage account node
-    //   a blob container node
+    //   a storage account treeItem
+    //   a blob container treeItem
 
-    if (!node) {
-        node = <IAzureNode<StorageAccountNode>>await ext.tree.showNodePicker(StorageAccountNode.contextValue);
+    if (!treeItem) {
+        treeItem = <StorageAccountTreeItem>await ext.tree.showTreePicker(StorageAccountTreeItem.contextValue);
     }
 
-    let storageOrContainerNode = <IAzureNode<StorageAccountNode> | IAzureNode<BlobContainerNode>>node;
+    let storageOrContainerTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>treeItem;
     assert(
-        storageOrContainerNode.treeItem instanceof StorageAccountNode || storageOrContainerNode.treeItem instanceof BlobContainerNode,
-        `Internal error: Incorrect node type "${storageOrContainerNode.treeItem.contextValue}" passed to selectStorageAccountNodeForCommand()`);
+        storageOrContainerTreeItem instanceof StorageAccountTreeItem || storageOrContainerTreeItem instanceof BlobContainerTreeItem,
+        `Internal error: Incorrect treeItem type "${storageOrContainerTreeItem.contextValue}" passed to selectStorageAccountTreeItemForCommand()`);
 
-    let accountNode: IAzureParentNode<StorageAccountNode>;
-    if (storageOrContainerNode.treeItem instanceof BlobContainerNode) {
-        // Currently the portal only allows configuring at the storage account level, so retrieve the storage account node
-        accountNode = storageOrContainerNode.treeItem.getStorageAccountNode(storageOrContainerNode);
+    let accountTreeItem: StorageAccountTreeItem;
+    if (storageOrContainerTreeItem instanceof BlobContainerTreeItem) {
+        // Currently the portal only allows configuring at the storage account level, so retrieve the storage account treeItem
+        accountTreeItem = storageOrContainerTreeItem.getStorageAccountTreeItem(storageOrContainerTreeItem);
     } else {
-        assert(storageOrContainerNode.treeItem instanceof StorageAccountNode);
-        accountNode = <IAzureParentNode<StorageAccountNode>>node;
+        assert(storageOrContainerTreeItem instanceof StorageAccountTreeItem);
+        accountTreeItem = <StorageAccountTreeItem>treeItem;
     }
 
     if (options.mustBeWebsiteCapable) {
-        let hostingStatus = await accountNode.treeItem.getWebsiteHostingStatus();
-        await accountNode.treeItem.ensureHostingCapable(hostingStatus);
+        let hostingStatus = await accountTreeItem.getWebsiteHostingStatus();
+        await accountTreeItem.ensureHostingCapable(hostingStatus);
 
         if (options.askToConfigureWebsite && !hostingStatus.enabled) {
             let result = await window.showInformationMessage(
-                `Website hosting is not enabled on storage account "${accountNode.treeItem.label}". Would you like to go to the portal to enable it?`,
+                `Website hosting is not enabled on storage account "${accountTreeItem.label}". Would you like to go to the portal to enable it?`,
                 DialogResponses.yes,
                 DialogResponses.no);
             let enableResponse = (result === DialogResponses.yes);
             actionContext.properties.enableResponse = String(enableResponse);
             actionContext.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
             if (enableResponse) {
-                await commands.executeCommand("azureStorage.configureStaticWebsite", accountNode);
+                await commands.executeCommand("azureStorage.configureStaticWebsite", accountTreeItem);
             }
             // Either way can't continue
             throw new UserCancelledError();
@@ -66,5 +66,5 @@ export async function selectStorageAccountNodeForCommand(
         }
     }
 
-    return accountNode;
+    return accountTreeItem;
 }

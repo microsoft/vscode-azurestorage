@@ -5,13 +5,13 @@
 
 import * as copypaste from 'copy-paste';
 import * as vscode from "vscode";
-import { IActionContext, IAzureNode, IAzureParentNode, registerCommand, TelemetryProperties } from 'vscode-azureextensionui';
+import { IActionContext, registerCommand, TelemetryProperties } from 'vscode-azureextensionui';
 import * as ext from "../../constants";
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
-import { BlobContainerNode } from "../blobContainers/blobContainerNode";
+import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
 import { showWorkspaceFoldersQuickPick } from "../blobContainers/quickPickUtils";
-import { selectStorageAccountNodeForCommand } from '../selectStorageAccountNodeForCommand';
-import { StorageAccountNode } from './storageAccountNode';
+import { selectStorageAccountTreeItemForCommand } from '../selectStorageAccountNodeForCommand';
+import { StorageAccountTreeItem } from './storageAccountNode';
 
 export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
@@ -20,30 +20,30 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
 }
 
-async function openStorageAccountInStorageExplorer(node: IAzureNode<StorageAccountNode>): Promise<void> {
-    let accountId = node.treeItem.storageAccount.id;
+async function openStorageAccountInStorageExplorer(treeItem: StorageAccountTreeItem): Promise<void> {
+    let accountId = treeItem.storageAccount.id;
 
-    await storageExplorerLauncher.openResource(accountId, node.subscriptionId);
+    await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId);
 }
 
-async function copyPrimaryKey(node: IAzureNode<StorageAccountNode>): Promise<void> {
-    let primaryKey = await node.treeItem.getPrimaryKey();
+async function copyPrimaryKey(treeItem: StorageAccountTreeItem): Promise<void> {
+    let primaryKey = await treeItem.getPrimaryKey();
     copypaste.copy(primaryKey.value);
 }
 
-async function copyConnectionString(node: IAzureNode<StorageAccountNode>): Promise<void> {
-    let connectionString = await node.treeItem.getConnectionString();
+async function copyConnectionString(treeItem: StorageAccountTreeItem): Promise<void> {
+    let connectionString = await treeItem.getConnectionString();
     copypaste.copy(connectionString);
 }
 
-async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | IAzureParentNode<StorageAccountNode> | IAzureParentNode<BlobContainerNode>): Promise<void> {
+async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {
     let properties: TelemetryProperties & {
         contextValue?: string;
         enableResponse?: string;
     } = this.properties;
 
     let sourcePath: string | undefined;
-    let destNode: IAzureParentNode<StorageAccountNode> | IAzureParentNode<BlobContainerNode> | undefined;
+    let destTreeItem: StorageAccountTreeItem | BlobContainerTreeItem | undefined;
 
     // Disambiguate context this was executed from
     if (target instanceof vscode.Uri) {
@@ -51,17 +51,17 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
         sourcePath = target.fsPath;
         properties.contextValue = 'Folder';
     } else {
-        // Command called from command palette or from storage account/container node
-        destNode = <IAzureParentNode<StorageAccountNode> | IAzureParentNode<BlobContainerNode>>target;
+        // Command called from command palette or from storage account/container treeItem
+        destTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>target;
         // tslint:disable-next-line:strict-boolean-expressions
-        properties.contextValue = (destNode && destNode.treeItem.contextValue) || 'CommandPalette';
+        properties.contextValue = (destTreeItem && destTreeItem.contextValue) || 'CommandPalette';
     }
 
     // Ask first for destination account if needed since it might require configuration and don't want to have user
     // select source location only to have to possibly cancel.
 
-    let destAccountNode: IAzureParentNode<StorageAccountNode> = await selectStorageAccountNodeForCommand(
-        destNode,
+    let destAccountTreeItem: StorageAccountTreeItem = await selectStorageAccountTreeItemForCommand(
+        destTreeItem,
         this, // actionContext
         {
             mustBeWebsiteCapable: true,
@@ -74,10 +74,10 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | I
     }
 
     // Get the $web container
-    let destContainerNode = await destAccountNode.treeItem.getWebsiteCapableContainer(destAccountNode);
-    if (!destContainerNode) {
-        throw new Error(`Could not find $web blob container for storage account "${destAccountNode.treeItem.label}"`);
+    let destContainerTreeItem = await destAccountTreeItem.getWebsiteCapableContainer();
+    if (!destContainerTreeItem) {
+        throw new Error(`Could not find $web blob container for storage account "${destAccountTreeItem.label}"`);
     }
 
-    return destContainerNode.treeItem.deployStaticWebsite(destContainerNode, this, sourcePath);
+    return destContainerTreeItem.deployStaticWebsite(this, sourcePath);
 }
