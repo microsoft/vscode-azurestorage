@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.4.2 - 2018-09-28
+
+### Fixed
+- Can get a command not found error attempting to run some commands before extension is activated [#232](https://github.com/Microsoft/vscode-azurestorage/issues/232)
+
 ## 0.4.1 - 2018-07-30
 
 ### Changed
