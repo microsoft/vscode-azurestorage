@@ -8,7 +8,7 @@ import { packageLint } from 'vscode-azureextensionui';
 
 suite('package lint', async () => {
     let pkgContents = fse.readFileSync(require.resolve('../../package.json')); // Relative to 'out/test'
-    let pkg = JSON.parse(pkgContents.toString());
+    let pkg: {} = JSON.parse; (pkgContents.toString());
 
     packageLint(
         pkg,
