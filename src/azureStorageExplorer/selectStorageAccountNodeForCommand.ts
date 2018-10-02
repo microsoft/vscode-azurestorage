@@ -28,7 +28,7 @@ export async function selectStorageAccountTreeItemForCommand(
     //   a blob container treeItem
 
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.tree.showTreePicker(StorageAccountTreeItem.contextValue);
+        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
     }
 
     let storageOrContainerTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>treeItem;
