@@ -4,13 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fse from 'fs-extra';
-import { packageLint } from 'vscode-azureextensionui';
+import * as vscode from 'vscode';
+import { addPackageLintSuites } from 'vscode-azureextensiondev';
+import { ext } from '../src/extensionVariables';
 
 suite('package lint', async () => {
     let pkgContents = fse.readFileSync(require.resolve('../../package.json')); // Relative to 'out/test'
-    let pkg: {} = JSON.parse; (pkgContents.toString());
+    let pkg: {} = JSON.parse(pkgContents.toString());
 
-    packageLint(
+    addPackageLintSuites(
+        () => ext.context,
+        async () => await vscode.commands.getCommands(), // asdf
         pkg,
         {
             commandsRegisteredButNotInPackage: [
