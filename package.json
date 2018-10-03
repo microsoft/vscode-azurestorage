@@ -679,7 +679,7 @@
 		"@types/fs-extra": "=5.0.2",
 		"@types/glob": "^5.0.35",
 		"@types/mocha": "^2.2.42",
-		"@types/node": "^7.0.43",
+		"@types/node": "^7.0.71",
 		"@types/opn": "5.1.0",
 		"@types/winreg": "1.2.30",
 		"cross-env": "^5.2.0",
@@ -687,7 +687,7 @@
 		"tslint": "^5.7.0",
 		"tslint-microsoft-contrib": "5.0.1",
 		"typescript": "^2.5.3",
-		"vsce": "^1.37.5",
+		"vsce": "^1.51.1",
 		"vscode": "^1.1.5"
 	},
 	"extensionDependencies": [
