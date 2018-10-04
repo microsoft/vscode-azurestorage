@@ -6,16 +6,18 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { nonNull, StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
-import { TableNode } from './tableNode';
+import { TableTreeItem } from './tableNode';
 
-export class TableGroupNode implements IAzureParentTreeItem {
+export class TableGroupTreeItem extends AzureParentTreeItem {
     private _continuationToken: azureStorage.TableService.ListTablesContinuationToken | undefined;
 
     constructor(
+        parent: AzureParentTreeItem,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly key: StorageAccountKeyWrapper) {
+        super(parent);
     }
 
     public label: string = "Tables";
@@ -25,7 +27,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.png')
     };
 
-    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -36,7 +38,8 @@ export class TableGroupNode implements IAzureParentTreeItem {
         this._continuationToken = continuationToken;
 
         return entries.map((table: string) => {
-            return new TableNode(
+            return new TableTreeItem(
+                this,
                 table,
                 this.storageAccount,
                 this.key);
@@ -44,7 +47,7 @@ export class TableGroupNode implements IAzureParentTreeItem {
 
     }
 
-    hasMoreChildren(): boolean {
+    hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
     }
 
@@ -62,18 +65,18 @@ export class TableGroupNode implements IAzureParentTreeItem {
         });
     }
 
-    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
         const tableName = await window.showInputBox({
             placeHolder: 'Enter a name for the new table',
-            validateInput: TableGroupNode.validateTableName
+            validateInput: TableGroupTreeItem.validateTableName
         });
 
         if (tableName) {
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-                showCreatingNode(tableName);
+                showCreatingTreeItem(tableName);
                 progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
                 const table = await this.createTable(tableName);
-                return new TableNode(nonNull(table.TableName, "TableName"), this.storageAccount, this.key);
+                return new TableTreeItem(this, nonNull(table.TableName, "TableName"), this.storageAccount, this.key);
             });
         }
 

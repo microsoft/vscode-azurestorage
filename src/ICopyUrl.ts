@@ -5,8 +5,6 @@
 
 'use strict';
 
-import { IAzureNode } from "vscode-azureextensionui";
-
 export interface ICopyUrl {
-    copyUrl(_node: IAzureNode): void;
+    copyUrl(): void;
 }

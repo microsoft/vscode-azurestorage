@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IAzureParentNode, registerCommand } from 'vscode-azureextensionui';
-import { FileShareGroupNode } from './fileShareGroupNode';
+import { registerCommand } from 'vscode-azureextensionui';
+import { FileShareGroupTreeItem } from './fileShareGroupNode';
 
 export function registerFileShareGroupActionHandlers(): void {
-    registerCommand("azureStorage.createFileShare", async (node: IAzureParentNode<FileShareGroupNode>) => await node.createChild());
+    registerCommand("azureStorage.createFileShare", async (treeItem: FileShareGroupTreeItem) => await treeItem.createChild());
 }

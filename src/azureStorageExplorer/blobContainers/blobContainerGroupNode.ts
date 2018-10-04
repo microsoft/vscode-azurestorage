@@ -7,16 +7,18 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
-import { BlobContainerNode } from './blobContainerNode';
+import { BlobContainerTreeItem } from "./blobContainerNode";
 
-export class BlobContainerGroupNode implements IAzureParentTreeItem {
+export class BlobContainerGroupTreeItem extends AzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
+        parent: AzureParentTreeItem,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly key: StorageAccountKeyWrapper) {
+        super(parent);
     }
 
     public label: string = "Blob Containers";
@@ -26,7 +28,7 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
     };
 
-    public async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+    public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -36,11 +38,11 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         this._continuationToken = continuationToken;
 
         return entries.map((container: azureStorage.BlobService.ContainerResult) => {
-            return new BlobContainerNode(container, this.storageAccount, this.key);
+            return new BlobContainerTreeItem(this, container, this.storageAccount, this.key);
         });
     }
 
-    public hasMoreChildren(): boolean {
+    public hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
     }
 
@@ -59,18 +61,18 @@ export class BlobContainerGroupNode implements IAzureParentTreeItem {
         });
     }
 
-    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
         const containerName = await vscode.window.showInputBox({
             placeHolder: 'Enter a name for the new blob container',
-            validateInput: BlobContainerGroupNode.validateContainerName
+            validateInput: BlobContainerGroupTreeItem.validateContainerName
         });
 
         if (containerName) {
             return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-                showCreatingNode(containerName);
+                showCreatingTreeItem(containerName);
                 progress.report({ message: `Azure Storage: Creating blob container '${containerName}'` });
                 const container = await this.createBlobContainer(containerName);
-                return new BlobContainerNode(container, this.storageAccount, this.key);
+                return new BlobContainerTreeItem(this, container, this.storageAccount, this.key);
             });
         }
 

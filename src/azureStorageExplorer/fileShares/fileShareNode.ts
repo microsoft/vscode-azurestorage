@@ -7,22 +7,24 @@ import * as azureStorage from "azure-storage";
 import * as copypaste from 'copy-paste';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
-import { DialogResponses, IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
-import { DirectoryNode } from './directoryNode';
+import { DirectoryTreeItem } from './directoryNode';
 import { askAndCreateChildDirectory } from './directoryUtils';
-import { FileNode } from './fileNode';
+import { FileTreeItem } from './fileNode';
 import { askAndCreateEmptyTextFile } from './fileUtils';
 
-export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
+export class FileShareTreeItem extends AzureParentTreeItem implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
+        parent: AzureParentTreeItem,
         public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly key: StorageAccountKeyWrapper) {
+        super(parent);
     }
 
     public label: string = this.share.name;
@@ -32,11 +34,11 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
     };
 
-    hasMoreChildren(): boolean {
+    hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
     }
 
-    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -45,16 +47,16 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
         let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
-        return (<IAzureTreeItem[]>[])
+        return (<AzureTreeItem[]>[])
             .concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
-                return new DirectoryNode('', directory, this.share, this.storageAccount, this.key);
+                return new DirectoryTreeItem(this, '', directory, this.share, this.storageAccount, this.key);
             }))
             .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
-                return new FileNode(file, '', this.share, this.storageAccount, this.key);
+                return new FileTreeItem(this, file, '', this.share, this.storageAccount, this.key);
             }));
     }
 
-    public async copyUrl(_node: IAzureParentNode): Promise<void> {
+    public async copyUrl(): Promise<void> {
         let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
         let url = fileService.getUrl(this.share.name, "");
         copypaste.copy(url);
@@ -76,7 +78,7 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
         });
     }
 
-    public async deleteTreeItem(_node: IAzureNode): Promise<void> {
+    public async deleteTreeItemImpl(): Promise<void> {
         const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
         const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
@@ -93,11 +95,11 @@ export class FileShareNode implements IAzureParentTreeItem, ICopyUrl {
         }
     }
 
-    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void, userOptions?: {}): Promise<IAzureTreeItem> {
-        if (userOptions === FileNode.contextValue) {
-            return askAndCreateEmptyTextFile('', this.share, this.storageAccount, this.key, showCreatingNode);
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void, userOptions?: {}): Promise<AzureTreeItem> {
+        if (userOptions === FileTreeItem.contextValue) {
+            return askAndCreateEmptyTextFile(this, '', this.share, this.storageAccount, this.key, showCreatingTreeItem);
         } else {
-            return askAndCreateChildDirectory('', this.share, this.storageAccount, this.key, showCreatingNode);
+            return askAndCreateChildDirectory(this, '', this.share, this.storageAccount, this.key, showCreatingTreeItem);
         }
     }
 }

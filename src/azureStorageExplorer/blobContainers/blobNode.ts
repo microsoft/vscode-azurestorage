@@ -7,18 +7,20 @@ import * as azureStorage from "azure-storage";
 import * as copypaste from 'copy-paste';
 import * as path from 'path';
 import { SaveDialogOptions, Uri, window } from 'vscode';
-import { DialogResponses, IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { BlobFileHandler } from './blobFileHandler';
 
-export class BlobNode implements IAzureTreeItem, ICopyUrl {
+export class BlobTreeItem extends AzureTreeItem implements ICopyUrl {
   constructor(
+    parent: AzureParentTreeItem,
     public readonly blob: azureStorage.BlobService.BlobResult,
     public readonly container: azureStorage.BlobService.ContainerResult,
     public readonly storageAccount: StorageAccountWrapper,
     public readonly key: StorageAccountKeyWrapper) {
+    super(parent);
   }
 
   public label: string = this.blob.name;
@@ -30,7 +32,7 @@ export class BlobNode implements IAzureTreeItem, ICopyUrl {
 
   public commandId: string = 'azureStorage.editBlob';
 
-  public async copyUrl(_node: IAzureNode): Promise<void> {
+  public async copyUrl(): Promise<void> {
     let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
     let url = blobService.getUrl(this.container.name, this.blob.name);
     copypaste.copy(url);
@@ -38,7 +40,7 @@ export class BlobNode implements IAzureTreeItem, ICopyUrl {
     ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
   }
 
-  public async deleteTreeItem(_node: IAzureNode): Promise<void> {
+  public async deleteTreeItemImpl(): Promise<void> {
     const message: string = `Are you sure you want to delete the blob '${this.label}'?`;
     const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
     if (result === DialogResponses.deleteResponse) {
@@ -55,9 +57,9 @@ export class BlobNode implements IAzureTreeItem, ICopyUrl {
     }
   }
 
-  public async download(node: IAzureNode<BlobNode>): Promise<void> {
+  public async download(): Promise<void> {
     const handler = new BlobFileHandler();
-    await handler.checkCanDownload(node);
+    await handler.checkCanDownload(this);
 
     const extension = path.extname(this.blob.name);
     const filters = {
@@ -74,7 +76,7 @@ export class BlobNode implements IAzureTreeItem, ICopyUrl {
       defaultUri: Uri.file(this.blob.name)
     });
     if (uri && uri.scheme === 'file') {
-      await handler.downloadFile(node, uri.fsPath);
+      await handler.downloadFile(this, uri.fsPath);
     }
   }
 }

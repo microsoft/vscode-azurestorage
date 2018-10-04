@@ -6,14 +6,16 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri, window } from 'vscode';
-import { DialogResponses, IAzureNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 
-export class QueueNode implements IAzureTreeItem {
+export class QueueTreeItem extends AzureTreeItem {
     constructor(
+        parent: AzureParentTreeItem,
         public readonly queue: azureStorage.QueueService.QueueResult,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly key: StorageAccountKeyWrapper) {
+        super(parent);
     }
 
     public label: string = this.queue.name;
@@ -23,7 +25,7 @@ export class QueueNode implements IAzureTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
     };
 
-    public async deleteTreeItem(_node: IAzureNode): Promise<void> {
+    public async deleteTreeItemImpl(): Promise<void> {
         const message: string = `Are you sure you want to delete queue '${this.label}' and all its contents?`;
         const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {

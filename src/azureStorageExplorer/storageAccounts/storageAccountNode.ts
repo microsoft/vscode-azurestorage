@@ -3,22 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
 import { StorageManagementClient } from 'azure-arm-storage';
 import * as azureStorage from "azure-storage";
 // tslint:disable-next-line:no-require-imports
 import opn = require('opn');
 import * as path from 'path';
 import { commands, MessageItem, Uri, window } from 'vscode';
-import { IAzureNode, IAzureParentNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
 import * as ext from "../../constants";
-import { BlobContainerGroupNode } from '../blobContainers/blobContainerGroupNode';
-import { BlobContainerNode } from "../blobContainers/blobContainerNode";
-import { FileShareGroupNode } from '../fileShares/fileShareGroupNode';
-import { QueueGroupNode } from '../queues/queueGroupNode';
-import { TableGroupNode } from '../tables/tableGroupNode';
+import { BlobContainerGroupTreeItem } from '../blobContainers/blobContainerGroupNode';
+import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
+import { FileShareGroupTreeItem } from '../fileShares/fileShareGroupNode';
+import { QueueGroupTreeItem } from '../queues/queueGroupNode';
+import { TableGroupTreeItem } from '../tables/tableGroupNode';
 
 export type WebsiteHostingStatus = {
     capable: boolean;
@@ -29,61 +28,63 @@ export type WebsiteHostingStatus = {
 
 type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
 
-export class StorageAccountNode implements IAzureParentTreeItem {
+export class StorageAccountTreeItem extends AzureParentTreeItem {
     constructor(
+        parent: AzureParentTreeItem,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly storageManagementClient: StorageManagementClient) {
+        super(parent);
     }
 
     public id: string = this.storageAccount.id;
     public label: string = this.storageAccount.name;
     public static contextValue: string = 'azureStorageAccount';
-    public contextValue: string = StorageAccountNode.contextValue;
+    public contextValue: string = StorageAccountTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount_16x.png'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount_16x.png')
     };
 
-    private _blobContainerGroupNodePromise: Promise<BlobContainerGroupNode> | undefined;
+    private _blobContainerGroupTreeItemPromise: Promise<BlobContainerGroupTreeItem> | undefined;
 
-    private async getBlobContainerGroupNode(): Promise<BlobContainerGroupNode> {
-        const createBlobContainerGroupNode = async (): Promise<BlobContainerGroupNode> => {
+    private async getBlobContainerGroupTreeItem(): Promise<BlobContainerGroupTreeItem> {
+        const createBlobContainerGroupTreeItem = async (): Promise<BlobContainerGroupTreeItem> => {
             let primaryKey = await this.getPrimaryKey();
-            return new BlobContainerGroupNode(this.storageAccount, new StorageAccountKeyWrapper(primaryKey));
+            return new BlobContainerGroupTreeItem(this, this.storageAccount, new StorageAccountKeyWrapper(primaryKey));
         };
 
-        if (!this._blobContainerGroupNodePromise) {
-            this._blobContainerGroupNodePromise = createBlobContainerGroupNode();
+        if (!this._blobContainerGroupTreeItemPromise) {
+            this._blobContainerGroupTreeItemPromise = createBlobContainerGroupTreeItem();
         }
 
-        return await this._blobContainerGroupNodePromise;
+        return await this._blobContainerGroupTreeItemPromise;
     }
 
-    async loadMoreChildren(_node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
+    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem[]> {
         let primaryKey = await this.getPrimaryKey();
         let primaryEndpoints = this.storageAccount.primaryEndpoints;
-        let groupNodes: IAzureTreeItem[] = [];
+        let groupTreeItems: AzureTreeItem[] = [];
 
         if (!!primaryEndpoints.blob) {
-            groupNodes.push(await this.getBlobContainerGroupNode());
+            groupTreeItems.push(await this.getBlobContainerGroupTreeItem());
         }
 
         if (!!primaryEndpoints.file) {
-            groupNodes.push(new FileShareGroupNode(this.storageAccount, primaryKey));
+            groupTreeItems.push(new FileShareGroupTreeItem(this, this.storageAccount, primaryKey));
         }
 
         if (!!primaryEndpoints.queue) {
-            groupNodes.push(new QueueGroupNode(this.storageAccount, primaryKey));
+            groupTreeItems.push(new QueueGroupTreeItem(this, this.storageAccount, primaryKey));
         }
 
         if (!!primaryEndpoints.table) {
-            groupNodes.push(new TableGroupNode(this.storageAccount, primaryKey));
+            groupTreeItems.push(new TableGroupTreeItem(this, this.storageAccount, primaryKey));
         }
 
-        return groupNodes;
+        return groupTreeItems;
     }
 
-    hasMoreChildren(): boolean {
+    hasMoreChildrenImpl(): boolean {
         return false;
     }
 
@@ -141,18 +142,16 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         return result;
     }
 
-    public async getWebsiteCapableContainer(node: IAzureParentNode<StorageAccountNode>): Promise<IAzureParentNode<BlobContainerNode> | undefined> {
-        assert(node.treeItem === this);
-
+    public async getWebsiteCapableContainer(): Promise<BlobContainerTreeItem | undefined> {
         // Refresh the storage account first to make sure $web has been picked up if new
-        await node.refresh();
+        await this.refresh();
 
-        let groupTreeItem = <IAzureTreeItem>await this.getBlobContainerGroupNode();
+        let groupTreeItem = <AzureTreeItem>await this.getBlobContainerGroupTreeItem();
 
         // Currently only the child with the name "$web" is supported for hosting websites
         let id = `${this.id}/${groupTreeItem.id || groupTreeItem.label}/${ext.staticWebsiteContainerName}`;
-        let containerNode = <IAzureParentNode<BlobContainerNode>>await node.treeDataProvider.findNode(id);
-        return containerNode;
+        let containerTreeItem = <BlobContainerTreeItem>await this.treeDataProvider.findTreeItem(id);
+        return containerTreeItem;
     }
 
     // This is the URL to use for browsing the website
@@ -204,17 +203,15 @@ export class StorageAccountNode implements IAzureParentTreeItem {
         });
     }
 
-    public async configureStaticWebsite(node: IAzureNode): Promise<void> {
-        assert(node.treeItem === this);
+    public async configureStaticWebsite(): Promise<void> {
         let hostingStatus = await this.getWebsiteHostingStatus();
         await this.ensureHostingCapable(hostingStatus);
 
-        let resourceId = `${node.id}/staticWebsite`;
-        node.openInPortal(resourceId);
+        let resourceId = `${this.fullId}/staticWebsite`;
+        this.openInPortal(resourceId);
     }
 
-    public async browseStaticWebsite(node: IAzureNode): Promise<void> {
-        assert(node.treeItem === this);
+    public async browseStaticWebsite(): Promise<void> {
         const configure: MessageItem = {
             title: "Configure website hosting"
         };
@@ -226,7 +223,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
             let msg = "Static website hosting is not enabled for this storage account.";
             let result = await window.showErrorMessage(msg, configure);
             if (result === configure) {
-                await commands.executeCommand('azureStorage.configureStaticWebsite', node);
+                await commands.executeCommand('azureStorage.configureStaticWebsite', this);
             }
             throw new UserCancelledError(msg);
         }
@@ -235,7 +232,7 @@ export class StorageAccountNode implements IAzureParentTreeItem {
             let msg = "No index document has been set for this website.";
             let result = await window.showErrorMessage(msg, configure);
             if (result === configure) {
-                await commands.executeCommand('azureStorage.configureStaticWebsite', node);
+                await commands.executeCommand('azureStorage.configureStaticWebsite', this);
             }
             throw new UserCancelledError(msg);
         }

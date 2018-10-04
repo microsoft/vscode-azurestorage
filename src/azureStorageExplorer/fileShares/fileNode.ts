@@ -7,24 +7,26 @@ import * as azureStorage from "azure-storage";
 import * as copypaste from 'copy-paste';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
-import { DialogResponses, IAzureNode, IAzureParentNode, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { deleteFile } from './fileUtils';
 
-export class FileNode implements IAzureTreeItem, ICopyUrl {
+export class FileTreeItem extends AzureTreeItem implements ICopyUrl {
     constructor(
+        parent: AzureParentTreeItem,
         public readonly file: azureStorage.FileService.FileResult,
         public readonly directoryPath: string,
         public readonly share: azureStorage.FileService.ShareResult,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly key: StorageAccountKeyWrapper) {
+        super(parent);
     }
 
     public label: string = this.file.name;
     public static contextValue: string = 'azureFile';
-    public contextValue: string = FileNode.contextValue;
+    public contextValue: string = FileTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'document.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'document.svg')
@@ -32,7 +34,7 @@ export class FileNode implements IAzureTreeItem, ICopyUrl {
 
     public commandId: string = 'azureStorage.editFile';
 
-    public async copyUrl(_node: IAzureParentNode): Promise<void> {
+    public async copyUrl(): Promise<void> {
         let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
         let url = fileService.getUrl(this.share.name, this.directoryPath, this.file.name);
         copypaste.copy(url);
@@ -40,7 +42,7 @@ export class FileNode implements IAzureTreeItem, ICopyUrl {
         ext.outputChannel.appendLine(`File URL copied to clipboard: ${url}`);
     }
 
-    public async deleteTreeItem(_node: IAzureNode): Promise<void> {
+    public async deleteTreeItemImpl(): Promise<void> {
         const message: string = `Are you sure you want to delete the file '${this.label}'?`;
         const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {

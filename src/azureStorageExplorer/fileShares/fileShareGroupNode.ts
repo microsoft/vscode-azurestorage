@@ -7,19 +7,21 @@ import * as azureStorage from "azure-storage";
 import { FileService } from 'azure-storage';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { IAzureNode, IAzureParentTreeItem, IAzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
-import { FileShareNode } from './fileShareNode';
+import { FileShareTreeItem } from './fileShareNode';
 
 const minQuotaGB = 1;
 const maxQuotaGB = 5120;
 
-export class FileShareGroupNode implements IAzureParentTreeItem {
+export class FileShareGroupTreeItem extends AzureParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
+        parent: AzureParentTreeItem,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly key: StorageAccountKeyWrapper) {
+        super(parent);
     }
 
     public label: string = "File Shares";
@@ -29,7 +31,7 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
     };
 
-    async loadMoreChildren(_node: IAzureNode, clearCache: boolean): Promise<IAzureTreeItem[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -40,14 +42,15 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
         this._continuationToken = continuationToken;
 
         return entries.map((fileShare: azureStorage.FileService.ShareResult) => {
-            return new FileShareNode(
+            return new FileShareTreeItem(
+                this,
                 fileShare,
                 this.storageAccount,
                 this.key);
         });
     }
 
-    hasMoreChildren(): boolean {
+    hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
     }
 
@@ -65,25 +68,25 @@ export class FileShareGroupNode implements IAzureParentTreeItem {
         });
     }
 
-    public async createChild(_node: IAzureNode, showCreatingNode: (label: string) => void): Promise<IAzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
         const shareName = await window.showInputBox({
             placeHolder: 'Enter a name for the new file share',
-            validateInput: FileShareGroupNode.validateFileShareName
+            validateInput: FileShareGroupTreeItem.validateFileShareName
         });
 
         if (shareName) {
             const quotaGB = await window.showInputBox({
                 prompt: `Specify quota (in GB, between ${minQuotaGB} and ${maxQuotaGB}), to limit total storage size`,
                 value: maxQuotaGB.toString(),
-                validateInput: FileShareGroupNode.validateQuota
+                validateInput: FileShareGroupTreeItem.validateQuota
             });
 
             if (quotaGB) {
                 return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-                    showCreatingNode(shareName);
+                    showCreatingTreeItem(shareName);
                     progress.report({ message: `Azure Storage: Creating file share '${shareName}'` });
                     const share = await this.createFileShare(shareName, Number(quotaGB));
-                    return new FileShareNode(share, this.storageAccount, this.key);
+                    return new FileShareTreeItem(this, share, this.storageAccount, this.key);
                 });
             }
         }

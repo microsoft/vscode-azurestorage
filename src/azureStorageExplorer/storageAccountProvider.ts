@@ -5,26 +5,26 @@
 
 // tslint:disable-next-line:no-require-imports
 import { StorageManagementClient } from 'azure-arm-storage';
-import { IAzureNode, IAzureTreeItem, IChildProvider } from 'vscode-azureextensionui';
+import { AzureTreeItem, createAzureClient, SubscriptionTreeItem } from 'vscode-azureextensionui';
 import { StorageAccount } from '../../node_modules/azure-arm-storage/lib/models';
 import { StorageAccountWrapper } from '../components/storageWrappers';
-import { StorageAccountNode } from './storageAccounts/storageAccountNode';
+import { StorageAccountTreeItem } from './storageAccounts/storageAccountNode';
 
-export class StorageAccountProvider implements IChildProvider {
+export class StorageAccountProvider extends SubscriptionTreeItem {
     public childTypeLabel: string = "Storage Account";
 
-    async loadMoreChildren(node: IAzureNode, _clearCache: boolean): Promise<IAzureTreeItem[]> {
-        let storageManagementClient = new StorageManagementClient(node.credentials, node.subscriptionId, node.environment.resourceManagerEndpointUrl);
+    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem[]> {
+        let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
 
         let accounts = await storageManagementClient.storageAccounts.list();
-        let accountNodes = accounts.map((storageAccount: StorageAccount) => {
-            return new StorageAccountNode(new StorageAccountWrapper(storageAccount), storageManagementClient);
+        let accountTreeItems = accounts.map((storageAccount: StorageAccount) => {
+            return new StorageAccountTreeItem(this, new StorageAccountWrapper(storageAccount), storageManagementClient);
         });
 
-        return accountNodes;
+        return accountTreeItems;
     }
 
-    hasMoreChildren(): boolean {
+    hasMoreChildrenImpl(): boolean {
         return false;
     }
 }

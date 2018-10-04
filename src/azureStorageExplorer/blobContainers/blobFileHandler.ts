@@ -4,49 +4,47 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
-import { BlobNode } from './blobNode';
-
 import * as fse from 'fs-extra';
 import { Uri } from 'vscode';
-import { IAzureNode } from 'vscode-azureextensionui';
 import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
 import { awaitWithProgress } from '../../components/progress';
 import { ext } from "../../extensionVariables";
 import { Limits } from '../limits';
-import { BlobContainerNode } from './blobContainerNode';
+import { BlobContainerTreeItem } from './blobContainerNode';
+import { BlobTreeItem } from './blobNode';
 
-export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>> {
-    async getSaveConfirmationText(node: IAzureNode<BlobNode>): Promise<string> {
-        return `Saving '${node.treeItem.blob.name}' will update the blob "${node.treeItem.blob.name}" in Blob Container "${node.treeItem.container.name}"`;
+export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
+    async getSaveConfirmationText(treeItem: BlobTreeItem): Promise<string> {
+        return `Saving '${treeItem.blob.name}' will update the blob "${treeItem.blob.name}" in Blob Container "${treeItem.container.name}"`;
     }
 
-    async getFilename(node: IAzureNode<BlobNode>): Promise<string> {
-        return node.treeItem.blob.name;
+    async getFilename(treeItem: BlobTreeItem): Promise<string> {
+        return treeItem.blob.name;
     }
 
-    public async checkCanDownload(node: IAzureNode<BlobNode>): Promise<void> {
+    public async checkCanDownload(treeItem: BlobTreeItem): Promise<void> {
         let message: string | undefined;
 
-        if (Number(node.treeItem.blob.contentLength) > Limits.maxUploadDownloadSizeBytes) {
+        if (Number(treeItem.blob.contentLength) > Limits.maxUploadDownloadSizeBytes) {
             message = `Please use Storage Explorer for blobs larger than ${Limits.maxUploadDownloadSizeMB}MB.`;
-        } else if (!node.treeItem.blob.blobType.toLocaleLowerCase().startsWith("block")) {
-            message = `Please use Storage Explorer for blobs of type '${node.treeItem.blob.blobType}'.`;
+        } else if (!treeItem.blob.blobType.toLocaleLowerCase().startsWith("block")) {
+            message = `Please use Storage Explorer for blobs of type '${treeItem.blob.blobType}'.`;
         }
 
         if (message) {
-            await Limits.askOpenInStorageExplorer(message, node.treeItem.storageAccount.id, node.subscriptionId, 'Azure.BlobContainer', node.treeItem.container.name);
+            await Limits.askOpenInStorageExplorer(message, treeItem.storageAccount.id, treeItem.root.subscriptionId, 'Azure.BlobContainer', treeItem.container.name);
         }
     }
 
-    public async checkCanUpload(node: IAzureNode<BlobContainerNode> | IAzureNode<BlobNode>, localPath: string): Promise<void> {
+    public async checkCanUpload(treeItem: BlobContainerTreeItem | BlobTreeItem, localPath: string): Promise<void> {
         let size = await this.getLocalFileSize(localPath);
         if (size > Limits.maxUploadDownloadSizeBytes) {
             await Limits.askOpenInStorageExplorer(
                 `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
-                node.treeItem.storageAccount.id,
-                node.subscriptionId,
+                treeItem.storageAccount.id,
+                treeItem.root.subscriptionId,
                 'Azure.BlobContainer',
-                node.treeItem.container.name);
+                treeItem.container.name);
         }
     }
 
@@ -55,13 +53,12 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         return stat.size;
     }
 
-    public async downloadFile(node: IAzureNode<BlobNode>, filePath: string): Promise<void> {
-        await this.checkCanDownload(node);
+    public async downloadFile(treeItem: BlobTreeItem, filePath: string): Promise<void> {
+        await this.checkCanDownload(treeItem);
 
-        const blob = node.treeItem.blob;
-        const treeItem = node.treeItem;
+        const blob = treeItem.blob;
         const linkablePath = Uri.file(filePath); // Allows CTRL+Click in Output panel
-        const blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, treeItem.key.value);
+        const blobService = azureStorage.createBlobService(treeItem.storageAccount.name, treeItem.key.value);
 
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Downloading ${blob.name} to ${filePath}...`);
@@ -89,23 +86,23 @@ export class BlobFileHandler implements IRemoteFileHandler<IAzureNode<BlobNode>>
         ext.outputChannel.appendLine(`Successfully downloaded ${linkablePath}.`);
     }
 
-    async uploadFile(node: IAzureNode<BlobNode>, filePath: string): Promise<void> {
-        await this.checkCanUpload(node, filePath);
+    async uploadFile(treeItem: BlobTreeItem, filePath: string): Promise<void> {
+        await this.checkCanUpload(treeItem, filePath);
 
-        let blobService = azureStorage.createBlobService(node.treeItem.storageAccount.name, node.treeItem.key.value);
+        let blobService = azureStorage.createBlobService(treeItem.storageAccount.name, treeItem.key.value);
         let createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
 
-        if (node.treeItem.blob.contentSettings) {
-            createOptions.contentSettings = node.treeItem.blob.contentSettings;
+        if (treeItem.blob.contentSettings) {
+            createOptions.contentSettings = treeItem.blob.contentSettings;
             createOptions.contentSettings.contentMD5 = undefined; // Needs to be filled in by SDK
         }
 
         await new Promise<void>((resolve, reject) => {
-            blobService.createBlockBlobFromLocalFile(node.treeItem.container.name, node.treeItem.blob.name, filePath, createOptions, (error?: Error, _result?: azureStorage.BlobService.BlobResult, _response?: azureStorage.ServiceResponse) => {
+            blobService.createBlockBlobFromLocalFile(treeItem.container.name, treeItem.blob.name, filePath, createOptions, (error?: Error, _result?: azureStorage.BlobService.BlobResult, _response?: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     let errorAny = <{ code?: string }>error;
                     if (!!errorAny.code) {
-                        let humanReadableMessage = `Unable to save '${node.treeItem.blob.name}', blob service returned error code "${errorAny.code}"`;
+                        let humanReadableMessage = `Unable to save '${treeItem.blob.name}', blob service returned error code "${errorAny.code}"`;
                         switch (errorAny.code) {
                             case "ENOTFOUND":
                                 humanReadableMessage += " - Please check connection.";
