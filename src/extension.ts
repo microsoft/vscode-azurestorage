@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext): void {
     const ui: IAzureUserInput = new AzureUserInput(context.globalState);
     ext.ui = ui;
 
-    const tree = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMoreNodes');
+    const tree = new AzureTreeDataProvider(new StorageAccountProvider(), 'azureStorage.loadMore');
     ext.tree = tree;
 
     ext.reporter = createTelemetryReporter(context);

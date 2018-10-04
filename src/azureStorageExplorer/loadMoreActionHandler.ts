@@ -6,5 +6,5 @@
 import { AzureTreeDataProvider, IAzureNode, registerCommand } from 'vscode-azureextensionui';
 
 export function registerLoadMoreActionHandler(treeDataProvider: AzureTreeDataProvider): void {
-  registerCommand("azureStorage.loadMoreNodes", async (node: IAzureNode) => await treeDataProvider.loadMore(node));
+  registerCommand("azureStorage.loadMore", async (node: IAzureNode) => await treeDataProvider.loadMore(node));
 }

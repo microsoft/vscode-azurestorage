@@ -9,18 +9,18 @@ import { addPackageLintSuites } from 'vscode-azureextensiondev';
 import { ext } from '../src/extensionVariables';
 
 suite('package lint', async () => {
-    let pkgContents = fse.readFileSync(require.resolve('../../package.json')); // Relative to 'out/test'
+    let pkgContents = await fse.readJson('../../package.json'); // Relative to 'out/test'
     let pkg: {} = JSON.parse(pkgContents.toString());
 
     addPackageLintSuites(
         () => ext.context,
-        async () => await vscode.commands.getCommands(), // asdf
+        async () => await vscode.commands.getCommands(),
         pkg,
         {
             commandsRegisteredButNotInPackage: [
                 'azureStorage.editBlob',
                 'azureStorage.editFile',
-                'azureStorage.loadMoreNodes'
+                'azureStorage.loadMore'
             ]
         });
 });
