@@ -4,18 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fse from 'fs-extra';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { addPackageLintSuites } from 'vscode-azureextensiondev';
 import { ext } from '../src/extensionVariables';
 
-suite('package lint', async () => {
-    let pkgContents = await fse.readJson('../../package.json'); // Relative to 'out/test'
-    let pkg: {} = JSON.parse(pkgContents.toString());
+suite('package lint', () => {
+    let pkgContents = <{}>fse.readJsonSync(path.join(__dirname, '../../package.json')); // Relative to 'out/test'
 
     addPackageLintSuites(
         () => ext.context,
         async () => await vscode.commands.getCommands(),
-        pkg,
+        pkgContents,
         {
             commandsRegisteredButNotInPackage: [
                 'azureStorage.editBlob',
