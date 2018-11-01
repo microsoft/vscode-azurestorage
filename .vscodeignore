@@ -7,3 +7,5 @@ src/**
 tsconfig.json
 vsc-extension-quickstart.md
 .github/**
+test-results.xml
+.azure-pipelines/**
