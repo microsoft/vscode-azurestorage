@@ -295,3 +295,5 @@ out/
 .vscode-test/
 
 package-lock.json
+.vscode-test
+test-results.xml
