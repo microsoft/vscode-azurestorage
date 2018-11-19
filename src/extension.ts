@@ -5,9 +5,13 @@
 
 'use strict';
 
+const loadStartTime: number = Date.now();
+let loadEndTime: number;
+
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzureTreeDataProvider, AzureTreeItem, AzureUserInput, createTelemetryReporter, IActionContext, IAzureUserInput, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, AzureTreeItem, AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createTelemetryReporter, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
@@ -26,62 +30,67 @@ import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
-export function activate(context: vscode.ExtensionContext): void {
+export async function activate(context: vscode.ExtensionContext): Promise<AzureExtensionApiProvider> {
     console.log('Extension "Azure Storage Tools" is now active.');
 
-    registerUIExtensionVariables(ext);
-
     ext.context = context;
+    ext.reporter = createTelemetryReporter(context);
+    ext.ui = new AzureUserInput(context.globalState);
     ext.outputChannel = vscode.window.createOutputChannel("Azure Storage");
     context.subscriptions.push(ext.outputChannel);
+    registerUIExtensionVariables(ext);
 
-    const ui: IAzureUserInput = new AzureUserInput(context.globalState);
-    ext.ui = ui;
+    await callWithTelemetryAndErrorHandling('azureStorage.activate', async function (this: IActionContext): Promise<void> {
+        this.properties.isActivationEvent = 'true';
+        this.measurements.mainFileLoad = (loadEndTime - loadStartTime) / 1000;
 
-    const tree = new AzureTreeDataProvider(StorageAccountProvider, 'azureStorage.loadMore');
-    ext.tree = tree;
+        const tree = new AzureTreeDataProvider(StorageAccountProvider, 'azureStorage.loadMore');
+        ext.tree = tree;
 
-    ext.reporter = createTelemetryReporter(context);
+        registerBlobActionHandlers();
+        registerBlobContainerActionHandlers();
+        registerBlobContainerGroupActionHandlers();
+        registerFileActionHandlers();
+        registerDirectoryActionHandlers();
+        registerFileShareActionHandlers();
+        registerFileShareGroupActionHandlers();
+        registerLoadMoreActionHandler(tree);
+        registerQueueActionHandlers();
+        registerQueueGroupActionHandlers();
+        registerStorageAccountActionHandlers();
+        registerTableActionHandlers();
+        registerTableGroupActionHandlers();
 
-    registerBlobActionHandlers();
-    registerBlobContainerActionHandlers();
-    registerBlobContainerGroupActionHandlers();
-    registerFileActionHandlers();
-    registerDirectoryActionHandlers();
-    registerFileShareActionHandlers();
-    registerFileShareGroupActionHandlers();
-    registerLoadMoreActionHandler(tree);
-    registerQueueActionHandlers();
-    registerQueueGroupActionHandlers();
-    registerStorageAccountActionHandlers();
-    registerTableActionHandlers();
-    registerTableGroupActionHandlers();
-
-    vscode.window.registerTreeDataProvider('azureStorage', tree);
-    registerCommand('azureStorage.refresh', async (treeItem?: AzureTreeItem) => await tree.refresh(treeItem));
-    registerCommand('azureStorage.copyUrl', (treeItem: AzureTreeItem & ICopyUrl) => treeItem.copyUrl());
-    registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
-    registerCommand("azureStorage.openInPortal", (treeItem: AzureTreeItem) => {
-        treeItem.openInPortal();
+        vscode.window.registerTreeDataProvider('azureStorage', tree);
+        registerCommand('azureStorage.refresh', async (treeItem?: AzureTreeItem) => await tree.refresh(treeItem));
+        registerCommand('azureStorage.copyUrl', (treeItem: AzureTreeItem & ICopyUrl) => treeItem.copyUrl());
+        registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
+        registerCommand("azureStorage.openInPortal", (treeItem: AzureTreeItem) => {
+            treeItem.openInPortal();
+        });
+        registerCommand("azureStorage.configureStaticWebsite", async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
+            let accountTreeItem = await selectStorageAccountTreeItemForCommand(
+                treeItem,
+                this,
+                {
+                    mustBeWebsiteCapable: true,
+                    askToConfigureWebsite: false
+                });
+            await accountTreeItem.configureStaticWebsite();
+        });
+        registerCommand('azureStorage.browseStaticWebsite', async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
+            let accountTreeItem = await selectStorageAccountTreeItemForCommand(
+                treeItem,
+                this,
+                {
+                    mustBeWebsiteCapable: true,
+                    askToConfigureWebsite: true
+                });
+            await accountTreeItem.browseStaticWebsite();
+        });
     });
-    registerCommand("azureStorage.configureStaticWebsite", async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
-        let accountTreeItem = await selectStorageAccountTreeItemForCommand(
-            treeItem,
-            this,
-            {
-                mustBeWebsiteCapable: true,
-                askToConfigureWebsite: false
-            });
-        await accountTreeItem.configureStaticWebsite();
-    });
-    registerCommand('azureStorage.browseStaticWebsite', async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
-        let accountTreeItem = await selectStorageAccountTreeItemForCommand(
-            treeItem,
-            this,
-            {
-                mustBeWebsiteCapable: true,
-                askToConfigureWebsite: true
-            });
-        await accountTreeItem.browseStaticWebsite();
-    });
+
+    return createApiProvider([]);
 }
+
+loadEndTime = Date.now();
