@@ -24,8 +24,8 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem {
     public label: string = "Blob Containers";
     public contextValue: string = 'azureBlobContainerGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlob_16x.png'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlob_16x.png')
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlobContainer.svg'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlobContainer.svg')
     };
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {

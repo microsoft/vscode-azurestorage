@@ -27,8 +27,8 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem {
     public label: string = "File Shares";
     public contextValue: string = 'azureFileShareGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare_16x.png'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare_16x.png')
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare.svg'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare.svg')
     };
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {

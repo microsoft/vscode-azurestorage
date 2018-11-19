@@ -23,8 +23,8 @@ export class QueueGroupTreeItem extends AzureParentTreeItem {
     public label: string = "Queues";
     public contextValue: string = 'azureQueueGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue_16x.png'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue.svg'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue.svg')
     };
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
