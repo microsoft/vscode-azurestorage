@@ -21,8 +21,8 @@ export class QueueTreeItem extends AzureTreeItem {
     public label: string = this.queue.name;
     public contextValue: string = 'azureQueue';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue_16x.png'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue_16x.png')
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue.svg'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue.svg')
     };
 
     public async deleteTreeItemImpl(): Promise<void> {

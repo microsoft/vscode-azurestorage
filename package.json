@@ -130,43 +130,23 @@
 			},
 			{
 				"command": "azureStorage.openBlobContainer",
-				"title": "Open in Storage Explorer",
-				"icon": {
-					"light": "resources/light/AzureStorageAccount_16x.png",
-					"dark": "resources/dark/AzureStorageAccount_16x.png"
-				}
+				"title": "Open in Storage Explorer"
 			},
 			{
 				"command": "azureStorage.openTable",
-				"title": "Open in Storage Explorer",
-				"icon": {
-					"light": "resources/light/AzureStorageAccount_16x.png",
-					"dark": "resources/dark/AzureStorageAccount_16x.png"
-				}
+				"title": "Open in Storage Explorer"
 			},
 			{
 				"command": "azureStorage.openFileShare",
-				"title": "Open in Storage Explorer",
-				"icon": {
-					"light": "resources/light/AzureStorageAccount_16x.png",
-					"dark": "resources/dark/AzureStorageAccount_16x.png"
-				}
+				"title": "Open in Storage Explorer"
 			},
 			{
 				"command": "azureStorage.openQueue",
-				"title": "Open in Storage Explorer",
-				"icon": {
-					"light": "resources/light/AzureStorageAccount_16x.png",
-					"dark": "resources/dark/AzureStorageAccount_16x.png"
-				}
+				"title": "Open in Storage Explorer"
 			},
 			{
 				"command": "azureStorage.openStorageAccount",
-				"title": "Open in Storage Explorer",
-				"icon": {
-					"light": "resources/light/AzureStorageAccount_16x.png",
-					"dark": "resources/dark/AzureStorageAccount_16x.png"
-				}
+				"title": "Open in Storage Explorer"
 			},
 			{
 				"command": "azureStorage.copyPrimaryKey",

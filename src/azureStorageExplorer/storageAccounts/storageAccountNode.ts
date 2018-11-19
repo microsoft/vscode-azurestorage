@@ -41,8 +41,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem {
     public static contextValue: string = 'azureStorageAccount';
     public contextValue: string = StorageAccountTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount_16x.png'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount_16x.png')
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount.svg'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
     };
 
     private _blobContainerGroupTreeItemPromise: Promise<BlobContainerGroupTreeItem> | undefined;

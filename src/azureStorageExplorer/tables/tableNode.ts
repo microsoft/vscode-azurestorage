@@ -21,8 +21,8 @@ export class TableTreeItem extends AzureTreeItem {
     public label: string = this.tableName;
     public contextValue: string = 'azureTable';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable_16x.png'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable_16x.png')
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable.svg'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable.svg')
     };
 
     public async deleteTreeItemImpl(): Promise<void> {
