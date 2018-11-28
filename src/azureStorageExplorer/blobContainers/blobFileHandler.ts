@@ -32,7 +32,7 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
         }
 
         if (message) {
-            await Limits.askOpenInStorageExplorer(message, treeItem.storageAccount.id, treeItem.root.subscriptionId, 'Azure.BlobContainer', treeItem.container.name);
+            await Limits.askOpenInStorageExplorer(message, treeItem.root.storageAccount.id, treeItem.root.subscriptionId, 'Azure.BlobContainer', treeItem.container.name);
         }
     }
 
@@ -41,7 +41,7 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
         if (size > Limits.maxUploadDownloadSizeBytes) {
             await Limits.askOpenInStorageExplorer(
                 `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
-                treeItem.storageAccount.id,
+                treeItem.root.storageAccount.id,
                 treeItem.root.subscriptionId,
                 'Azure.BlobContainer',
                 treeItem.container.name);
@@ -58,7 +58,7 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
 
         const blob = treeItem.blob;
         const linkablePath = Uri.file(filePath); // Allows CTRL+Click in Output panel
-        const blobService = azureStorage.createBlobService(treeItem.storageAccount.name, treeItem.key.value);
+        const blobService = treeItem.root.createBlobService();
 
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Downloading ${blob.name} to ${filePath}...`);
@@ -89,7 +89,7 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
     async uploadFile(treeItem: BlobTreeItem, filePath: string): Promise<void> {
         await this.checkCanUpload(treeItem, filePath);
 
-        let blobService = azureStorage.createBlobService(treeItem.storageAccount.name, treeItem.key.value);
+        let blobService = treeItem.root.createBlobService();
         let createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
 
         if (treeItem.blob.contentSettings) {

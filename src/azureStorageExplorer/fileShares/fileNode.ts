@@ -8,19 +8,17 @@ import * as copypaste from 'copy-paste';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
+import { IStorageRoot } from "../IStorageRoot";
 import { deleteFile } from './fileUtils';
 
-export class FileTreeItem extends AzureTreeItem implements ICopyUrl {
+export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
     constructor(
         parent: AzureParentTreeItem,
         public readonly file: azureStorage.FileService.FileResult,
         public readonly directoryPath: string,
-        public readonly share: azureStorage.FileService.ShareResult,
-        public readonly storageAccount: StorageAccountWrapper,
-        public readonly key: StorageAccountKeyWrapper) {
+        public readonly share: azureStorage.FileService.ShareResult) {
         super(parent);
     }
 
@@ -35,7 +33,7 @@ export class FileTreeItem extends AzureTreeItem implements ICopyUrl {
     public commandId: string = 'azureStorage.editFile';
 
     public async copyUrl(): Promise<void> {
-        let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+        let fileService = this.root.createFileService();
         let url = fileService.getUrl(this.share.name, this.directoryPath, this.file.name);
         copypaste.copy(url);
         ext.outputChannel.show();
@@ -46,7 +44,7 @@ export class FileTreeItem extends AzureTreeItem implements ICopyUrl {
         const message: string = `Are you sure you want to delete the file '${this.label}'?`;
         const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            await deleteFile(this.directoryPath, this.file.name, this.share.name, this.storageAccount.name, this.key.value);
+            await deleteFile(this.directoryPath, this.file.name, this.share.name, this.root);
         } else {
             throw new UserCancelledError();
         }

@@ -14,7 +14,7 @@ export function registerTableActionHandlers(): void {
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
 function openTableInStorageExplorer(treeItem: TableTreeItem): Promise<void> {
-    let accountId = treeItem.storageAccount.id;
+    let accountId = treeItem.root.storageAccount.id;
     const resourceType = "Azure.Table";
     let resourceName = treeItem.tableName;
 

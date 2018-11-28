@@ -29,7 +29,7 @@ export function registerFileShareActionHandlers(): void {
 }
 
 async function openFileShareInStorageExplorer(treeItem: FileShareTreeItem): Promise<void> {
-    let accountId = treeItem.storageAccount.id;
+    let accountId = treeItem.root.storageAccount.id;
     let subscriptionid = treeItem.root.subscriptionId;
     const resourceType = 'Azure.FileShare';
     let resourceName = treeItem.share.name;

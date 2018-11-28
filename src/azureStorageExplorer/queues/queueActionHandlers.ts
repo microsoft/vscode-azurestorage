@@ -14,7 +14,7 @@ export function registerQueueActionHandlers(): void {
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
 function openQueueInStorageExplorer(treeItem: QueueTreeItem): Promise<void> {
-    let accountId = treeItem.storageAccount.id;
+    let accountId = treeItem.root.storageAccount.id;
     const resourceType = "Azure.Queue";
     let resourceName = treeItem.queue.name;
 

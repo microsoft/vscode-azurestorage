@@ -27,8 +27,7 @@ async function openStorageAccountInStorageExplorer(treeItem: StorageAccountTreeI
 }
 
 async function copyPrimaryKey(treeItem: StorageAccountTreeItem): Promise<void> {
-    let primaryKey = await treeItem.getPrimaryKey();
-    copypaste.copy(primaryKey.value);
+    copypaste.copy(treeItem.key.value);
 }
 
 async function copyConnectionString(treeItem: StorageAccountTreeItem): Promise<void> {

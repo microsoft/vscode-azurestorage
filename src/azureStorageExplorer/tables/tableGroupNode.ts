@@ -6,19 +6,13 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { nonNull, StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
+import { AzureParentTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { nonNull } from "../../components/storageWrappers";
+import { IStorageRoot } from "../IStorageRoot";
 import { TableTreeItem } from './tableNode';
 
-export class TableGroupTreeItem extends AzureParentTreeItem {
+export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: azureStorage.TableService.ListTablesContinuationToken | undefined;
-
-    constructor(
-        parent: AzureParentTreeItem,
-        public readonly storageAccount: StorageAccountWrapper,
-        public readonly key: StorageAccountKeyWrapper) {
-        super(parent);
-    }
 
     public label: string = "Tables";
     public contextValue: string = 'azureTableGroup';
@@ -27,7 +21,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable.svg')
     };
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<TableTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -40,9 +34,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem {
         return entries.map((table: string) => {
             return new TableTreeItem(
                 this,
-                table,
-                this.storageAccount,
-                this.key);
+                table);
         });
 
     }
@@ -54,7 +46,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem {
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
-            let tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
+            let tableService = this.root.createTableService();
             tableService.listTablesSegmented(currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {
                 if (err) {
                     reject(err);
@@ -65,7 +57,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem {
         });
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<TableTreeItem> {
         const tableName = await window.showInputBox({
             placeHolder: 'Enter a name for the new table',
             validateInput: TableGroupTreeItem.validateTableName
@@ -76,7 +68,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem {
                 showCreatingTreeItem(tableName);
                 progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
                 const table = await this.createTable(tableName);
-                return new TableTreeItem(this, nonNull(table.TableName, "TableName"), this.storageAccount, this.key);
+                return new TableTreeItem(this, nonNull(table.TableName, "TableName"));
             });
         }
 
@@ -86,7 +78,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem {
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     private createTable(name: string): Promise<azureStorage.TableService.TableResult> {
         return new Promise((resolve, reject) => {
-            let tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
+            let tableService = this.root.createTableService();
             tableService.createTable(name, (err?: Error, result?: azureStorage.TableService.TableResult) => {
                 if (err) {
                     reject(err);

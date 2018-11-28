@@ -8,18 +8,16 @@ import * as copypaste from 'copy-paste';
 import * as path from 'path';
 import { SaveDialogOptions, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
+import { IStorageRoot } from "../IStorageRoot";
 import { BlobFileHandler } from './blobFileHandler';
 
-export class BlobTreeItem extends AzureTreeItem implements ICopyUrl {
+export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
   constructor(
     parent: AzureParentTreeItem,
     public readonly blob: azureStorage.BlobService.BlobResult,
-    public readonly container: azureStorage.BlobService.ContainerResult,
-    public readonly storageAccount: StorageAccountWrapper,
-    public readonly key: StorageAccountKeyWrapper) {
+    public readonly container: azureStorage.BlobService.ContainerResult) {
     super(parent);
   }
 
@@ -33,7 +31,7 @@ export class BlobTreeItem extends AzureTreeItem implements ICopyUrl {
   public commandId: string = 'azureStorage.editBlob';
 
   public async copyUrl(): Promise<void> {
-    let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+    let blobService = this.root.createBlobService();
     let url = blobService.getUrl(this.container.name, this.blob.name);
     copypaste.copy(url);
     ext.outputChannel.show();
@@ -44,7 +42,7 @@ export class BlobTreeItem extends AzureTreeItem implements ICopyUrl {
     const message: string = `Are you sure you want to delete the blob '${this.label}'?`;
     const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
     if (result === DialogResponses.deleteResponse) {
-      const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+      let blobService = this.root.createBlobService();
       await new Promise((resolve, reject) => {
         // tslint:disable-next-line:no-any
         blobService.deleteBlob(this.container.name, this.blob.name, (err?: any) => {
