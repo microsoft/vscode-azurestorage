@@ -242,7 +242,7 @@
 				{
 					"command": "azureStorage.deployStaticWebsite",
 					"when": "explorerResourceIsFolder == true",
-					"group": "zzz_staticwebsites"
+					"group": "zzz_azuretools_deploy@3"
 				}
 			],
 			"view/item/context": [
