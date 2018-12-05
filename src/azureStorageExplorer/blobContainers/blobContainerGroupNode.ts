@@ -7,19 +7,12 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
+import { AzureParentTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./blobContainerNode";
 
-export class BlobContainerGroupTreeItem extends AzureParentTreeItem {
+export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
-
-    constructor(
-        parent: AzureParentTreeItem,
-        public readonly storageAccount: StorageAccountWrapper,
-        public readonly key: StorageAccountKeyWrapper) {
-        super(parent);
-    }
 
     public label: string = "Blob Containers";
     public contextValue: string = 'azureBlobContainerGroup';
@@ -28,7 +21,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlobContainer.svg')
     };
 
-    public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
+    public async loadMoreChildrenImpl(clearCache: boolean): Promise<BlobContainerTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -38,7 +31,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem {
         this._continuationToken = continuationToken;
 
         return entries.map((container: azureStorage.BlobService.ContainerResult) => {
-            return new BlobContainerTreeItem(this, container, this.storageAccount, this.key);
+            return new BlobContainerTreeItem(this, container);
         });
     }
 
@@ -49,7 +42,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem {
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     private listContainers(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise((resolve, reject) => {
-            let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            let blobService = this.root.createBlobService();
             // currentToken argument typed incorrectly in SDK
             blobService.listContainersSegmented(<azureStorage.common.ContinuationToken>currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.BlobService.ListContainerResult) => {
                 if (err) {
@@ -61,7 +54,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem {
         });
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<BlobContainerTreeItem> {
         const containerName = await vscode.window.showInputBox({
             placeHolder: 'Enter a name for the new blob container',
             validateInput: BlobContainerGroupTreeItem.validateContainerName
@@ -72,7 +65,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem {
                 showCreatingTreeItem(containerName);
                 progress.report({ message: `Azure Storage: Creating blob container '${containerName}'` });
                 const container = await this.createBlobContainer(containerName);
-                return new BlobContainerTreeItem(this, container, this.storageAccount, this.key);
+                return new BlobContainerTreeItem(this, container);
             });
         }
 
@@ -82,7 +75,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem {
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     private createBlobContainer(name: string): Promise<azureStorage.BlobService.ContainerResult> {
         return new Promise((resolve, reject) => {
-            let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            let blobService = this.root.createBlobService();
             blobService.createContainer(name, (err?: Error, result?: azureStorage.BlobService.ContainerResult) => {
                 if (err) {
                     reject(err);

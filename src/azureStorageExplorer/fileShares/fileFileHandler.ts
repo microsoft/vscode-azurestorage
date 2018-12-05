@@ -17,7 +17,7 @@ export class FileFileHandler implements IRemoteFileHandler<FileTreeItem> {
     }
 
     async downloadFile(treeItem: FileTreeItem, filePath: string): Promise<void> {
-        let fileService = azureStorage.createFileService(treeItem.storageAccount.name, treeItem.key.value);
+        let fileService = treeItem.root.createFileService();
         await new Promise<void>((resolve, reject) => {
             fileService.getFileToLocalFile(treeItem.share.name, treeItem.directoryPath, treeItem.file.name, filePath, (error?: Error, _result?: azureStorage.FileService.FileResult, _response?: azureStorage.ServiceResponse) => {
                 if (!!error) {
@@ -30,7 +30,7 @@ export class FileFileHandler implements IRemoteFileHandler<FileTreeItem> {
     }
 
     async uploadFile(treeItem: FileTreeItem, filePath: string): Promise<void> {
-        let fileService = azureStorage.createFileService(treeItem.storageAccount.name, treeItem.key.value);
+        let fileService = treeItem.root.createFileService();
         let fileProperties = await this.getProperties(treeItem);
         let createOptions: azureStorage.FileService.CreateFileRequestOptions = {};
 
@@ -64,7 +64,7 @@ export class FileFileHandler implements IRemoteFileHandler<FileTreeItem> {
     }
 
     private async getProperties(treeItem: FileTreeItem): Promise<azureStorage.FileService.FileResult> {
-        let fileService = azureStorage.createFileService(treeItem.storageAccount.name, treeItem.key.value);
+        let fileService = treeItem.root.createFileService();
 
         return await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
             fileService.getFileProperties(treeItem.share.name, treeItem.directoryPath, treeItem.file.name, (error?: Error, result?: azureStorage.FileService.FileResult, _response?: azureStorage.ServiceResponse) => {

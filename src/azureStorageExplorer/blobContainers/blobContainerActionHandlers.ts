@@ -29,7 +29,7 @@ export function registerBlobContainerActionHandlers(): void {
 }
 
 async function openBlobContainerInStorageExplorer(treeItem: BlobContainerTreeItem): Promise<void> {
-    let accountId = treeItem.storageAccount.id;
+    let accountId = treeItem.root.storageAccount.id;
     const resourceType = 'Azure.BlobContainer';
     let resourceName = treeItem.container.name;
 

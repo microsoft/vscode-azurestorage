@@ -3,18 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
+import { IStorageRoot } from "../IStorageRoot";
 
-export class TableTreeItem extends AzureTreeItem {
+export class TableTreeItem extends AzureTreeItem<IStorageRoot> {
     constructor(
         parent: AzureParentTreeItem,
-        public readonly tableName: string,
-        public readonly storageAccount: StorageAccountWrapper,
-        public readonly key: StorageAccountKeyWrapper) {
+        public readonly tableName: string) {
         super(parent);
     }
 
@@ -29,7 +26,7 @@ export class TableTreeItem extends AzureTreeItem {
         const message: string = `Are you sure you want to delete table '${this.label}' and all its contents?`;
         const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const tableService = azureStorage.createTableService(this.storageAccount.name, this.key.value);
+            const tableService = this.root.createTableService();
             await new Promise((resolve, reject) => {
                 // tslint:disable-next-line:no-any
                 tableService.deleteTable(this.tableName, (err?: any) => {

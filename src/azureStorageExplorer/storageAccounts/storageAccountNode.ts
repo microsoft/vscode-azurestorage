@@ -9,13 +9,14 @@ import * as azureStorage from "azure-storage";
 import opn = require('opn');
 import * as path from 'path';
 import { commands, MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, ISubscriptionRoot, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
 import * as ext from "../../constants";
 import { BlobContainerGroupTreeItem } from '../blobContainers/blobContainerGroupNode';
 import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
 import { FileShareGroupTreeItem } from '../fileShares/fileShareGroupNode';
+import { IStorageRoot } from '../IStorageRoot';
 import { QueueGroupTreeItem } from '../queues/queueGroupNode';
 import { TableGroupTreeItem } from '../tables/tableGroupNode';
 
@@ -28,12 +29,30 @@ export type WebsiteHostingStatus = {
 
 type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
 
-export class StorageAccountTreeItem extends AzureParentTreeItem {
-    constructor(
+export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
+    public key: StorageAccountKeyWrapper;
+
+    private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
+    private _root: IStorageRoot;
+
+    private constructor(
         parent: AzureParentTreeItem,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly storageManagementClient: StorageManagementClient) {
         super(parent);
+        this._root = this.createRoot(parent.root);
+        this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
+    }
+
+    public static async createStorageAccountTreeItem(parent: AzureParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
+        const ti = new StorageAccountTreeItem(parent, storageAccount, client);
+        // make sure key is initialized
+        await ti.refreshImpl();
+        return ti;
+    }
+
+    public get root(): IStorageRoot {
+        return this._root;
     }
 
     public id: string = this.storageAccount.id;
@@ -45,40 +64,24 @@ export class StorageAccountTreeItem extends AzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
     };
 
-    private _blobContainerGroupTreeItemPromise: Promise<BlobContainerGroupTreeItem> | undefined;
-
-    private async getBlobContainerGroupTreeItem(): Promise<BlobContainerGroupTreeItem> {
-        const createBlobContainerGroupTreeItem = async (): Promise<BlobContainerGroupTreeItem> => {
-            let primaryKey = await this.getPrimaryKey();
-            return new BlobContainerGroupTreeItem(this, this.storageAccount, new StorageAccountKeyWrapper(primaryKey));
-        };
-
-        if (!this._blobContainerGroupTreeItemPromise) {
-            this._blobContainerGroupTreeItemPromise = createBlobContainerGroupTreeItem();
-        }
-
-        return await this._blobContainerGroupTreeItemPromise;
-    }
-
-    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem[]> {
-        let primaryKey = await this.getPrimaryKey();
+    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<IStorageRoot>[]> {
         let primaryEndpoints = this.storageAccount.primaryEndpoints;
-        let groupTreeItems: AzureTreeItem[] = [];
+        let groupTreeItems: AzureTreeItem<IStorageRoot>[] = [];
 
         if (!!primaryEndpoints.blob) {
-            groupTreeItems.push(await this.getBlobContainerGroupTreeItem());
+            groupTreeItems.push(this._blobContainerGroupTreeItem);
         }
 
         if (!!primaryEndpoints.file) {
-            groupTreeItems.push(new FileShareGroupTreeItem(this, this.storageAccount, primaryKey));
+            groupTreeItems.push(new FileShareGroupTreeItem(this));
         }
 
         if (!!primaryEndpoints.queue) {
-            groupTreeItems.push(new QueueGroupTreeItem(this, this.storageAccount, primaryKey));
+            groupTreeItems.push(new QueueGroupTreeItem(this));
         }
 
         if (!!primaryEndpoints.table) {
-            groupTreeItems.push(new TableGroupTreeItem(this, this.storageAccount, primaryKey));
+            groupTreeItems.push(new TableGroupTreeItem(this));
         }
 
         return groupTreeItems;
@@ -88,22 +91,40 @@ export class StorageAccountTreeItem extends AzureParentTreeItem {
         return false;
     }
 
-    async getPrimaryKey(): Promise<StorageAccountKeyWrapper> {
+    async refreshImpl(): Promise<void> {
         let keys: StorageAccountKeyWrapper[] = await this.getKeys();
         let primaryKey = keys.find(key => {
             return key.keyName === "key1" || key.keyName === "primaryKey";
         });
 
         if (primaryKey) {
-            return new StorageAccountKeyWrapper(primaryKey);
+            this.key = new StorageAccountKeyWrapper(primaryKey);
         } else {
             throw new Error("Could not find primary key");
         }
     }
 
+    private createRoot(subRoot: ISubscriptionRoot): IStorageRoot {
+        return Object.assign({}, subRoot, {
+            storageAccount: this.storageAccount,
+            createBlobService: () => {
+                return azureStorage.createBlobService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.blob);
+            },
+            createFileService: () => {
+                return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file);
+            },
+            createQueueService: () => {
+                return azureStorage.createQueueService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.queue);
+            },
+            createTableService: () => {
+                // tslint:disable-next-line:no-any the typings for createTableService are incorrect
+                return azureStorage.createTableService(this.storageAccount.name, this.key.value, <any>this.storageAccount.primaryEndpoints.table);
+            }
+        });
+    }
+
     async getConnectionString(): Promise<string> {
-        let primaryKey = await this.getPrimaryKey();
-        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${primaryKey.value}`;
+        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};`;
     }
 
     async getKeys(): Promise<StorageAccountKeyWrapper[]> {
@@ -146,10 +167,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem {
         // Refresh the storage account first to make sure $web has been picked up if new
         await this.refresh();
 
-        let groupTreeItem = <AzureTreeItem>await this.getBlobContainerGroupTreeItem();
-
         // Currently only the child with the name "$web" is supported for hosting websites
-        let id = `${this.id}/${groupTreeItem.id || groupTreeItem.label}/${ext.staticWebsiteContainerName}`;
+        let id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${ext.staticWebsiteContainerName}`;
         let containerTreeItem = <BlobContainerTreeItem>await this.treeDataProvider.findTreeItem(id);
         return containerTreeItem;
     }
@@ -160,14 +179,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem {
         return this.storageAccount.primaryEndpoints.web;
     }
 
-    public async createBlobService(): Promise<azureStorage.BlobService> {
-        let primaryKey = await this.getPrimaryKey();
-        let blobService = azureStorage.createBlobService(this.storageAccount.name, primaryKey.value);
-        return blobService;
-    }
-
     public async getWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
-        let blobService = await this.createBlobService();
+        let blobService = this.root.createBlobService();
 
         return await new Promise<WebsiteHostingStatus>((resolve, reject) => {
             // tslint:disable-next-line:no-any
@@ -190,7 +203,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem {
     }
 
     private async getAccountType(): Promise<StorageTypes> {
-        let blobService = await this.createBlobService();
+        let blobService = this.root.createBlobService();
         return await new Promise<StorageTypes>((resolve, reject) => {
             // tslint:disable-next-line:no-any
             blobService.getAccountProperties(undefined, undefined, undefined, (err?: any, result?) => {

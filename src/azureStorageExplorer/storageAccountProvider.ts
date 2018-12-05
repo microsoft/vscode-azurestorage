@@ -5,8 +5,8 @@
 
 // tslint:disable-next-line:no-require-imports
 import { StorageManagementClient } from 'azure-arm-storage';
-import { AzureTreeItem, createAzureClient, SubscriptionTreeItem } from 'vscode-azureextensionui';
-import { StorageAccount } from '../../node_modules/azure-arm-storage/lib/models';
+import { StorageAccount } from 'azure-arm-storage/lib/models';
+import { AzureTreeItem, createAzureClient, createTreeItemsWithErrorHandling, SubscriptionTreeItem } from 'vscode-azureextensionui';
 import { StorageAccountWrapper } from '../components/storageWrappers';
 import { StorageAccountTreeItem } from './storageAccounts/storageAccountNode';
 
@@ -17,11 +17,17 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
         let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
 
         let accounts = await storageManagementClient.storageAccounts.list();
-        let accountTreeItems = accounts.map((storageAccount: StorageAccount) => {
-            return new StorageAccountTreeItem(this, new StorageAccountWrapper(storageAccount), storageManagementClient);
-        });
-
-        return accountTreeItems;
+        return createTreeItemsWithErrorHandling(
+            this,
+            accounts,
+            'invalidStorageAccount',
+            async (sa: StorageAccount) => {
+                return await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient);
+            },
+            (sa: StorageAccount) => {
+                return sa.name;
+            }
+        );
     }
 
     hasMoreChildrenImpl(): boolean {

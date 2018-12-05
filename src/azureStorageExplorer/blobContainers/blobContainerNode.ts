@@ -12,9 +12,9 @@ import { ProgressLocation, Uri } from 'vscode';
 import * as vscode from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { awaitWithProgress } from '../../components/progress';
-import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
+import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../storageAccounts/storageAccountNode";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
@@ -32,14 +32,12 @@ interface ICreateChildOptions {
     blobPath: string;
 }
 
-export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyUrl {
+export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
         parent: AzureParentTreeItem,
-        public readonly container: azureStorage.BlobService.ContainerResult,
-        public readonly storageAccount: StorageAccountWrapper,
-        public readonly key: StorageAccountKeyWrapper) {
+        public readonly container: azureStorage.BlobService.ContainerResult) {
         super(parent);
     }
 
@@ -55,7 +53,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
         return !!this._continuationToken;
     }
 
-    public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
+    public async loadMoreChildrenImpl(clearCache: boolean): Promise<BlobTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -65,14 +63,14 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
         let { entries, continuationToken } = blobs;
         this._continuationToken = continuationToken;
         return entries.map((blob: azureStorage.BlobService.BlobResult) => {
-            return new BlobTreeItem(this, blob, this.container, this.storageAccount, this.key);
+            return new BlobTreeItem(this, blob, this.container);
         });
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     private listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {
-            let blobService = this.createBlobService();
+            let blobService = this.root.createBlobService();
             blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults }, (err?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
                 if (err) {
                     reject(err);
@@ -103,15 +101,11 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
         return blobs;
     }
 
-    private createBlobService(): azureStorage.BlobService {
-        return azureStorage.createBlobService(this.storageAccount.name, this.key.value);
-    }
-
     public async deleteTreeItemImpl(): Promise<void> {
         const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
         const result = await vscode.window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const blobService = this.createBlobService();
+            const blobService = this.root.createBlobService();
             await new Promise((resolve, reject) => {
                 // tslint:disable-next-line:no-any
                 blobService.deleteContainer(this.container.name, (err?: any) => {
@@ -124,7 +118,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
         }
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void, userOptions: ICreateChildOptions): Promise<AzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void, userOptions: ICreateChildOptions): Promise<BlobTreeItem> {
         switch (userOptions.childType) {
             case ChildType.uploadedBlob:
                 return this.createChildAsUpload(userOptions, showCreatingTreeItem);
@@ -136,7 +130,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
     }
 
     public async copyUrl(): Promise<void> {
-        let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+        let blobService = this.root.createBlobService();
         let url = blobService.getUrl(this.container.name);
         copypaste.copy(url);
         ext.outputChannel.show();
@@ -233,7 +227,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
     }
 
     private get friendlyContainerName(): string {
-        return `${this.storageAccount.name}/${this.container.name}`;
+        return `${this.root.storageAccount.name}/${this.container.name}`;
     }
 
     /**
@@ -261,7 +255,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
 
             // Find existing blobs
             let blobsToDelete: azureStorage.BlobService.BlobResult[] = [];
-            let blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+            let blobService = this.root.createBlobService();
             blobsToDelete = await this.listAllBlobs(cancellationToken);
             properties.blobsToDelete = blobsToDelete.length;
 
@@ -276,7 +270,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
             }
 
             // ext.outputChannel.show();
-            ext.outputChannel.appendLine(`Deploying to static website ${this.storageAccount.name}/${this.container.name}`);
+            ext.outputChannel.appendLine(`Deploying to static website ${this.root.storageAccount.name}/${this.container.name}`);
 
             // Find source files
             // Note: glob always returns paths with '/' separator, even on Windows, which also is the main
@@ -335,7 +329,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
-                throw new Error(`Could not obtain the primary web endpoint for ${this.storageAccount.name}`);
+                throw new Error(`Could not obtain the primary web endpoint for ${this.root.storageAccount.name}`);
             }
 
             ext.outputChannel.appendLine(`Deployment to static website complete. Primary web endpoint is ${webEndpoint}`);
@@ -352,7 +346,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
     public getPrimaryWebEndpoint(): string | undefined {
         // Right now only one web endpoint is supported per storage account
         // tslint:disable-next-line:strict-boolean-expressions
-        return this.storageAccount.primaryEndpoints && this.storageAccount.primaryEndpoints.web;
+        return this.root.storageAccount.primaryEndpoints && this.root.storageAccount.primaryEndpoints.web;
     }
 
     public getStorageAccountTreeItem(treeItem: AzureTreeItem): StorageAccountTreeItem {
@@ -433,11 +427,11 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
         }
     }
 
-    private async createChildAsUpload(options: ICreateChildOptions, showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
+    private async createChildAsUpload(options: ICreateChildOptions, showCreatingTreeItem: (label: string) => void): Promise<BlobTreeItem> {
         showCreatingTreeItem(options.blobPath);
         await this.uploadFileToBlockBlob(options.filePath, options.blobPath);
         const actualBlob = await this.getBlob(options.blobPath);
-        return new BlobTreeItem(this, actualBlob, this.container, this.storageAccount, this.key);
+        return new BlobTreeItem(this, actualBlob, this.container);
     }
 
     private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
@@ -446,7 +440,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
-        const blobService = azureStorage.createBlobService(this.storageAccount.name, this.key.value);
+        const blobService = this.root.createBlobService();
         let speedSummary: azureStorage.common.streams.speedsummary.SpeedSummary;
         const uploadPromise = new Promise((resolve, reject) => {
             // tslint:disable-next-line:no-function-expression // Grandfathered in
@@ -477,7 +471,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
     }
 
     // Currently only supports creating block blobs
-    private async createChildAsNewBlockBlob(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
+    private async createChildAsNewBlockBlob(showCreatingTreeItem: (label: string) => void): Promise<BlobTreeItem> {
         const blobName = await vscode.window.showInputBox({
             placeHolder: 'Enter a name for the new block blob',
             validateInput: async (name: string) => {
@@ -498,7 +492,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
                 progress.report({ message: `Azure Storage: Creating block blob '${blobName}'` });
                 const blob = await this.createTextBlockBlob(blobName);
                 const actualBlob = await this.getBlob(blob.name);
-                return new BlobTreeItem(this, actualBlob, this.container, this.storageAccount, this.key);
+                return new BlobTreeItem(this, actualBlob, this.container);
             });
         }
 
@@ -507,7 +501,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     private getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
-        const blobService = this.createBlobService();
+        const blobService = this.root.createBlobService();
         return new Promise((resolve, reject) => {
             blobService.getBlobProperties(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
@@ -522,7 +516,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     private createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
-            let blobService = this.createBlobService();
+            let blobService = this.root.createBlobService();
             const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
                 contentSettings: {
                     contentType: 'text/plain'
@@ -554,7 +548,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem implements ICopyU
 
     private async doesBlobExist(blobPath: string): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
-            const blobService = this.createBlobService();
+            const blobService = this.root.createBlobService();
             blobService.doesBlobExist(this.container.name, blobPath, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);

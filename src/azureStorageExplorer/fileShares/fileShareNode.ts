@@ -7,23 +7,21 @@ import * as azureStorage from "azure-storage";
 import * as copypaste from 'copy-paste';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
+import { AzureParentTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
+import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './directoryNode';
 import { askAndCreateChildDirectory } from './directoryUtils';
 import { FileTreeItem } from './fileNode';
 import { askAndCreateEmptyTextFile } from './fileUtils';
 
-export class FileShareTreeItem extends AzureParentTreeItem implements ICopyUrl {
+export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
         parent: AzureParentTreeItem,
-        public readonly share: azureStorage.FileService.ShareResult,
-        public readonly storageAccount: StorageAccountWrapper,
-        public readonly key: StorageAccountKeyWrapper) {
+        public readonly share: azureStorage.FileService.ShareResult) {
         super(parent);
     }
 
@@ -38,7 +36,7 @@ export class FileShareTreeItem extends AzureParentTreeItem implements ICopyUrl {
         return !!this._continuationToken;
     }
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<(DirectoryTreeItem | FileTreeItem)[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -47,17 +45,17 @@ export class FileShareTreeItem extends AzureParentTreeItem implements ICopyUrl {
         let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
-        return (<AzureTreeItem[]>[])
+        return (<(DirectoryTreeItem | FileTreeItem)[]>[])
             .concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
-                return new DirectoryTreeItem(this, '', directory, this.share, this.storageAccount, this.key);
+                return new DirectoryTreeItem(this, '', directory, this.share);
             }))
             .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
-                return new FileTreeItem(this, file, '', this.share, this.storageAccount, this.key);
+                return new FileTreeItem(this, file, '', this.share);
             }));
     }
 
     public async copyUrl(): Promise<void> {
-        let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+        let fileService = this.root.createFileService();
         let url = fileService.getUrl(this.share.name, "");
         copypaste.copy(url);
         ext.outputChannel.show();
@@ -67,7 +65,7 @@ export class FileShareTreeItem extends AzureParentTreeItem implements ICopyUrl {
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return new Promise((resolve, reject) => {
-            let fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+            let fileService = this.root.createFileService();
             fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
                 if (err) {
                     reject(err);
@@ -82,7 +80,7 @@ export class FileShareTreeItem extends AzureParentTreeItem implements ICopyUrl {
         const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
         const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const fileService = azureStorage.createFileService(this.storageAccount.name, this.key.value);
+            const fileService = this.root.createFileService();
             await new Promise((resolve, reject) => {
                 // tslint:disable-next-line:no-any
                 fileService.deleteShare(this.share.name, (err?: any) => {
@@ -95,11 +93,11 @@ export class FileShareTreeItem extends AzureParentTreeItem implements ICopyUrl {
         }
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void, userOptions?: {}): Promise<AzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void, userOptions?: {}): Promise<DirectoryTreeItem | FileTreeItem> {
         if (userOptions === FileTreeItem.contextValue) {
-            return askAndCreateEmptyTextFile(this, '', this.share, this.storageAccount, this.key, showCreatingTreeItem);
+            return askAndCreateEmptyTextFile(this, '', this.share, showCreatingTreeItem);
         } else {
-            return askAndCreateChildDirectory(this, '', this.share, this.storageAccount, this.key, showCreatingTreeItem);
+            return askAndCreateChildDirectory(this, '', this.share, showCreatingTreeItem);
         }
     }
 }

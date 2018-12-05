@@ -6,19 +6,12 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, UserCancelledError } from 'vscode-azureextensionui';
-import { StorageAccountKeyWrapper, StorageAccountWrapper } from "../../components/storageWrappers";
+import { AzureParentTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { IStorageRoot } from "../IStorageRoot";
 import { QueueTreeItem } from './queueNode';
 
-export class QueueGroupTreeItem extends AzureParentTreeItem {
+export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
-
-    constructor(
-        parent: AzureParentTreeItem,
-        public readonly storageAccount: StorageAccountWrapper,
-        public readonly key: StorageAccountKeyWrapper) {
-        super(parent);
-    }
 
     public label: string = "Queues";
     public contextValue: string = 'azureQueueGroup';
@@ -27,7 +20,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue.svg')
     };
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<QueueTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -40,9 +33,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem {
         return entries.map((queue: azureStorage.QueueService.QueueResult) => {
             return new QueueTreeItem(
                 this,
-                queue,
-                this.storageAccount,
-                this.key);
+                queue);
         });
 
     }
@@ -54,7 +45,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem {
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise((resolve, reject) => {
-            let queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
+            let queueService = this.root.createQueueService();
             queueService.listQueuesSegmented(currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.QueueService.ListQueueResult) => {
                 if (err) {
                     reject(err);
@@ -65,7 +56,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem {
         });
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<AzureTreeItem> {
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<QueueTreeItem> {
         const queueName = await window.showInputBox({
             placeHolder: 'Enter a name for the new queue',
             validateInput: QueueGroupTreeItem.validateQueueName
@@ -76,7 +67,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem {
                 showCreatingTreeItem(queueName);
                 progress.report({ message: `Azure Storage: Creating queue '${queueName}'` });
                 const share = await this.createQueue(queueName);
-                return new QueueTreeItem(this, share, this.storageAccount, this.key);
+                return new QueueTreeItem(this, share);
             });
         }
 
@@ -86,7 +77,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem {
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     private createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
         return new Promise((resolve, reject) => {
-            let queueService = azureStorage.createQueueService(this.storageAccount.name, this.key.value);
+            let queueService = this.root.createQueueService();
             queueService.createQueue(name, (err?: Error, result?: azureStorage.QueueService.QueueResult) => {
                 if (err) {
                     reject(err);
