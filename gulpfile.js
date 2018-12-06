@@ -37,13 +37,10 @@ gulp.task('install-azure-account', () => {
     }
 });
 
-gulp.task('test', gulp.series('install-azure-account', (cb) => {
+gulp.task('test', gulp.series('install-azure-account', () => {
     const env = process.env;
     env.DEBUGTELEMETRY = 1;
     env.MOCHA_reporter = 'mocha-junit-reporter';
     env.MOCHA_FILE = path.join(__dirname, 'test-results.xml');
-    const cmd = cp.spawn('node', ['./node_modules/vscode/bin/test'], { stdio: 'inherit', env });
-    cmd.on('close', (code) => {
-        cb(code);
-    });
+    return cp.spawn('node', ['./node_modules/vscode/bin/test'], { stdio: 'inherit', env });
 }));
