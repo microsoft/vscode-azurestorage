@@ -33,7 +33,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
   public async copyUrl(): Promise<void> {
     let blobService = this.root.createBlobService();
     let url = blobService.getUrl(this.container.name, this.blob.name);
-    clipboardy.write(url);
+    await clipboardy.write(url);
     ext.outputChannel.show();
     ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
   }

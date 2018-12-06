@@ -27,12 +27,12 @@ async function openStorageAccountInStorageExplorer(treeItem: StorageAccountTreeI
 }
 
 async function copyPrimaryKey(treeItem: StorageAccountTreeItem): Promise<void> {
-    clipboardy.write(treeItem.key.value);
+    await clipboardy.write(treeItem.key.value);
 }
 
 async function copyConnectionString(treeItem: StorageAccountTreeItem): Promise<void> {
     let connectionString = await treeItem.getConnectionString();
-    clipboardy.write(connectionString);
+    await clipboardy.write(connectionString);
 }
 
 async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {

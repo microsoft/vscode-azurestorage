@@ -662,6 +662,7 @@
 		"all": "npm i && npm run lint && npm test"
 	},
 	"devDependencies": {
+		"@types/clipboardy": "^1.1.0",
 		"@types/fs-extra": "=5.0.2",
 		"@types/glob": "^5.0.35",
 		"@types/mocha": "^5.2.5",
@@ -684,7 +685,6 @@
 		"ms-vscode.azure-account"
 	],
 	"dependencies": {
-		"@types/clipboardy": "^1.1.0",
 		"azure-arm-resource": "^3.1.1-preview",
 		"azure-arm-storage": "^5.1.1-preview",
 		"azure-storage": "^2.10.0",

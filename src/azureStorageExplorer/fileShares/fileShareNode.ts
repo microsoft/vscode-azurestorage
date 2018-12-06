@@ -57,7 +57,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     public async copyUrl(): Promise<void> {
         let fileService = this.root.createFileService();
         let url = fileService.getUrl(this.share.name, "");
-        clipboardy.write(url);
+        await clipboardy.write(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Share URL copied to clipboard: ${url}`);
     }
