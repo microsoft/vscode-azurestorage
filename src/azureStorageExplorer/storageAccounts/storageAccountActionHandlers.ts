@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as copypaste from 'copy-paste';
+import * as clipboardy from 'clipboardy';
 import * as vscode from "vscode";
 import { IActionContext, registerCommand, TelemetryProperties } from 'vscode-azureextensionui';
 import * as ext from "../../constants";
@@ -27,12 +27,12 @@ async function openStorageAccountInStorageExplorer(treeItem: StorageAccountTreeI
 }
 
 async function copyPrimaryKey(treeItem: StorageAccountTreeItem): Promise<void> {
-    copypaste.copy(treeItem.key.value);
+    clipboardy.write(treeItem.key.value);
 }
 
 async function copyConnectionString(treeItem: StorageAccountTreeItem): Promise<void> {
     let connectionString = await treeItem.getConnectionString();
-    copypaste.copy(connectionString);
+    clipboardy.write(connectionString);
 }
 
 async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {
