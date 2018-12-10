@@ -6,7 +6,8 @@
 import * as clipboardy from 'clipboardy';
 import * as vscode from "vscode";
 import { IActionContext, registerCommand, TelemetryProperties } from 'vscode-azureextensionui';
-import * as ext from "../../constants";
+import { isPathEqual, isSubpath } from '../../components/fs';
+import { configurationSettingsKeys, extensionPrefix } from '../../constants';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
 import { showWorkspaceFoldersQuickPick } from "../blobContainers/quickPickUtils";
@@ -69,7 +70,7 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | S
 
     //  Ask for source folder if needed
     if (!sourcePath) {
-        sourcePath = await showWorkspaceFoldersQuickPick("Select the folder to deploy", this.properties, ext.configurationSettingsKeys.deployPath);
+        sourcePath = await showWorkspaceFoldersQuickPick("Select the folder to deploy", this.properties, configurationSettingsKeys.deployPath);
     }
 
     // Get the $web container
@@ -78,5 +79,42 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | S
         throw new Error(`Could not find $web blob container for storage account "${destAccountTreeItem.label}"`);
     }
 
+    await runPreDeployTask(sourcePath, properties);
+
     return destContainerTreeItem.deployStaticWebsite(this, sourcePath);
+}
+
+async function runPreDeployTask(deployFsPath: string, telemetryProperties: TelemetryProperties): Promise<void> {
+    const taskName: string | undefined = vscode.workspace.getConfiguration(extensionPrefix, vscode.Uri.file(deployFsPath)).get(configurationSettingsKeys.preDeployTask);
+    telemetryProperties.hasPreDeployTask = String(!!taskName);
+    if (taskName) {
+        const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
+        const preDeployTask: vscode.Task | undefined = tasks.find((task: vscode.Task) => isTaskEqual(taskName, deployFsPath, task));
+        if (preDeployTask) {
+            await vscode.tasks.executeTask(preDeployTask);
+            await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
+                const listener: vscode.Disposable = vscode.tasks.onDidEndTaskProcess((e: vscode.TaskProcessEndEvent) => {
+                    if (e.execution.task === preDeployTask) {
+                        listener.dispose();
+                        if (e.exitCode === 0) {
+                            resolve();
+                        } else {
+                            reject(new Error(`Pre-deploy task "${e.execution.task.name}" failed with exit code "${e.exitCode}".`));
+                        }
+                    }
+                });
+            });
+        } else {
+            throw new Error(`Failed to find pre-deploy task "${taskName}". Modify your tasks or the setting "${extensionPrefix}.${configurationSettingsKeys.preDeployTask}".`);
+        }
+    }
+}
+
+function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vscode.Task): boolean {
+    if (actualTask.name && actualTask.name.toLowerCase() === expectedName.toLowerCase() && actualTask.scope !== undefined) {
+        const workspaceFolder = <Partial<vscode.WorkspaceFolder>>actualTask.scope;
+        return !!workspaceFolder.uri && (isPathEqual(workspaceFolder.uri.fsPath, expectedPath) || isSubpath(workspaceFolder.uri.fsPath, expectedPath));
+    } else {
+        return false;
+    }
 }
