@@ -8,3 +8,5 @@ export const staticWebsiteContainerName = '$web';
 export enum configurationSettingsKeys {
     deployPath = 'deployPath'
 }
+
+export const extensionPrefix: string = 'azureStorage';

@@ -6,8 +6,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IAzureQuickPickItem, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
-
-export const extensionPrefix: string = 'azureStorage';
+import { extensionPrefix } from '../../constants';
 
 export async function showWorkspaceFoldersQuickPick(placeHolderString: string, telemetryProperties: TelemetryProperties, subPathSetting: string | undefined): Promise<string> {
     const folderQuickPickItems: IAzureQuickPickItem<string | undefined>[] = vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders.map((value) => {

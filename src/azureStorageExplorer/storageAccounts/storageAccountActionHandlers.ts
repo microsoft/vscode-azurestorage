@@ -6,6 +6,8 @@
 import * as clipboardy from 'clipboardy';
 import * as vscode from "vscode";
 import { IActionContext, registerCommand, TelemetryProperties } from 'vscode-azureextensionui';
+import { isPathEqual, isSubpath } from '../../components/fs';
+import { extensionPrefix } from '../../constants';
 import * as ext from "../../constants";
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
@@ -78,5 +80,42 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | S
         throw new Error(`Could not find $web blob container for storage account "${destAccountTreeItem.label}"`);
     }
 
+    await runPreDeployTask(sourcePath, properties);
+
     return destContainerTreeItem.deployStaticWebsite(this, sourcePath);
+}
+
+async function runPreDeployTask(deployFsPath: string, telemetryProperties: TelemetryProperties): Promise<void> {
+    const preDeployTaskKey: string = 'preDeployTask';
+    const taskName: string | undefined = vscode.workspace.getConfiguration(extensionPrefix, vscode.Uri.file(deployFsPath)).get(preDeployTaskKey);
+    telemetryProperties.hasPreDeployTask = String(!!taskName);
+    if (taskName) {
+        const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
+        const preDeployTask: vscode.Task | undefined = tasks.find((task: vscode.Task) => {
+            if (task.name && task.name.toLowerCase() === taskName.toLowerCase() && task.scope !== undefined) {
+                const workspaceFolder = <Partial<vscode.WorkspaceFolder>>task.scope;
+                return !!workspaceFolder.uri && (isPathEqual(workspaceFolder.uri.fsPath, deployFsPath) || isSubpath(workspaceFolder.uri.fsPath, deployFsPath));
+            } else {
+                return false;
+            }
+        });
+
+        if (preDeployTask) {
+            await vscode.tasks.executeTask(preDeployTask);
+            await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
+                const listener: vscode.Disposable = vscode.tasks.onDidEndTaskProcess((e: vscode.TaskProcessEndEvent) => {
+                    if (e.execution.task === preDeployTask) {
+                        listener.dispose();
+                        if (e.exitCode === 0) {
+                            resolve();
+                        } else {
+                            reject(new Error(`Pre-deploy task "${e.execution.task.name}" failed with exit code "${e.exitCode}".`));
+                        }
+                    }
+                });
+            });
+        } else {
+            throw new Error(`Failed to find pre-deploy task "${taskName}". Modify your tasks or the setting "${extensionPrefix}.${preDeployTaskKey}".`);
+        }
+    }
 }
