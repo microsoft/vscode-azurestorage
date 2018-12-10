@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { registerCommand } from 'vscode-azureextensionui';
+import { createChildNode } from '../commonTreeCommands';
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 
 export function registerFileShareGroupActionHandlers(): void {
-    registerCommand("azureStorage.createFileShare", async (treeItem: FileShareGroupTreeItem) => await treeItem.createChild());
+    registerCommand("azureStorage.createFileShare", async (treeItem?: FileShareGroupTreeItem) => await createChildNode(FileShareGroupTreeItem.contextValue, treeItem));
 }

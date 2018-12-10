@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { registerCommand } from 'vscode-azureextensionui';
+import { createChildNode } from '../commonTreeCommands';
 import { QueueGroupTreeItem } from './queueGroupNode';
 
 export function registerQueueGroupActionHandlers(): void {
-    registerCommand("azureStorage.createQueue", async (treeItem: QueueGroupTreeItem) => await treeItem.createChild());
+    registerCommand("azureStorage.createQueue", async (treeItem?: QueueGroupTreeItem) => await createChildNode(QueueGroupTreeItem.contextValue, treeItem));
 }

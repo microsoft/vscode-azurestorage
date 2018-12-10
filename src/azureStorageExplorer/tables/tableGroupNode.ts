@@ -15,7 +15,9 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: azureStorage.TableService.ListTablesContinuationToken | undefined;
 
     public label: string = "Tables";
-    public contextValue: string = 'azureTableGroup';
+    public readonly childTypeLabel: string = "Table";
+    public static contextValue: string = 'azureTableGroup';
+    public contextValue: string = TableGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable.svg')

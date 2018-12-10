@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { registerCommand } from 'vscode-azureextensionui';
+import { createChildNode } from '../commonTreeCommands';
 import { BlobContainerGroupTreeItem } from './blobContainerGroupNode';
 
 export function registerBlobContainerGroupActionHandlers(): void {
-    registerCommand("azureStorage.createBlobContainer", async (treeItem: BlobContainerGroupTreeItem) => await treeItem.createChild());
+    registerCommand("azureStorage.createBlobContainer", async (treeItem?: BlobContainerGroupTreeItem) => await createChildNode(BlobContainerGroupTreeItem.contextValue, treeItem));
 }

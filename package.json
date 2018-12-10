@@ -91,11 +91,13 @@
 				"icon": {
 					"light": "resources/light/refresh.svg",
 					"dark": "resources/dark/refresh.svg"
-				}
+				},
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.openInPortal",
-				"title": "Open in Portal"
+				"title": "Open in Portal",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.configureStaticWebsite",
@@ -104,7 +106,7 @@
 			},
 			{
 				"command": "azureStorage.browseStaticWebsite",
-				"title": "Browse Static Website...",
+				"title": "Browse Static Website",
 				"category": "Azure Storage"
 			},
 			{
@@ -113,7 +115,8 @@
 				"icon": {
 					"light": "resources/light/filter.svg",
 					"dark": "resources/dark/filter.svg"
-				}
+				},
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.deployStaticWebsite",
@@ -126,103 +129,128 @@
 			},
 			{
 				"command": "azureStorage.copyUrl",
-				"title": "Copy URL"
+				"title": "Copy URL",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.openBlobContainer",
-				"title": "Open in Storage Explorer"
+				"title": "Open in Storage Explorer",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.openTable",
-				"title": "Open in Storage Explorer"
+				"title": "Open in Storage Explorer",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.openFileShare",
-				"title": "Open in Storage Explorer"
+				"title": "Open in Storage Explorer",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.openQueue",
-				"title": "Open in Storage Explorer"
+				"title": "Open in Storage Explorer",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.openStorageAccount",
-				"title": "Open in Storage Explorer"
+				"title": "Open in Storage Explorer",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.copyPrimaryKey",
-				"title": "Copy Primary Key"
+				"title": "Copy Primary Key",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.copyConnectionString",
-				"title": "Copy Connection String"
+				"title": "Copy Connection String",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.createBlobContainer",
-				"title": "Create Blob Container"
+				"title": "Create Blob Container...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.deleteBlobContainer",
-				"title": "Delete Blob Container"
+				"title": "Delete Blob Container...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.createBlockTextBlob",
-				"title": "Create Empty Text Blob"
+				"title": "Create Empty Text Blob...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.uploadBlockBlob",
-				"title": "Upload Block Blob..."
+				"title": "Upload Block Blob...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.deleteBlob",
-				"title": "Delete"
+				"title": "Delete...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.downloadBlob",
-				"title": "Download..."
+				"title": "Download...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.createFileShare",
-				"title": "Create File Share"
+				"title": "Create File Share...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.deleteFileShare",
-				"title": "Delete File Share"
+				"title": "Delete File Share...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.createDirectory",
-				"title": "Create Directory"
+				"title": "Create Directory...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.createSubdirectory",
-				"title": "Create Subdirectory"
+				"title": "Create Subdirectory...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.deleteDirectory",
-				"title": "Delete Directory"
+				"title": "Delete Directory...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.createTextFile",
-				"title": "Create Empty Text File"
+				"title": "Create Empty Text File...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.deleteFile",
-				"title": "Delete"
+				"title": "Delete...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.createTable",
-				"title": "Create Table"
+				"title": "Create Table...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.deleteTable",
-				"title": "Delete Table"
+				"title": "Delete Table...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.createQueue",
-				"title": "Create Queue"
+				"title": "Create Queue...",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.deleteQueue",
-				"title": "Delete Queue"
+				"title": "Delete Queue...",
+				"category": "Azure Storage"
 			}
 		],
 		"menus": {
@@ -512,14 +540,6 @@
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.createBlobContainer",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.deleteBlobContainer",
-					"when": "never"
-				},
-				{
 					"command": "azureStorage.createBlockTextBlob",
 					"when": "never"
 				},
@@ -540,23 +560,7 @@
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.createTable",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.deleteTable",
-					"when": "never"
-				},
-				{
 					"command": "azureStorage.openFileShare",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.createFileShare",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.deleteFileShare",
 					"when": "never"
 				},
 				{
@@ -582,39 +586,6 @@
 				{
 					"command": "azureStorage.openQueue",
 					"when": "never"
-				},
-				{
-					"command": "azureStorage.openStorageAccount",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.copyConnectionString",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.copyPrimaryKey",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.createQueue",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.deleteQueue",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.openInPortal",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.configureStaticWebsite"
-				},
-				{
-					"command": "azureStorage.deployStaticWebsite"
-				},
-				{
-					"command": "azureStorage.browseStaticWebsite"
 				}
 			]
 		},

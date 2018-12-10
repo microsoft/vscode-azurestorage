@@ -8,6 +8,7 @@ import * as vscode from "vscode";
 import { IActionContext, registerCommand, TelemetryProperties } from 'vscode-azureextensionui';
 import { isPathEqual, isSubpath } from '../../components/fs';
 import { configurationSettingsKeys, extensionPrefix } from '../../constants';
+import { ext } from '../../extensionVariables';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
 import { showWorkspaceFoldersQuickPick } from "../blobContainers/quickPickUtils";
@@ -21,17 +22,29 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
 }
 
-async function openStorageAccountInStorageExplorer(treeItem: StorageAccountTreeItem): Promise<void> {
+async function openStorageAccountInStorageExplorer(treeItem?: StorageAccountTreeItem): Promise<void> {
+    if (!treeItem) {
+        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
+    }
+
     let accountId = treeItem.storageAccount.id;
 
     await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId);
 }
 
-async function copyPrimaryKey(treeItem: StorageAccountTreeItem): Promise<void> {
+async function copyPrimaryKey(treeItem?: StorageAccountTreeItem): Promise<void> {
+    if (!treeItem) {
+        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
+    }
+
     await clipboardy.write(treeItem.key.value);
 }
 
-async function copyConnectionString(treeItem: StorageAccountTreeItem): Promise<void> {
+async function copyConnectionString(treeItem?: StorageAccountTreeItem): Promise<void> {
+    if (!treeItem) {
+        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
+    }
+
     let connectionString = await treeItem.getConnectionString();
     await clipboardy.write(connectionString);
 }
