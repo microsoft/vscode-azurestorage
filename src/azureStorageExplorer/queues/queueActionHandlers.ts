@@ -5,11 +5,12 @@
 
 import { registerCommand } from 'vscode-azureextensionui';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { deleteNode } from '../commonTreeCommands';
 import { QueueTreeItem } from './queueNode';
 
 export function registerQueueActionHandlers(): void {
     registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);
-    registerCommand("azureStorage.deleteQueue", async (treeItem: QueueTreeItem) => await treeItem.deleteTreeItem());
+    registerCommand("azureStorage.deleteQueue", async (treeItem?: QueueTreeItem) => await deleteNode(QueueTreeItem.contextValue, treeItem));
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in

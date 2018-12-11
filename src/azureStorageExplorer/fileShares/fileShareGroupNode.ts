@@ -18,7 +18,9 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     public label: string = "File Shares";
-    public contextValue: string = 'azureFileShareGroup';
+    public readonly childTypeLabel: string = "File Share";
+    public static contextValue: string = 'azureFileShareGroup';
+    public contextValue: string = FileShareGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare.svg')

@@ -25,6 +25,7 @@ import { registerQueueGroupActionHandlers } from './azureStorageExplorer/queues/
 import { selectStorageAccountTreeItemForCommand } from './azureStorageExplorer/selectStorageAccountNodeForCommand';
 import { StorageAccountProvider } from './azureStorageExplorer/storageAccountProvider';
 import { registerStorageAccountActionHandlers } from './azureStorageExplorer/storageAccounts/storageAccountActionHandlers';
+import { StorageAccountTreeItem } from './azureStorageExplorer/storageAccounts/storageAccountNode';
 import { registerTableActionHandlers } from './azureStorageExplorer/tables/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/tableGroupActionHandlers';
 import { ext } from './extensionVariables';
@@ -65,7 +66,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<AzureE
         registerCommand('azureStorage.refresh', async (treeItem?: AzureTreeItem) => await tree.refresh(treeItem));
         registerCommand('azureStorage.copyUrl', (treeItem: AzureTreeItem & ICopyUrl) => treeItem.copyUrl());
         registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
-        registerCommand("azureStorage.openInPortal", (treeItem: AzureTreeItem) => {
+        registerCommand("azureStorage.openInPortal", async (treeItem?: AzureTreeItem) => {
+            if (!treeItem) {
+                treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
+            }
+
             treeItem.openInPortal();
         });
         registerCommand("azureStorage.configureStaticWebsite", async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {

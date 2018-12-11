@@ -14,7 +14,9 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     public label: string = "Queues";
-    public contextValue: string = 'azureQueueGroup';
+    public readonly childTypeLabel: string = "Queue";
+    public static contextValue: string = 'azureQueueGroup';
+    public contextValue: string = QueueGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue.svg')

@@ -7,6 +7,7 @@ import { IActionContext, registerCommand, registerEvent } from 'vscode-azureexte
 import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileEditor';
 import { ext } from '../../extensionVariables';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { deleteNode } from '../commonTreeCommands';
 import { DirectoryTreeItem } from './directoryNode';
 import { FileFileHandler } from './fileFileHandler';
 import { FileTreeItem } from './fileNode';
@@ -19,7 +20,7 @@ export function registerFileShareActionHandlers(): void {
 
     registerCommand("azureStorage.openFileShare", openFileShareInStorageExplorer);
     registerCommand("azureStorage.editFile", async (treeItem: FileTreeItem) => await _editor.showEditor(treeItem));
-    registerCommand("azureStorage.deleteFileShare", async (treeItem: FileShareTreeItem) => await treeItem.deleteTreeItem());
+    registerCommand("azureStorage.deleteFileShare", async (treeItem?: FileShareTreeItem) => await deleteNode(FileShareTreeItem.contextValue, treeItem));
     registerCommand("azureStorage.createDirectory", async (treeItem: FileShareTreeItem) => await treeItem.createChild(DirectoryTreeItem.contextValue));
     registerCommand("azureStorage.createTextFile", async (treeItem: FileShareTreeItem) => {
         let childTreeItem = await treeItem.createChild(FileTreeItem.contextValue);

@@ -26,7 +26,8 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     }
 
     public label: string = this.share.name;
-    public contextValue: string = 'azureFileShare';
+    public static contextValue: string = 'azureFileShare';
+    public contextValue: string = FileShareTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare.svg')

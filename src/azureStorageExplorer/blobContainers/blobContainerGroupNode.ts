@@ -15,7 +15,9 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     public label: string = "Blob Containers";
-    public contextValue: string = 'azureBlobContainerGroup';
+    public readonly childTypeLabel: string = "Blob Container";
+    public static contextValue: string = 'azureBlobContainerGroup';
+    public contextValue: string = BlobContainerGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlobContainer.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlobContainer.svg')

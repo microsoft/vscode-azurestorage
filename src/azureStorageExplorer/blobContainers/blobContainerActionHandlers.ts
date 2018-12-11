@@ -9,6 +9,7 @@ import { IActionContext, registerCommand, registerEvent } from 'vscode-azureexte
 import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileEditor';
 import { ext } from '../../extensionVariables';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { deleteNode } from '../commonTreeCommands';
 import { BlobContainerTreeItem, ChildType } from './blobContainerNode';
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
@@ -19,7 +20,7 @@ export function registerBlobContainerActionHandlers(): void {
 
     registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
     registerCommand("azureStorage.editBlob", async (treeItem: BlobTreeItem) => await _editor.showEditor(treeItem));
-    registerCommand("azureStorage.deleteBlobContainer", async (treeItem: BlobContainerTreeItem) => await treeItem.deleteTreeItem());
+    registerCommand("azureStorage.deleteBlobContainer", async (treeItem?: BlobContainerTreeItem) => await deleteNode(BlobContainerTreeItem.contextValue, treeItem));
     registerCommand("azureStorage.createBlockTextBlob", async (treeItem: BlobContainerTreeItem) => {
         let childTreeItem = await treeItem.createChild({ childType: ChildType.newBlockBlob });
         await vscode.commands.executeCommand("azureStorage.editBlob", childTreeItem);
