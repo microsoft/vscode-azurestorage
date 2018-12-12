@@ -15,10 +15,15 @@ import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../component
 import * as ext from "../../constants";
 import { BlobContainerGroupTreeItem } from '../blobContainers/blobContainerGroupNode';
 import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
+import { DirectoryTreeItem } from '../fileShares/directoryNode';
+import { FileTreeItem } from '../fileShares/fileNode';
 import { FileShareGroupTreeItem } from '../fileShares/fileShareGroupNode';
+import { FileShareTreeItem } from '../fileShares/fileShareNode';
 import { IStorageRoot } from '../IStorageRoot';
 import { QueueGroupTreeItem } from '../queues/queueGroupNode';
+import { QueueTreeItem } from '../queues/queueNode';
 import { TableGroupTreeItem } from '../tables/tableGroupNode';
+import { TableTreeItem } from '../tables/tableNode';
 
 export type WebsiteHostingStatus = {
     capable: boolean;
@@ -33,6 +38,9 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public key: StorageAccountKeyWrapper;
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
+    private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
+    private readonly _queueGroupTreeItem: QueueGroupTreeItem;
+    private readonly _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot;
 
     private constructor(
@@ -42,6 +50,9 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         super(parent);
         this._root = this.createRoot(parent.root);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
+        this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
+        this._queueGroupTreeItem = new QueueGroupTreeItem(this);
+        this._tableGroupTreeItem = new TableGroupTreeItem(this);
     }
 
     public static async createStorageAccountTreeItem(parent: AzureParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
@@ -73,18 +84,39 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
 
         if (!!primaryEndpoints.file) {
-            groupTreeItems.push(new FileShareGroupTreeItem(this));
+            groupTreeItems.push(this._fileShareGroupTreeItem);
         }
 
         if (!!primaryEndpoints.queue) {
-            groupTreeItems.push(new QueueGroupTreeItem(this));
+            groupTreeItems.push(this._queueGroupTreeItem);
         }
 
         if (!!primaryEndpoints.table) {
-            groupTreeItems.push(new TableGroupTreeItem(this));
+            groupTreeItems.push(this._tableGroupTreeItem);
         }
 
         return groupTreeItems;
+    }
+
+    public pickTreeItemImpl(expectedContextValue: string): AzureTreeItem<IStorageRoot> | undefined {
+        switch (expectedContextValue) {
+            case BlobContainerGroupTreeItem.contextValue:
+            case BlobContainerTreeItem.contextValue:
+                return this._blobContainerGroupTreeItem;
+            case FileShareGroupTreeItem.contextValue:
+            case FileShareTreeItem.contextValue:
+            case DirectoryTreeItem.contextValue:
+            case FileTreeItem.contextValue:
+                return this._fileShareGroupTreeItem;
+            case QueueGroupTreeItem.contextValue:
+            case QueueTreeItem.contextValue:
+                return this._queueGroupTreeItem;
+            case TableGroupTreeItem.contextValue:
+            case TableTreeItem.contextValue:
+                return this._tableGroupTreeItem;
+            default:
+                return undefined;
+        }
     }
 
     hasMoreChildrenImpl(): boolean {

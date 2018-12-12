@@ -16,7 +16,8 @@ export class TableTreeItem extends AzureTreeItem<IStorageRoot> {
     }
 
     public label: string = this.tableName;
-    public contextValue: string = 'azureTable';
+    public static contextValue: string = 'azureTable';
+    public contextValue: string = TableTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureTable.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureTable.svg')

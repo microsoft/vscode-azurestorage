@@ -17,6 +17,7 @@ The Azure Storage extension for VS Code lets you deploy static websites and brow
 ## Extension Settings
 
 * `azureStorage.showExplorer`: Set to `false` to hide Azure Storage Explorer
+* `azureStorage.preDeployTask`: Set to the name of a task to be run before deploying a static website.
 * `azureStorage.storageExplorerLocation`:  [Mac only] Set to `"Path/To/Microsoft Azure Storage Explorer.app"` to override the default location.
 * `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing a warning dialog on File file save.
 * `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing a warning dialog on Blob file save.

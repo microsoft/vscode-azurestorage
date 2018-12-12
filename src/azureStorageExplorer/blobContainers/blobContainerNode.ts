@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
-import * as copypaste from 'copy-paste';
+import * as clipboardy from 'clipboardy';
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
-import { ProgressLocation, Uri } from 'vscode';
 import * as vscode from 'vscode';
+import { ProgressLocation, Uri } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { awaitWithProgress } from '../../components/progress';
 import { ext } from "../../extensionVariables";
@@ -132,7 +132,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     public async copyUrl(): Promise<void> {
         let blobService = this.root.createBlobService();
         let url = blobService.getUrl(this.container.name);
-        copypaste.copy(url);
+        await clipboardy.write(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Container URL copied to clipboard: ${url}`);
     }

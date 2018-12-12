@@ -17,7 +17,8 @@ export class QueueTreeItem extends AzureTreeItem<IStorageRoot> {
     }
 
     public label: string = this.queue.name;
-    public contextValue: string = 'azureQueue';
+    public static contextValue: string = 'azureQueue';
+    public contextValue: string = QueueTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue.svg')

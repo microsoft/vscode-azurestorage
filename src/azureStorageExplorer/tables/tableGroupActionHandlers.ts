@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { registerCommand } from 'vscode-azureextensionui';
+import { createChildNode } from '../commonTreeCommands';
 import { TableGroupTreeItem } from './tableGroupNode';
 
 export function registerTableGroupActionHandlers(): void {
-    registerCommand("azureStorage.createTable", async (treeItem: TableGroupTreeItem) => await treeItem.createChild());
+    registerCommand("azureStorage.createTable", async (treeItem?: TableGroupTreeItem) => await createChildNode(TableGroupTreeItem.contextValue, treeItem));
 }

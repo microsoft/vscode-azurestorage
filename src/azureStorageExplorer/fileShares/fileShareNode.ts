@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
-import * as copypaste from 'copy-paste';
+import * as clipboardy from 'clipboardy';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { AzureParentTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
@@ -26,7 +26,8 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     }
 
     public label: string = this.share.name;
-    public contextValue: string = 'azureFileShare';
+    public static contextValue: string = 'azureFileShare';
+    public contextValue: string = FileShareTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare.svg')
@@ -57,7 +58,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     public async copyUrl(): Promise<void> {
         let fileService = this.root.createFileService();
         let url = fileService.getUrl(this.share.name, "");
-        copypaste.copy(url);
+        await clipboardy.write(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Share URL copied to clipboard: ${url}`);
     }
