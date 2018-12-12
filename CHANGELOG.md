@@ -1,6 +1,15 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.5.0 - 2018-12-11
+### Fixed
+- [Copy connection string](https://github.com/Microsoft/vscode-azurestorage/issues/141) now works on linux
+
+### Added
+- [Themed icons](https://github.com/Microsoft/vscode-azurestorage/issues/6)
+- [Pre-publish for static websites](https://github.com/Microsoft/vscode-azurestorage/issues/216)
+- Provisional support for [sovereign accounts in Azure](https://github.com/Microsoft/vscode-azurestorage/pull/253)
+
 ## 0.4.2 - 2018-09-28
 
 ### Fixed
