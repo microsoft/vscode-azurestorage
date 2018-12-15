@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as assert from 'assert';
 import { StorageManagementClient } from 'azure-arm-storage';
 import * as azureStorage from "azure-storage";
 // tslint:disable-next-line:no-require-imports
@@ -12,7 +13,8 @@ import { commands, MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, ISubscriptionRoot, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
-import * as ext from "../../constants";
+import * as constants from "../../constants";
+import { ext } from "../../extensionVariables";
 import { BlobContainerGroupTreeItem } from '../blobContainers/blobContainerGroupNode';
 import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
 import { DirectoryTreeItem } from '../fileShares/directoryNode';
@@ -34,14 +36,36 @@ export type WebsiteHostingStatus = {
 
 type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
 
+const defaultIconPath: { light: string | Uri; dark: string | Uri } = {
+    light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount.svg'),
+    dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
+};
+
+const websiteIconPath: { light: string | Uri; dark: string | Uri } = {
+    light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'Website.svg'),
+    dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'Website.svg')
+};
+
 export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public key: StorageAccountKeyWrapper;
+    public iconPath: { light: string | Uri; dark: string | Uri } = defaultIconPath;
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
     private readonly _queueGroupTreeItem: QueueGroupTreeItem;
     private readonly _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot;
+    private _websiteHostingEnabled: boolean;
+
+    // Call this before giving this node to vscode
+    public set websiteHostingEnabled(value: boolean) {
+        this._websiteHostingEnabled = value;
+        this.iconPath = value ? websiteIconPath : defaultIconPath;
+    }
+
+    public get websiteHostingEnabled(): boolean {
+        return this._websiteHostingEnabled;
+    }
 
     private constructor(
         parent: AzureParentTreeItem,
@@ -70,10 +94,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public label: string = this.storageAccount.name;
     public static contextValue: string = 'azureStorageAccount';
     public contextValue: string = StorageAccountTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
-    };
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<IStorageRoot>[]> {
         let primaryEndpoints = this.storageAccount.primaryEndpoints;
@@ -101,6 +121,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public pickTreeItemImpl(expectedContextValue: string): AzureTreeItem<IStorageRoot> | undefined {
         switch (expectedContextValue) {
             case BlobContainerGroupTreeItem.contextValue:
+                assert(this.iconPath && typeof this._websiteHostingEnabled === 'boolean', "Haven't called storageAccountWebsiteHostingEnabled");
             case BlobContainerTreeItem.contextValue:
                 return this._blobContainerGroupTreeItem;
             case FileShareGroupTreeItem.contextValue:
@@ -200,7 +221,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         await this.refresh();
 
         // Currently only the child with the name "$web" is supported for hosting websites
-        let id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${ext.staticWebsiteContainerName}`;
+        let id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${constants.staticWebsiteContainerName}`;
         let containerTreeItem = <BlobContainerTreeItem>await this.treeDataProvider.findTreeItem(id);
         return containerTreeItem;
     }
@@ -234,6 +255,30 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     }
 
+    public async setWebsiteHostingProperties(staticWebsiteProperties: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties): Promise<WebsiteHostingStatus> {
+        let blobService = await this.root.createBlobService();
+        return await new Promise<WebsiteHostingStatus>((resolve, reject) => {
+            blobService.getServiceProperties((err, props: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    props.StaticWebsite = {
+                        Enabled: staticWebsiteProperties.Enabled,
+                        IndexDocument: staticWebsiteProperties.IndexDocument || undefined,
+                        ErrorDocument404Path: staticWebsiteProperties.ErrorDocument404Path || undefined
+                    };
+                    blobService.setServiceProperties(props, (err2, _response) => {
+                        if (err2) {
+                            reject(err2);
+                        } else {
+                            resolve();
+                        }
+                    });
+                }
+            });
+        });
+    }
+
     private async getAccountType(): Promise<StorageTypes> {
         let blobService = this.root.createBlobService();
         return await new Promise<StorageTypes>((resolve, reject) => {
@@ -249,11 +294,45 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async configureStaticWebsite(): Promise<void> {
-        let hostingStatus = await this.getWebsiteHostingStatus();
-        await this.ensureHostingCapable(hostingStatus);
+        const defaultIndexDocumentName = 'index.html';
+        let oldStatus = await this.getWebsiteHostingStatus();
+        await this.ensureHostingCapable(oldStatus);
+        let indexDocument = await ext.ui.showInputBox({
+            ignoreFocusOut: true,
+            prompt: "Enter the index document name",
+            value: oldStatus.indexDocument || defaultIndexDocumentName
+        });
 
-        let resourceId = `${this.fullId}/staticWebsite`;
-        this.openInPortal(resourceId);
+        let errorDocument404Path: string = await ext.ui.showInputBox({
+            ignoreFocusOut: true,
+            prompt: "Enter the 404 document path",
+            value: oldStatus.errorDocument404Path || "",
+            placeHolder: 'e.g. error/documents/error.html',
+            validateInput: (value: string): string | undefined => {
+                if (value) {
+                    if (value.startsWith('/') || value.endsWith('/')) {
+                        return "If specified, the error document path must not begin or end with a '/' character.";
+                    } else if (value.length < 3 || value.length > 255) {
+                        return "If specified, the error document path must be between 3 and 255 characters in length";
+                    }
+                }
+                return undefined;
+            }
+        });
+        let newStatus: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties = {
+            Enabled: true,
+            ErrorDocument404Path: errorDocument404Path,
+            IndexDocument: indexDocument
+        };
+        await this.setWebsiteHostingProperties(newStatus);
+        let msg = oldStatus.enabled ?
+            'Static website hosting configuration updated' :
+            'The storage account has been enabled for static website hosting';
+        window.showInformationMessage(msg);
+        if (!oldStatus.enabled) {
+            await ext.tree.refresh();
+        }
+
     }
 
     public async browseStaticWebsite(): Promise<void> {

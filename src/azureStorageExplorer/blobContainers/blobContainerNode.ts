@@ -12,6 +12,7 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { awaitWithProgress } from '../../components/progress';
+import * as constants from '../../constants';
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -32,6 +33,16 @@ interface ICreateChildOptions {
     blobPath: string;
 }
 
+const defaultIconPath: { light: string | Uri; dark: string | Uri } = {
+    light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount.svg'),
+    dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
+};
+
+const websiteIconPath: { light: string | Uri; dark: string | Uri } = {
+    light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'Website.svg'),
+    dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'Website.svg')
+};
+
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
@@ -39,6 +50,12 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         parent: AzureParentTreeItem,
         public readonly container: azureStorage.BlobService.ContainerResult) {
         super(parent);
+        const storageAccountNode = <StorageAccountTreeItem>(parent.parent);
+        const websiteHostingEnabled = storageAccountNode.websiteHostingEnabled;
+        this.iconPath =
+            websiteHostingEnabled && container.name === constants.staticWebsiteContainerName ?
+                websiteIconPath :
+                defaultIconPath;
     }
 
     public label: string = this.container.name;
