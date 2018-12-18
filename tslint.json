@@ -21,6 +21,7 @@
             "allow-string",
             "allow-undefined-union",
             "allow-null-union",
+            "allow-boolean-or-undefined",
             "allow-mix",
             "allow-number"
         ],

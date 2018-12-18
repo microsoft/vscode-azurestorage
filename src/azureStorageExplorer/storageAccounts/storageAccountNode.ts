@@ -121,7 +121,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public pickTreeItemImpl(expectedContextValue: string): AzureTreeItem<IStorageRoot> | undefined {
         switch (expectedContextValue) {
             case BlobContainerGroupTreeItem.contextValue:
-                assert(this.iconPath && typeof this._websiteHostingEnabled === 'boolean', "Haven't called storageAccountWebsiteHostingEnabled");
+                assert(typeof this._websiteHostingEnabled === 'boolean', "Haven't called storageAccountWebsiteHostingEnabled");
             case BlobContainerTreeItem.contextValue:
                 return this._blobContainerGroupTreeItem;
             case FileShareGroupTreeItem.contextValue:
@@ -256,18 +256,18 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async setWebsiteHostingProperties(staticWebsiteProperties: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties): Promise<WebsiteHostingStatus> {
-        let blobService = await this.root.createBlobService();
+        let blobService = this.root.createBlobService();
         return await new Promise<WebsiteHostingStatus>((resolve, reject) => {
-            blobService.getServiceProperties((err, props: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties) => {
+            blobService.getServiceProperties((err?: Error | undefined, props: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties = {}) => {
                 if (err) {
                     reject(err);
                 } else {
                     props.StaticWebsite = {
                         Enabled: staticWebsiteProperties.Enabled,
-                        IndexDocument: staticWebsiteProperties.IndexDocument || undefined,
-                        ErrorDocument404Path: staticWebsiteProperties.ErrorDocument404Path || undefined
+                        IndexDocument: staticWebsiteProperties.IndexDocument ? staticWebsiteProperties.IndexDocument : undefined,
+                        ErrorDocument404Path: staticWebsiteProperties.ErrorDocument404Path ? staticWebsiteProperties.ErrorDocument404Path : undefined
                     };
-                    blobService.setServiceProperties(props, (err2, _response) => {
+                    blobService.setServiceProperties(props, (err2?: Error | undefined, _response?) => {
                         if (err2) {
                             reject(err2);
                         } else {
@@ -300,13 +300,13 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         let indexDocument = await ext.ui.showInputBox({
             ignoreFocusOut: true,
             prompt: "Enter the index document name",
-            value: oldStatus.indexDocument || defaultIndexDocumentName
+            value: oldStatus.indexDocument ? oldStatus.indexDocument : defaultIndexDocumentName
         });
 
         let errorDocument404Path: string = await ext.ui.showInputBox({
             ignoreFocusOut: true,
             prompt: "Enter the 404 document path",
-            value: oldStatus.errorDocument404Path || "",
+            value: oldStatus.errorDocument404Path ? oldStatus.errorDocument404Path : "",
             placeHolder: 'e.g. error/documents/error.html',
             validateInput: (value: string): string | undefined => {
                 if (value) {
