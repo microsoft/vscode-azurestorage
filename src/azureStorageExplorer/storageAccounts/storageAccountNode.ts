@@ -258,7 +258,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public async setWebsiteHostingProperties(staticWebsiteProperties: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties): Promise<WebsiteHostingStatus> {
         let blobService = this.root.createBlobService();
         return await new Promise<WebsiteHostingStatus>((resolve, reject) => {
-            blobService.getServiceProperties((err?: Error | undefined, props: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties = {}) => {
+            blobService.getServiceProperties((err: Error | undefined, props: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties = {}) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -267,7 +267,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                         IndexDocument: staticWebsiteProperties.IndexDocument ? staticWebsiteProperties.IndexDocument : undefined,
                         ErrorDocument404Path: staticWebsiteProperties.ErrorDocument404Path ? staticWebsiteProperties.ErrorDocument404Path : undefined
                     };
-                    blobService.setServiceProperties(props, (err2?: Error | undefined, _response?) => {
+                    blobService.setServiceProperties(props, (err2: Error | undefined, _response?) => {
                         if (err2) {
                             reject(err2);
                         } else {
