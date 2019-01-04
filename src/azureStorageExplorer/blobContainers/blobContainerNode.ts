@@ -452,7 +452,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
-        let blobFriendlyPath = `${this.friendlyContainerName}${blobPath}`;
+        let blobFriendlyPath = `${this.friendlyContainerName}/${blobPath}`;
         if (!suppressLogs) {
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
