@@ -21,12 +21,7 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
             this,
             accounts,
             'invalidStorageAccount',
-            async (sa: StorageAccount) => {
-                const accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient);
-                const hostingStatus = await accountTreeItem.getWebsiteHostingStatus();
-                accountTreeItem.websiteHostingEnabled = hostingStatus.enabled;
-                return accountTreeItem;
-            },
+            async (sa: StorageAccount) => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
             (sa: StorageAccount) => {
                 return sa.name;
             }
