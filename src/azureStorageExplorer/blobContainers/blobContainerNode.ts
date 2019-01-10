@@ -39,8 +39,8 @@ const defaultIconPath: { light: string | Uri; dark: string | Uri } = {
 };
 
 const websiteIconPath: { light: string | Uri; dark: string | Uri } = {
-    light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'Website.svg'),
-    dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'Website.svg')
+    light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'BrandAzureStaticWebsites.svg'),
+    dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'BrandAzureStaticWebsites.svg')
 };
 
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
