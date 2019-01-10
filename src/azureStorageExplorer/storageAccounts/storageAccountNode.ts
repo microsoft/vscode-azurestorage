@@ -36,14 +36,12 @@ export type WebsiteHostingStatus = {
 
 type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
 
-const defaultIconPath: { light: string | Uri; dark: string | Uri } = {
-    light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount.svg'),
-    dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
-};
-
 export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public key: StorageAccountKeyWrapper;
-    public iconPath: { light: string | Uri; dark: string | Uri } = defaultIconPath;
+    public iconPath: { light: string | Uri; dark: string | Uri } = {
+        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount.svg'),
+        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
+    };
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
@@ -71,7 +69,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
         this._queueGroupTreeItem = new QueueGroupTreeItem(this);
         this._tableGroupTreeItem = new TableGroupTreeItem(this);
-        this.iconPath = defaultIconPath;
     }
 
     public static async createStorageAccountTreeItem(parent: AzureParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
@@ -319,7 +316,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             'The storage account has been enabled for static website hosting.';
         window.showInformationMessage(msg);
         if (!oldStatus.enabled) {
-            await ext.tree.refresh(this);
+            await this.refresh();
         }
 
     }
@@ -328,8 +325,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const minLengthDocumentPath = 3;
         const maxLengthDocumentPath = 255;
         if (documentpath) {
-            if (documentpath.startsWith('/') || documentpath.endsWith('/')) {
-                return `The ${documentType} document path must not begin or end with a '/' character.`;
+            if (documentpath.includes('/')) {
+                return `The ${documentType} document path cannot contain a '/' character.`;
             } else if (documentpath.length < minLengthDocumentPath || documentpath.length > maxLengthDocumentPath) {
                 return `The ${documentType} document path must be between ${minLengthDocumentPath} and ${maxLengthDocumentPath} characters in length.`;
             }
