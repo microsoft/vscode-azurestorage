@@ -257,11 +257,11 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 if (err) {
                     reject(err);
                 } else {
-                    props.StaticWebsite = {
+                    Object.assign(props.StaticWebsite, {
                         Enabled: staticWebsiteProperties.Enabled,
                         IndexDocument: staticWebsiteProperties.IndexDocument ? staticWebsiteProperties.IndexDocument : undefined,
                         ErrorDocument404Path: staticWebsiteProperties.ErrorDocument404Path ? staticWebsiteProperties.ErrorDocument404Path : undefined
-                    };
+                    });
                     blobService.setServiceProperties(props, (err2: Error | undefined, _response?) => {
                         if (err2) {
                             reject(err2);
@@ -313,7 +313,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         await this.setWebsiteHostingProperties(newStatus);
         let msg = oldStatus.enabled ?
             'Static website hosting configuration updated.' :
-            'The storage account has been enabled for static website hosting.';
+            `The storage account ${this.label} has been enabled for static website hosting.`;
         window.showInformationMessage(msg);
         if (!oldStatus.enabled) {
             await this.refresh();
@@ -321,10 +321,15 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     }
 
-    private validateDocumentNameInput(documentType: string, documentpath: string | undefined): undefined | string {
+    public async disableStaticWebsite(): Promise<void> {
+        await this.setWebsiteHostingProperties({ Enabled: false, ErrorDocument404Path: undefined, IndexDocument: undefined });
+        window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
+    }
+
+    private validateDocumentNameInput(documentType: string, documentpath: string): undefined | string {
         const minLengthDocumentPath = 3;
         const maxLengthDocumentPath = 255;
-        if (documentpath) {
+        if (documentpath || documentType === "Index") {
             if (documentpath.includes('/')) {
                 return `The ${documentType} document path cannot contain a '/' character.`;
             } else if (documentpath.length < minLengthDocumentPath || documentpath.length > maxLengthDocumentPath) {

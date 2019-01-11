@@ -32,6 +32,7 @@
 		"onView:azureStorage",
 		"onCommand:azureStorage.deployStaticWebsite",
 		"onCommand:azureStorage.configureStaticWebsite",
+		"onCommand:azureStorage.disableStaticWebsite",
 		"onCommand:azureStorage.refresh",
 		"onCommand:azureStorage.browseStaticWebsite",
 		"onCommand:azureStorage.openInPortal",
@@ -102,6 +103,11 @@
 			{
 				"command": "azureStorage.configureStaticWebsite",
 				"title": "Configure Static Website...",
+				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.disableStaticWebsite",
+				"title": "Disable Static Website",
 				"category": "Azure Storage"
 			},
 			{
@@ -322,6 +328,11 @@
 					"group": "6_staticwebsites@3"
 				},
 				{
+					"command": "azureStorage.disableStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "6_staticwebsites@3"
+				},
+				{
 					"command": "azureStorage.refresh",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "9_refresh"
@@ -365,6 +376,11 @@
 				},
 				{
 					"command": "azureStorage.configureStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureBlobContainer",
+					"group": "6_staticwebsites@2"
+				},
+				{
+					"command": "azureStorage.disableStaticWebsite",
 					"when": "view == azureStorage && viewItem == azureBlobContainer",
 					"group": "6_staticwebsites@2"
 				},
