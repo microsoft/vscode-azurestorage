@@ -46,14 +46,15 @@ export async function selectStorageAccountTreeItemForCommand(
     }
 
     if (options.mustBeWebsiteCapable) {
-        let hostingStatus = await accountTreeItem.getWebsiteHostingStatus();
+        let hostingStatus = await accountTreeItem.getActualWebsiteHostingStatus();
         await accountTreeItem.ensureHostingCapable(hostingStatus);
 
         if (options.askToConfigureWebsite && !hostingStatus.enabled) {
-            let result = await window.showInformationMessage(
-                `Website hosting is not enabled on storage account "${accountTreeItem.label}". Would you like to enable it?`,
-                DialogResponses.yes,
-                DialogResponses.no);
+            let result = await window.showWarningMessage(
+                `Website hosting is not enabled on storage account "${accountTreeItem.label}".`,
+                { modal: true },
+                { title: "Enable web hosting." },
+                DialogResponses.cancel);
             let enableResponse = (result === DialogResponses.yes);
             actionContext.properties.enableResponse = String(enableResponse);
             actionContext.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';

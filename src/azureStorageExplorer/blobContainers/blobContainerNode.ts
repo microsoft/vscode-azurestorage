@@ -17,6 +17,7 @@ import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../storageAccounts/storageAccountNode";
+import { BlobContainerGroupTreeItem } from "./blobContainerGroupNode";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
 
@@ -33,38 +34,29 @@ interface ICreateChildOptions {
     blobPath: string;
 }
 
-const defaultIconPath: { light: string | Uri; dark: string | Uri } = {
-    light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount.svg'),
-    dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
-};
-
-const websiteIconPath: { light: string | Uri; dark: string | Uri } = {
-    light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'BrandAzureStaticWebsites.svg'),
-    dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'BrandAzureStaticWebsites.svg')
-};
-
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
-        parent: AzureParentTreeItem,
+        parent: BlobContainerGroupTreeItem,
         public readonly container: azureStorage.BlobService.ContainerResult) {
         super(parent);
-        const storageAccountNode = <StorageAccountTreeItem>(parent.parent);
-        const websiteHostingEnabled = storageAccountNode.websiteHostingEnabled;
-        this.iconPath =
-            websiteHostingEnabled && container.name === constants.staticWebsiteContainerName ?
-                websiteIconPath :
-                defaultIconPath;
+    }
+
+    public get iconPath(): { light: string | Uri; dark: string | Uri } {
+        // tslint:disable-next-line:no-non-null-assertion
+        const websiteHostingEnabled: boolean = (<StorageAccountTreeItem>this.parent!.parent).websiteHostingEnabled;
+        const iconFileName = websiteHostingEnabled && this.container.name === constants.staticWebsiteContainerName ?
+            'BrandAzureStaticWebsites' : 'AzureBlobContainer';
+        return {
+            light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', `${iconFileName}.svg`),
+            dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', `${iconFileName}.svg`)
+        };
     }
 
     public label: string = this.container.name;
     public static contextValue: string = 'azureBlobContainer';
     public contextValue: string = BlobContainerTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlobContainer.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlobContainer.svg')
-    };
 
     public hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
