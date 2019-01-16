@@ -10,7 +10,7 @@ let loadEndTime: number;
 
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzureTreeDataProvider, AzureTreeItem, AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createTelemetryReporter, DialogResponses, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzureTreeDataProvider, AzureTreeItem, AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createTelemetryReporter, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
@@ -91,10 +91,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<AzureE
                     mustBeWebsiteCapable: false,
                     askToConfigureWebsite: false
                 });
-            let confirmDisable: vscode.MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${accountTreeItem.label}'?`, DialogResponses.yes, DialogResponses.cancel);
-            if (confirmDisable === DialogResponses.yes) {
-                await accountTreeItem.disableStaticWebsite();
-            }
+            await accountTreeItem.disableStaticWebsite();
         });
         registerCommand('azureStorage.browseStaticWebsite', async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(

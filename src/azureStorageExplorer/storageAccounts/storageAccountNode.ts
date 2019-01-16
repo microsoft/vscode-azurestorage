@@ -10,7 +10,7 @@ import * as azureStorage from "azure-storage";
 import opn = require('opn');
 import * as path from 'path';
 import { commands, MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, ISubscriptionRoot, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, DialogResponses, ISubscriptionRoot, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
 import * as constants from "../../constants";
@@ -49,7 +49,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private readonly _queueGroupTreeItem: QueueGroupTreeItem;
     private readonly _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot;
-    private _websiteHostingEnabled: boolean;
 
     private constructor(
         parent: AzureParentTreeItem,
@@ -108,7 +107,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public pickTreeItemImpl(expectedContextValue: string): AzureTreeItem<IStorageRoot> | undefined {
         switch (expectedContextValue) {
             case BlobContainerGroupTreeItem.contextValue:
-                assert(typeof this._websiteHostingEnabled === 'boolean', "Haven't called storageAccountWebsiteHostingEnabled");
+                assert(typeof this.websiteHostingEnabled === 'boolean', "Haven't called storageAccountWebsiteHostingEnabled");
             case BlobContainerTreeItem.contextValue:
                 return this._blobContainerGroupTreeItem;
             case FileShareGroupTreeItem.contextValue:
@@ -319,10 +318,17 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async disableStaticWebsite(): Promise<void> {
-        await this.setWebsiteHostingProperties({ Enabled: false });
-        this.websiteHostingEnabled = false;
-        window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
-        await this.refresh();
+        if (!this.websiteHostingEnabled) {
+            window.showInformationMessage(`Account '${this.label}' does not currently have staitc web hosting enabled.`);
+            return;
+        }
+        let confirmDisable: MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, DialogResponses.yes, DialogResponses.cancel);
+        if (confirmDisable === DialogResponses.yes) {
+            await this.setWebsiteHostingProperties({ Enabled: false });
+            this.websiteHostingEnabled = false;
+            window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
+            await this.refresh();
+        }
     }
 
     private validateIndexDocumentName(documentpath: string): undefined | string {
