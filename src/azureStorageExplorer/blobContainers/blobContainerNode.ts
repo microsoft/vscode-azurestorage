@@ -36,6 +36,7 @@ interface ICreateChildOptions {
 
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
+    private _websiteHostingEnabled: boolean;
 
     constructor(
         parent: BlobContainerGroupTreeItem,
@@ -45,8 +46,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public get iconPath(): { light: string | Uri; dark: string | Uri } {
         // tslint:disable-next-line:no-non-null-assertion
-        const websiteHostingEnabled: boolean = (<StorageAccountTreeItem>this.parent!.parent).websiteHostingEnabled;
-        const iconFileName = websiteHostingEnabled && this.container.name === constants.staticWebsiteContainerName ?
+        const iconFileName = this._websiteHostingEnabled && this.container.name === constants.staticWebsiteContainerName ?
             'BrandAzureStaticWebsites' : 'AzureBlobContainer';
         return {
             light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', `${iconFileName}.svg`),
@@ -76,6 +76,11 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
+    public async refreshImpl(): Promise<void> {
+        //tslint:disable-next-line:no-non-null-assertion
+        const hostingStatus = await (<StorageAccountTreeItem>this!.parent!.parent).getActualWebsiteHostingStatus();
+        this._websiteHostingEnabled = hostingStatus.enabled;
+    }
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     private listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { window } from 'vscode';
 import { AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "./blobContainers/blobContainerNode";
@@ -50,12 +49,13 @@ export async function selectStorageAccountTreeItemForCommand(
         await accountTreeItem.ensureHostingCapable(hostingStatus);
 
         if (options.askToConfigureWebsite && !hostingStatus.enabled) {
-            let result = await window.showWarningMessage(
+            let enableWebHostingPrompt = "Enable website hosting";
+            let result: { title: string } = await ext.ui.showWarningMessage(
                 `Website hosting is not enabled on storage account "${accountTreeItem.label}".`,
                 { modal: true },
-                { title: "Enable web hosting." },
+                { title: enableWebHostingPrompt },
                 DialogResponses.cancel);
-            let enableResponse = (result === DialogResponses.yes);
+            let enableResponse = (result.title === enableWebHostingPrompt);
             actionContext.properties.enableResponse = String(enableResponse);
             actionContext.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
             if (enableResponse) {

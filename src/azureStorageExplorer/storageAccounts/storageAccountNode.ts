@@ -319,12 +319,14 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async disableStaticWebsite(): Promise<void> {
         if (!this.websiteHostingEnabled) {
-            window.showInformationMessage(`Account '${this.label}' does not currently have staitc web hosting enabled.`);
+            window.showInformationMessage(`Account '${this.label}' does not currently have static website hosting enabled.`);
             return;
         }
-        let confirmDisable: MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, DialogResponses.yes, DialogResponses.cancel);
-        if (confirmDisable === DialogResponses.yes) {
-            await this.setWebsiteHostingProperties({ Enabled: false });
+        let confirmDisable: MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, { title: "Disable" }, DialogResponses.cancel);
+        if (confirmDisable.title === "Disable") {
+            let currentStatus = await this.getActualWebsiteHostingStatus();
+            let props = { Enabled: false, IndexDocument: currentStatus.indexDocument, ErrorDocument404Path: currentStatus.errorDocument404Path };
+            await this.setWebsiteHostingProperties(props);
             this.websiteHostingEnabled = false;
             window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
             await this.refresh();
@@ -348,7 +350,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const maxLengthDocumentPath = 255;
         if (documentpath) {
             if (documentpath.startsWith('/') || documentpath.endsWith('/')) {
-                return "The error document path cannot contain a '/' character.";
+                return "The error document path start or end with a '/' character.";
             } else if (documentpath.length < minLengthDocumentPath || documentpath.length > maxLengthDocumentPath) {
                 return `The error document path must be between ${minLengthDocumentPath} and ${maxLengthDocumentPath} characters in length.`;
             }

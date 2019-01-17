@@ -370,6 +370,11 @@
 					"group": "5_cutcopypaste"
 				},
 				{
+					"command": "azureStorage.browseStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureBlobContainer",
+					"group": "6_staticwebsites@1"
+				},
+				{
 					"command": "azureStorage.deployStaticWebsite",
 					"when": "view == azureStorage && viewItem == azureBlobContainer",
 					"group": "6_staticwebsites@2"
@@ -383,11 +388,6 @@
 					"command": "azureStorage.disableStaticWebsite",
 					"when": "view == azureStorage && viewItem == azureBlobContainer",
 					"group": "6_staticwebsites@4"
-				},
-				{
-					"command": "azureStorage.browseStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "6_staticwebsites@3"
 				},
 				{
 					"command": "azureStorage.deleteBlobContainer",
