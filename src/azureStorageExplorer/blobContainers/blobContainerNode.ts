@@ -38,10 +38,17 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
     private _websiteHostingEnabled: boolean;
 
-    constructor(
+    private constructor(
         parent: BlobContainerGroupTreeItem,
         public readonly container: azureStorage.BlobService.ContainerResult) {
         super(parent);
+    }
+
+    public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: azureStorage.BlobService.ContainerResult): Promise<BlobContainerTreeItem> {
+        const ti = new BlobContainerTreeItem(parent, container);
+        // Get static website status to display the appropriate icon
+        await ti.refreshImpl();
+        return ti;
     }
 
     public get iconPath(): { light: string | Uri; dark: string | Uri } {

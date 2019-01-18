@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
 import { StorageManagementClient } from 'azure-arm-storage';
 import * as azureStorage from "azure-storage";
 // tslint:disable-next-line:no-require-imports
@@ -42,7 +41,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount.svg'),
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
     };
-    public websiteHostingEnabled: boolean;
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
@@ -66,9 +64,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const ti = new StorageAccountTreeItem(parent, storageAccount, client);
         // make sure key is initialized
         await ti.refreshImpl();
-        const hostingStatus = await ti.getActualWebsiteHostingStatus();
-        ti.websiteHostingEnabled = hostingStatus.enabled;
-
         return ti;
     }
 
@@ -107,7 +102,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public pickTreeItemImpl(expectedContextValue: string): AzureTreeItem<IStorageRoot> | undefined {
         switch (expectedContextValue) {
             case BlobContainerGroupTreeItem.contextValue:
-                assert(typeof this.websiteHostingEnabled === 'boolean', "Haven't called storageAccountWebsiteHostingEnabled");
             case BlobContainerTreeItem.contextValue:
                 return this._blobContainerGroupTreeItem;
             case FileShareGroupTreeItem.contextValue:
@@ -228,9 +222,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 if (err) {
                     reject(err);
                 } else {
-                    if (result && result.StaticWebsite) {
-                        this.websiteHostingEnabled = result.StaticWebsite.Enabled;
-                    }
                     let staticWebsite: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties | undefined =
                         result && result.StaticWebsite;
                     resolve(<WebsiteHostingStatus>{
@@ -308,16 +299,15 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         let msg = oldStatus.enabled ?
             'Static website hosting configuration updated.' :
             `The storage account '${this.label}' has been enabled for static website hosting.`;
-        this.websiteHostingEnabled = newStatus.Enabled;
         window.showInformationMessage(msg);
         if (oldStatus.enabled !== newStatus.Enabled) {
-            await this.refresh();
+            await ext.tree.refresh(this);
         }
 
     }
 
     public async disableStaticWebsite(): Promise<void> {
-        if (!this.websiteHostingEnabled) {
+        if (!(await this.getActualWebsiteHostingStatus())) {
             window.showInformationMessage(`Account '${this.label}' does not currently have static website hosting enabled.`);
             return;
         }
@@ -326,9 +316,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         if (confirmDisable === disableMessage) {
             let props = { Enabled: false };
             await this.setWebsiteHostingProperties(props);
-            this.websiteHostingEnabled = false;
             window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
-            await this.refresh();
+            await ext.tree.refresh(this);
         }
     }
 
