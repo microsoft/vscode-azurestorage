@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from "vscode-azureextensionui";
+import { AzureTreeItem, IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "./blobContainers/blobContainerNode";
 import { StorageAccountTreeItem } from "./storageAccounts/storageAccountNode";
@@ -49,15 +49,16 @@ export async function selectStorageAccountTreeItemForCommand(
         await accountTreeItem.ensureHostingCapable(hostingStatus);
 
         if (options.askToConfigureWebsite && !hostingStatus.enabled) {
+            actionContext.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
+            actionContext.properties.enableResponse = 'false';
             let enableWebHostingPrompt = "Enable website hosting";
-            let result: { title: string } = await ext.ui.showWarningMessage(
+            // don't check result since cancel throws UserCancelledError and only other option is 'Enable'
+            await ext.ui.showWarningMessage(
                 `Website hosting is not enabled on storage account "${accountTreeItem.label}".`,
                 { modal: true },
-                { title: enableWebHostingPrompt },
-                DialogResponses.cancel);
-            let enableResponse = (result.title === enableWebHostingPrompt);
+                { title: enableWebHostingPrompt });
+            let enableResponse = 'true';
             actionContext.properties.enableResponse = String(enableResponse);
-            actionContext.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
             if (enableResponse) {
                 await accountTreeItem.configureStaticWebsite();
             }

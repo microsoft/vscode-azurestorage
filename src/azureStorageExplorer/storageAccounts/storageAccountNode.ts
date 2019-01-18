@@ -294,7 +294,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         });
 
         let errorDocument404Path: string = await ext.ui.showInputBox({
-            ignoreFocusOut: true,
             prompt: "Enter the 404 error document path",
             value: oldStatus.errorDocument404Path ? oldStatus.errorDocument404Path : "",
             placeHolder: 'e.g. error/documents/error.html',
@@ -322,10 +321,10 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             window.showInformationMessage(`Account '${this.label}' does not currently have static website hosting enabled.`);
             return;
         }
-        let confirmDisable: MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, { title: "Disable" }, DialogResponses.cancel);
-        if (confirmDisable.title === "Disable") {
-            let currentStatus = await this.getActualWebsiteHostingStatus();
-            let props = { Enabled: false, IndexDocument: currentStatus.indexDocument, ErrorDocument404Path: currentStatus.errorDocument404Path };
+        let disableMessage: MessageItem = { title: "Disable" };
+        let confirmDisable: MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, { modal: true }, disableMessage, DialogResponses.cancel);
+        if (confirmDisable === disableMessage) {
+            let props = { Enabled: false };
             await this.setWebsiteHostingProperties(props);
             this.websiteHostingEnabled = false;
             window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
