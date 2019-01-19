@@ -238,7 +238,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async setWebsiteHostingProperties(staticWebsiteProperties: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties): Promise<void> {
         let blobService = this.root.createBlobService();
-        return await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             blobService.getServiceProperties((err: Error | undefined, props: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties = {}) => {
                 if (err) {
                     reject(err);
@@ -258,6 +258,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 }
             });
         });
+        return;
     }
 
     private async getAccountType(): Promise<StorageTypes> {
@@ -307,7 +308,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async disableStaticWebsite(): Promise<void> {
-        if (!(await this.getActualWebsiteHostingStatus())) {
+        let websiteHostingStatus = await this.getActualWebsiteHostingStatus();
+        if (!websiteHostingStatus.enabled) {
             window.showInformationMessage(`Account '${this.label}' does not currently have static website hosting enabled.`);
             return;
         }
