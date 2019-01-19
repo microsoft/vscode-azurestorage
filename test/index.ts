@@ -40,7 +40,7 @@ let options: { [key: string]: string | boolean | number } = {
 let environmentVariables = <{ [key: string]: string }>process.env;
 for (let envVar of Object.keys(environmentVariables)) {
     let match = envVar.match(/^mocha_(.+)/i);
-    if (match) {
+    if (match !== null) {
         let [, option] = match;
         let value: string | number = environmentVariables[envVar];
         if (typeof value === 'string' && !isNaN(parseInt(value, undefined))) {

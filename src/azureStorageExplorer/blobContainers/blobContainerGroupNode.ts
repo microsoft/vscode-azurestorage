@@ -32,9 +32,9 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         let { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 
-        return entries.map((container: azureStorage.BlobService.ContainerResult) => {
-            return new BlobContainerTreeItem(this, container);
-        });
+        return await Promise.all(entries.map(async (container: azureStorage.BlobService.ContainerResult) => {
+            return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
+        }));
     }
 
     public hasMoreChildrenImpl(): boolean {
@@ -67,7 +67,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
                 showCreatingTreeItem(containerName);
                 progress.report({ message: `Azure Storage: Creating blob container '${containerName}'` });
                 const container = await this.createBlobContainer(containerName);
-                return new BlobContainerTreeItem(this, container);
+                return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
             });
         }
 

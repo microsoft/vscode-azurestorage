@@ -21,9 +21,7 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
             this,
             accounts,
             'invalidStorageAccount',
-            async (sa: StorageAccount) => {
-                return await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient);
-            },
+            async (sa: StorageAccount) => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
             (sa: StorageAccount) => {
                 return sa.name;
             }

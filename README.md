@@ -26,7 +26,7 @@ The Azure Storage extension for VS Code lets you deploy static websites and brow
 
 * Note that static websites are an Azure preview feature and is only supported for GPv2 storage accounts.
 
-* When configuring your storage account for static site hosting, you **must** set the *index document name*. Do not leave it empty, even if the watermark says "index.html" (you must actually type "index.html" into the textbox and click Save).
+* When configuring your storage account for static website hosting, you **must** set the *index document name*. Do not leave it empty, even if the watermark says "index.html" (you must actually type "index.html" into the textbox and click Save).
 
 * See the [tutorial](https://code.visualstudio.com/tutorials/static-website/getting-started)
 

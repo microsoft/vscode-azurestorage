@@ -12,10 +12,12 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { awaitWithProgress } from '../../components/progress';
+import * as constants from '../../constants';
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../storageAccounts/storageAccountNode";
+import { BlobContainerGroupTreeItem } from "./blobContainerGroupNode";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
 
@@ -34,20 +36,34 @@ interface ICreateChildOptions {
 
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
+    private _websiteHostingEnabled: boolean;
 
-    constructor(
-        parent: AzureParentTreeItem,
+    private constructor(
+        parent: BlobContainerGroupTreeItem,
         public readonly container: azureStorage.BlobService.ContainerResult) {
         super(parent);
+    }
+
+    public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: azureStorage.BlobService.ContainerResult): Promise<BlobContainerTreeItem> {
+        const ti = new BlobContainerTreeItem(parent, container);
+        // Get static website status to display the appropriate icon
+        await ti.refreshImpl();
+        return ti;
+    }
+
+    public get iconPath(): { light: string | Uri; dark: string | Uri } {
+        // tslint:disable-next-line:no-non-null-assertion
+        const iconFileName = this._websiteHostingEnabled && this.container.name === constants.staticWebsiteContainerName ?
+            'BrandAzureStaticWebsites' : 'AzureBlobContainer';
+        return {
+            light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', `${iconFileName}.svg`),
+            dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', `${iconFileName}.svg`)
+        };
     }
 
     public label: string = this.container.name;
     public static contextValue: string = 'azureBlobContainer';
     public contextValue: string = BlobContainerTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureBlobContainer.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureBlobContainer.svg')
-    };
 
     public hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
@@ -67,6 +83,11 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
+    public async refreshImpl(): Promise<void> {
+        //tslint:disable-next-line:no-non-null-assertion
+        const hostingStatus = await (<StorageAccountTreeItem>this!.parent!.parent).getActualWebsiteHostingStatus();
+        this._websiteHostingEnabled = hostingStatus.enabled;
+    }
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     private listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {

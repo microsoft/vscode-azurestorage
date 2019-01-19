@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { commands, window } from 'vscode';
-import { AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from "vscode-azureextensionui";
+import { AzureTreeItem, IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "./blobContainers/blobContainerNode";
 import { StorageAccountTreeItem } from "./storageAccounts/storageAccountNode";
@@ -46,19 +45,22 @@ export async function selectStorageAccountTreeItemForCommand(
     }
 
     if (options.mustBeWebsiteCapable) {
-        let hostingStatus = await accountTreeItem.getWebsiteHostingStatus();
+        let hostingStatus = await accountTreeItem.getActualWebsiteHostingStatus();
         await accountTreeItem.ensureHostingCapable(hostingStatus);
 
         if (options.askToConfigureWebsite && !hostingStatus.enabled) {
-            let result = await window.showInformationMessage(
-                `Website hosting is not enabled on storage account "${accountTreeItem.label}". Would you like to go to the portal to enable it?`,
-                DialogResponses.yes,
-                DialogResponses.no);
-            let enableResponse = (result === DialogResponses.yes);
-            actionContext.properties.enableResponse = String(enableResponse);
             actionContext.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
+            actionContext.properties.enableResponse = 'false';
+            let enableWebHostingPrompt = "Enable website hosting";
+            // don't check result since cancel throws UserCancelledError and only other option is 'Enable'
+            await ext.ui.showWarningMessage(
+                `Website hosting is not enabled on storage account "${accountTreeItem.label}".`,
+                { modal: true },
+                { title: enableWebHostingPrompt });
+            let enableResponse = 'true';
+            actionContext.properties.enableResponse = String(enableResponse);
             if (enableResponse) {
-                await commands.executeCommand("azureStorage.configureStaticWebsite", accountTreeItem);
+                await accountTreeItem.configureStaticWebsite();
             }
             // Either way can't continue
             throw new UserCancelledError();
