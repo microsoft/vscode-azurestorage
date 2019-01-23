@@ -12,35 +12,37 @@ import { ext } from '../../extensionVariables';
 
 export async function showWorkspaceFoldersQuickPick(placeHolderString: string, telemetryProperties: TelemetryProperties, subPathSetting: string | undefined): Promise<string> {
     const folderQuickPickItems: IAzureQuickPickItem<string | undefined>[] = [];
-    for (let workspaceFolder of vscode.workspace.workspaceFolders || []) {
-        {
-            let fsPath: string = workspaceFolder.uri.fsPath;
-            if (subPathSetting) {
-                const subpath: string | undefined = vscode.workspace.getConfiguration(extensionPrefix, workspaceFolder.uri).get(subPathSetting);
-                if (subpath) {
-                    fsPath = path.join(fsPath, subpath);
+    if (vscode.workspace.workspaceFolders) {
+        for (let workspaceFolder of vscode.workspace.workspaceFolders) {
+            {
+                let fsPath: string = workspaceFolder.uri.fsPath;
+                if (subPathSetting) {
+                    const subpath: string | undefined = vscode.workspace.getConfiguration(extensionPrefix, workspaceFolder.uri).get(subPathSetting);
+                    if (subpath) {
+                        fsPath = path.join(fsPath, subpath);
+                    }
                 }
-            }
 
-            folderQuickPickItems.push({
-                label: path.basename(fsPath),
-                description: fsPath,
-                data: fsPath
-            });
+                folderQuickPickItems.push({
+                    label: path.basename(fsPath),
+                    description: fsPath,
+                    data: fsPath
+                });
 
-            // If the workspace has any of build, dist, or out, show those as well
-            const buildDefaultPaths = ["build", "dist", "out"];
-            for (let defaultPath of buildDefaultPaths) {
-                const buildPath: string = path.join(fsPath, defaultPath);
-                if (fse.existsSync(buildPath)) {
-                    folderQuickPickItems.push({
-                        label: path.basename(buildPath),
-                        description: buildPath,
-                        data: buildPath
-                    });
+                // If the workspace has any of build, dist, or out, show those as well
+                const buildDefaultPaths = ["build", "dist", "out"];
+                for (let defaultPath of buildDefaultPaths) {
+                    const buildPath: string = path.join(fsPath, defaultPath);
+                    if (fse.existsSync(buildPath)) {
+                        folderQuickPickItems.push({
+                            label: path.basename(buildPath),
+                            description: buildPath,
+                            data: buildPath
+                        });
+                    }
                 }
-            }
 
+            }
         }
     }
 
