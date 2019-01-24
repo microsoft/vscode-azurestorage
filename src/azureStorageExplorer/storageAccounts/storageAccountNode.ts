@@ -42,10 +42,10 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
     };
 
-    private _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
-    private _fileShareGroupTreeItem: FileShareGroupTreeItem;
-    private _queueGroupTreeItem: QueueGroupTreeItem;
-    private _tableGroupTreeItem: TableGroupTreeItem;
+    private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
+    private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
+    private readonly _queueGroupTreeItem: QueueGroupTreeItem;
+    private readonly _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot;
 
     private constructor(
@@ -76,16 +76,9 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public static contextValue: string = 'azureStorageAccount';
     public contextValue: string = StorageAccountTreeItem.contextValue;
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzureTreeItem<IStorageRoot>[]> {
+    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<IStorageRoot>[]> {
         let primaryEndpoints = this.storageAccount.primaryEndpoints;
         let groupTreeItems: AzureTreeItem<IStorageRoot>[] = [];
-
-        if (clearCache) {
-            this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
-            this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
-            this._queueGroupTreeItem = new QueueGroupTreeItem(this);
-            this._tableGroupTreeItem = new TableGroupTreeItem(this);
-        }
 
         if (!!primaryEndpoints.blob) {
             groupTreeItems.push(this._blobContainerGroupTreeItem);
