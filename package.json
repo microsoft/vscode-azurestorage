@@ -56,6 +56,7 @@
 		"onCommand:azureStorage.createDirectory",
 		"onCommand:azureStorage.deleteDirectory",
 		"onCommand:azureStorage.createTextFile",
+		"onCommand:azureStorage.createAccountForStaticWebsite",
 		"onCommand:azureStorage.deleteFile",
 		"onCommand:azureStorage.createDirectory",
 		"onCommand:azureStorage.createSubdirectory",
@@ -231,6 +232,11 @@
 			{
 				"command": "azureStorage.createTextFile",
 				"title": "Create Empty Text File...",
+				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.createAccountForStaticWebsite",
+				"title": "Create storage account for static website",
 				"category": "Azure Storage"
 			},
 			{
@@ -437,6 +443,11 @@
 					"group": "2_create@1"
 				},
 				{
+					"command": "azureStorage.createAccountForStaticWebsite",
+					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+					"group": "2_create@3"
+				},
+				{
 					"command": "azureStorage.createDirectory",
 					"when": "view == azureStorage && viewItem == azureFileShare",
 					"group": "2_create@2"
@@ -593,6 +604,10 @@
 				},
 				{
 					"command": "azureStorage.createTextFile",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createAccountForStaticWebsite",
 					"when": "never"
 				},
 				{
