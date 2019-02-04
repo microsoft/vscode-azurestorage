@@ -6,7 +6,7 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 - Web apps containing out, dist, or build folders will have more convenient defaults when deploying to a static website
 
 ### Added
-- Disabling and configuring static website capability from the extension
+- Enabling, disabling and configuring static website capability from the extension
 
 ## 0.5.0 - 2018-12-11
 ### Fixed
