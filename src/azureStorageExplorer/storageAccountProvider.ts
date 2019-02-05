@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { AzureTreeItem, AzureWizard, createAzureClient, createTreeItemsWithErrorHandling, IActionContext, IStorageAccountWizardContext, ISubscriptionRoot, LocationListStep, ResourceGroupListStep, StorageAccountCreateStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItem } from 'vscode-azureextensionui';
 import { StorageAccountWrapper } from '../components/storageWrappers';
 import { StorageAccountTreeItem } from './storageAccounts/storageAccountNode';
+import { StorageAccountNameStep } from 'vscode-azureextensionui';
 
 export class StorageAccountProvider extends SubscriptionTreeItem {
     public childTypeLabel: string = "Storage Account";
@@ -46,12 +47,12 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
         const wizardContext: IStorageAccountWizardContext = Object.assign({}, this.root);
 
         const wizard = new AzureWizard(
-            [new ResourceGroupListStep(), new LocationListStep()],
+            [new ResourceGroupListStep(), new LocationListStep(), new StorageAccountNameStep()],
             [new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS })],
             wizardContext);
 
         // https://github.com/Microsoft/vscode-azuretools/issues/120
-        actionContext = actionContext || <IActionContext>{ properties: {}, measurements: {} };
+        actionContext = actionContext ? actionContext : <IActionContext>{ properties: {}, measurements: {} };
 
         await wizard.prompt(actionContext);
 
@@ -63,7 +64,7 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
             await wizard.execute(actionContext!);
         });
         //return await this.initChild(storageManagementClient, wizardContext.storageAccount);
-        let accountArray = createTreeItemsWithErrorHandling(
+        let accountArray: AzureTreeItem[] = await createTreeItemsWithErrorHandling(
             this,
             // tslint:disable-next-line:no-non-null-assertion
             [wizardContext.storageAccount],
