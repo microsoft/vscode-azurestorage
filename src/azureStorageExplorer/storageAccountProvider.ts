@@ -32,18 +32,6 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
 
     public async createChildImpl(showCreatingTreeItem: (label: string) => void, _userOptions: Object, actionContext?: IActionContext): Promise<AzureTreeItem<ISubscriptionRoot>> {
         let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
-        // let resourceManagementClient = createAzureClient(this.root, ResourceManagementClient);
-        // // tslint:disable-next-line:no-non-null-assertion
-        // let resourceGroups: IAzureQuickPickItem<ResourceGroup>[] = (await resourceManagementClient.resourceGroups.list()).map((item) => { return { label: item.name!, description: item.name!, data: item }; });
-        // const resourceGroupName = await vscode.window.showQuickPick(resourceGroups, { canPickMany: false, placeHolder: "Pick a resource group within which to create an account" });
-        // const accountName = await vscode.window.showInputBox({
-        //     prompt: "Enter account name",
-        //     validateInput: async (input: string) => await this.validateAccountName(input)
-        // });
-        // if (accountName && resourceGroupName) {
-        //     const config = { kind: "StorageV2", performance: "Standard", replication: "LRS" };
-        //     const skuName = `${config.performance}_${config.replication}`;
-        // }
         const wizardContext: IStorageAccountWizardContext = Object.assign({}, this.root);
 
         const wizard = new AzureWizard(
@@ -63,10 +51,8 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
             // tslint:disable-next-line:no-non-null-assertion
             await wizard.execute(actionContext!);
         });
-        //return await this.initChild(storageManagementClient, wizardContext.storageAccount);
         let accountArray: AzureTreeItem[] = await createTreeItemsWithErrorHandling(
             this,
-            // tslint:disable-next-line:no-non-null-assertion
             [wizardContext.storageAccount],
             'invalidStorageAccount',
             async (sa: StorageAccount) => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
@@ -75,25 +61,6 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
         return accountArray[0];
     }
 
-    /*
-        private async validateAccountName(name: string): Promise<string | undefined> {
-            if (name !== name.toLowerCase()) {
-                return "Account name can only contain lower case letters";
-            }
-            let minLength = 3;
-            let maxLength = 24;
-            if (name.length < minLength || name.length > maxLength) {
-                return `Account name has to be between ${minLength} to ${maxLength} letters`;
-            }
-            let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
-            let availability: CheckNameAvailabilityResult = await storageManagementClient.storageAccounts.checkNameAvailability(name);
-            if (availability.nameAvailable) {
-                return;
-            } else {
-                return `${availability.reason}: ${availability.message}`;
-            }
-        }
-    */
     public hasMoreChildrenImpl(): boolean {
         return false;
     }
