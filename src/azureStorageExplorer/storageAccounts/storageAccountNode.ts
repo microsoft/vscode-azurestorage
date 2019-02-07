@@ -9,7 +9,7 @@ import * as azureStorage from "azure-storage";
 import opn = require('opn');
 import * as path from 'path';
 import { commands, MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, ISubscriptionRoot, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, ISubscriptionRoot, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
 import * as constants from "../../constants";
@@ -134,6 +134,19 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             this.key = new StorageAccountKeyWrapper(primaryKey);
         } else {
             throw new Error("Could not find primary key");
+        }
+    }
+
+    public async deleteTreeItemImpl(): Promise<void> {
+        const message: string = `Are you sure you want to delete account '${this.label}' and all its contents?`;
+        const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        if (result === DialogResponses.deleteResponse) {
+            let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
+            let parsedId = this.parseAzureResourceId(this.storageAccount.id);
+            let resourceGroupName = parsedId.resourceGroups;
+            await storageManagementClient.storageAccounts.deleteMethod(resourceGroupName, this.storageAccount.name);
+        } else {
+            throw new UserCancelledError();
         }
     }
 
