@@ -93,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<AzureE
                 });
             await accountTreeItem.disableStaticWebsite();
         });
-        registerCommand("azureStorage.createAccountForStaticWebsite", async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
+        registerCommand("azureStorage.createGpv2Account", async function (this: IActionContext, treeItem?: SubscriptionTreeItem): Promise<void> {
             let node = treeItem ? <SubscriptionTreeItem>treeItem : <SubscriptionTreeItem>await ext.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue);
 
             await node.createChild(this);

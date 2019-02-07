@@ -7,10 +7,9 @@
 import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import * as vscode from 'vscode';
-import { AzureTreeItem, AzureWizard, createAzureClient, createTreeItemsWithErrorHandling, IActionContext, IStorageAccountWizardContext, ISubscriptionRoot, LocationListStep, ResourceGroupListStep, StorageAccountCreateStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItem } from 'vscode-azureextensionui';
-import { StorageAccountWrapper } from '../components/storageWrappers';
+import { AzureTreeItem, AzureWizard, createAzureClient, createTreeItemsWithErrorHandling, IActionContext, IStorageAccountWizardContext, ISubscriptionRoot, LocationListStep, ResourceGroupListStep, StorageAccountCreateStep, StorageAccountKind, StorageAccountNameStep, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItem } from 'vscode-azureextensionui';
+import { nonNull, StorageAccountWrapper } from '../components/storageWrappers';
 import { StorageAccountTreeItem } from './storageAccounts/storageAccountNode';
-import { StorageAccountNameStep } from 'vscode-azureextensionui';
 
 export class StorageAccountProvider extends SubscriptionTreeItem {
     public childTypeLabel: string = "Storage Account";
@@ -35,7 +34,7 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
         const wizardContext: IStorageAccountWizardContext = Object.assign({}, this.root);
 
         const wizard = new AzureWizard(
-            [new ResourceGroupListStep(), new LocationListStep(), new StorageAccountNameStep()],
+            [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
             [new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS })],
             wizardContext);
 
@@ -45,20 +44,11 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
         await wizard.prompt(actionContext);
 
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-            // tslint:disable-next-line:no-non-null-assertion
-            showCreatingTreeItem(wizardContext.newStorageAccountName!);
-            progress.report({ message: `Storage: Creating account '${wizardContext.newStorageAccountName}'` });
-            // tslint:disable-next-line:no-non-null-assertion
-            await wizard.execute(actionContext!);
+            showCreatingTreeItem(nonNull(wizardContext.newStorageAccountName));
+            progress.report({ message: `Creating storage account '${wizardContext.newStorageAccountName}'` });
+            await wizard.execute(nonNull(actionContext));
         });
-        let accountArray: AzureTreeItem[] = await createTreeItemsWithErrorHandling(
-            this,
-            [wizardContext.storageAccount],
-            'invalidStorageAccount',
-            async (sa: StorageAccount) => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
-            (sa: StorageAccount) => sa.name
-        );
-        return accountArray[0];
+        return await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(nonNull(wizardContext.storageAccount)), storageManagementClient);
     }
 
     public hasMoreChildrenImpl(): boolean {
