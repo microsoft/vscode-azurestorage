@@ -63,7 +63,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public static async createStorageAccountTreeItem(parent: AzureParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
         const ti = new StorageAccountTreeItem(parent, storageAccount, client);
         // make sure key is initialized
-        await ti.refreshImpl();
+        await ti.refreshKey();
         return ti;
     }
 
@@ -124,7 +124,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return false;
     }
 
-    async refreshImpl(): Promise<void> {
+    async refreshKey(): Promise<void> {
         let keys: StorageAccountKeyWrapper[] = await this.getKeys();
         let primaryKey = keys.find(key => {
             return key.keyName === "key1" || key.keyName === "primaryKey";
