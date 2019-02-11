@@ -8,6 +8,7 @@ import { FileService } from 'azure-storage';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { resourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 import { FileShareTreeItem } from './fileShareNode';
 
@@ -22,8 +23,8 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public static contextValue: string = 'azureFileShareGroup';
     public contextValue: string = FileShareGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare.svg')
+        light: path.join(resourcesPath, 'light', 'AzureFileShare.svg'),
+        dark: path.join(resourcesPath, 'dark', 'AzureFileShare.svg')
     };
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<FileShareTreeItem[]> {

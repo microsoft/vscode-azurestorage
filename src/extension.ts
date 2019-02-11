@@ -5,9 +5,6 @@
 
 'use strict';
 
-const loadStartTime: number = Date.now();
-let loadEndTime: number;
-
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { AzureTreeDataProvider, AzureTreeItem, AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createTelemetryReporter, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
@@ -31,7 +28,7 @@ import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
-export async function activate(context: vscode.ExtensionContext): Promise<AzureExtensionApiProvider> {
+export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }): Promise<AzureExtensionApiProvider> {
     console.log('Extension "Azure Storage Tools" is now active.');
 
     ext.context = context;
@@ -43,7 +40,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<AzureE
 
     await callWithTelemetryAndErrorHandling('azureStorage.activate', async function (this: IActionContext): Promise<void> {
         this.properties.isActivationEvent = 'true';
-        this.measurements.mainFileLoad = (loadEndTime - loadStartTime) / 1000;
+        this.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
         const tree = new AzureTreeDataProvider(StorageAccountProvider, 'azureStorage.loadMore');
         ext.tree = tree;
@@ -63,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<AzureE
         registerTableGroupActionHandlers();
 
         vscode.window.registerTreeDataProvider('azureStorage', tree);
-        registerCommand('azureStorage.refresh', async (treeItem?: AzureTreeItem) => await tree.refresh(treeItem));
+        registerCommand('azureStorage.refresh', async (treeItem?: AzureTreeItem) => tree.refresh(treeItem));
         registerCommand('azureStorage.copyUrl', (treeItem: AzureTreeItem & ICopyUrl) => treeItem.copyUrl());
         registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
         registerCommand("azureStorage.openInPortal", async (treeItem?: AzureTreeItem) => {
@@ -108,4 +105,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<AzureE
     return createApiProvider([]);
 }
 
-loadEndTime = Date.now();
+// this method is called when your extension is deactivated
+export function deactivateInternal(): void {
+    // Nothing to do
+}

@@ -38,8 +38,8 @@ type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
 export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public key: StorageAccountKeyWrapper;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureStorageAccount.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureStorageAccount.svg')
+        light: path.join(constants.resourcesPath, 'light', 'AzureStorageAccount.svg'),
+        dark: path.join(constants.resourcesPath, 'dark', 'AzureStorageAccount.svg')
     };
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;

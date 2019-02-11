@@ -1,7 +1,7 @@
+# These files are excluded during vsce package
 .vscode/**
 .vscode-test/**
-out/test/**
-out/**/*.map
+out
 src/**
 .gitignore
 tsconfig.json
@@ -9,3 +9,21 @@ vsc-extension-quickstart.md
 .github/**
 test-results.xml
 .azure-pipelines/**
+*.cmd
+**/*.map
+out/test/**
+README.dev.md
+test/**
+tsd.json
+typings/**
+build
+out/**
+tslint.json
+node_modules/**
+**/*.map
+dist/test/**
+gulp*
+webpack.config*
+stats.json
+*.vsix
+*.zip

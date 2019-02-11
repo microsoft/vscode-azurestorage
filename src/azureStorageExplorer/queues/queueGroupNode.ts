@@ -7,6 +7,7 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { resourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 import { QueueTreeItem } from './queueNode';
 
@@ -18,8 +19,8 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public static contextValue: string = 'azureQueueGroup';
     public contextValue: string = QueueGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureQueue.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureQueue.svg')
+        light: path.join(resourcesPath, 'light', 'AzureQueue.svg'),
+        dark: path.join(resourcesPath, 'dark', 'AzureQueue.svg')
     };
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<QueueTreeItem[]> {

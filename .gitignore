@@ -234,7 +234,6 @@ FakesAssemblies/
 
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
-node_modules/
 
 # Typescript v1 declaration files
 typings/
@@ -287,13 +286,15 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 
-out/
-
 \.DS_Store
 
-# VSCode testing artifacts
-.vscode-test/
+# VS Code Extension Development
+out
+node_modules
+*.vsix
+dist
+*.zip
 
+# Artifacts from running vscode extension tests
 .vscode-test
 test-results.xml
-*.vsix

@@ -8,6 +8,7 @@ import * as clipboardy from 'clipboardy';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { AzureParentTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
+import { resourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -29,8 +30,8 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     public static contextValue: string = 'azureFileShare';
     public contextValue: string = FileShareTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'AzureFileShare.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'AzureFileShare.svg')
+        light: path.join(resourcesPath, 'light', 'AzureFileShare.svg'),
+        dark: path.join(resourcesPath, 'dark', 'AzureFileShare.svg')
     };
 
     hasMoreChildrenImpl(): boolean {
