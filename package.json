@@ -666,7 +666,6 @@
 		"@types/node": "^7.0.71",
 		"@types/opn": "5.1.0",
 		"@types/winreg": "1.2.30",
-		"glob": "^7.1.3",
 		"gulp": "^4.0.0",
 		"gulp-decompress": "^2.0.2",
 		"gulp-download": "^0.0.1",
