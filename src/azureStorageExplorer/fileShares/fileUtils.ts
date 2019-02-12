@@ -7,10 +7,10 @@ import * as azureStorage from "azure-storage";
 import { FileService } from "azure-storage";
 import { ProgressLocation, window } from "vscode";
 import { AzureParentTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { FileTreeItem } from "./fileNode";
 import { validateFileName } from "./validateNames";
-import { ext } from "../../extensionVariables";
 
 // Currently only supports creating block blobs
 export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult, showCreatingTreeItem: (label: string) => void): Promise<FileTreeItem> {
