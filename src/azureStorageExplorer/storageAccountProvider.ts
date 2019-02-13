@@ -31,7 +31,8 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
         );
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void, _userOptions: Object, actionContext?: IActionContext): Promise<AzureTreeItem<ISubscriptionRoot>> {
+    // Default value for actionContext stems from https://github.com/Microsoft/vscode-azuretools/issues/120
+    public async createChildImpl(showCreatingTreeItem: (label: string) => void, _userOptions: Object, actionContext: IActionContext = <IActionContext>{ properties: {}, measurements: {} }): Promise<AzureTreeItem<ISubscriptionRoot>> {
         let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
         const wizardContext: IStorageAccountWizardContext = Object.assign({}, this.root);
 
@@ -40,15 +41,12 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
             [new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS })],
             wizardContext);
 
-        // https://github.com/Microsoft/vscode-azuretools/issues/120
-        actionContext = actionContext ? actionContext : <IActionContext>{ properties: {}, measurements: {} };
-
         await wizard.prompt(actionContext);
 
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
             showCreatingTreeItem(nonNull(wizardContext.newStorageAccountName));
             progress.report({ message: `Creating storage account '${wizardContext.newStorageAccountName}'` });
-            await wizard.execute(nonNull(actionContext));
+            await wizard.execute(actionContext);
         });
         return await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(<StorageAccount>nonNull(wizardContext.storageAccount)), storageManagementClient);
     }
