@@ -8,7 +8,7 @@ The Azure Storage extension for VS Code lets you deploy static websites and brow
 
 ![StorageTree](resources/storageTree.png)
 
-* Explore/Create/Delete Blob Containers, File Shares, Queues and Tables
+* Explore/Create/Delete Blob Containers, File Shares, Queues, Tables and Storage Accounts
 * Create, Edit, and Delete Block Blobs and Files
 * Upload and Download Blobs up to 4MB in size
 * Access Connection String and Primary Key

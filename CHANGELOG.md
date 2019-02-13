@@ -7,6 +7,7 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 
 ### Added
 - Enabling, disabling and configuring static website capability from the extension
+- Creating (GPv2) and deleting storage accounts from the extension
 
 ## 0.5.0 - 2018-12-11
 ### Fixed
