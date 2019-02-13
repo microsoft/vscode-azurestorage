@@ -53,6 +53,7 @@
 		"onCommand:azureStorage.downloadBlob",
 		"onCommand:azureStorage.createFileShare",
 		"onCommand:azureStorage.deleteFileShare",
+		"onCommand:azureStorage.deleteAccount",
 		"onCommand:azureStorage.createDirectory",
 		"onCommand:azureStorage.deleteDirectory",
 		"onCommand:azureStorage.createTextFile",
@@ -211,6 +212,11 @@
 			{
 				"command": "azureStorage.deleteFileShare",
 				"title": "Delete File Share...",
+				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.deleteAccount",
+				"title": "Delete Account...",
 				"category": "Azure Storage"
 			},
 			{
@@ -449,6 +455,11 @@
 				{
 					"command": "azureStorage.deleteFileShare",
 					"when": "view == azureStorage && viewItem == azureFileShare",
+					"group": "7_modification"
+				},
+				{
+					"command": "azureStorage.deleteAccount",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "7_modification"
 				},
 				{
