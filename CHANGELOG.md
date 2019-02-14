@@ -1,6 +1,15 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.6.0 - 2019-02-01
+### Fixed
+- Web apps containing out, dist, or build folders will have more convenient defaults when deploying to a static website [#176](https://github.com/Microsoft/vscode-azurestorage/issues/176), [#173](https://github.com/Microsoft/vscode-azurestorage/issues/173)
+- Validation of text file name during file creation [#148](https://github.com/Microsoft/vscode-azurestorage/issues/148)
+
+### Added
+- Enabling, disabling and configuring static website capability from the extension [#153](https://github.com/Microsoft/vscode-azurestorage/issues/153), [#277](https://github.com/Microsoft/vscode-azurestorage/issues/277)
+- Creating (GPv2) and deleting storage accounts from the extension [#278](https://github.com/Microsoft/vscode-azurestorage/issues/278), [#291](https://github.com/Microsoft/vscode-azurestorage/issues/291)
+
 ## 0.5.0 - 2018-12-11
 ### Fixed
 - [Copy connection string](https://github.com/Microsoft/vscode-azurestorage/issues/141) now works on linux

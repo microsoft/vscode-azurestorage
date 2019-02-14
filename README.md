@@ -8,7 +8,7 @@ The Azure Storage extension for VS Code lets you deploy static websites and brow
 
 ![StorageTree](resources/storageTree.png)
 
-* Explore/Create/Delete Blob Containers, File Shares, Queues and Tables
+* Explore/Create/Delete Blob Containers, File Shares, Queues, Tables and Storage Accounts
 * Create, Edit, and Delete Block Blobs and Files
 * Upload and Download Blobs up to 4MB in size
 * Access Connection String and Primary Key
@@ -25,8 +25,6 @@ The Azure Storage extension for VS Code lets you deploy static websites and brow
 ## Deploy to Static Website
 
 * Note that static websites are an Azure preview feature and is only supported for GPv2 storage accounts.
-
-* When configuring your storage account for static website hosting, you **must** set the *index document name*. Do not leave it empty, even if the watermark says "index.html" (you must actually type "index.html" into the textbox and click Save).
 
 * See the [tutorial](https://code.visualstudio.com/tutorials/static-website/getting-started)
 
