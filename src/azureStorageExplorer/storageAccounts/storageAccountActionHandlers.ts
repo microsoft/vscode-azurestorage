@@ -21,7 +21,7 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
     registerCommand("azureStorage.copyConnectionString", copyConnectionString);
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
-    registerCommand("azureStorage.deleteAccount", async (treeItem?: StorageAccountTreeItem) => await deleteNode(StorageAccountTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.deleteStorageAccount", async (treeItem?: StorageAccountTreeItem) => await deleteNode(StorageAccountTreeItem.contextValue, treeItem));
 }
 
 async function openStorageAccountInStorageExplorer(treeItem?: StorageAccountTreeItem): Promise<void> {

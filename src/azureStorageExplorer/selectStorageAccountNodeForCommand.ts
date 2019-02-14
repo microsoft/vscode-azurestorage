@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { AzureTreeItem, IActionContext, UserCancelledError } from "vscode-azureextensionui";
+import { AzureTreeItem, IActionContext } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "./blobContainers/blobContainerNode";
 import { StorageAccountTreeItem } from "./storageAccounts/storageAccountNode";
@@ -62,9 +62,6 @@ export async function selectStorageAccountTreeItemForCommand(
             if (enableResponse) {
                 await accountTreeItem.configureStaticWebsite();
             }
-            // Either way can't continue
-            throw new UserCancelledError();
-
         }
     }
 
