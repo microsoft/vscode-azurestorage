@@ -12,6 +12,7 @@ import { ext } from '../../extensionVariables';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
 import { showWorkspaceFoldersQuickPick } from "../blobContainers/quickPickUtils";
+import { deleteNode } from '../commonTreeCommands';
 import { selectStorageAccountTreeItemForCommand } from '../selectStorageAccountNodeForCommand';
 import { StorageAccountTreeItem } from './storageAccountNode';
 
@@ -20,6 +21,7 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
     registerCommand("azureStorage.copyConnectionString", copyConnectionString);
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
+    registerCommand("azureStorage.deleteStorageAccount", async (treeItem?: StorageAccountTreeItem) => await deleteNode(StorageAccountTreeItem.contextValue, treeItem));
 }
 
 async function openStorageAccountInStorageExplorer(treeItem?: StorageAccountTreeItem): Promise<void> {

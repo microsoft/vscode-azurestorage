@@ -2,7 +2,7 @@
 	"name": "vscode-azurestorage",
 	"displayName": "Azure Storage",
 	"description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"publisher": "ms-azuretools",
 	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 	"engines": {
@@ -53,9 +53,11 @@
 		"onCommand:azureStorage.downloadBlob",
 		"onCommand:azureStorage.createFileShare",
 		"onCommand:azureStorage.deleteFileShare",
+		"onCommand:azureStorage.deleteStorageAccount",
 		"onCommand:azureStorage.createDirectory",
 		"onCommand:azureStorage.deleteDirectory",
 		"onCommand:azureStorage.createTextFile",
+		"onCommand:azureStorage.createGpv2Account",
 		"onCommand:azureStorage.deleteFile",
 		"onCommand:azureStorage.createDirectory",
 		"onCommand:azureStorage.createSubdirectory",
@@ -214,6 +216,11 @@
 				"category": "Azure Storage"
 			},
 			{
+				"command": "azureStorage.deleteStorageAccount",
+				"title": "Delete Storage Account...",
+				"category": "Azure Storage"
+			},
+			{
 				"command": "azureStorage.createDirectory",
 				"title": "Create Directory...",
 				"category": "Azure Storage"
@@ -231,6 +238,11 @@
 			{
 				"command": "azureStorage.createTextFile",
 				"title": "Create Empty Text File...",
+				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.createGpv2Account",
+				"title": "Create Storage Account",
 				"category": "Azure Storage"
 			},
 			{
@@ -437,6 +449,11 @@
 					"group": "2_create@1"
 				},
 				{
+					"command": "azureStorage.createGpv2Account",
+					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+					"group": "2_create@3"
+				},
+				{
 					"command": "azureStorage.createDirectory",
 					"when": "view == azureStorage && viewItem == azureFileShare",
 					"group": "2_create@2"
@@ -449,6 +466,11 @@
 				{
 					"command": "azureStorage.deleteFileShare",
 					"when": "view == azureStorage && viewItem == azureFileShare",
+					"group": "7_modification"
+				},
+				{
+					"command": "azureStorage.deleteStorageAccount",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "7_modification"
 				},
 				{
@@ -593,6 +615,10 @@
 				},
 				{
 					"command": "azureStorage.createTextFile",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.createGpv2Account",
 					"when": "never"
 				},
 				{

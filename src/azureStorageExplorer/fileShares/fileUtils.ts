@@ -7,15 +7,24 @@ import * as azureStorage from "azure-storage";
 import { FileService } from "azure-storage";
 import { ProgressLocation, window } from "vscode";
 import { AzureParentTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { FileTreeItem } from "./fileNode";
 import { validateFileName } from "./validateNames";
 
 // Currently only supports creating block blobs
 export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult, showCreatingTreeItem: (label: string) => void): Promise<FileTreeItem> {
-    const fileName = await window.showInputBox({
+    const fileName = await ext.ui.showInputBox({
         placeHolder: 'Enter a name for the new file',
-        validateInput: validateFileName
+        validateInput: async (name: string) => {
+            let nameError = validateFileName(name);
+            if (nameError) {
+                return nameError;
+            } else if (await doesFileExist(name, parent, directoryPath, share)) {
+                return "A file with this path and name already exists";
+            }
+            return undefined;
+        }
     });
 
     if (fileName) {
@@ -29,6 +38,20 @@ export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<ISto
     }
 
     throw new UserCancelledError();
+}
+
+async function doesFileExist(fileName: string, parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+        const fileService = parent.root.createFileService();
+        fileService.doesFileExist(share.name, directoryPath, fileName, (err?: Error, result?: FileService.FileResult) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result && result.exists === true);
+            }
+        });
+    });
+
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
