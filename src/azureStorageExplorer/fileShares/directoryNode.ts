@@ -8,6 +8,7 @@ import * as clipboardy from 'clipboardy';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { AzureParentTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
+import { resourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -29,8 +30,8 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     public static contextValue: string = 'azureFileShareDirectory';
     public contextValue: string = DirectoryTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'folder.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'folder.svg')
+        light: path.join(resourcesPath, 'light', 'folder.svg'),
+        dark: path.join(resourcesPath, 'dark', 'folder.svg')
     };
 
     private get fullPath(): string {

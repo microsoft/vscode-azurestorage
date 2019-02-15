@@ -8,6 +8,7 @@ import * as clipboardy from 'clipboardy';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
+import { resourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -26,8 +27,8 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     public static contextValue: string = 'azureFile';
     public contextValue: string = FileTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', 'document.svg'),
-        dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', 'document.svg')
+        light: path.join(resourcesPath, 'light', 'document.svg'),
+        dark: path.join(resourcesPath, 'dark', 'document.svg')
     };
 
     public commandId: string = 'azureStorage.editFile';

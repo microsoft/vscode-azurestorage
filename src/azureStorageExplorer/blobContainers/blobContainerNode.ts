@@ -56,8 +56,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const iconFileName = this._websiteHostingEnabled && this.container.name === constants.staticWebsiteContainerName ?
             'BrandAzureStaticWebsites' : 'AzureBlobContainer';
         return {
-            light: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'light', `${iconFileName}.svg`),
-            dark: path.join(__filename, '..', '..', '..', '..', '..', 'resources', 'dark', `${iconFileName}.svg`)
+            light: path.join(constants.resourcesPath, 'light', `${iconFileName}.svg`),
+            dark: path.join(constants.resourcesPath, 'dark', `${iconFileName}.svg`)
         };
     }
 

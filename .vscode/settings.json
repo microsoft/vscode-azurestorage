@@ -30,5 +30,6 @@
         "out": false, // set this to true to hide the "out" folder with the compiled JS files
         ".vscode-test": true
     },
-    "typescript.preferences.importModuleSpecifier": "relative"
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.tsdk": "node_modules/typescript/lib"
 }
