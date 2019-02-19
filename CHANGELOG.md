@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
-## 0.7.0 - 2019-02-22
+## 0.7.0 - 2019-02-19
 ### Fixed
 - Improved installation and start-up performance
 
