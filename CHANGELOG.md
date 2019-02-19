@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.7.0 - 2019-02-19
+### Fixed
+- Improved installation and start-up performance
+
 ## 0.6.0 - 2019-02-01
 ### Fixed
 - Web apps containing out, dist, or build folders will have more convenient defaults when deploying to a static website [#176](https://github.com/Microsoft/vscode-azurestorage/issues/176), [#173](https://github.com/Microsoft/vscode-azurestorage/issues/173)
