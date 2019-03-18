@@ -2,11 +2,11 @@
 
 [![Version](https://vsmarketplacebadge.apphb.com/version/ms-azuretools.vscode-azurestorage.svg)](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestorage) [![Installs](https://vsmarketplacebadge.apphb.com/installs-short/ms-azuretools.vscode-azurestorage.svg)](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestorage) [![Build Status](https://dev.azure.com/ms-azuretools/AzCode/_apis/build/status/vscode-azurestorage)](https://dev.azure.com/ms-azuretools/AzCode/_build/latest?definitionId=6)
 
-The Azure Storage extension for VS Code lets you deploy static websites and browse Azure Blob Containers, File Shares, Tables, and Queues. Follow [this tutorial](https://code.visualstudio.com/tutorials/static-website/getting-started) to deploy your web apps to Azure Storage from VS Code.
+Azure Storage is a Microsoft-managed service providing cloud storage that is highly available, secure, durable, scalable, and redundant. Use the extension to deploy static websites and Single Page Apps (SPAs) and browse Azure Blob Containers, File Shares, Tables, and Queues.
+
+**Visit the [wiki](https://github.com/Microsoft/vscode-azurestorage/wiki) for additional information about the extension.**
 
 ## Features
-
-![StorageTree](resources/storageTree.png)
 
 * Explore/Create/Delete Blob Containers, File Shares, Queues, Tables and Storage Accounts
 * Create, Edit, and Delete Block Blobs and Files
@@ -14,7 +14,41 @@ The Azure Storage extension for VS Code lets you deploy static websites and brow
 * Access Connection String and Primary Key
 * Open in Storage Explorer for memory or computationally heavy tasks, or for upload/download of large or non-text files.
 
-## Extension Settings
+## Installation
+
+1. Download and install the [Azure Storage extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestorage) for Visual Studio Code
+2. Once complete, you'll see an Azure icon in the Activity Bar
+    > If your activity bar is hidden, you won't be able to access the extension. Show the Activity Bar by clicking View > Appearance > Show Activity Bar
+3. Sign in to your Azure Account by clicking Sign in to Azure...
+    >  If you don't already have an Azure Account, click "Create a Free Azure Account" for a free 30-day account with $200 in Azure credits to try out any combination of services.
+
+## Deploy your Single Page App to Azure Storage
+
+Once you are signed in to your Azure account and you have your app open in Visual Studio Code, click the deploy button in the Azure Storage explorer - it's the blue up arrow - to deploy your app.
+
+![Deploy from Storage](resources/storage-deploy.png)
+
+> Tip: Looking for a sample app to deploy? Run `npx create-react-app my-react-app` to create one
+
+Make sure you've compiled your app (run `npm run build` if you created a sample from create-react-app) prior to deploying it to Azure.
+
+1. Choose **Create New Storage Account**
+2. Type a globally unique name for your Storage Account and press Enter. Valid characters for an storage account name are 'a-z' and '0-9'
+3. Create a new Resource Group and accept the default name
+4. Choose a location in a [region](https://azure.microsoft.com/en-us/global-infrastructure/regions/) near you or near other services you may need to access
+    > It may take up to a minute for the account to be created
+5. When prompted, choose "Enable website hosting" to configure your storage account for static site hosting
+6. Enter 'index.html' for the index document path
+7. Enter 'index.html' for the 404 error document path
+    > Index.html is used for the error document because modern Single Page Applications (SPAs) such as React will handle errors in the client. For classic static websites, use the error document to customize your 404 page.
+8. Select the build output from your current workspace if you have your app open already or browse to the directory containing your compiled application code
+    > If you have a `build`, `out`, or `dist` directory, you'll see it as an option to deploy from.
+
+Once the deployment completes, click **Browse to Website** in the prompt to view your freshly deployed website.
+
+## Settings
+
+Use these configuration settings to customize the Azure Storage extension.
 
 * `azureStorage.showExplorer`: Set to `false` to hide Azure Storage Explorer
 * `azureStorage.preDeployTask`: Set to the name of a task to be run before deploying a static website.
@@ -22,38 +56,6 @@ The Azure Storage extension for VS Code lets you deploy static websites and brow
 * `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing a warning dialog on File file save.
 * `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing a warning dialog on Blob file save.
 
-## Deploy to Static Website
-
-* Note that static websites are an Azure preview feature and is only supported for GPv2 storage accounts.
-
-* See the [tutorial](https://code.visualstudio.com/tutorials/static-website/getting-started)
-
-## Managing Azure Subscriptions
-
-If you are not signed in to Azure, you will see a "Sign in to Azure..." link. Alternatively, you can select "View->Command Palette" in the VS Code menu, and search for "Azure: Sign In".
-
-![Sign in to Azure](resources/SignIn.gif)
-
-If you don't have an Azure Account, you can sign up for one today for free and receive $200 in credits by selecting "Create a Free Azure Account..." or selecting "View->Command Palette" and searching for "Azure: Create an Account".
-
-You may sign out of Azure by selecting "View->Command Palette" and searching for "Azure: Sign Out".
-
-To select which subscriptions show up in the extension's explorer, click on the "Select Subscriptions..." button on any subscription node (indicated by a "filter" icon when you hover over it), or select "View->Command Palette" and search for "Azure: Select Subscriptions". Note that this selection affects all VS Code extensions that support the [Azure Account and Sign-In](https://github.com/Microsoft/vscode-azure-account) extension.
-
-![Select Azure Subscriptions](resources/SelectSubscriptions.gif)
-
-## Known Issues
-
-This extension focuses on simple developer and editing scenarios that are convenient from within VS Code.  Therefore, the following scenarios are not supported:
-
-* Classic Azure Storage Accounts not supported.
-* Viewing diagnostics and logs tables is not supported.
-* Viewing the contents of tables and queues is not supported.
-* Uploading or downloading binary files (except images) is not supported.
-* Uploading or downloading of blobs is limited to text file types, block blobs and up to 4MB in size. Uploading and downloading of files in file shares is not currently supported.
-
-For these scenarios and other advanced features, please use [Microsoft Azure Storage Explorer](https://storageexplorer.com), which is free and available cross-platform for Linux, MacOS and Windows.
-Feedback on supported or desired features, as well as issues that you find, is always encouraged. Simply enter an [issue](https://github.com/Microsoft/vscode-azurestorage/issues).
 
 ## Contributing
 
