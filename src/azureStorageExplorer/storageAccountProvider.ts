@@ -36,10 +36,11 @@ export class StorageAccountProvider extends SubscriptionTreeItem {
         let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
         const wizardContext: IStorageAccountWizardContext = Object.assign({}, this.root);
 
-        const wizard = new AzureWizard(
-            [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
-            [new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS })],
-            wizardContext);
+        const wizard = new AzureWizard(wizardContext, {
+            title: "Create storage account",
+            promptSteps: [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
+            executeSteps: [new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS })],
+        });
 
         await wizard.prompt(actionContext);
 
