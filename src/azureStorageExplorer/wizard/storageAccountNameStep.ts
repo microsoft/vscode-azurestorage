@@ -3,30 +3,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable-next-line:no-require-imports
 import { StorageManagementClient } from 'azure-arm-storage';
 import { CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
 import { AzureNameStep, createAzureClient, IStorageAccountWizardContext, ResourceGroupListStep, resourceGroupNamingRules, storageAccountNamingRules } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
 
 export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
-    public async prompt(wizardContext: T): Promise<T> {
-        if (!wizardContext.newStorageAccountName) {
-            const client: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
+    public async prompt(wizardContext: T): Promise<void> {
+        const client: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
 
-            const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-            wizardContext.newStorageAccountName = (await ext.ui.showInputBox({
-                value: suggestedName,
-                prompt: 'Enter the name of the new storage account.',
-                validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(client, value)
-            })).trim();
+        const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
+        wizardContext.newStorageAccountName = (await ext.ui.showInputBox({
+            value: suggestedName,
+            prompt: 'Enter the name of the new storage account.',
+            validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(client, value)
+        })).trim();
 
-            if (!wizardContext.relatedNameTask) {
-                wizardContext.relatedNameTask = this.generateRelatedName(wizardContext, wizardContext.newStorageAccountName, resourceGroupNamingRules);
-            }
+        if (!wizardContext.relatedNameTask) {
+            wizardContext.relatedNameTask = this.generateRelatedName(wizardContext, wizardContext.newStorageAccountName, resourceGroupNamingRules);
         }
+    }
 
-        return wizardContext;
+    public shouldPrompt(wizardContext: T): boolean {
+        return !wizardContext.newStorageAccountName;
     }
 
     protected async isRelatedNameAvailable(wizardContext: T, name: string): Promise<boolean> {

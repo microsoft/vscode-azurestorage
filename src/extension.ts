@@ -68,7 +68,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
             }
 
-            treeItem.openInPortal();
+            await treeItem.openInPortal();
         });
         registerCommand("azureStorage.configureStaticWebsite", async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
