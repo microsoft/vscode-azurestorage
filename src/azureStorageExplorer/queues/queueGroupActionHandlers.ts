@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { registerCommand } from 'vscode-azureextensionui';
+import { IActionContext, registerCommand } from 'vscode-azureextensionui';
 import { createChildNode } from '../commonTreeCommands';
 import { QueueGroupTreeItem } from './queueGroupNode';
 
 export function registerQueueGroupActionHandlers(): void {
-    registerCommand("azureStorage.createQueue", async (treeItem?: QueueGroupTreeItem) => await createChildNode(QueueGroupTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.createQueue", async (context: IActionContext, treeItem?: QueueGroupTreeItem) => await createChildNode(context, QueueGroupTreeItem.contextValue, treeItem));
 }

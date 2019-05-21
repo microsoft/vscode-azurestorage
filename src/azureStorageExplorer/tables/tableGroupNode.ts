@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzureParentTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { nonNull } from "../../components/storageWrappers";
 import { resourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
@@ -60,7 +60,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         });
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<TableTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext): Promise<TableTreeItem> {
         const tableName = await window.showInputBox({
             placeHolder: 'Enter a name for the new table',
             validateInput: TableGroupTreeItem.validateTableName
@@ -68,7 +68,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
         if (tableName) {
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-                showCreatingTreeItem(tableName);
+                context.showCreatingTreeItem(tableName);
                 progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
                 const table = await this.createTable(tableName);
                 return new TableTreeItem(this, nonNull(table.TableName, "TableName"));

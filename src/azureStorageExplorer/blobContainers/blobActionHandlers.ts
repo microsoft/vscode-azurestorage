@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { registerCommand } from "vscode-azureextensionui";
+import { IActionContext, registerCommand } from "vscode-azureextensionui";
 import { BlobTreeItem } from "./blobNode";
 
 export function registerBlobActionHandlers(): void {
-    registerCommand("azureStorage.deleteBlob", async (treeItem: BlobTreeItem) => await treeItem.deleteTreeItem());
-    registerCommand("azureStorage.downloadBlob", async (treeItem: BlobTreeItem) => await treeItem.download());
+    registerCommand("azureStorage.deleteBlob", async (context: IActionContext, treeItem: BlobTreeItem) => await treeItem.deleteTreeItem(context));
+    registerCommand("azureStorage.downloadBlob", async (_context: IActionContext, treeItem: BlobTreeItem) => await treeItem.download());
 }

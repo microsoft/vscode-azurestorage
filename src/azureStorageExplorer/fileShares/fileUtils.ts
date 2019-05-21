@@ -6,14 +6,14 @@
 import * as azureStorage from "azure-storage";
 import { FileService } from "azure-storage";
 import { ProgressLocation, window } from "vscode";
-import { AzureParentTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { FileTreeItem } from "./fileNode";
 import { validateFileName } from "./validateNames";
 
 // Currently only supports creating block blobs
-export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult, showCreatingTreeItem: (label: string) => void): Promise<FileTreeItem> {
+export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult, context: ICreateChildImplContext): Promise<FileTreeItem> {
     const fileName = await ext.ui.showInputBox({
         placeHolder: 'Enter a name for the new file',
         validateInput: async (name: string) => {
@@ -29,7 +29,7 @@ export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<ISto
 
     if (fileName) {
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-            showCreatingTreeItem(fileName);
+            context.showCreatingTreeItem(fileName);
             progress.report({ message: `Azure Storage: Creating file '${fileName}'` });
             const file = await createFile(directoryPath, fileName, share, parent.root);
             const actualFile = await getFile(directoryPath, file.name, share, parent.root);
