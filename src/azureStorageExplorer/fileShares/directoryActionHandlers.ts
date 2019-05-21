@@ -3,12 +3,13 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureParentTreeItem, registerCommand } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, IActionContext, registerCommand } from 'vscode-azureextensionui';
 import { DirectoryTreeItem } from './directoryNode';
+import { IFileShareCreateChildContext } from './fileShareNode';
 
 export function registerDirectoryActionHandlers(): void {
-    registerCommand("azureStorage.deleteDirectory", async (treeItem: AzureParentTreeItem) => await treeItem.deleteTreeItem());
-    registerCommand("azureStorage.createSubdirectory", async (treeItem: AzureParentTreeItem) => await treeItem.createChild(DirectoryTreeItem.contextValue));
+    registerCommand("azureStorage.deleteDirectory", async (context: IActionContext, treeItem: AzureParentTreeItem) => await treeItem.deleteTreeItem(context));
+    registerCommand("azureStorage.createSubdirectory", async (context: IActionContext, treeItem: AzureParentTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.contextValue }));
 
     // Note: azureStorage.createTextFile is registered in fileShareActionHandlers
 }

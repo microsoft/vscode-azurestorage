@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtParentTreeItem, AzExtTreeItem } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 
-export async function deleteNode(expectedContextValue: string, node?: AzExtTreeItem): Promise<void> {
+export async function deleteNode(context: IActionContext, expectedContextValue: string, node?: AzExtTreeItem): Promise<void> {
     if (!node) {
-        node = await ext.tree.showTreeItemPicker(expectedContextValue);
+        node = await ext.tree.showTreeItemPicker(expectedContextValue, context);
     }
 
-    await node.deleteTreeItem();
+    await node.deleteTreeItem(context);
 }
 
-export async function createChildNode(expectedContextValue: string, node?: AzExtParentTreeItem): Promise<void> {
+export async function createChildNode(context: IActionContext, expectedContextValue: string, node?: AzExtParentTreeItem): Promise<void> {
     if (!node) {
-        node = await ext.tree.showTreeItemPicker<AzExtParentTreeItem>(expectedContextValue);
+        node = await ext.tree.showTreeItemPicker<AzExtParentTreeItem>(expectedContextValue, context);
     }
 
-    await node.createChild();
+    await node.createChild(context);
 }

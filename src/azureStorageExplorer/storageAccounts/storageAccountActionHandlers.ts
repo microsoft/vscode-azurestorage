@@ -5,7 +5,7 @@
 
 import * as clipboardy from 'clipboardy';
 import * as vscode from "vscode";
-import { IActionContext, registerCommand, TelemetryProperties } from 'vscode-azureextensionui';
+import { IActionContext, registerCommand } from 'vscode-azureextensionui';
 import { isPathEqual, isSubpath } from '../../components/fs';
 import { configurationSettingsKeys, extensionPrefix } from '../../constants';
 import { ext } from '../../extensionVariables';
@@ -21,12 +21,12 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
     registerCommand("azureStorage.copyConnectionString", copyConnectionString);
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
-    registerCommand("azureStorage.deleteStorageAccount", async (treeItem?: StorageAccountTreeItem) => await deleteNode(StorageAccountTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.deleteStorageAccount", async (context: IActionContext, treeItem?: StorageAccountTreeItem) => await deleteNode(context, StorageAccountTreeItem.contextValue, treeItem));
 }
 
-async function openStorageAccountInStorageExplorer(treeItem?: StorageAccountTreeItem): Promise<void> {
+async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
+        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
 
     let accountId = treeItem.storageAccount.id;
@@ -34,29 +34,24 @@ async function openStorageAccountInStorageExplorer(treeItem?: StorageAccountTree
     await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId);
 }
 
-async function copyPrimaryKey(treeItem?: StorageAccountTreeItem): Promise<void> {
+async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
+        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
 
     await clipboardy.write(treeItem.key.value);
 }
 
-async function copyConnectionString(treeItem?: StorageAccountTreeItem): Promise<void> {
+async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
+        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
 
     let connectionString = await treeItem.getConnectionString();
     await clipboardy.write(connectionString);
 }
 
-async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {
-    let properties: TelemetryProperties & {
-        contextValue?: string;
-        enableResponse?: string;
-    } = this.properties;
-
+async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {
     let sourcePath: string | undefined;
     let destTreeItem: StorageAccountTreeItem | BlobContainerTreeItem | undefined;
 
@@ -64,12 +59,12 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | S
     if (target instanceof vscode.Uri) {
         // Command called from file view on a folder
         sourcePath = target.fsPath;
-        properties.contextValue = 'Folder';
+        context.telemetry.properties.contextValue = 'Folder';
     } else {
         // Command called from command palette or from storage account/container treeItem
         destTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>target;
         // tslint:disable-next-line:strict-boolean-expressions
-        properties.contextValue = (destTreeItem && destTreeItem.contextValue) || 'CommandPalette';
+        context.telemetry.properties.contextValue = (destTreeItem && destTreeItem.contextValue) || 'CommandPalette';
     }
 
     // Ask first for destination account if needed since it might require configuration and don't want to have user
@@ -77,7 +72,7 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | S
 
     let destAccountTreeItem: StorageAccountTreeItem = await selectStorageAccountTreeItemForCommand(
         destTreeItem,
-        this, // actionContext
+        context,
         {
             mustBeWebsiteCapable: true,
             askToConfigureWebsite: true
@@ -85,23 +80,23 @@ async function deployStaticWebsite(this: IActionContext, target?: vscode.Uri | S
 
     //  Ask for source folder if needed
     if (!sourcePath) {
-        sourcePath = await showWorkspaceFoldersQuickPick("Select the folder to deploy", this.properties, configurationSettingsKeys.deployPath);
+        sourcePath = await showWorkspaceFoldersQuickPick("Select the folder to deploy", context, configurationSettingsKeys.deployPath);
     }
 
     // Get the $web container
-    let destContainerTreeItem = await destAccountTreeItem.getWebsiteCapableContainer();
+    let destContainerTreeItem = await destAccountTreeItem.getWebsiteCapableContainer(context);
     if (!destContainerTreeItem) {
         throw new Error(`Could not find $web blob container for storage account "${destAccountTreeItem.label}"`);
     }
 
-    await runPreDeployTask(sourcePath, properties);
+    await runPreDeployTask(sourcePath, context);
 
-    return destContainerTreeItem.deployStaticWebsite(this, sourcePath);
+    return destContainerTreeItem.deployStaticWebsite(context, sourcePath);
 }
 
-async function runPreDeployTask(deployFsPath: string, telemetryProperties: TelemetryProperties): Promise<void> {
+async function runPreDeployTask(deployFsPath: string, context: IActionContext): Promise<void> {
     const taskName: string | undefined = vscode.workspace.getConfiguration(extensionPrefix, vscode.Uri.file(deployFsPath)).get(configurationSettingsKeys.preDeployTask);
-    telemetryProperties.hasPreDeployTask = String(!!taskName);
+    context.telemetry.properties.hasPreDeployTask = String(!!taskName);
     if (taskName) {
         const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
         const preDeployTask: vscode.Task | undefined = tasks.find((task: vscode.Task) => isTaskEqual(taskName, deployFsPath, task));

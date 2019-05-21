@@ -38,9 +38,9 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     context.subscriptions.push(ext.outputChannel);
     registerUIExtensionVariables(ext);
 
-    await callWithTelemetryAndErrorHandling('azureStorage.activate', async function (this: IActionContext): Promise<void> {
-        this.properties.isActivationEvent = 'true';
-        this.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
+    await callWithTelemetryAndErrorHandling('azureStorage.activate', async (activateContext: IActionContext) => {
+        activateContext.telemetry.properties.isActivationEvent = 'true';
+        activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
         const azureAccountTreeItem = new AzureAccountTreeItem();
         context.subscriptions.push(azureAccountTreeItem);
@@ -61,46 +61,46 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerTableActionHandlers();
         registerTableGroupActionHandlers();
 
-        registerCommand('azureStorage.refresh', async (treeItem?: AzExtTreeItem) => ext.tree.refresh(treeItem));
-        registerCommand('azureStorage.loadMore', async (treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem));
-        registerCommand('azureStorage.copyUrl', (treeItem: AzureTreeItem & ICopyUrl) => treeItem.copyUrl());
+        registerCommand('azureStorage.refresh', async (_actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(treeItem));
+        registerCommand('azureStorage.loadMore', async (actionContext: IActionContext, treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem, actionContext));
+        registerCommand('azureStorage.copyUrl', (_actionContext: IActionContext, treeItem: AzureTreeItem & ICopyUrl) => treeItem.copyUrl());
         registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
-        registerCommand("azureStorage.openInPortal", async (treeItem?: AzureTreeItem) => {
+        registerCommand("azureStorage.openInPortal", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             if (!treeItem) {
-                treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
+                treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, actionContext);
             }
 
             await treeItem.openInPortal();
         });
-        registerCommand("azureStorage.configureStaticWebsite", async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
+        registerCommand("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
-                this,
+                actionContext,
                 {
                     mustBeWebsiteCapable: true,
                     askToConfigureWebsite: false
                 });
             await accountTreeItem.configureStaticWebsite();
         });
-        registerCommand("azureStorage.disableStaticWebsite", async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
+        registerCommand("azureStorage.disableStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
-                this,
+                actionContext,
                 {
                     mustBeWebsiteCapable: false,
                     askToConfigureWebsite: false
                 });
             await accountTreeItem.disableStaticWebsite();
         });
-        registerCommand("azureStorage.createGpv2Account", async function (this: IActionContext, treeItem?: SubscriptionTreeItem): Promise<void> {
-            let node = treeItem ? <SubscriptionTreeItem>treeItem : <SubscriptionTreeItem>await ext.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue);
+        registerCommand("azureStorage.createGpv2Account", async (actionContext: IActionContext, treeItem?: SubscriptionTreeItem) => {
+            let node = treeItem ? <SubscriptionTreeItem>treeItem : <SubscriptionTreeItem>await ext.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue, actionContext);
 
-            await node.createChild(this);
+            await node.createChild(actionContext);
         });
-        registerCommand('azureStorage.browseStaticWebsite', async function (this: IActionContext, treeItem?: AzureTreeItem): Promise<void> {
+        registerCommand('azureStorage.browseStaticWebsite', async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
-                this,
+                actionContext,
                 {
                     mustBeWebsiteCapable: true,
                     askToConfigureWebsite: true

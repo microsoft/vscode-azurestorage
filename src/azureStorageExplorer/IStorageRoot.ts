@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
-import { ISubscriptionRoot } from "vscode-azureextensionui";
+import { ISubscriptionContext } from "vscode-azureextensionui";
 import { StorageAccountWrapper } from "../components/storageWrappers";
 
-export interface IStorageRoot extends ISubscriptionRoot {
+export interface IStorageRoot extends ISubscriptionContext {
     storageAccount: StorageAccountWrapper;
     createBlobService(): azureStorage.BlobService;
     createFileService(): azureStorage.FileService;

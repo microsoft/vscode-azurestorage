@@ -18,7 +18,7 @@ import { StorageAccountTreeItem } from "./storageAccounts/storageAccountNode";
  */
 export async function selectStorageAccountTreeItemForCommand(
     treeItem: AzureTreeItem | undefined,
-    actionContext: IActionContext,
+    context: IActionContext,
     options: { mustBeWebsiteCapable: boolean, askToConfigureWebsite: boolean }
 ): Promise<StorageAccountTreeItem> {
     // treeItem should be one of:
@@ -27,7 +27,7 @@ export async function selectStorageAccountTreeItemForCommand(
     //   a blob container treeItem
 
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue);
+        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
 
     let storageOrContainerTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>treeItem;
@@ -49,8 +49,8 @@ export async function selectStorageAccountTreeItemForCommand(
         await accountTreeItem.ensureHostingCapable(hostingStatus);
 
         if (options.askToConfigureWebsite && !hostingStatus.enabled) {
-            actionContext.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
-            actionContext.properties.enableResponse = 'false';
+            context.telemetry.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
+            context.telemetry.properties.enableResponse = 'false';
             let enableWebHostingPrompt = "Enable website hosting";
             // don't check result since cancel throws UserCancelledError and only other option is 'Enable'
             await ext.ui.showWarningMessage(
@@ -58,7 +58,7 @@ export async function selectStorageAccountTreeItemForCommand(
                 { modal: true },
                 { title: enableWebHostingPrompt });
             let enableResponse = 'true';
-            actionContext.properties.enableResponse = String(enableResponse);
+            context.telemetry.properties.enableResponse = String(enableResponse);
             if (enableResponse) {
                 await accountTreeItem.configureStaticWebsite();
             }

@@ -7,7 +7,7 @@ import * as azureStorage from "azure-storage";
 import { FileService } from 'azure-storage';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzureParentTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { resourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 import { FileShareTreeItem } from './fileShareNode';
@@ -62,7 +62,7 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         });
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<FileShareTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext): Promise<FileShareTreeItem> {
         const shareName = await window.showInputBox({
             placeHolder: 'Enter a name for the new file share',
             validateInput: FileShareGroupTreeItem.validateFileShareName
@@ -77,7 +77,7 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
             if (quotaGB) {
                 return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-                    showCreatingTreeItem(shareName);
+                    context.showCreatingTreeItem(shareName);
                     progress.report({ message: `Azure Storage: Creating file share '${shareName}'` });
                     const share = await this.createFileShare(shareName, Number(quotaGB));
                     return new FileShareTreeItem(this, share);
