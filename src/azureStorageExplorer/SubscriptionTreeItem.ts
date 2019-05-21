@@ -7,21 +7,20 @@
 import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import * as vscode from 'vscode';
-import { AzureTreeItem, AzureWizard, createAzureClient, createTreeItemsWithErrorHandling, IActionContext, IStorageAccountWizardContext, ISubscriptionRoot, LocationListStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItem } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureTreeItem, AzureWizard, createAzureClient, IActionContext, IStorageAccountWizardContext, ISubscriptionRoot, LocationListStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
 import { nonNull, StorageAccountWrapper } from '../components/storageWrappers';
 import { StorageAccountTreeItem } from './storageAccounts/storageAccountNode';
 import { StorageAccountCreateStep } from './wizard/storageAccountCreateStep';
 import { StorageAccountNameStep } from './wizard/storageAccountNameStep';
 
-export class StorageAccountProvider extends SubscriptionTreeItem {
+export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public childTypeLabel: string = "Storage Account";
 
-    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem[]> {
+    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
 
         let accounts = await storageManagementClient.storageAccounts.list();
-        return createTreeItemsWithErrorHandling(
-            this,
+        return this.createTreeItemsWithErrorHandling(
             accounts,
             'invalidStorageAccount',
             async (sa: StorageAccount) => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
