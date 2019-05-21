@@ -99,25 +99,28 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return groupTreeItems;
     }
 
-    public pickTreeItemImpl(expectedContextValue: string): AzureTreeItem<IStorageRoot> | undefined {
-        switch (expectedContextValue) {
-            case BlobContainerGroupTreeItem.contextValue:
-            case BlobContainerTreeItem.contextValue:
-                return this._blobContainerGroupTreeItem;
-            case FileShareGroupTreeItem.contextValue:
-            case FileShareTreeItem.contextValue:
-            case DirectoryTreeItem.contextValue:
-            case FileTreeItem.contextValue:
-                return this._fileShareGroupTreeItem;
-            case QueueGroupTreeItem.contextValue:
-            case QueueTreeItem.contextValue:
-                return this._queueGroupTreeItem;
-            case TableGroupTreeItem.contextValue:
-            case TableTreeItem.contextValue:
-                return this._tableGroupTreeItem;
-            default:
-                return undefined;
+    public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): AzureTreeItem<IStorageRoot> | undefined {
+        for (const expectedContextValue of expectedContextValues) {
+            switch (expectedContextValue) {
+                case BlobContainerGroupTreeItem.contextValue:
+                case BlobContainerTreeItem.contextValue:
+                    return this._blobContainerGroupTreeItem;
+                case FileShareGroupTreeItem.contextValue:
+                case FileShareTreeItem.contextValue:
+                case DirectoryTreeItem.contextValue:
+                case FileTreeItem.contextValue:
+                    return this._fileShareGroupTreeItem;
+                case QueueGroupTreeItem.contextValue:
+                case QueueTreeItem.contextValue:
+                    return this._queueGroupTreeItem;
+                case TableGroupTreeItem.contextValue:
+                case TableTreeItem.contextValue:
+                    return this._tableGroupTreeItem;
+                default:
+            }
         }
+
+        return undefined;
     }
 
     hasMoreChildrenImpl(): boolean {
