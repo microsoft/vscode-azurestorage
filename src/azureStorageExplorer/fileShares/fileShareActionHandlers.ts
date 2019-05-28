@@ -11,7 +11,7 @@ import { deleteNode } from '../commonTreeCommands';
 import { DirectoryTreeItem } from './directoryNode';
 import { FileFileHandler } from './fileFileHandler';
 import { FileTreeItem } from './fileNode';
-import { FileShareTreeItem } from './fileShareNode';
+import { FileShareTreeItem, IFileShareCreateChildContext } from './fileShareNode';
 
 export function registerFileShareActionHandlers(): void {
     const _editor = new RemoteFileEditor(new FileFileHandler(), "azureStorage.file.showSavePrompt");
@@ -19,17 +19,17 @@ export function registerFileShareActionHandlers(): void {
     ext.context.subscriptions.push(_editor);
 
     registerCommand("azureStorage.openFileShare", openFileShareInStorageExplorer);
-    registerCommand("azureStorage.editFile", async (treeItem: FileTreeItem) => await _editor.showEditor(treeItem));
-    registerCommand("azureStorage.deleteFileShare", async (treeItem?: FileShareTreeItem) => await deleteNode(FileShareTreeItem.contextValue, treeItem));
-    registerCommand("azureStorage.createDirectory", async (treeItem: FileShareTreeItem) => await treeItem.createChild(DirectoryTreeItem.contextValue));
-    registerCommand("azureStorage.createTextFile", async (treeItem: FileShareTreeItem) => {
-        let childTreeItem = await treeItem.createChild(FileTreeItem.contextValue);
+    registerCommand("azureStorage.editFile", async (_context: IActionContext, treeItem: FileTreeItem) => await _editor.showEditor(treeItem));
+    registerCommand("azureStorage.deleteFileShare", async (context: IActionContext, treeItem?: FileShareTreeItem) => await deleteNode(context, FileShareTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.createDirectory", async (context: IActionContext, treeItem: FileShareTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.contextValue }));
+    registerCommand("azureStorage.createTextFile", async (context: IActionContext, treeItem: FileShareTreeItem) => {
+        let childTreeItem = await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue });
         await vscode.commands.executeCommand("azureStorage.editFile", childTreeItem);
     });
-    registerEvent('azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async function (this: IActionContext, doc: vscode.TextDocument): Promise<void> { await _editor.onDidSaveTextDocument(this, doc); });
+    registerEvent('azureStorage.fileEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async (context: IActionContext, doc: vscode.TextDocument) => { await _editor.onDidSaveTextDocument(context, doc); });
 }
 
-async function openFileShareInStorageExplorer(treeItem: FileShareTreeItem): Promise<void> {
+async function openFileShareInStorageExplorer(_context: IActionContext, treeItem: FileShareTreeItem): Promise<void> {
     let accountId = treeItem.root.storageAccount.id;
     let subscriptionid = treeItem.root.subscriptionId;
     const resourceType = 'Azure.FileShare';

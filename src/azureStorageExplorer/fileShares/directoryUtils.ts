@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from "path";
 import { ProgressLocation, window } from "vscode";
-import { AzureParentTreeItem, UserCancelledError } from "vscode-azureextensionui";
+import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from "./directoryNode";
@@ -14,7 +14,7 @@ import { deleteFile } from "./fileUtils";
 import { validateDirectoryName } from "./validateNames";
 
 // Supports both file share and directory parents
-export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, share: azureStorage.FileService.ShareResult, showCreatingTreeItem: (label: string) => void): Promise<DirectoryTreeItem> {
+export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, share: azureStorage.FileService.ShareResult, context: ICreateChildImplContext): Promise<DirectoryTreeItem> {
     const dirName = await window.showInputBox({
         placeHolder: 'Enter a name for the new directory',
         validateInput: validateDirectoryName
@@ -22,7 +22,7 @@ export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<ISt
 
     if (dirName) {
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-            showCreatingTreeItem(dirName);
+            context.showCreatingTreeItem(dirName);
             progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
             let dir = await createDirectory(share, parent.root, parentPath, dirName);
 

@@ -10,7 +10,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { awaitWithProgress } from '../../components/progress';
 import * as constants from '../../constants';
 import { ext } from "../../extensionVariables";
@@ -28,8 +28,7 @@ export enum ChildType {
     uploadedBlob
 }
 
-interface ICreateChildOptions {
-    childType: ChildType;
+export interface IExistingBlobContext extends IActionContext {
     filePath: string;
     blobPath: string;
 }
@@ -139,14 +138,14 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void, userOptions: ICreateChildOptions): Promise<BlobTreeItem> {
-        switch (userOptions.childType) {
-            case ChildType.uploadedBlob:
-                return this.createChildAsUpload(userOptions, showCreatingTreeItem);
-            case ChildType.newBlockBlob:
-                return this.createChildAsNewBlockBlob(showCreatingTreeItem);
-            default:
-                throw new Error("Unexpected child type");
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext>): Promise<BlobTreeItem> {
+        if (context.blobPath && context.filePath) {
+            context.showCreatingTreeItem(context.blobPath);
+            await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
+            const actualBlob = await this.getBlob(context.blobPath);
+            return new BlobTreeItem(this, actualBlob, this.container);
+        } else {
+            return this.createChildAsNewBlockBlob(context);
         }
     }
 
@@ -159,7 +158,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     // This is the public entrypoint for azureStorage.uploadBlockBlob
-    public async uploadBlockBlob(): Promise<void> {
+    public async uploadBlockBlob(context: IActionContext): Promise<void> {
         let uris = await vscode.window.showOpenDialog(
             <vscode.OpenDialogOptions>{
                 canSelectFiles: true,
@@ -207,7 +206,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
                     let blobId = `${this.fullId}/${blobPath}`;
                     try {
-                        let blobTreeItem = await this.treeDataProvider.findTreeItem(blobId);
+                        let blobTreeItem = await this.treeDataProvider.findTreeItem(blobId, context);
                         if (blobTreeItem) {
                             // A treeItem for this blob already exists, no need to do anything with the tree, just upload
                             await this.uploadFileToBlockBlob(filePath, blobPath);
@@ -218,14 +217,14 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                     }
                 }
 
-                await this.createChild(<ICreateChildOptions>{ childType: ChildType.uploadedBlob, blobPath, filePath });
+                await this.createChild(<IExistingBlobContext>{ ...context, blobPath, filePath });
             }
         }
 
         throw new UserCancelledError();
     }
 
-    public async deployStaticWebsite(actionContext: IActionContext, sourceFolderPath: string): Promise<void> {
+    public async deployStaticWebsite(context: IActionContext, sourceFolderPath: string): Promise<void> {
         let destBlobFolder = "";
         let webEndpoint = await vscode.window.withProgress(
             {
@@ -234,7 +233,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 title: `Deploying to ${this.friendlyContainerName} from ${sourceFolderPath}`,
 
             },
-            async (progress, cancellationToken) => await this.deployStaticWebsiteCore(actionContext, sourceFolderPath, destBlobFolder, progress, cancellationToken),
+            async (progress, cancellationToken) => await this.deployStaticWebsiteCore(context, sourceFolderPath, destBlobFolder, progress, cancellationToken),
         );
 
         let browseWebsite: vscode.MessageItem = { title: "Browse to website" };
@@ -257,7 +256,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
      * @returns The primary web endpoint
      */
     private async deployStaticWebsiteCore(
-        _actionContext: IActionContext,
+        context: IActionContext,
         sourceFolderPath: string,
         destBlobFolder: string,
         progress: vscode.Progress<{ message?: string, increment?: number }>,
@@ -267,7 +266,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             blobsToDelete: number;
             filesToUpload: number;
             fileLengths: number[];
-        }>_actionContext.properties;
+        }>context.telemetry.properties;
 
         try {
             properties.fileLengths = [];
@@ -448,13 +447,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    private async createChildAsUpload(options: ICreateChildOptions, showCreatingTreeItem: (label: string) => void): Promise<BlobTreeItem> {
-        showCreatingTreeItem(options.blobPath);
-        await this.uploadFileToBlockBlob(options.filePath, options.blobPath);
-        const actualBlob = await this.getBlob(options.blobPath);
-        return new BlobTreeItem(this, actualBlob, this.container);
-    }
-
     private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
         let blobFriendlyPath = `${this.friendlyContainerName}/${blobPath}`;
         if (!suppressLogs) {
@@ -492,7 +484,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     // Currently only supports creating block blobs
-    private async createChildAsNewBlockBlob(showCreatingTreeItem: (label: string) => void): Promise<BlobTreeItem> {
+    private async createChildAsNewBlockBlob(context: ICreateChildImplContext): Promise<BlobTreeItem> {
         const blobName = await vscode.window.showInputBox({
             placeHolder: 'Enter a name for the new block blob',
             validateInput: async (name: string) => {
@@ -509,7 +501,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
         if (blobName) {
             return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-                showCreatingTreeItem(blobName);
+                context.showCreatingTreeItem(blobName);
                 progress.report({ message: `Azure Storage: Creating block blob '${blobName}'` });
                 const blob = await this.createTextBlockBlob(blobName);
                 const actualBlob = await this.getBlob(blob.name);

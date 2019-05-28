@@ -7,7 +7,7 @@ import * as azureStorage from "azure-storage";
 import * as clipboardy from 'clipboardy';
 import * as path from 'path';
 import { Uri, window } from 'vscode';
-import { AzureParentTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { resourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
@@ -95,11 +95,15 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         }
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void, userOptions?: {}): Promise<DirectoryTreeItem | FileTreeItem> {
-        if (userOptions === FileTreeItem.contextValue) {
-            return askAndCreateEmptyTextFile(this, '', this.share, showCreatingTreeItem);
+    public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem | FileTreeItem> {
+        if (context.childType === FileTreeItem.contextValue) {
+            return askAndCreateEmptyTextFile(this, '', this.share, context);
         } else {
-            return askAndCreateChildDirectory(this, '', this.share, showCreatingTreeItem);
+            return askAndCreateChildDirectory(this, '', this.share, context);
         }
     }
+}
+
+export interface IFileShareCreateChildContext extends IActionContext {
+    childType: string;
 }

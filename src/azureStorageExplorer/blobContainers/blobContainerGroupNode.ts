@@ -7,7 +7,7 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { AzureParentTreeItem, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { resourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./blobContainerNode";
@@ -57,7 +57,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         });
     }
 
-    public async createChildImpl(showCreatingTreeItem: (label: string) => void): Promise<BlobContainerTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext): Promise<BlobContainerTreeItem> {
         const containerName = await vscode.window.showInputBox({
             placeHolder: 'Enter a name for the new blob container',
             validateInput: BlobContainerGroupTreeItem.validateContainerName
@@ -65,7 +65,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
 
         if (containerName) {
             return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-                showCreatingTreeItem(containerName);
+                context.showCreatingTreeItem(containerName);
                 progress.report({ message: `Azure Storage: Creating blob container '${containerName}'` });
                 const container = await this.createBlobContainer(containerName);
                 return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);

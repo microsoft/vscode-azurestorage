@@ -9,7 +9,7 @@ import * as azureStorage from "azure-storage";
 import opn = require('opn');
 import * as path from 'path';
 import { commands, MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, ISubscriptionRoot, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
 import * as constants from "../../constants";
@@ -99,25 +99,28 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return groupTreeItems;
     }
 
-    public pickTreeItemImpl(expectedContextValue: string): AzureTreeItem<IStorageRoot> | undefined {
-        switch (expectedContextValue) {
-            case BlobContainerGroupTreeItem.contextValue:
-            case BlobContainerTreeItem.contextValue:
-                return this._blobContainerGroupTreeItem;
-            case FileShareGroupTreeItem.contextValue:
-            case FileShareTreeItem.contextValue:
-            case DirectoryTreeItem.contextValue:
-            case FileTreeItem.contextValue:
-                return this._fileShareGroupTreeItem;
-            case QueueGroupTreeItem.contextValue:
-            case QueueTreeItem.contextValue:
-                return this._queueGroupTreeItem;
-            case TableGroupTreeItem.contextValue:
-            case TableTreeItem.contextValue:
-                return this._tableGroupTreeItem;
-            default:
-                return undefined;
+    public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): AzureTreeItem<IStorageRoot> | undefined {
+        for (const expectedContextValue of expectedContextValues) {
+            switch (expectedContextValue) {
+                case BlobContainerGroupTreeItem.contextValue:
+                case BlobContainerTreeItem.contextValue:
+                    return this._blobContainerGroupTreeItem;
+                case FileShareGroupTreeItem.contextValue:
+                case FileShareTreeItem.contextValue:
+                case DirectoryTreeItem.contextValue:
+                case FileTreeItem.contextValue:
+                    return this._fileShareGroupTreeItem;
+                case QueueGroupTreeItem.contextValue:
+                case QueueTreeItem.contextValue:
+                    return this._queueGroupTreeItem;
+                case TableGroupTreeItem.contextValue:
+                case TableTreeItem.contextValue:
+                    return this._tableGroupTreeItem;
+                default:
+            }
         }
+
+        return undefined;
     }
 
     hasMoreChildrenImpl(): boolean {
@@ -151,7 +154,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
     }
 
-    private createRoot(subRoot: ISubscriptionRoot): IStorageRoot {
+    private createRoot(subRoot: ISubscriptionContext): IStorageRoot {
         return Object.assign({}, subRoot, {
             storageAccount: this.storageAccount,
             createBlobService: () => {
@@ -210,13 +213,13 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return result;
     }
 
-    public async getWebsiteCapableContainer(): Promise<BlobContainerTreeItem | undefined> {
+    public async getWebsiteCapableContainer(context: IActionContext): Promise<BlobContainerTreeItem | undefined> {
         // Refresh the storage account first to make sure $web has been picked up if new
         await this.refresh();
 
         // Currently only the child with the name "$web" is supported for hosting websites
         let id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${constants.staticWebsiteContainerName}`;
-        let containerTreeItem = <BlobContainerTreeItem>await this.treeDataProvider.findTreeItem(id);
+        let containerTreeItem = <BlobContainerTreeItem>await this.treeDataProvider.findTreeItem(id, context);
         return containerTreeItem;
     }
 

@@ -6,11 +6,11 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IAzureQuickPickItem, TelemetryProperties } from 'vscode-azureextensionui';
+import { IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { extensionPrefix } from '../../constants';
 import { ext } from '../../extensionVariables';
 
-export async function showWorkspaceFoldersQuickPick(placeHolderString: string, telemetryProperties: TelemetryProperties, subPathSetting: string | undefined): Promise<string> {
+export async function showWorkspaceFoldersQuickPick(placeHolderString: string, context: IActionContext, subPathSetting: string | undefined): Promise<string> {
     const folderQuickPickItems: IAzureQuickPickItem<string | undefined>[] = [];
     if (vscode.workspace.workspaceFolders) {
         for (let workspaceFolder of vscode.workspace.workspaceFolders) {
@@ -49,11 +49,11 @@ export async function showWorkspaceFoldersQuickPick(placeHolderString: string, t
     folderQuickPickItems.unshift({ label: '$(file-directory) Browse...', description: '', data: undefined });
 
     const folderQuickPickOption = { placeHolder: placeHolderString };
-    telemetryProperties.cancelStep = 'showWorkspaceFolders';
+    context.telemetry.properties.cancelStep = 'showWorkspaceFolders';
     const pickedItem = await ext.ui.showQuickPick(folderQuickPickItems, folderQuickPickOption);
 
     if (!pickedItem.data) {
-        telemetryProperties.cancelStep = 'showWorkspaceFoldersBrowse';
+        context.telemetry.properties.cancelStep = 'showWorkspaceFoldersBrowse';
         const browseResult = await ext.ui.showOpenDialog({
             canSelectFiles: false,
             canSelectFolders: true,
@@ -61,10 +61,10 @@ export async function showWorkspaceFoldersQuickPick(placeHolderString: string, t
             defaultUri: vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0].uri : undefined
         });
 
-        telemetryProperties.cancelStep = undefined;
+        context.telemetry.properties.cancelStep = undefined;
         return browseResult[0].fsPath;
     } else {
-        telemetryProperties.cancelStep = undefined;
+        context.telemetry.properties.cancelStep = undefined;
         return pickedItem.data;
     }
 }
