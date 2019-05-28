@@ -76,12 +76,12 @@ function getResourceManagementClient(testAccount: TestAzureAccount): ResourceMan
     return new ResourceManagementClient(testAccount.getSubscriptionCredentials(), testAccount.getSubscriptionId());
 }
 
-async function assertThrowsAsync(fn: { (): Promise<StorageAccount>; (): void; }, regExp: RegExp) {
-    let f = () => { };
+async function assertThrowsAsync(fn: { (): Promise<StorageAccount>; (): void; }, regExp: RegExp): Promise<void> {
+    let f = () => { return undefined; };
     try {
         await fn();
     } catch (e) {
-        f = () => { throw e };
+        f = () => { throw e; };
     } finally {
         assert.throws(f, regExp);
     }
