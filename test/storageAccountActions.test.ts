@@ -6,11 +6,11 @@
 import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
-import { StorageAccountListResult } from 'azure-arm-storage/lib/models';
+import { StorageAccount } from 'azure-arm-storage/lib/models';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
-import { AzureTreeDataProvider, DialogResponses, TestAzureAccount, TestUserInput } from 'vscode-azureextensionui';
-import { ext, getRandomHexString, StorageAccountProvider } from '../extension.bundle';
+import { AzExtTreeDataProvider, DialogResponses, TestAzureAccount, TestUserInput } from 'vscode-azureextensionui';
+import { AzureAccountTreeItem, ext, getRandomHexString } from '../extension.bundle';
 import { longRunningTestsEnabled } from './global.test';
 
 suite('Storage Account Actions', async function (this: ISuiteCallbackContext): Promise<void> {
@@ -18,8 +18,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     const resourceGroupsToDelete: string[] = [];
     const testAccount: TestAzureAccount = new TestAzureAccount();
     let storageAccountClient: StorageManagementClient;
-    const resourceGroupName: string = getRandomHexString();
-    const storageAccountName: string = getRandomHexString().toLowerCase();
+    const resourceName: string = getRandomHexString().toLowerCase();
 
     suiteSetup(async function (this: IHookCallbackContext): Promise<void> {
         if (!longRunningTestsEnabled) {
@@ -27,7 +26,9 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         }
         this.timeout(120 * 1000);
         await testAccount.signIn();
-        ext.tree = new AzureTreeDataProvider(StorageAccountProvider, 'azureStorage.loadMore', undefined, testAccount);
+
+        ext.azureAccountTreeItem = new AzureAccountTreeItem(testAccount);
+        ext.tree = new AzExtTreeDataProvider(ext.azureAccountTreeItem, 'azureStorage.loadMore');
         storageAccountClient = getStorageManagementClient(testAccount);
     });
 
@@ -47,25 +48,23 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
                 console.log(`Ignoring resource group "${resourceGroup}" because it does not exist.`);
             }
         }
-        ext.tree.dispose();
+        ext.azureAccountTreeItem.dispose();
     });
 
     test("createStorageAccount", async () => {
-        resourceGroupsToDelete.push(resourceGroupName);
-        ext.ui = new TestUserInput([storageAccountName, '$(plus) Create new resource group', resourceGroupName, 'East US']);
+        resourceGroupsToDelete.push(resourceName);
+        ext.ui = new TestUserInput([resourceName, '$(plus) Create new resource group', resourceName, 'East US']);
         await vscode.commands.executeCommand('azureStorage.createGpv2Account');
-        const createdAccount: StorageAccountListResult = await storageAccountClient.storageAccounts.listByResourceGroup(resourceGroupName);
+        const createdAccount: StorageAccount = await storageAccountClient.storageAccounts.getProperties(resourceName, resourceName);
         assert.ok(createdAccount);
-        assert.equal(createdAccount[0].name, storageAccountName, `The created Storage Account '${createdAccount[0].name}' is not equal to the expected one '${storageAccountName}'.`);
     });
 
     test("deleteStorageAccount", async () => {
-        const createdAccount1: StorageAccountListResult = await storageAccountClient.storageAccounts.listByResourceGroup(resourceGroupName);
+        const createdAccount1: StorageAccount = await storageAccountClient.storageAccounts.getProperties(resourceName, resourceName);
         assert.ok(createdAccount1);
-        ext.ui = new TestUserInput([storageAccountName, DialogResponses.deleteResponse.title]);
+        ext.ui = new TestUserInput([resourceName, DialogResponses.deleteResponse.title]);
         await vscode.commands.executeCommand('azureStorage.deleteStorageAccount');
-        const createdAccount2: StorageAccountListResult = await storageAccountClient.storageAccounts.listByResourceGroup(resourceGroupName);
-        assert.equal(createdAccount2.length, 0, `Deleting failed since the storage account ${storageAccountName} still exists`);
+        await assertThrowsAsync(async () => await storageAccountClient.storageAccounts.getProperties(resourceName, resourceName), /Error/);
     });
 });
 
@@ -75,4 +74,15 @@ function getStorageManagementClient(testAccount: TestAzureAccount): StorageManag
 
 function getResourceManagementClient(testAccount: TestAzureAccount): ResourceManagementClient {
     return new ResourceManagementClient(testAccount.getSubscriptionCredentials(), testAccount.getSubscriptionId());
+}
+
+async function assertThrowsAsync(fn: { (): Promise<StorageAccount>; (): void; }, regExp: RegExp) {
+    let f = () => { };
+    try {
+        await fn();
+    } catch (e) {
+        f = () => { throw e };
+    } finally {
+        assert.throws(f, regExp);
+    }
 }
