@@ -12,7 +12,7 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { awaitWithProgress } from '../../components/progress';
-import * as constants from '../../constants';
+import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -52,11 +52,11 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public get iconPath(): { light: string | Uri; dark: string | Uri } {
         // tslint:disable-next-line:no-non-null-assertion
-        const iconFileName = this._websiteHostingEnabled && this.container.name === constants.staticWebsiteContainerName ?
+        const iconFileName = this._websiteHostingEnabled && this.container.name === staticWebsiteContainerName ?
             'BrandAzureStaticWebsites' : 'AzureBlobContainer';
         return {
-            light: path.join(constants.resourcesPath, 'light', `${iconFileName}.svg`),
-            dark: path.join(constants.resourcesPath, 'dark', `${iconFileName}.svg`)
+            light: path.join(getResourcesPath(), 'light', `${iconFileName}.svg`),
+            dark: path.join(getResourcesPath(), 'dark', `${iconFileName}.svg`)
         };
     }
 

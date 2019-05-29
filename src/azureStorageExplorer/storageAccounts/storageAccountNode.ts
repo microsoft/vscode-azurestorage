@@ -12,7 +12,7 @@ import { commands, MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/models';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
-import * as constants from "../../constants";
+import { getResourcesPath, staticWebsiteContainerName } from '../../constants';
 import { ext } from "../../extensionVariables";
 import { BlobContainerGroupTreeItem } from '../blobContainers/blobContainerGroupNode';
 import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
@@ -38,8 +38,8 @@ type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
 export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public key: StorageAccountKeyWrapper;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(constants.resourcesPath, 'light', 'AzureStorageAccount.svg'),
-        dark: path.join(constants.resourcesPath, 'dark', 'AzureStorageAccount.svg')
+        light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
+        dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
     };
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
@@ -217,7 +217,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         await this.refresh();
 
         // Currently only the child with the name "$web" is supported for hosting websites
-        let id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${constants.staticWebsiteContainerName}`;
+        let id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${staticWebsiteContainerName}`;
         let containerTreeItem = <BlobContainerTreeItem>await this.treeDataProvider.findTreeItem(id, context);
         return containerTreeItem;
     }

@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { resourcesPath } from "../../constants";
+import { getResourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./blobContainerNode";
 
@@ -20,8 +20,8 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     public static contextValue: string = 'azureBlobContainerGroup';
     public contextValue: string = BlobContainerGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(resourcesPath, 'light', 'AzureBlobContainer.svg'),
-        dark: path.join(resourcesPath, 'dark', 'AzureBlobContainer.svg')
+        light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
+        dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
     };
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<BlobContainerTreeItem[]> {

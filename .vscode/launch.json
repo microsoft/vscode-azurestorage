@@ -12,18 +12,18 @@
             ],
             "stopOnEntry": false,
             "sourceMaps": true,
-            // outFiles is used for locating generated JavaScript files, see https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_source-maps
             "outFiles": [
-                "${workspaceFolder}/**/*.js"
+                "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "npm: webpack",
+            "preLaunchTask": "npm: compile",
             "env": {
+                "AZCODE_STORAGE_IGNORE_BUNDLE": "1",
                 "DEBUGTELEMETRY": "1",
                 "NODE_DEBUG": ""
             }
         },
         {
-            "name": "Launch Extension (no build)",
+            "name": "Launch Extension (webpack)",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
@@ -32,10 +32,10 @@
             ],
             "stopOnEntry": false,
             "sourceMaps": true,
-            // outFiles is used for locating generated JavaScript files, see https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_source-maps
             "outFiles": [
-                "${workspaceFolder}/**/*.js"
+                "${workspaceFolder}/out/**/*.js"
             ],
+            "preLaunchTask": "npm: webpack",
             "env": {
                 "DEBUGTELEMETRY": "1",
                 "NODE_DEBUG": ""
@@ -48,11 +48,34 @@
             "runtimeExecutable": "${execPath}",
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "npm: compile",
+            "env": {
+                "AZCODE_STORAGE_IGNORE_BUNDLE": "1",
+                "MOCHA_grep": "", // RegExp of tests to run (empty for all)
+                "MOCHA_enableTimeouts": "0", // Disable time-outs
+                "DEBUGTELEMETRY": "1",
+                "NODE_DEBUG": "",
+                "ENABLE_LONG_RUNNING_TESTS": ""
+            }
+        },
+        {
+            "name": "Launch Tests (webpack)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
                 "--extensionTestsPath=${workspaceFolder}/dist/test"
             ],
             "stopOnEntry": false,
             "sourceMaps": true,
-            // outFiles is used for locating generated JavaScript files, see https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_source-maps
             "outFiles": [
                 "${workspaceFolder}/dist/**/*.js"
             ],
@@ -61,7 +84,8 @@
                 "MOCHA_grep": "", // RegExp of tests to run (empty for all)
                 "MOCHA_enableTimeouts": "0", // Disable time-outs
                 "DEBUGTELEMETRY": "1",
-                "NODE_DEBUG": ""
+                "NODE_DEBUG": "",
+                "ENABLE_LONG_RUNNING_TESTS": ""
             }
         }
     ]

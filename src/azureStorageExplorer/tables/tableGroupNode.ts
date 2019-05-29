@@ -8,7 +8,7 @@ import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { nonNull } from "../../components/storageWrappers";
-import { resourcesPath } from "../../constants";
+import { getResourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 import { TableTreeItem } from './tableNode';
 
@@ -20,8 +20,8 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public static contextValue: string = 'azureTableGroup';
     public contextValue: string = TableGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(resourcesPath, 'light', 'AzureTable.svg'),
-        dark: path.join(resourcesPath, 'dark', 'AzureTable.svg')
+        light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
+        dark: path.join(getResourcesPath(), 'dark', 'AzureTable.svg')
     };
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<TableTreeItem[]> {

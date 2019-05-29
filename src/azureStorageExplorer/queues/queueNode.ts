@@ -7,7 +7,7 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
-import { resourcesPath } from "../../constants";
+import { getResourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 
 export class QueueTreeItem extends AzureTreeItem<IStorageRoot> {
@@ -21,8 +21,8 @@ export class QueueTreeItem extends AzureTreeItem<IStorageRoot> {
     public static contextValue: string = 'azureQueue';
     public contextValue: string = QueueTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(resourcesPath, 'light', 'AzureQueue.svg'),
-        dark: path.join(resourcesPath, 'dark', 'AzureQueue.svg')
+        light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
+        dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
     };
 
     public async deleteTreeItemImpl(): Promise<void> {
