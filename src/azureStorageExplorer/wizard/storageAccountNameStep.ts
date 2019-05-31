@@ -15,7 +15,7 @@ export class StorageAccountNameStep<T extends IStorageAccountWizardContext> exte
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
         wizardContext.newStorageAccountName = (await ext.ui.showInputBox({
             value: suggestedName,
-            prompt: 'Enter the name of the new storage account.',
+            prompt: 'Enter a globally unique name for the new Storage Account',
             validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(client, value)
         })).trim();
 
