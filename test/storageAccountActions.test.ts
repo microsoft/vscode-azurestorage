@@ -6,7 +6,8 @@
 import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
-import { StorageAccount } from 'azure-arm-storage/lib/models';
+import { BlobContainer, StorageAccount, StorageAccountKey } from 'azure-arm-storage/lib/models';
+import * as clipboardy from 'clipboardy';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { AzExtTreeDataProvider, DialogResponses, TestAzureAccount, TestUserInput } from 'vscode-azureextensionui';
@@ -57,6 +58,40 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         await vscode.commands.executeCommand('azureStorage.createGpv2Account');
         const createdAccount: StorageAccount = await storageAccountClient.storageAccounts.getProperties(resourceName, resourceName);
         assert.ok(createdAccount);
+    });
+
+    test("createBlobContainer", async () => {
+        const blobContainerName: string = getRandomHexString().toLowerCase();
+        ext.ui = new TestUserInput([resourceName, blobContainerName]);
+        await vscode.commands.executeCommand('azureStorage.createBlobContainer');
+        const createdAccount: BlobContainer = await storageAccountClient.blobContainers.get(resourceName, resourceName, blobContainerName);
+        assert.ok(createdAccount);
+    });
+
+    test("copyConnectionString", async () => {
+        let key: string | undefined;
+        ext.ui = new TestUserInput([resourceName]);
+        await vscode.commands.executeCommand('azureStorage.copyConnectionString');
+        const connectionString: string = await clipboardy.read();
+        const listKeys: StorageAccountKey[] | undefined = (await storageAccountClient.storageAccounts.listKeys(resourceName, resourceName)).keys;
+        if (listKeys !== undefined) {
+            key = listKeys[0].value;
+            assert.equal(connectionString, `DefaultEndpointsProtocol=https;AccountName=${resourceName};AccountKey=${key};`, `Copy connection string value should be 'DefaultEndpointsProtocol=https;AccountName=${resourceName};AccountKey=${key}' rather than '${connectionString}'.`);
+        }
+        assert.ok(key);
+    });
+
+    test("copyPrimaryKey", async () => {
+        let key: string | undefined;
+        ext.ui = new TestUserInput([resourceName]);
+        await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
+        const primaryKey: string = await clipboardy.read();
+        const listKeys: StorageAccountKey[] | undefined = (await storageAccountClient.storageAccounts.listKeys(resourceName, resourceName)).keys;
+        if (listKeys !== undefined) {
+            key = listKeys[0].value;
+            assert.equal(primaryKey, key, `Copy primary key value should be '${key}' rather than '${primaryKey}'.`);
+        }
+        assert.ok(key);
     });
 
     test("deleteStorageAccount", async () => {

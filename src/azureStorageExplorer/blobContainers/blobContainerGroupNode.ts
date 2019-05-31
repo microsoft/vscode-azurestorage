@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
+import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./blobContainerNode";
 
@@ -58,7 +59,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<BlobContainerTreeItem> {
-        const containerName = await vscode.window.showInputBox({
+        const containerName = await ext.ui.showInputBox({
             placeHolder: 'Enter a name for the new blob container',
             validateInput: BlobContainerGroupTreeItem.validateContainerName
         });

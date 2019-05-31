@@ -20,3 +20,4 @@ export { activateInternal, deactivateInternal } from './src/extension';
 export { ext } from './src/extensionVariables';
 export { getRandomHexString } from './src/utils/stringUtils';
 export { AzureAccountTreeItem } from './src/azureStorageExplorer/AzureAccountTreeItem';
+export { StorageAccountTreeItem } from './src/azureStorageExplorer/storageAccounts/storageAccountNode';
