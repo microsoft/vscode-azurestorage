@@ -3,10 +3,13 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureAccountTreeItemBase, ISubscriptionContext } from "vscode-azureextensionui";
+import { AzureAccountTreeItemBase, ISubscriptionContext, TestAzureAccount } from "vscode-azureextensionui";
 import { SubscriptionTreeItem } from "./SubscriptionTreeItem";
 
 export class AzureAccountTreeItem extends AzureAccountTreeItemBase {
+    public constructor(testAccount?: TestAzureAccount) {
+        super(undefined, testAccount);
+    }
     public createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItem {
         return new SubscriptionTreeItem(this, root);
     }

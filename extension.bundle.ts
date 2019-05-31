@@ -18,3 +18,5 @@ export { activateInternal, deactivateInternal } from './src/extension';
 // The tests should import '../extension.bundle.ts'. At design-time they live in tests/ and so will pick up this file (extension.bundle.ts).
 // At runtime the tests live in dist/tests and will therefore pick up the main webpack bundle at dist/extension.bundle.js.
 export { ext } from './src/extensionVariables';
+export { getRandomHexString } from './src/utils/stringUtils';
+export { AzureAccountTreeItem } from './src/azureStorageExplorer/AzureAccountTreeItem';
