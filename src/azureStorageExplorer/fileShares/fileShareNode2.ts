@@ -6,8 +6,8 @@
 import * as azureStorage from "azure-storage";
 import * as clipboardy from 'clipboardy';
 import * as path from 'path';
-import { Uri, window, workspace } from 'vscode';
-import { AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError, GenericTreeItem, AzExtTreeItem } from 'vscode-azureextensionui';
+import { Uri, window } from 'vscode';
+import { AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
@@ -17,7 +17,9 @@ import { askAndCreateChildDirectory } from './directoryUtils';
 import { FileTreeItem } from './fileNode';
 import { askAndCreateEmptyTextFile } from './fileUtils';
 
-export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
+// copied over from FileShareTreeItem
+
+export class FileShareTreeItem2 extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     constructor(
@@ -28,7 +30,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public label: string = this.share.name;
     public static contextValue: string = 'azureFileShare';
-    public contextValue: string = FileShareTreeItem.contextValue;
+    public contextValue: string = FileShareTreeItem2.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
@@ -38,7 +40,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return !!this._continuationToken;
     }
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<(AzExtTreeItem)[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<(DirectoryTreeItem | FileTreeItem)[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -47,25 +49,13 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
-        const result = (<(AzExtTreeItem)[]>[])
+        return (<(DirectoryTreeItem | FileTreeItem)[]>[])
             .concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
                 return new DirectoryTreeItem(this, '', directory, this.share);
             }))
             .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
                 return new FileTreeItem(this, file, '', this.share);
             }));
-
-        if (workspace.getConfiguration("azureStorage").get("enableTest")) {
-            const ti = new GenericTreeItem(this, {
-                label: 'Open in File Explorer...',
-                commandId: 'azureStorage.fileShareTest',
-                contextValue: 'openFileExplorer'
-            });
-
-            ti.commandArgs = [this];
-            result.push(ti);
-        }
-        return result;
     }
 
     public async copyUrl(): Promise<void> {
@@ -77,7 +67,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
+    listFiles(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return new Promise((resolve, reject) => {
             let fileService = this.root.createFileService();
             fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
