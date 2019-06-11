@@ -3,24 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ext } from '../../extensionVariables';
-import { DirectoryTreeItem } from './directoryNode';
-import { FileShareGroupTreeItem } from './fileShareGroupNode';
-import { FileShareTreeItem2 } from './fileShareNode2';
-import { FileTreeItem2 } from './fileNode2';
 import * as azureStorage from "azure-storage";
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling } from 'vscode-azureextensionui';
+import { ext } from '../../extensionVariables';
+import { DirectoryTreeItem } from './directoryNode';
+import { FileTreeItem2 } from './fileNode2';
+import { FileShareGroupTreeItem } from './fileShareGroupNode';
+import { FileShareTreeItem2 } from './fileShareNode2';
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem2 | FileTreeItem2 | DirectoryTreeItem;
 
 class FileStatImpl implements vscode.FileStat {
+    // tslint:disable-next-line: no-reserved-keywords
     type: vscode.FileType;
     ctime: number;
     mtime: number;
     size: number;
 
     constructor(
+        // tslint:disable-next-line: no-reserved-keywords
         type: vscode.FileType,
         ctime: number,
         mtime: number,
@@ -35,6 +37,7 @@ class FileStatImpl implements vscode.FileStat {
 
 export class FileShareFS implements vscode.FileSystemProvider {
 
+    // tslint:disable-next-line: typedef
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
@@ -49,8 +52,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             if (entry instanceof FileTreeItem2) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return new FileStatImpl(vscode.FileType.File, 0, 0, 0);
-            }
-            else {
+            } else if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem2) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return new FileStatImpl(vscode.FileType.Directory, 0, 0, 0);
             }
@@ -91,6 +93,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
+    // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, _options: { recursive: boolean; }): Promise<void> {
         let fileFound: FileTreeItem2 = await this.lookupAsFile(uri, false);
 
@@ -132,7 +135,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let entry: EntryTreeItem = root;
 
-            let shareResult;
+            let shareResult: azureStorage.FileService.ShareResult | undefined;
 
             for (const part of parts) {
                 if (entry instanceof FileShareGroupTreeItem) {
@@ -147,15 +150,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
                         let entries = listShareResult.entries;
                         let fileShareResultChild = entries.find(element => element.name === part);
-                        shareResult = fileShareResultChild;
 
                         if (fileShareResultChild) {
+                            shareResult = fileShareResultChild;
                             entry = new FileShareTreeItem2(entry, shareResult);
                             break;
                         }
-                    } while (continuationToken !== undefined)
-                }
-                else if (entry instanceof FileShareTreeItem2 || entry instanceof DirectoryTreeItem) {
+                    } while (continuationToken !== undefined);
+                } else if (entry instanceof FileShareTreeItem2 || entry instanceof DirectoryTreeItem) {
 
                     let continuationToken: azureStorage.common.ContinuationToken | undefined;
 
@@ -171,21 +173,20 @@ export class FileShareFS implements vscode.FileSystemProvider {
                         let fileResultChild = entries.files.find(element => element.name === part);
 
                         if (directoryResultChild) {
-                            entry = new DirectoryTreeItem(entry, parentPath, directoryResultChild, shareResult);
+                            entry = new DirectoryTreeItem(entry, parentPath, directoryResultChild, <azureStorage.FileService.ShareResult>shareResult);
+                            // tslint:disable-next-line: prefer-template
                             parentPath = parentPath + part + '/';
                             break;
                         }
                         if (fileResultChild) {
-                            entry = new FileTreeItem2(entry, fileResultChild, parentPath, shareResult);
+                            entry = new FileTreeItem2(entry, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>shareResult);
                             break;
                         }
-                    } while (continuationToken != undefined)
-                }
-                else {
+                    } while (continuationToken !== undefined);
+                } else {
                     if (!silent) {
                         throw vscode.FileSystemError.FileNotFound(uri);
-                    }
-                    else {
+                    } else {
                         return undefined;
                     }
                 }
