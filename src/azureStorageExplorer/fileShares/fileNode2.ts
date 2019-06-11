@@ -6,7 +6,6 @@
 import * as azureStorage from "azure-storage";
 import * as clipboardy from 'clipboardy';
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
@@ -40,15 +39,6 @@ export class FileTreeItem2 extends AzureTreeItem<IStorageRoot> implements ICopyU
         await clipboardy.write(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`File URL copied to clipboard: ${url}`);
-    }
-
-    public async rename(newParent: AzureParentTreeItem, newFileName: string): Promise<void> {
-        // this.parent = newParent;
-        // this.label = newFileName;
-        // this.directoryPath = newFileName;
-
-
-        // need to update parent, file
     }
 
     public async deleteTreeItemImpl(): Promise<void> {

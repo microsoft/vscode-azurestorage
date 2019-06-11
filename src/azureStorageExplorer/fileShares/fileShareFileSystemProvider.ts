@@ -6,7 +6,7 @@
 
 import * as vscode from 'vscode';
 import { DirectoryTreeItem } from './directoryNode';
-import { callWithTelemetryAndErrorHandling, AzExtParentTreeItem, AzureParentTreeItem } from 'vscode-azureextensionui';
+import { callWithTelemetryAndErrorHandling } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem2 } from './fileShareNode2';
