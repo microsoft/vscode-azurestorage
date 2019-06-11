@@ -68,7 +68,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         }
 
         registerCommand('azureStorage.fileShareTest', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
-            commands.executeCommand('vscode.openFolder', vscode.Uri.parse("azurestorage://" + treeItem.fullId));
+            commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorage://' + treeItem.fullId));
         });
         registerCommand('azureStorage.refresh', async (_actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(treeItem));
         registerCommand('azureStorage.loadMore', async (actionContext: IActionContext, treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem, actionContext));

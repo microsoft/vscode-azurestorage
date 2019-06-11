@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
-import { DirectoryTreeItem } from './directoryNode';
-import { callWithTelemetryAndErrorHandling } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
+import { DirectoryTreeItem } from './directoryNode';
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem2 } from './fileShareNode2';
 import { FileTreeItem2 } from './fileNode2';
 import * as azureStorage from "azure-storage";
+import * as vscode from 'vscode';
+import { callWithTelemetryAndErrorHandling } from 'vscode-azureextensionui';
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem2 | FileTreeItem2 | DirectoryTreeItem;
 
@@ -50,7 +50,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return new FileStatImpl(vscode.FileType.File, 0, 0, 0);
             }
-            else if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem2) {
+            else {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return new FileStatImpl(vscode.FileType.Directory, 0, 0, 0);
             }
@@ -62,7 +62,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         let entry: DirectoryTreeItem | FileShareTreeItem2 = await this.lookupAsDirectory(uri, false);
 
-        let _continuationToken;
+        let _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
         // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
         let listFilesandDirectoryResult = await entry.listFiles(<azureStorage.common.ContinuationToken>_continuationToken!);
@@ -94,14 +94,10 @@ export class FileShareFS implements vscode.FileSystemProvider {
     async delete(uri: vscode.Uri, _options: { recursive: boolean; }): Promise<void> {
         let fileFound: FileTreeItem2 = await this.lookupAsFile(uri, false);
 
-        if (!!fileFound) {
-            return fileFound.deleteTreeItemImpl();
-        }
-
-        throw vscode.FileSystemError.FileNotFound(uri);
+        return fileFound.deleteTreeItemImpl();
     }
 
-    rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
+    rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void {
         throw new Error("Method not implemented.");
     }
 
@@ -127,7 +123,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let temp = uri.authority + uri.path;
 
-            let endOfRootPath = temp.indexOf('File Shares')
+            let endOfRootPath = temp.indexOf('File Shares');
             let rootPath = temp.substring(0, endOfRootPath + 11);
             let root: EntryTreeItem = <EntryTreeItem>await ext.tree.findTreeItem(rootPath, context);
 
@@ -141,7 +137,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             for (const part of parts) {
                 if (entry instanceof FileShareGroupTreeItem) {
 
-                    var continuationToken: azureStorage.common.ContinuationToken | undefined;
+                    let continuationToken: azureStorage.common.ContinuationToken | undefined;
 
                     do {
                         // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
@@ -157,11 +153,11 @@ export class FileShareFS implements vscode.FileSystemProvider {
                             entry = new FileShareTreeItem2(entry, shareResult);
                             break;
                         }
-                    } while (continuationToken != undefined)
+                    } while (continuationToken !== undefined)
                 }
                 else if (entry instanceof FileShareTreeItem2 || entry instanceof DirectoryTreeItem) {
 
-                    var continuationToken: azureStorage.common.ContinuationToken | undefined;
+                    let continuationToken: azureStorage.common.ContinuationToken | undefined;
 
                     do {
                         // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
