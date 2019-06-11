@@ -49,7 +49,7 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listFileShares(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.FileService.ListSharesResult> {
+    listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
         return new Promise((resolve, reject) => {
             let fileService = this.root.createFileService();
             fileService.listSharesSegmented(currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.FileService.ListSharesResult) => {
