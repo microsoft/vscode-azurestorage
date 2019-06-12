@@ -8,12 +8,11 @@ import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
 import { DirectoryTreeItem } from './directoryNode';
-import { FileFileHandler } from "./fileFileHandler";
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
-import { FileShareTreeItem2 } from './fileShareNode2';
+import { FileShareTreeItem } from "./fileShareNode";
 
-export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem2 | FileTreeItem | DirectoryTreeItem;
+export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
 class FileStatImpl implements vscode.FileStat {
     // tslint:disable-next-line: no-reserved-keywords
@@ -53,7 +52,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             if (entry instanceof FileTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return new FileStatImpl(vscode.FileType.File, 0, 0, 0);
-            } else if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem2) {
+            } else if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return new FileStatImpl(vscode.FileType.Directory, 0, 0, 0);
             }
@@ -63,7 +62,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        let entry: DirectoryTreeItem | FileShareTreeItem2 = await this.lookupAsDirectory(uri, false);
+        let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, false);
 
         // Intentionally passing undefined for token - only supports listing first batch of files for now
         // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
@@ -85,14 +84,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        let fileFound: FileTreeItem = await this.lookupAsFile(uri, false);
-
-        let fileFileHandler: FileFileHandler = new FileFileHandler();
-        await fileFileHandler.downloadFile(fileFound, fileFound.fullId);
-
-        let data = new Uint8Array(0);
-        return data;
+    readFile(_uri: vscode.Uri): Uint8Array {
+        throw new Error("Method not implemented.");
     }
 
     writeFile(_uri: vscode.Uri, _content: Uint8Array, _options: { create: boolean; overwrite: boolean; }): void | Thenable<void> {
@@ -108,17 +101,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    private async lookupAsFile(uri: vscode.Uri, silent: boolean): Promise<FileTreeItem> {
+    private async lookupAsDirectory(uri: vscode.Uri, silent: boolean): Promise<DirectoryTreeItem | FileShareTreeItem> {
         let entry = await this.lookup(uri, silent);
-        if (entry instanceof FileTreeItem) {
-            return entry;
-        }
-        throw vscode.FileSystemError.FileIsADirectory(uri);
-    }
-
-    private async lookupAsDirectory(uri: vscode.Uri, silent: boolean): Promise<DirectoryTreeItem | FileShareTreeItem2> {
-        let entry = await this.lookup(uri, silent);
-        if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem2) {
+        if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
@@ -147,49 +132,36 @@ export class FileShareFS implements vscode.FileSystemProvider {
             for (const part of parts) {
                 if (entry instanceof FileShareGroupTreeItem) {
 
-                    let continuationToken: azureStorage.common.ContinuationToken | undefined;
+                    // Intentionally passing undefined for token - only supports listing first batch of files for now
+                    // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
+                    let listShareResult = await entry.listFileShares(<azureStorage.common.ContinuationToken>undefined!);
 
-                    do {
-                        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-                        let listShareResult = await entry.listFileShares(<azureStorage.common.ContinuationToken>continuationToken!);
+                    let entries = listShareResult.entries;
+                    let fileShareResultChild = entries.find(element => element.name === part);
 
-                        continuationToken = listShareResult.continuationToken;
+                    if (fileShareResultChild) {
+                        shareResult = fileShareResultChild;
+                        entry = new FileShareTreeItem(entry, shareResult);
+                    }
+                } else if (entry instanceof FileShareTreeItem || entry instanceof DirectoryTreeItem) {
 
-                        let entries = listShareResult.entries;
-                        let fileShareResultChild = entries.find(element => element.name === part);
+                    // Intentionally passing undefined for token - only supports listing first batch of files for now
+                    // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
+                    let listFilesAndDirectoriesResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
 
-                        if (fileShareResultChild) {
-                            shareResult = fileShareResultChild;
-                            entry = new FileShareTreeItem2(entry, shareResult);
-                            break;
-                        }
-                    } while (continuationToken !== undefined);
-                } else if (entry instanceof FileShareTreeItem2 || entry instanceof DirectoryTreeItem) {
+                    let entries = listFilesAndDirectoriesResult.entries;
 
-                    let continuationToken: azureStorage.common.ContinuationToken | undefined;
+                    let directoryResultChild = entries.directories.find(element => element.name === part);
+                    let fileResultChild = entries.files.find(element => element.name === part);
 
-                    do {
-                        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-                        let listFilesAndDirectoriesResult = await entry.listFiles(<azureStorage.common.ContinuationToken>continuationToken!);
-
-                        continuationToken = listFilesAndDirectoriesResult.continuationToken;
-
-                        let entries = listFilesAndDirectoriesResult.entries;
-
-                        let directoryResultChild = entries.directories.find(element => element.name === part);
-                        let fileResultChild = entries.files.find(element => element.name === part);
-
-                        if (directoryResultChild) {
-                            entry = new DirectoryTreeItem(entry, parentPath, directoryResultChild, <azureStorage.FileService.ShareResult>shareResult);
-                            // tslint:disable-next-line: prefer-template
-                            parentPath = parentPath + part + '/';
-                            break;
-                        }
-                        if (fileResultChild) {
-                            entry = new FileTreeItem(entry, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>shareResult);
-                            break;
-                        }
-                    } while (continuationToken !== undefined);
+                    if (directoryResultChild) {
+                        entry = new DirectoryTreeItem(entry, parentPath, directoryResultChild, <azureStorage.FileService.ShareResult>shareResult);
+                        // tslint:disable-next-line: prefer-template
+                        parentPath = parentPath + part + '/';
+                    }
+                    if (fileResultChild) {
+                        entry = new FileTreeItem(entry, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>shareResult);
+                    }
                 } else {
                     if (!silent) {
                         throw vscode.FileSystemError.FileNotFound(uri);
