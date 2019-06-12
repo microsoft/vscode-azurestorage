@@ -16,7 +16,7 @@ import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer
 import { registerDirectoryActionHandlers } from './azureStorageExplorer/fileShares/directoryActionHandlers';
 import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fileActionHandlers';
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
-import { FileShareFS } from './azureStorageExplorer/fileShares/fileShareFileSystemProvider';
+import { FileShareFS } from './azureStorageExplorer/fileShares/FileShareFS';
 import { registerFileShareGroupActionHandlers } from './azureStorageExplorer/fileShares/fileShareGroupActionHandlers';
 import { FileShareTreeItem } from './azureStorageExplorer/fileShares/fileShareNode';
 import { registerQueueActionHandlers } from './azureStorageExplorer/queues/queueActionHandlers';
@@ -27,6 +27,7 @@ import { StorageAccountTreeItem } from './azureStorageExplorer/storageAccounts/s
 import { SubscriptionTreeItem } from './azureStorageExplorer/SubscriptionTreeItem';
 import { registerTableActionHandlers } from './azureStorageExplorer/tables/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/tableGroupActionHandlers';
+import { configurationSettingsKeys, extensionPrefix } from './constants';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
@@ -64,13 +65,13 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerTableGroupActionHandlers();
 
         // tslint:disable-next-line: strict-boolean-expressions
-        if (vscode.workspace.getConfiguration("azureStorage").get("enableTest")) {
+        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.previewFileShareInExplorer)) {
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', new FileShareFS(), { isCaseSensitive: true }));
         }
 
-        registerCommand('azureStorage.fileShareTest', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
+        registerCommand('azureStorage.fileShareExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
             // tslint:disable-next-line: prefer-template
-            commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorage://' + treeItem.fullId));
+            await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorage://' + treeItem.fullId));
         });
         registerCommand('azureStorage.refresh', async (_actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(treeItem));
         registerCommand('azureStorage.loadMore', async (actionContext: IActionContext, treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem, actionContext));

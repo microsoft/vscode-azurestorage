@@ -56,10 +56,10 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }));
 
         // tslint:disable-next-line: strict-boolean-expressions
-        if (workspace.getConfiguration("azureStorage").get("enableTest")) {
+        if (workspace.getConfiguration("azureStorage").get("previewFileShareInExplorer")) {
             const ti = new GenericTreeItem(this, {
                 label: 'Open in File Explorer...',
-                commandId: 'azureStorage.fileShareTest',
+                commandId: 'azureStorage.fileShareExplorer',
                 contextValue: 'openFileExplorer'
             });
 
