@@ -84,8 +84,32 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    readFile(_uri: vscode.Uri): Uint8Array {
-        throw new Error("Method not implemented.");
+    async readFile(uri: vscode.Uri): Promise<Uint8Array> {
+        let treeItem: FileTreeItem = await this.lookupAsFile(uri, false);
+
+        let fileService = treeItem.root.createFileService();
+        return await new Promise<Uint8Array>((resolve, reject) => {
+            fileService.getFileToText(treeItem.share.name, treeItem.directoryPath, treeItem.file.name, (error?: Error, _text?: string, _result?: azureStorage.FileService.FileResult, _response?: azureStorage.ServiceResponse) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve(this.strToUintArray(_text));
+                }
+            });
+        });
+    }
+
+    private strToUintArray(str: string | undefined): Uint8Array {
+        if (str === undefined) {
+            return new Uint8Array(0);
+        }
+
+        let buf = new ArrayBuffer(str.length);
+        let bufView = new Uint8Array(buf);
+        for (let i = 0; i < str.length; i++) {
+            bufView[i] = str.charCodeAt(i);
+        }
+        return bufView;
     }
 
     writeFile(_uri: vscode.Uri, _content: Uint8Array, _options: { create: boolean; overwrite: boolean; }): void | Thenable<void> {
