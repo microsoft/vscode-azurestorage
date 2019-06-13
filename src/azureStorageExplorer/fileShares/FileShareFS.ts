@@ -84,7 +84,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    readFile(uri: vscode.Uri): Uint8Array {
+    readFile(_uri: vscode.Uri): Uint8Array {
         throw new Error("Method not implemented.");
     }
 

@@ -20,7 +20,7 @@ Object.defineProperty(exports, "__esModule", {
 
 const ignoreBundle = !/^(false|0)?$/i.test(process.env.AZCODE_STORAGE_IGNORE_BUNDLE || '');
 const extensionPath = ignoreBundle ? "./out/src/extension" : "./dist/extension.bundle";
-const extension = require("./out/src/extension");
+const extension = require(extensionPath);
 
 async function activate(ctx) {
     return await extension.activateInternal(ctx, perfStats);
