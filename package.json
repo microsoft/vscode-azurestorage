@@ -30,7 +30,7 @@
 	"preview": true,
 	"activationEvents": [
 		"onView:azureStorage",
-		"onCommand:azureStorage.fileShareExplorer",
+		"onCommand:azureStorage.openInFileExplorer",
 		"onFileSystem:azurestorage",
 		"onCommand:azureStorage.deployStaticWebsite",
 		"onCommand:azureStorage.configureStaticWebsite",
@@ -72,26 +72,27 @@
 	"icon": "media/azureStorageIcon.png",
 	"contributes": {
 		"viewsContainers": {
-			"activitybar": [{
-				"id": "azure",
-				"title": "Azure",
-				"icon": "resources/azure.svg"
-			}]
+			"activitybar": [
+				{
+					"id": "azure",
+					"title": "Azure",
+					"icon": "resources/azure.svg"
+				}
+			]
 		},
 		"views": {
-			"azure": [{
-				"id": "azureStorage",
-				"name": "Storage",
-				"when": "config.azureStorage.showExplorer == true"
-			}]
+			"azure": [
+				{
+					"id": "azureStorage",
+					"name": "Storage",
+					"when": "config.azureStorage.showExplorer == true"
+				}
+			]
 		},
-		"commands": [{
-				"command": "azureStorage.fileShareExplorer",
+		"commands": [
+			{
+				"command": "azureStorage.openInFileExplorer",
 				"title": "File Share",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				},
 				"category": "Azure Storage"
 			},
 			{
@@ -278,7 +279,8 @@
 			}
 		],
 		"menus": {
-			"view/title": [{
+			"view/title": [
+				{
 					"command": "azureStorage.deployStaticWebsite",
 					"when": "view == azureStorage",
 					"group": "navigation@2"
@@ -289,12 +291,15 @@
 					"group": "navigation@99"
 				}
 			],
-			"explorer/context": [{
-				"command": "azureStorage.deployStaticWebsite",
-				"when": "explorerResourceIsFolder == true",
-				"group": "zzz_azuretools_deploy@3"
-			}],
-			"view/item/context": [{
+			"explorer/context": [
+				{
+					"command": "azureStorage.deployStaticWebsite",
+					"when": "explorerResourceIsFolder == true",
+					"group": "zzz_azuretools_deploy@3"
+				}
+			],
+			"view/item/context": [
+				{
 					"$comment": "========= azureSubscription =========",
 					"command": "azureStorage.selectSubscriptions",
 					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
@@ -562,7 +567,8 @@
 					"group": "7_modification"
 				}
 			],
-			"commandPalette": [{
+			"commandPalette": [
+				{
 					"command": "azureStorage.selectSubscriptions",
 					"when": "never"
 				},
@@ -632,11 +638,13 @@
 				}
 			]
 		},
-		"keybindings": [{
-			"command": "workbench.view.extension.azure",
-			"key": "ctrl+shift+a",
-			"mac": "cmd+shift+a"
-		}],
+		"keybindings": [
+			{
+				"command": "workbench.view.extension.azure",
+				"key": "ctrl+shift+a",
+				"mac": "cmd+shift+a"
+			}
+		],
 		"configuration": {
 			"title": "Azure Storage Accounts",
 			"properties": {
@@ -665,7 +673,7 @@
 					"type": "string",
 					"description": "The name of the task to run before deploying."
 				},
-				"azureStorage.previewFileShareInExplorer": {
+				"azureStorage.enableViewInFileExplorer": {
 					"type": "boolean",
 					"description": "Enable preview support for file share files in file explorer.",
 					"default": false

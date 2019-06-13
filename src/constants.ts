@@ -10,7 +10,7 @@ export const staticWebsiteContainerName = '$web';
 export enum configurationSettingsKeys {
     deployPath = 'deployPath',
     preDeployTask = 'preDeployTask',
-    previewFileShareInExplorer = 'previewFileShareInExplorer'
+    enableViewInFileExplorer = 'enableViewInFileExplorer'
 }
 
 export const extensionPrefix: string = 'azureStorage';

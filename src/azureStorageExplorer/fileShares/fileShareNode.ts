@@ -8,7 +8,7 @@ import * as clipboardy from 'clipboardy';
 import * as path from 'path';
 import { Uri, window, workspace } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { getResourcesPath } from "../../constants";
+import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -56,10 +56,10 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }));
 
         // tslint:disable-next-line: strict-boolean-expressions
-        if (workspace.getConfiguration("azureStorage").get("previewFileShareInExplorer")) {
+        if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
             const ti = new GenericTreeItem(this, {
                 label: 'Open in File Explorer...',
-                commandId: 'azureStorage.fileShareExplorer',
+                commandId: 'azureStorage.openInFileExplorer',
                 contextValue: 'openFileExplorer'
             });
 

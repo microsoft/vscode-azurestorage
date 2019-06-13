@@ -65,11 +65,11 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerTableGroupActionHandlers();
 
         // tslint:disable-next-line: strict-boolean-expressions
-        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.previewFileShareInExplorer)) {
+        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', new FileShareFS(), { isCaseSensitive: true }));
         }
 
-        registerCommand('azureStorage.fileShareExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
+        registerCommand('azureStorage.openInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
             // tslint:disable-next-line: prefer-template
             await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorage://' + treeItem.fullId));
         });
