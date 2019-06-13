@@ -14,7 +14,9 @@ let perfStats = {
     loadEndTime: undefined
 };
 
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
 const ignoreBundle = !/^(false|0)?$/i.test(process.env.AZCODE_STORAGE_IGNORE_BUNDLE || '');
 const extensionPath = ignoreBundle ? "./out/src/extension" : "./dist/extension.bundle";

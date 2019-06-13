@@ -71,7 +71,7 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listFiles(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
+    listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return listFilesInDirectory(this.fullPath, this.share.name, this.root, 50, currentToken);
     }
 

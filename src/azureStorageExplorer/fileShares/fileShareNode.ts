@@ -6,9 +6,9 @@
 import * as azureStorage from "azure-storage";
 import * as clipboardy from 'clipboardy';
 import * as path from 'path';
-import { Uri, window } from 'vscode';
-import { AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { getResourcesPath } from "../../constants";
+import { Uri, window, workspace } from 'vscode';
+import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -38,7 +38,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return !!this._continuationToken;
     }
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<(DirectoryTreeItem | FileTreeItem)[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<(AzExtTreeItem)[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -47,13 +47,26 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
-        return (<(DirectoryTreeItem | FileTreeItem)[]>[])
+        const result = (<(AzExtTreeItem)[]>[])
             .concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
                 return new DirectoryTreeItem(this, '', directory, this.share);
             }))
             .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
                 return new FileTreeItem(this, file, '', this.share);
             }));
+
+        // tslint:disable-next-line: strict-boolean-expressions
+        if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
+            const ti = new GenericTreeItem(this, {
+                label: 'Open in File Explorer...',
+                commandId: 'azureStorage.openInFileExplorer',
+                contextValue: 'openFileExplorer'
+            });
+
+            ti.commandArgs = [this];
+            result.push(ti);
+        }
+        return result;
     }
 
     public async copyUrl(): Promise<void> {
