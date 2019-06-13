@@ -84,8 +84,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    readFile(_uri: vscode.Uri): Uint8Array {
-        throw new Error("Method not implemented");
+    readFile(uri: vscode.Uri): Uint8Array {
+        throw new Error("Method not implemented.");
     }
 
     writeFile(_uri: vscode.Uri, _content: Uint8Array, _options: { create: boolean; overwrite: boolean; }): void | Thenable<void> {
@@ -110,7 +110,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     private async lookup(uri: vscode.Uri, silent: boolean): Promise<EntryTreeItem | undefined> {
-        return <EntryTreeItem>await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
+        return <EntryTreeItem>await callWithTelemetryAndErrorHandling('fs.lookup', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
