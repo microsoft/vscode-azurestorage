@@ -93,8 +93,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     // tslint:disable-next-line: no-reserved-keywords
-    delete(_uri: vscode.Uri, _options: { recursive: boolean; }): void {
-        throw new Error("Method not implemented.");
+    async delete(uri: vscode.Uri, _options: { recursive: boolean; }): Promise<void> {
+        let fileFound: EntryTreeItem | undefined = await this.lookup(uri, false);
+
+        if (fileFound instanceof FileTreeItem) {
+            return fileFound.deleteTreeItemImpl();
+        } else if (fileFound instanceof DirectoryTreeItem) {
+            return fileFound.deleteTreeItemImpl();
+        }
     }
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void {
