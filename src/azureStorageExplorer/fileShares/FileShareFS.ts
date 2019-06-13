@@ -93,13 +93,13 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 if (!!error) {
                     reject(error);
                 } else {
-                    resolve(this.strToUintArray(_text));
+                    resolve(this.strToUint8Array(_text));
                 }
             });
         });
     }
 
-    private strToUintArray(str: string | undefined): Uint8Array {
+    private strToUint8Array(str: string | undefined): Uint8Array {
         if (str === undefined) {
             return new Uint8Array(0);
         }
@@ -131,6 +131,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
+    }
+
+    private async lookupAsFile(uri: vscode.Uri, silent: boolean): Promise<FileTreeItem> {
+        let entry = await this.lookup(uri, silent);
+        if (entry instanceof FileTreeItem) {
+            return entry;
+        }
+        throw vscode.FileSystemError.FileIsADirectory(uri);
     }
 
     private async lookup(uri: vscode.Uri, silent: boolean): Promise<EntryTreeItem | undefined> {
