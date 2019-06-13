@@ -11,7 +11,6 @@ import { DirectoryTreeItem } from './directoryNode';
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
-import { deleteFile } from "./fileUtils";
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
@@ -95,13 +94,13 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, _options: { recursive: boolean; }): Promise<void> {
-        let fileFound: EntryTreeItem | undefined = await this.lookup(uri, false);
+        return <void>await callWithTelemetryAndErrorHandling('fs.delete', async (context) => {
+            let fileFound: EntryTreeItem | undefined = await this.lookup(uri, false);
 
-        if (fileFound instanceof FileTreeItem) {
-            await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
-        } else if (fileFound instanceof DirectoryTreeItem) {
-            await deleteFile(fileFound.parentPath, fileFound.directory.name, fileFound.share.name, fileFound.root);
-        }
+            if (fileFound instanceof FileTreeItem || fileFound instanceof DirectoryTreeItem) {
+                await fileFound.deleteTreeItem(context);
+            }
+        });
     }
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void {
