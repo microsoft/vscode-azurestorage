@@ -11,6 +11,7 @@ import { DirectoryTreeItem } from './directoryNode';
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
+import { deleteFile } from "./fileUtils";
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
@@ -97,9 +98,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         let fileFound: EntryTreeItem | undefined = await this.lookup(uri, false);
 
         if (fileFound instanceof FileTreeItem) {
-            return fileFound.deleteTreeItemImpl();
+            await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
         } else if (fileFound instanceof DirectoryTreeItem) {
-            return fileFound.deleteTreeItemImpl();
+            await deleteFile(fileFound.parentPath, fileFound.directory.name, fileFound.share.name, fileFound.root);
         }
     }
 
