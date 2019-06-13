@@ -121,6 +121,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
+    private async lookupAsFile(uri: vscode.Uri, silent: boolean): Promise<FileTreeItem> {
+        let entry = await this.lookup(uri, silent);
+        if (entry instanceof FileTreeItem) {
+            return entry;
+        }
+        throw vscode.FileSystemError.FileNotFound(uri);
+    }
+
     private async lookupAsDirectory(uri: vscode.Uri, silent: boolean): Promise<DirectoryTreeItem | FileShareTreeItem> {
         let entry = await this.lookup(uri, silent);
         if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
