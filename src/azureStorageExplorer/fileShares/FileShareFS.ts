@@ -213,7 +213,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let entry: EntryTreeItem = root;
 
-            for (const part of parts) {
+            for (let i = 0; i < parts.length; i++) {
+                let part = parts[i];
                 if (entry instanceof FileShareGroupTreeItem) {
                     // Intentionally passing undefined for token - only supports listing first batch of files for now
                     // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
@@ -241,7 +242,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                         if (fileResultChild) {
                             entry = new FileTreeItem(entry, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>entry.share);
                         } else {
-                            if (terminateEarly && part === parts[parts.length - 1]) {
+                            if (terminateEarly && i === parts.length - 1) {
                                 return entry;
                             } else {
                                 throw vscode.FileSystemError.FileNotFound(uri);
