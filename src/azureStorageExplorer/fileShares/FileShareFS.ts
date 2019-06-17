@@ -90,7 +90,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         let fileService = treeItem.root.createFileService();
 
         const result = await new Promise<string | undefined>((resolve, reject) => {
-            fileService.getFileToText(treeItem.share.name, treeItem.directoryPath, treeItem.file.name, (error?: Error, text?: string, _result?: azureStorage.FileService.FileResult, _response?: azureStorage.ServiceResponse) => {
+            fileService.getFileToText(treeItem.share.name, treeItem.directoryPath, treeItem.file.name, (error?: Error, text?: string) => {
                 if (!!error) {
                     reject(error);
                 } else {
