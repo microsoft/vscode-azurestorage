@@ -7,8 +7,8 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { getResourcesPath } from "../../constants";
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./blobContainerNode";
 
@@ -24,7 +24,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
     };
 
-    public async loadMoreChildrenImpl(clearCache: boolean): Promise<BlobContainerTreeItem[]> {
+    public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -33,9 +33,22 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         let { entries, continuationToken } = containers;
         this._continuationToken = continuationToken;
 
-        return await Promise.all(entries.map(async (container: azureStorage.BlobService.ContainerResult) => {
+        const result: AzExtTreeItem[] = await Promise.all(entries.map(async (container: azureStorage.BlobService.ContainerResult) => {
             return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
         }));
+
+        // tslint:disable-next-line: strict-boolean-expressions
+        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableBlobContainerViewInFileExplorer)) {
+            const ti = new GenericTreeItem(this, {
+                label: 'Open in File Explorer...',
+                commandId: 'azureStorage.openBlobContainerInFileExplorer',
+                contextValue: 'openBlobContainerInFileExplorer'
+            });
+
+            ti.commandArgs = [this];
+            result.push(ti);
+        }
+        return result;
     }
 
     public hasMoreChildrenImpl(): boolean {
