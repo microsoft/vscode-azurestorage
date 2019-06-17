@@ -5,6 +5,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import { BlobContainerGroupTreeItem } from './blobContainerGroupNode';
+import { BlobContainerTreeItem } from './blobContainerNode';
+import { BlobTreeItem } from './blobNode';
+
+export type EntryTreeItem = BlobContainerGroupTreeItem | BlobContainerTreeItem | BlobTreeItem;
 
 export class BlobContainerFS implements vscode.FileSystemProvider {
 
@@ -16,7 +21,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    stat(_uri: vscode.Uri): vscode.FileStat | Thenable<vscode.FileStat> {
+    stat(_uri: vscode.Uri): vscode.FileStat | Promise<vscode.FileStat> {
         throw new Error("Method not implemented.");
     }
 
@@ -28,7 +33,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    readFile(_uri: vscode.Uri): Uint8Array | Thenable<Uint8Array> {
+    readFile(_uri: vscode.Uri): Thenable<Uint8Array> {
         throw new Error("Method not implemented.");
     }
 
@@ -44,5 +49,15 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void | Thenable<void> {
         throw new Error("Method not implemented.");
     }
+
+    // private async lookup(uri: vscode.Uri): Promise<EntryTreeItem> {
+    //     return <EntryTreeItem>await callWithTelemetryAndErrorHandling('blobFS.look', async (context) => {
+    //         let treeItem: EntryTreeItem = ext.tree.findTreeItem(uri.toString(), context);
+
+    //         BlobContainerTreeItem.createBlobContainerTreeItem(null, container);
+    //         return treeItem;
+    //         throw new Error("Method not implemented.");
+    //     });
+    // }
 
 }
