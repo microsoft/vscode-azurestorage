@@ -212,8 +212,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
             if (this.root === undefined) {
                 await this.findRoot(uri);
             }
-            // let rootPath = temp.substring(0, endOfRootPathIndx);
-            // let root: EntryTreeItem = <EntryTreeItem>await ext.tree.findTreeItem(rootPath, context);
 
             let parts = temp.substring(endOfRootPathIndx).split('/').slice(1);
 
