@@ -63,10 +63,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        if (this.root === undefined) {
-            await this.findRoot(uri);
-        }
-
         let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri);
 
         // Intentionally passing undefined for token - only supports listing first batch of files for now
@@ -90,10 +86,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        if (this.root === undefined) {
-            await this.findRoot(uri);
-        }
-
         let treeItem: FileTreeItem = await this.lookupAsFile(uri);
 
         let fileService = treeItem.root.createFileService();
@@ -110,26 +102,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
         // tslint:disable-next-line: strict-boolean-expressions
         return Buffer.from(result || '');
-    }
-
-    private async findRoot(uri: vscode.Uri): Promise<void> {
-        await callWithTelemetryAndErrorHandling('fs.findRoot', async (context) => {
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
-
-            let temp = uri.authority + uri.path;
-
-            let fileShareName = 'File Shares';
-            let endOfRootPathIndx = temp.indexOf(fileShareName) + fileShareName.length;
-            let rootPath = temp.substring(0, endOfRootPathIndx);
-            let rootFound = await ext.tree.findTreeItem(rootPath, context);
-
-            if (rootFound) {
-                this.root = <EntryTreeItem>rootFound;
-            } else {
-                throw vscode.FileSystemError.FileNotFound(uri);
-            }
-        });
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
@@ -236,12 +208,16 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let fileShareName = 'File Shares';
             let endOfRootPathIndx = temp.indexOf(fileShareName) + fileShareName.length;
-            let rootPath = temp.substring(0, endOfRootPathIndx);
-            let root: EntryTreeItem = <EntryTreeItem>await ext.tree.findTreeItem(rootPath, context);
+
+            if (this.root === undefined) {
+                await this.findRoot(uri);
+            }
+            // let rootPath = temp.substring(0, endOfRootPathIndx);
+            // let root: EntryTreeItem = <EntryTreeItem>await ext.tree.findTreeItem(rootPath, context);
 
             let parts = temp.substring(endOfRootPathIndx).split('/').slice(1);
 
-            let entry: EntryTreeItem = root;
+            let entry: EntryTreeItem = this.root;
 
             for (let i = 0; i < parts.length; i++) {
                 let part = parts[i];
@@ -285,6 +261,26 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             return entry;
+        });
+    }
+
+    private async findRoot(uri: vscode.Uri): Promise<void> {
+        await callWithTelemetryAndErrorHandling('fs.findRoot', async (context) => {
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
+
+            let temp = uri.authority + uri.path;
+
+            let fileShareName = 'File Shares';
+            let endOfRootPathIndx = temp.indexOf(fileShareName) + fileShareName.length;
+            let rootPath = temp.substring(0, endOfRootPathIndx);
+            let rootFound = await ext.tree.findTreeItem(rootPath, context);
+
+            if (rootFound) {
+                this.root = <EntryTreeItem>rootFound;
+            } else {
+                throw vscode.FileSystemError.FileNotFound(uri);
+            }
         });
     }
 }
