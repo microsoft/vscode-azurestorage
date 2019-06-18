@@ -106,28 +106,32 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
-        let treeItem: EntryTreeItem = await this.lookup(uri, true);
         let fileTreeItem: FileTreeItem;
 
-        if (uri.path !== treeItem.fullId) {
-            if (options.create) {
-                fileTreeItem = await this.createFile(uri, treeItem);
+        if (options.create) {
+            let dirUri = vscode.Uri.file(path.dirname(uri.path));
+            let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
+
+            // tslint:disable-next-line: no-non-null-assertion
+            let listFilesAndDirectoriesResult = await dirTreeItem.listFiles(<azureStorage.common.ContinuationToken>undefined!);
+            let fileResultChild = listFilesAndDirectoriesResult.entries.files.find(element => element.name === path.basename(uri.path));
+
+            if (fileResultChild) {
+                if (!options.overwrite) {
+                    throw vscode.FileSystemError.FileExists(uri);
+                }
+                // tslint:disable-next-line: restrict-plus-operands
+                let parentPath: string = dirTreeItem instanceof DirectoryTreeItem ? dirTreeItem.parentPath + dirTreeItem.directory : '';
+                fileTreeItem = new FileTreeItem(dirTreeItem, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>dirTreeItem.share);
             } else {
-                throw vscode.FileSystemError.FileNotFound(uri);
+                if (!options.create) {
+                    throw vscode.FileSystemError.FileNotFound(uri);
+                }
+                fileTreeItem = await this.createFile(uri, dirTreeItem);
+                return;
             }
         } else {
-            if (options.create && !options.overwrite) { // not given permission to overwrite and can only create a new file
-                throw vscode.FileSystemError.FileExists(uri);
-            } else if (!options.overwrite) {
-                throw vscode.FileSystemError.NoPermissions(uri);
-            }
-
-            if (treeItem instanceof FileTreeItem) {
-                fileTreeItem = treeItem;
-            } else {
-                // tslint:disable-next-line: no-invalid-template-strings
-                throw new RangeError('Unexpected node type ${treeItem.constructor.name}');
-            }
+            fileTreeItem = await this.lookupAsFile(uri);
         }
 
         let fileService = fileTreeItem.root.createFileService();
@@ -189,7 +193,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
-    private async lookup(uri: vscode.Uri, terminateEarly?: boolean): Promise<EntryTreeItem> {
+    private async lookup(uri: vscode.Uri): Promise<EntryTreeItem> {
         return <EntryTreeItem>await callWithTelemetryAndErrorHandling('fs.lookup', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
@@ -209,8 +213,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let entry: EntryTreeItem = this.root;
 
-            for (let i = 0; i < parts.length; i++) {
-                let part = parts[i];
+            for (let part of parts) {
                 if (entry instanceof FileShareGroupTreeItem) {
                     // Intentionally passing undefined for token - only supports listing first batch of files for now
                     // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
@@ -238,11 +241,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                         if (fileResultChild) {
                             entry = new FileTreeItem(entry, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>entry.share);
                         } else {
-                            if (terminateEarly && i === parts.length - 1) {
-                                return entry;
-                            } else {
-                                throw vscode.FileSystemError.FileNotFound(uri);
-                            }
+                            throw vscode.FileSystemError.FileNotFound(uri);
                         }
                     }
                 } else {

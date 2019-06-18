@@ -16,7 +16,7 @@ import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer
 import { registerDirectoryActionHandlers } from './azureStorageExplorer/fileShares/directoryActionHandlers';
 import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fileActionHandlers';
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
-import { FileShareFS } from './azureStorageExplorer/fileShares/fileShareFS';
+import { FileShareFS } from './azureStorageExplorer/fileShares/FileShareFS';
 import { registerFileShareGroupActionHandlers } from './azureStorageExplorer/fileShares/fileShareGroupActionHandlers';
 import { FileShareTreeItem } from './azureStorageExplorer/fileShares/fileShareNode';
 import { registerQueueActionHandlers } from './azureStorageExplorer/queues/queueActionHandlers';
