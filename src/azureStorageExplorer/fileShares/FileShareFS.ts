@@ -12,6 +12,7 @@ import { DirectoryTreeItem } from './directoryNode';
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
+import { createFile } from "./fileUtils";
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
@@ -143,8 +144,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     private async createFile(uri: vscode.Uri, treeItem: EntryTreeItem): Promise<FileTreeItem> {
-        let fileService = treeItem.root.createFileService();
-
         let directoryPath: string = '';
         let fileName: string;
 
@@ -159,16 +158,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             throw vscode.FileSystemError.FileExists;
         }
 
-        const fileResult = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
-            fileService.createFile(treeItem.share.name, directoryPath, fileName, 1, (error?: Error, result?: azureStorage.FileService.FileResult) => {
-                if (!!error) {
-                    reject(error);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-
+        const fileResult = await createFile(directoryPath, fileName, treeItem.share, treeItem.root);
         return new FileTreeItem(treeItem, fileResult, directoryPath, <azureStorage.FileService.ShareResult>treeItem.share);
     }
 
@@ -189,11 +179,13 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileNotFound(uri);
     }
 
-    private async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem> {
+    async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem> {
         let entry = await this.lookup(uri);
         if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
+
             return entry;
         }
+
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
