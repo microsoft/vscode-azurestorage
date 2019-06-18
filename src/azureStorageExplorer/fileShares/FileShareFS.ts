@@ -39,7 +39,7 @@ class FileStatImpl implements vscode.FileStat {
 
 export class FileShareFS implements vscode.FileSystemProvider {
 
-    private rootMap: Map<string, EntryTreeItem> = new Map<string, EntryTreeItem>();
+    private rootMap: Map<string, FileShareTreeItem> = new Map<string, FileShareTreeItem>();
 
     // tslint:disable-next-line: typedef
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -221,7 +221,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 if (entry instanceof FileShareTreeItem || entry instanceof DirectoryTreeItem) {
                     // Intentionally passing undefined for token - only supports listing first batch of files for now
                     // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-                    let listFilesAndDirectoriesResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
+                    let listFilesAndDirectoriesResult: azureStorage.FileService.ListFilesAndDirectoriesResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
 
                     let entries = listFilesAndDirectoriesResult.entries;
 
@@ -267,8 +267,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let fileShareName = uri.path.substring(endOfFileShareIndx, endOfFileShareName);
 
-            if (rootFound) {
-                this.rootMap.set(fileShareName, <EntryTreeItem>rootFound);
+            if (rootFound && rootFound instanceof FileShareTreeItem) {
+                this.rootMap.set(fileShareName, <FileShareTreeItem>rootFound);
             } else {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }
