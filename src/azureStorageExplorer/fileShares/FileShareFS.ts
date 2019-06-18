@@ -200,16 +200,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let parentPath = '/';
 
-            let temp = uri.authority + uri.path;
-
             let fileShareName = 'File Shares';
-            let endOfRootPathIndx = temp.indexOf(fileShareName) + fileShareName.length;
+            let endOfRootPathIndx = uri.path.indexOf(fileShareName) + fileShareName.length;
 
             if (this.root === undefined) {
                 await this.findRoot(uri);
             }
 
-            let parts = temp.substring(endOfRootPathIndx).split('/').slice(1);
+            let parts = uri.path.substring(endOfRootPathIndx).split('/').slice(1);
 
             let entry: EntryTreeItem = this.root;
 
