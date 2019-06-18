@@ -39,7 +39,7 @@ class FileStatImpl implements vscode.FileStat {
 
 export class FileShareFS implements vscode.FileSystemProvider {
 
-    root: EntryTreeItem;
+    private rootMap: Map<string, EntryTreeItem> = new Map<string, EntryTreeItem>();
 
     // tslint:disable-next-line: typedef
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -200,29 +200,25 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let parentPath = '/';
 
-            let fileShareName = 'File Shares';
-            let endOfRootPathIndx = uri.path.indexOf(fileShareName) + fileShareName.length;
+            let fileShareString = 'File Shares';
+            let endOfRootPathIndx = uri.path.indexOf(fileShareString) + fileShareString.length;
+            let parts = uri.path.substring(endOfRootPathIndx).split('/').slice(1);
 
-            if (this.root === undefined) {
+            if (this.rootMap.get(parts[0]) === undefined) {
                 await this.findRoot(uri);
             }
 
-            let parts = uri.path.substring(endOfRootPathIndx).split('/').slice(1);
+            let entry: EntryTreeItem;
+            let root = this.rootMap.get(parts[0]);
 
-            let entry: EntryTreeItem = this.root;
+            if (root === undefined) {
+                throw new RangeError('Could not find File Share.');
+            } else {
+                entry = root;
+            }
 
-            for (let part of parts) {
-                if (entry instanceof FileShareGroupTreeItem) {
-                    // Intentionally passing undefined for token - only supports listing first batch of files for now
-                    // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-                    let listShareResult = await entry.listFileShares(<azureStorage.common.ContinuationToken>undefined!);
-
-                    let fileShareResultChild = listShareResult.entries.find(element => element.name === part);
-
-                    if (fileShareResultChild) {
-                        entry = new FileShareTreeItem(entry, fileShareResultChild);
-                    }
-                } else if (entry instanceof FileShareTreeItem || entry instanceof DirectoryTreeItem) {
+            for (let part of parts.slice(1)) {
+                if (entry instanceof FileShareTreeItem || entry instanceof DirectoryTreeItem) {
                     // Intentionally passing undefined for token - only supports listing first batch of files for now
                     // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
                     let listFilesAndDirectoriesResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
@@ -256,15 +252,23 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            let temp = uri.authority + uri.path;
+            let fileShareString = 'File Shares';
+            let endOfFileShareIndx = uri.path.indexOf(fileShareString) + fileShareString.length + 1;
+            let endOfFileShareName = uri.path.indexOf('/', endOfFileShareIndx);
+            let rootPath: string;
 
-            let fileShareName = 'File Shares';
-            let endOfRootPathIndx = temp.indexOf(fileShareName) + fileShareName.length;
-            let rootPath = temp.substring(0, endOfRootPathIndx);
+            if (endOfFileShareName === -1) {
+                rootPath = uri.path;
+            } else {
+                rootPath = uri.path.substring(0, endOfFileShareName);
+            }
+
             let rootFound = await ext.tree.findTreeItem(rootPath, context);
 
+            let fileShareName = uri.path.substring(endOfFileShareIndx, endOfFileShareName);
+
             if (rootFound) {
-                this.root = <EntryTreeItem>rootFound;
+                this.rootMap.set(fileShareName, <EntryTreeItem>rootFound);
             } else {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }
