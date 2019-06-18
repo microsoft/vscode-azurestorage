@@ -32,7 +32,8 @@
 		"onView:azureStorage",
 		"onCommand:azureStorage.openFileShareInFileExplorer",
 		"onCommand:azureStorage.openBlobContainerInFileExplorer",
-		"onFileSystem:azurestorage",
+		"onFileSystem:azurestoragefile",
+		"onFileSystem:azurestorageblob",
 		"onCommand:azureStorage.deployStaticWebsite",
 		"onCommand:azureStorage.configureStaticWebsite",
 		"onCommand:azureStorage.disableStaticWebsite",
@@ -679,14 +680,9 @@
 					"type": "string",
 					"description": "The name of the task to run before deploying."
 				},
-				"azureStorage.enableFileShareViewInFileExplorer": {
+				"azureStorage.enableViewInFileExplorer": {
 					"type": "boolean",
-					"description": "Enable preview support for file share files in file explorer.",
-					"default": false
-				},
-				"azureStorage.enableBlobContainerViewInFileExplorer": {
-					"type": "boolean",
-					"description": "Enable preview support for blob containers in file explorer.",
+					"description": "Enable preview support for file share files and blob containers in file explorer.",
 					"default": false
 				}
 			}

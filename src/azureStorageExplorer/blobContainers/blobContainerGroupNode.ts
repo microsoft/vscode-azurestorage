@@ -38,7 +38,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         }));
 
         // tslint:disable-next-line: strict-boolean-expressions
-        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableBlobContainerViewInFileExplorer)) {
+        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
             const ti = new GenericTreeItem(this, {
                 label: 'Open in File Explorer...',
                 commandId: 'azureStorage.openBlobContainerInFileExplorer',

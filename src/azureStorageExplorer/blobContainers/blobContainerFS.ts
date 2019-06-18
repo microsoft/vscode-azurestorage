@@ -50,14 +50,4 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    // private async lookup(uri: vscode.Uri): Promise<EntryTreeItem> {
-    //     return <EntryTreeItem>await callWithTelemetryAndErrorHandling('blobFS.look', async (context) => {
-    //         let treeItem: EntryTreeItem = ext.tree.findTreeItem(uri.toString(), context);
-
-    //         BlobContainerTreeItem.createBlobContainerTreeItem(null, container);
-    //         return treeItem;
-    //         throw new Error("Method not implemented.");
-    //     });
-    // }
-
 }
