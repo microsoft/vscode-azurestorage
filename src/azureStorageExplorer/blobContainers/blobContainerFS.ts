@@ -5,6 +5,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
+import { ext } from "../../extensionVariables";
 import { BlobContainerGroupTreeItem } from './blobContainerGroupNode';
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobTreeItem } from './blobNode';
@@ -12,6 +14,8 @@ import { BlobTreeItem } from './blobNode';
 export type EntryTreeItem = BlobContainerGroupTreeItem | BlobContainerTreeItem | BlobTreeItem;
 
 export class BlobContainerFS implements vscode.FileSystemProvider {
+
+    private rootMap: Map<string, BlobContainerTreeItem> = new Map<string, BlobContainerTreeItem>();
 
     // tslint:disable-next-line: typedef
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -21,7 +25,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    stat(_uri: vscode.Uri): vscode.FileStat | Promise<vscode.FileStat> {
+    async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
+        await this.findRoot(uri);
         throw new Error("Method not implemented.");
     }
 
@@ -48,6 +53,30 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void | Thenable<void> {
         throw new Error("Method not implemented.");
+    }
+
+    private async findRoot(uri: vscode.Uri): Promise<void> {
+        return <void>await callWithTelemetryAndErrorHandling('fs.lookup', async (context) => {
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
+
+            const blobContainerString = 'Blob Containers';
+            let endOfBlobContainerIndx = uri.path.indexOf(blobContainerString) + blobContainerString.length + 1;
+            let endOfBlobContainerName = uri.path.indexOf('/', endOfBlobContainerIndx) === -1 ? uri.path.length : uri.path.indexOf('/', endOfBlobContainerIndx);
+
+            let rootPath: string = uri.path.substring(0, endOfBlobContainerName);
+
+            let rootFound: BlobContainerTreeItem = <BlobContainerTreeItem>await ext.tree.findTreeItem(rootPath, context);
+
+            let fileBlobContainerName = uri.path.substring(endOfBlobContainerIndx, endOfBlobContainerName);
+
+            // tslint:disable-next-line: strict-boolean-expressions
+            if (!!rootFound) {
+                this.rootMap.set(fileBlobContainerName, rootFound);
+            } else {
+                throw vscode.FileSystemError.FileNotFound(uri);
+            }
+        });
     }
 
 }
