@@ -106,37 +106,51 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
-        let fileTreeItem: FileTreeItem;
-
-        if (options.create) {
-            let dirUri = vscode.Uri.file(path.dirname(uri.path));
-            let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
-
-            // tslint:disable-next-line: no-non-null-assertion
-            let listFilesAndDirectoriesResult = await dirTreeItem.listFiles(<azureStorage.common.ContinuationToken>undefined!);
-            let fileResultChild = listFilesAndDirectoriesResult.entries.files.find(element => element.name === path.basename(uri.path));
-
-            if (fileResultChild) {
-                if (!options.overwrite) {
-                    throw vscode.FileSystemError.FileExists(uri);
-                }
-                // tslint:disable-next-line: restrict-plus-operands
-                let parentPath: string = dirTreeItem instanceof DirectoryTreeItem ? dirTreeItem.parentPath + dirTreeItem.directory : '';
-                fileTreeItem = new FileTreeItem(dirTreeItem, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>dirTreeItem.share);
-            } else {
-                if (!options.create) {
-                    throw vscode.FileSystemError.FileNotFound(uri);
-                }
-                fileTreeItem = await this.createFile(uri, dirTreeItem);
-                return;
-            }
-        } else {
-            fileTreeItem = await this.lookupAsFile(uri);
+        if (!options.create && !options.overwrite) {
+            throw vscode.FileSystemError.NoPermissions(uri);
         }
 
-        let fileService = fileTreeItem.root.createFileService();
+        let dirUri = vscode.Uri.file(path.dirname(uri.path));
+        let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
+
+        // tslint:disable-next-line: restrict-plus-operands
+        const parentPath: string = dirTreeItem instanceof DirectoryTreeItem ? dirTreeItem.parentPath + dirTreeItem.directory.name : '';
+
+        let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
+            const fileService = dirTreeItem.root.createFileService();
+            fileService.doesFileExist(dirTreeItem.share.name, parentPath, path.basename(uri.path), (error?: Error, result?: azureStorage.FileService.FileResult) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        // tslint:disable: strict-boolean-expressions
+        if (!fileResultChild && !options.create) {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
+        if (!!fileResultChild && options.create && !options.overwrite) {
+            throw vscode.FileSystemError.FileExists(uri);
+        }
+
+        if (!fileResultChild) {
+            const fileName: string = path.basename(uri.path);
+            fileResultChild = await createFile(parentPath, fileName, dirTreeItem.share, dirTreeItem.root);
+        }
+
+        let fileTreeItem: FileTreeItem = new FileTreeItem(dirTreeItem, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>dirTreeItem.share);
+
+        if (!options.overwrite) { return; }
+
+        await this.updateFileContent(fileTreeItem, content);
+    }
+
+    private async updateFileContent(fileTreeItem: FileTreeItem, content: Uint8Array): Promise<void> {
         // tslint:disable-next-line: no-void-expression
         return await new Promise<void>((resolve, reject) => {
+            const fileService = fileTreeItem.root.createFileService();
             fileService.createFileFromText(fileTreeItem.share.name, fileTreeItem.directoryPath, fileTreeItem.file.name, content.toString(), (error?: Error) => {
                 if (!!error) {
                     reject(error);
@@ -145,25 +159,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 }
             });
         });
-    }
-
-    private async createFile(uri: vscode.Uri, treeItem: EntryTreeItem): Promise<FileTreeItem> {
-        let directoryPath: string = '';
-        let fileName: string;
-
-        if (treeItem instanceof FileShareGroupTreeItem) {
-            throw RangeError("Cannot create a FileShare folder through File Explorer.");
-        } else if (treeItem instanceof FileShareTreeItem) {
-            fileName = path.basename(uri.path);
-        } else if (treeItem instanceof DirectoryTreeItem) {
-            directoryPath = treeItem.parentPath + treeItem.directory.name;
-            fileName = path.basename(uri.path);
-        } else {
-            throw vscode.FileSystemError.FileExists;
-        }
-
-        const fileResult = await createFile(directoryPath, fileName, treeItem.share, treeItem.root);
-        return new FileTreeItem(treeItem, fileResult, directoryPath, <azureStorage.FileService.ShareResult>treeItem.share);
     }
 
     // tslint:disable-next-line: no-reserved-keywords
@@ -204,7 +199,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             let endOfRootPathIndx = uri.path.indexOf(fileShareString) + fileShareString.length;
             let parts = uri.path.substring(endOfRootPathIndx).split('/').slice(1);
 
-            if (this.rootMap.get(parts[0]) === undefined) {
+            if (!this.rootMap.get(parts[0])) {
                 await this.findRoot(uri);
             }
 
