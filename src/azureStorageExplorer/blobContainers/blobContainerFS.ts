@@ -50,23 +50,57 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         let entry: EntryTreeItem = await this.lookup(uri);
 
-        let result: [string, vscode.FileType][] = [];
+        let directoryChildren: [string, vscode.FileType][] = [];
         if (entry instanceof BlobContainerGroupTreeItem) {
             let containerList: azureStorage.BlobService.ListContainerResult = await entry.listContainers(undefined);
 
             for (let con of containerList.entries) {
-                result.push([con.name, vscode.FileType.Directory]);
+                directoryChildren.push([con.name, vscode.FileType.Directory]);
             }
         } else if (entry instanceof BlobContainerTreeItem) {
             // tslint:disable-next-line: no-non-null-assertion
-            let containerList: azureStorage.BlobService.ListBlobsResult = await entry.listBlobs(<azureStorage.common.ContinuationToken>undefined!);
+            // let containerList: azureStorage.BlobService.ListBlobsResult = await entry.listBlobs(<azureStorage.common.ContinuationToken>undefined!);
 
-            for (let con of containerList.entries) {
-                result.push([con.name, vscode.FileType.File]);
+            const blobContainerString = 'Blob Containers';
+            const prefix = uri.path.substring(uri.path.indexOf(blobContainerString) + blobContainerString.length, uri.path.lastIndexOf('/'));
+
+            const blobSerivce = entry.root.createBlobService();
+
+            const listBlobsResult = await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
+                // Intentionally passing undefined for token - only supports listing first batch of files for now
+                // tslint:disable: no-non-null-assertion
+                let options = { delimiter: '/' };
+                blobSerivce.listBlobsSegmentedWithPrefix(entry.label, prefix, <azureStorage.common.ContinuationToken>undefined!, options, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult, _response?: azureStorage.ServiceResponse) => {
+                    if (!!error) {
+                        reject(error);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+
+            const listBlobDirectoryResult = await new Promise<azureStorage.BlobService.ListBlobDirectoriesResult>((resolve, reject) => {
+                // Intentionally passing undefined for token - only supports listing first batch of files for now
+                // tslint:disable-next-line: no-non-null-assertion
+                blobSerivce.listBlobDirectoriesSegmentedWithPrefix(entry.label, prefix, <azureStorage.common.ContinuationToken>undefined!, (error?: Error, result?: azureStorage.BlobService.ListBlobDirectoriesResult, _response?: azureStorage.ServiceResponse) => {
+                    if (!!error) {
+                        reject(error);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+
+            for (let con of listBlobsResult.entries) {
+                directoryChildren.push([con.name, vscode.FileType.File]);
+            }
+
+            for (let con of listBlobDirectoryResult.entries) {
+                directoryChildren.push([con.name, vscode.FileType.Directory]);
             }
         }
 
-        return result;
+        return directoryChildren;
     }
 
     createDirectory(_uri: vscode.Uri): void | Thenable<void> {
@@ -162,7 +196,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 entry = root;
             }
 
-            let parentPath = blobContainerName;
+            let prefix = '';
 
             for (let part of parts.slice(1)) {
                 if (entry instanceof BlobContainerGroupTreeItem || entry instanceof BlobTreeItem) {
@@ -170,8 +204,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
 
                 // tslint:disable-next-line: prefer-template
-                // parentPath = parentPath + '/' + part;
-                let prefix: string = uri.path.substring(0, endOfBlobContainerIndx) + parentPath;
                 let blobSerivce = entry.root.createBlobService();
 
                 const listBlobDirectoryResult = await new Promise<azureStorage.BlobService.ListBlobDirectoriesResult>((resolve, reject) => {
@@ -187,23 +219,25 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 });
 
                 let directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === part);
-
+                if (directoryResultChild) {
+                    prefix = prefix + '/' + part;
+                }
                 if (!directoryResultChild) {
-                    // const listBlobsResult = await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
-                    //     // Intentionally passing undefined for token - only supports listing first batch of files for now
-                    //     // tslint:disable-next-line: no-non-null-assertion
-                    //     let options = { delimiter: '/' };
-                    //     // tslint:disable-next-line: no-non-null-assertion
-                    //     blobSerivce.listBlobsSegmentedWithPrefix(blobContainerName, prefix, <azureStorage.common.ContinuationToken>undefined!, options, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult, _response?: azureStorage.ServiceResponse) => {
-                    //         if (!!error) {
-                    //             reject(error);
-                    //         } else {
-                    //             resolve(result);
-                    //         }
-                    //     });
-                    // });
+                    const listBlobsResult = await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
+                        // Intentionally passing undefined for token - only supports listing first batch of files for now
+                        // tslint:disable-next-line: no-non-null-assertion
+                        let options = { delimiter: '/' };
+                        // tslint:disable-next-line: no-non-null-assertion
+                        blobSerivce.listBlobsSegmentedWithPrefix(blobContainerName, prefix, <azureStorage.common.ContinuationToken>undefined!, options, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult, _response?: azureStorage.ServiceResponse) => {
+                            if (!!error) {
+                                reject(error);
+                            } else {
+                                resolve(result);
+                            }
+                        });
+                    });
 
-                    let listBlobsResult: azureStorage.BlobService.ListBlobsResult = await entry.listBlobs(<azureStorage.common.ContinuationToken>undefined!);
+                    // let listBlobsResult: azureStorage.BlobService.ListBlobsResult = await entry.listBlobs(<azureStorage.common.ContinuationToken>undefined!);
 
                     let blobResultChild = listBlobsResult.entries.find(element => element.name === part);
 
