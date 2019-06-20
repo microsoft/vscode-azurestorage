@@ -69,7 +69,7 @@ function getFile(directoryPath: string, name: string, share: FileService.ShareRe
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-function createFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
+export function createFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
     return new Promise((resolve, reject) => {
         const fileService = root.createFileService();
         fileService.createFile(share.name, directoryPath, name, 0, (err?: Error, result?: azureStorage.FileService.FileResult) => {
