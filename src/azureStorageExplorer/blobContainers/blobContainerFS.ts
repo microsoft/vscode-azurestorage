@@ -221,8 +221,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 let directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === part);
                 if (directoryResultChild) {
                     prefix = `${prefix}/${part}`;
-                }
-                if (!directoryResultChild) {
+                    //entry = new BlobTreeItem(entry, directoryResultChild, <azureStorage.BlobService.ContainerResult>entry.container);
+                } else {
                     const listBlobsResult = await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
                         // Intentionally passing undefined for token - only supports listing first batch of files for now
                         // tslint:disable-next-line: no-non-null-assertion
