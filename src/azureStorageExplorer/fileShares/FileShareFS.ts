@@ -148,8 +148,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     private async updateFileContent(fileTreeItem: FileTreeItem, content: Uint8Array): Promise<void> {
-        // tslint:disable-next-line: no-void-expression
-        return await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             const fileService = fileTreeItem.root.createFileService();
             fileService.createFileFromText(fileTreeItem.share.name, fileTreeItem.directoryPath, fileTreeItem.file.name, content.toString(), (error?: Error) => {
                 if (!!error) {
