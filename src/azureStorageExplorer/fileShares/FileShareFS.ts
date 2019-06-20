@@ -162,8 +162,26 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     // tslint:disable-next-line: no-reserved-keywords
-    delete(_uri: vscode.Uri, _options: { recursive: boolean; }): void {
-        throw new Error("Method not implemented.");
+    async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
+        await callWithTelemetryAndErrorHandling('fs.delete', async (context) => {
+            context.errorHandling.rethrow = true;
+
+            if (!options.recursive) {
+                throw new Error("Azure storage does not support nonrecursive deletion of folders.");
+            }
+
+            let fileFound: EntryTreeItem | undefined = await this.lookup(uri, false);
+
+            if (fileFound === undefined) {
+                throw vscode.FileSystemError.FileNotFound(uri);
+            }
+
+            if (fileFound instanceof FileTreeItem || fileFound instanceof DirectoryTreeItem) {
+                await fileFound.deleteTreeItem(context);
+            } else {
+                throw new RangeError("Tried to delete a FileShare or the folder of FileShares.");
+            }
+        });
     }
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void {
