@@ -39,7 +39,7 @@ class FileStatImpl implements vscode.FileStat {
 
 export class FileShareFS implements vscode.FileSystemProvider {
 
-    private rootMap: Map<string, FileShareTreeItem> = new Map<string, FileShareTreeItem>();
+    private _rootMap: Map<string, FileShareTreeItem> = new Map<string, FileShareTreeItem>();
 
     // tslint:disable-next-line: typedef
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -216,12 +216,12 @@ export class FileShareFS implements vscode.FileSystemProvider {
             let endOfRootPathIndx = uri.path.indexOf(fileShareString) + fileShareString.length;
             let parts = uri.path.substring(endOfRootPathIndx).split('/').slice(1);
 
-            if (!this.rootMap.get(parts[0])) {
+            if (!this._rootMap.get(parts[0])) {
                 await this.findRoot(uri);
             }
 
             let entry: EntryTreeItem;
-            let root = this.rootMap.get(parts[0]);
+            let root = this._rootMap.get(parts[0]);
 
             if (root === undefined) {
                 throw new RangeError('Could not find File Share.');
@@ -280,7 +280,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             let fileShareName = uri.path.substring(endOfFileShareIndx, endOfFileShareName);
 
             if (rootFound && rootFound instanceof FileShareTreeItem) {
-                this.rootMap.set(fileShareName, <FileShareTreeItem>rootFound);
+                this._rootMap.set(fileShareName, <FileShareTreeItem>rootFound);
             } else {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }
