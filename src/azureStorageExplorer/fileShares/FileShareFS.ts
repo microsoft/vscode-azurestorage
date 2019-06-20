@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
@@ -11,6 +12,7 @@ import { DirectoryTreeItem } from './directoryNode';
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
+
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
@@ -80,7 +82,10 @@ export class FileShareFS implements vscode.FileSystemProvider {
         return result;
     }
 
-    createDirectory(_uri: vscode.Uri): void | Thenable<void> {
+    async createDirectory(uri: vscode.Uri): Promise<void> {
+        let dirUri = vscode.Uri.file(path.dirname(uri.path));
+        let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
+
         throw new Error("Method not implemented.");
     }
 
