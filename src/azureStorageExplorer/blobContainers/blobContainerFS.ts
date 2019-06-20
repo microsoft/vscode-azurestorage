@@ -220,7 +220,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
                 let directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === part);
                 if (directoryResultChild) {
-                    prefix = prefix + '/' + part;
+                    prefix = `${prefix}/${part}`;
                 }
                 if (!directoryResultChild) {
                     const listBlobsResult = await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
