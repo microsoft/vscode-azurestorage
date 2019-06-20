@@ -14,7 +14,7 @@ import { FileShareTreeItem } from "./fileShareNode";
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
-class FileStatImpl implements vscode.FileStat {
+export class FileStatImpl implements vscode.FileStat {
     // tslint:disable-next-line: no-reserved-keywords
     type: vscode.FileType;
     ctime: number;

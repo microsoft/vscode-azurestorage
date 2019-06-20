@@ -10,9 +10,9 @@ import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { awaitWithProgress } from '../../components/progress';
-import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
+import { configurationSettingsKeys, extensionPrefix, getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -68,7 +68,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         return !!this._continuationToken;
     }
 
-    public async loadMoreChildrenImpl(clearCache: boolean): Promise<BlobTreeItem[]> {
+    public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -77,9 +77,24 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let blobs = await this.listBlobs(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = blobs;
         this._continuationToken = continuationToken;
-        return entries.map((blob: azureStorage.BlobService.BlobResult) => {
-            return new BlobTreeItem(this, blob, this.container);
-        });
+        const result = (<(AzExtTreeItem)[]>[])
+            .concat(entries.map((blob: azureStorage.BlobService.BlobResult) => {
+                return new BlobTreeItem(this, blob, this.container);
+            }));
+
+        // tslint:disable-next-line: strict-boolean-expressions
+        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
+            const ti = new GenericTreeItem(this, {
+                label: 'Open in File Explorer...',
+                commandId: 'azureStorage.openBlobContainerInFileExplorer',
+                contextValue: 'openBlobContainerInFileExplorer'
+            });
+
+            ti.commandArgs = [this];
+            result.push(ti);
+        }
+
+        return result;
     }
 
     public async refreshImpl(): Promise<void> {
@@ -88,7 +103,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         this._websiteHostingEnabled = hostingStatus.enabled;
     }
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
+    listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
             blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults }, (err?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {

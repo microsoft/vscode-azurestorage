@@ -7,8 +7,8 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
+import { AzExtTreeItem, AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { getResourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./blobContainerNode";
 
@@ -37,17 +37,6 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
             return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
         }));
 
-        // tslint:disable-next-line: strict-boolean-expressions
-        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
-            const ti = new GenericTreeItem(this, {
-                label: 'Open in File Explorer...',
-                commandId: 'azureStorage.openBlobContainerInFileExplorer',
-                contextValue: 'openBlobContainerInFileExplorer'
-            });
-
-            ti.commandArgs = [this];
-            result.push(ti);
-        }
         return result;
     }
 
@@ -56,7 +45,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private listContainers(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.BlobService.ListContainerResult> {
+    listContainers(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.BlobService.ListContainerResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
             // currentToken argument typed incorrectly in SDK
