@@ -6,12 +6,18 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
+import { AzureParentTreeItem } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 
-export class BlobDirectoryTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
+export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
+  public loadMoreChildrenImpl(clearCache: boolean, context: import("vscode-azureextensionui").IActionContext): Promise<import("vscode-azureextensionui").AzExtTreeItem[]> {
+    throw new Error("Method not implemented.");
+  }
+  public hasMoreChildrenImpl(): boolean {
+    throw new Error("Method not implemented.");
+  }
 
   constructor(
     parent: AzureParentTreeItem,

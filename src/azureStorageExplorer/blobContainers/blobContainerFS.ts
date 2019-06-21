@@ -15,7 +15,7 @@ import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./blobDirectoryNode";
 import { BlobTreeItem } from './blobNode';
 
-export type EntryTreeItem = BlobContainerGroupTreeItem | BlobContainerTreeItem | BlobTreeItem;
+export type EntryTreeItem = BlobContainerGroupTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem | BlobTreeItem;
 
 export class BlobContainerFS implements vscode.FileSystemProvider {
 
@@ -30,28 +30,23 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        let entry: [EntryTreeItem, EntryTreeItem?] = await this.lookup(uri);
+        let entry: EntryTreeItem = await this.lookup(uri);
 
-        // tslint:disable-next-line: strict-boolean-expressions
-        if (!entry[1]) {
-            if (entry[0] instanceof BlobContainerGroupTreeItem || entry[0] instanceof BlobContainerTreeItem) {
-                // creation and modification times as well as size of tree item are intentionally set to 0 for now
-                // console.log('DIRECTORY' + uri.path);
-                return new FileStatImpl(vscode.FileType.Directory, 0, 0, 0);
-            } else if (entry[0] instanceof BlobTreeItem) {
-                // console.log('FILE' + uri.path);
-                // creation and modification times as well as size of tree item are intentionally set to 0 for now
-                return new FileStatImpl(vscode.FileType.File, 0, 0, 0);
-            }
+        if (entry instanceof BlobContainerGroupTreeItem || entry instanceof BlobContainerTreeItem || entry instanceof BlobDirectoryTreeItem) {
+            // creation and modification times as well as size of tree item are intentionally set to 0 for now
+            // console.log('DIRECTORY' + uri.path);
+            return new FileStatImpl(vscode.FileType.Directory, 0, 0, 0);
+        } else if (entry instanceof BlobTreeItem) {
+            // console.log('FILE' + uri.path);
+            // creation and modification times as well as size of tree item are intentionally set to 0 for now
+            return new FileStatImpl(vscode.FileType.File, 0, 0, 0);
         }
 
         throw vscode.FileSystemError.FileNotFound(uri);
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        let treeItem = await this.lookup(uri);
-
-        let entry: EntryTreeItem = !treeItem[1] ? treeItem[0] : treeItem[1];
+        let entry: EntryTreeItem = await this.lookup(uri);
 
         let directoryChildren: [string, vscode.FileType][] = [];
         if (entry instanceof BlobContainerGroupTreeItem) {
@@ -144,7 +139,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     private async findRoot(uri: vscode.Uri): Promise<void> {
-        return <void>await callWithTelemetryAndErrorHandling('fs.lookup', async (context) => {
+        return <void>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
@@ -176,8 +171,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     // In the case that the file and the directory have the same name, we return BlobTreeItem, BlobDirectoryTreeItem
-    private async lookup(uri: vscode.Uri): Promise<[EntryTreeItem, EntryTreeItem?]> {
-        return <[EntryTreeItem, EntryTreeItem?]>await callWithTelemetryAndErrorHandling('fs.lookup', async (context) => {
+    private async lookup(uri: vscode.Uri): Promise<EntryTreeItem> {
+        return <EntryTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
@@ -194,7 +189,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let entry: EntryTreeItem;
             let root = this.rootMap.get(blobContainerName);
 
-            if (root === undefined) {
+            if (!root) {
                 throw new RangeError('Could not find Blob Container.');
             } else {
                 entry = root;
@@ -210,55 +205,20 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     throw vscode.FileSystemError.FileNotFound(uri);
                 }
 
-                // possible special condition where folder and file have the same name
-                // if (part === parts[parts.length - 1]) {
-
-                // }
-
-                const listBlobDirectoryResult = await new Promise<azureStorage.BlobService.ListBlobDirectoriesResult>((resolve, reject) => {
-                    // Intentionally passing undefined for token - only supports listing first batch of files for now
-                    // tslint:disable-next-line: no-non-null-assertion
-                    blobSerivce.listBlobDirectoriesSegmentedWithPrefix(blobContainerName, prefix, <azureStorage.common.ContinuationToken>undefined!, (error?: Error, result?: azureStorage.BlobService.ListBlobDirectoriesResult, _response?: azureStorage.ServiceResponse) => {
-                        if (!!error) {
-                            reject(error);
-                        } else {
-                            resolve(result);
-                        }
-                    });
-                });
-
-                let directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === part);
-
-                // let directoryResultChild = this.findChildDirectory(blobSerivce, blobContainerName, prefix, part);
-                if (directoryResultChild) {
+                let directoryResultChild = await this.findChildDirectory(blobSerivce, blobContainerName, prefix, part);
+                if (!!directoryResultChild) {
                     prefix = `${prefix}/${part}`;
+                    entry = new BlobDirectoryTreeItem(entry, part, prefix, entry.container);
                     //entry = new BlobTreeItem(entry, directoryResultChild, <azureStorage.BlobService.ContainerResult>entry.container);
                 } else {
-                    const listBlobsResult = await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
-                        // Intentionally passing undefined for token - only supports listing first batch of files for now
-                        // tslint:disable-next-line: no-non-null-assertion
-                        let options = { delimiter: '/' };
-                        // tslint:disable-next-line: no-non-null-assertion
-                        blobSerivce.listBlobsSegmentedWithPrefix(blobContainerName, prefix, <azureStorage.common.ContinuationToken>undefined!, options, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult, _response?: azureStorage.ServiceResponse) => {
-                            if (!!error) {
-                                reject(error);
-                            } else {
-                                resolve(result);
-                            }
-                        });
-                    });
-
-                    // let listBlobsResult: azureStorage.BlobService.ListBlobsResult = await entry.listBlobs(<azureStorage.common.ContinuationToken>undefined!);
-
-                    let blobResultChild = listBlobsResult.entries.find(element => element.name === part);
-
+                    let blobResultChild = await this.findChildBlob(blobSerivce, blobContainerName, prefix, part);
                     if (!blobResultChild) {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
-                    entry = new BlobTreeItem(entry, blobResultChild, <azureStorage.BlobService.ContainerResult>entry.container);
+                    entry = new BlobTreeItem(entry, blobResultChild, entry.container);
                 }
             }
-            return [entry, undefined];
+            return entry;
         });
     }
 
@@ -274,9 +234,24 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             });
         });
+        return listBlobDirectoryResult.entries.find(element => element.name === part);
+    }
 
-        let directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === part);
-        return directoryResultChild;
+    private async findChildBlob(blobSerivce: azureStorage.BlobService, blobContainerName: string, prefix: string, part: string): Promise<azureStorage.BlobService.BlobResult | undefined> {
+        const listBlobsResult = await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
+            // Intentionally passing undefined for token - only supports listing first batch of files for now
+            // tslint:disable-next-line: no-non-null-assertion
+            let options = { delimiter: '/' };
+            // tslint:disable-next-line: no-non-null-assertion
+            blobSerivce.listBlobsSegmentedWithPrefix(blobContainerName, prefix, <azureStorage.common.ContinuationToken>undefined!, options, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult, _response?: azureStorage.ServiceResponse) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+        return listBlobsResult.entries.find(element => element.name === part);
     }
 
 }
