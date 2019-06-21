@@ -6,16 +6,23 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
+import { callWithTelemetryAndErrorHandling, ICreateChildImplContext } from "vscode-azureextensionui";
 import { ext } from '../../extensionVariables';
 import { DirectoryTreeItem } from './directoryNode';
+import { askAndCreateChildDirectory } from "./directoryUtils";
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
 import { createFile } from "./fileUtils";
 
-
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
+
+export class ICreateChildContextImpl implements ICreateChildImplContext {
+    showCreatingTreeItem(label: string): void {
+        console.log(label);
+    } telemetry: import("vscode-azureextensionui").ITelemetryContext;
+    errorHandling: import("vscode-azureextensionui").IErrorHandlingContext;
+}
 
 class FileStatImpl implements vscode.FileStat {
     // tslint:disable-next-line: no-reserved-keywords
@@ -84,10 +91,17 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
-        let dirUri = vscode.Uri.file(path.dirname(uri.path));
-        let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
+        await callWithTelemetryAndErrorHandling('fs.createDirectory', async (context: ICreateChildContextImpl) => {
+            let dirUri = vscode.Uri.file(path.dirname(uri.path));
+            let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
 
-        throw new Error("Method not implemented.");
+            if (dirTreeItem instanceof FileShareTreeItem) {
+                await askAndCreateChildDirectory(dirTreeItem, '', dirTreeItem.share, context);
+            } else {
+                let fullPath: string = path.posix.join(dirTreeItem.parentPath, dirTreeItem.directory.name);
+                await askAndCreateChildDirectory(dirTreeItem, fullPath, dirTreeItem.share, context);
+            }
+        });
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
