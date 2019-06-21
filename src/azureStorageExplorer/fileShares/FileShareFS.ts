@@ -211,7 +211,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            let parentPath = '/';
+            let parentPath = '';
 
             let fileShareString = 'File Shares';
             let endOfRootPathIndx = uri.path.indexOf(fileShareString) + fileShareString.length;
@@ -242,7 +242,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
                     if (directoryResultChild) {
                         entry = new DirectoryTreeItem(entry, parentPath, directoryResultChild, <azureStorage.FileService.ShareResult>entry.share);
                         // tslint:disable-next-line: prefer-template
-                        parentPath = parentPath + part + '/';
+
+                        parentPath = path.join(parentPath, part);
                     } else {
                         let fileResultChild = entries.files.find(element => element.name === part);
                         if (fileResultChild) {
