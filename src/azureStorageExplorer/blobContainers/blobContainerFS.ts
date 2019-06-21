@@ -56,40 +56,14 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 directoryChildren.push([con.name, vscode.FileType.Directory]);
             }
         } else if (entry instanceof BlobContainerTreeItem) {
-            // tslint:disable-next-line: no-non-null-assertion
-            // let containerList: azureStorage.BlobService.ListBlobsResult = await entry.listBlobs(<azureStorage.common.ContinuationToken>undefined!);
-
             const blobContainerString = 'Blob Containers';
             const prefix = uri.path.substring(uri.path.indexOf(blobContainerString) + blobContainerString.length, uri.path.lastIndexOf('/'));
-
             const blobSerivce = entry.root.createBlobService();
 
-            const listBlobsResult = await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
-                // Intentionally passing undefined for token - only supports listing first batch of files for now
-                // tslint:disable: no-non-null-assertion
-                let options = { delimiter: '/' };
-                blobSerivce.listBlobsSegmentedWithPrefix(entry.label, prefix, <azureStorage.common.ContinuationToken>undefined!, options, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult, _response?: azureStorage.ServiceResponse) => {
-                    if (!!error) {
-                        reject(error);
-                    } else {
-                        resolve(result);
-                    }
-                });
-            });
+            const listBlobResult = await this.listAllChildBlob(blobSerivce, entry.label, prefix);
+            const listBlobDirectoryResult = await this.listAllChildDirectory(blobSerivce, entry.label, prefix);
 
-            const listBlobDirectoryResult = await new Promise<azureStorage.BlobService.ListBlobDirectoriesResult>((resolve, reject) => {
-                // Intentionally passing undefined for token - only supports listing first batch of files for now
-                // tslint:disable-next-line: no-non-null-assertion
-                blobSerivce.listBlobDirectoriesSegmentedWithPrefix(entry.label, prefix, <azureStorage.common.ContinuationToken>undefined!, (error?: Error, result?: azureStorage.BlobService.ListBlobDirectoriesResult, _response?: azureStorage.ServiceResponse) => {
-                    if (!!error) {
-                        reject(error);
-                    } else {
-                        resolve(result);
-                    }
-                });
-            });
-
-            for (let con of listBlobsResult.entries) {
+            for (let con of listBlobResult.entries) {
                 directoryChildren.push([con.name, vscode.FileType.File]);
             }
 
