@@ -163,7 +163,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     private async lookupAsBlob(uri: vscode.Uri): Promise<BlobTreeItem> {
-        let entry = await this.lookup(uri);
+        const entry = await this.lookup(uri);
         if (entry instanceof BlobTreeItem) {
             return entry;
         }
@@ -177,16 +177,16 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.suppressDisplay = true;
 
             const blobContainerString = 'Blob Containers';
-            let endOfBlobContainerIndx = uri.path.indexOf(blobContainerString) + blobContainerString.length + 1;
+            const endOfBlobContainerIndx = uri.path.indexOf(blobContainerString) + blobContainerString.length + 1;
             let parts = uri.path.substring(endOfBlobContainerIndx).split('/');
 
-            let blobContainerName: string = parts[0] ? parts[0] : '';
+            const blobContainerName: string = parts[0] ? parts[0] : '';
 
             if (!this.rootMap.get(blobContainerName)) {
                 await this.findRoot(uri);
             }
 
-            let root = this.rootMap.get(blobContainerName);
+            const root = this.rootMap.get(blobContainerName);
             let entry: EntryTreeItem | undefined = !root ? undefined : root;
 
             if (!entry) {
