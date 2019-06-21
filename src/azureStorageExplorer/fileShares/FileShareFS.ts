@@ -205,24 +205,19 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            let parentPath = '';
-
-            let fileShareString = 'File Shares';
-            let endOfRootPathIndx = uri.path.indexOf(fileShareString) + fileShareString.length;
+            const fileShareString = 'File Shares';
+            const endOfRootPathIndx = uri.path.indexOf(fileShareString) + fileShareString.length;
             let parts = uri.path.substring(endOfRootPathIndx).split('/').slice(1);
 
-            if (!this._rootMap.get(parts[0])) {
-                await this.findRoot(uri);
-            }
+            const foundRoot = this._rootMap.get(parts[0]);
+            const root = !!foundRoot ? foundRoot : await this.findRoot(uri);
+            let entry: EntryTreeItem | undefined = !root ? undefined : root;
 
-            let entry: EntryTreeItem;
-            let root = this._rootMap.get(parts[0]);
-
-            if (root === undefined) {
+            if (!entry) {
                 throw new RangeError('Could not find File Share.');
-            } else {
-                entry = root;
             }
+
+            let parentPath = '';
 
             for (let part of parts.slice(1)) {
                 if (entry instanceof FileShareTreeItem || entry instanceof DirectoryTreeItem) {
@@ -253,8 +248,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async findRoot(uri: vscode.Uri): Promise<void> {
-        await callWithTelemetryAndErrorHandling('fs.findRoot', async (context) => {
+    private async findRoot(uri: vscode.Uri): Promise<FileShareTreeItem | null> {
+        return <FileShareTreeItem>await callWithTelemetryAndErrorHandling('fs.findRoot', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
@@ -274,6 +269,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             if (rootFound instanceof FileShareTreeItem) {
                 const fileShareName = uri.path.substring(endOfFileShareIndx, endOfFileShareName);
                 this._rootMap.set(fileShareName, <FileShareTreeItem>rootFound);
+                return <FileShareTreeItem>rootFound;
             } else {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }
