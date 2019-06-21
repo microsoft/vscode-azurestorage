@@ -113,7 +113,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
         let dirUri = vscode.Uri.file(path.dirname(uri.path));
         let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
 
-        // tslint:disable-next-line: restrict-plus-operands
         const parentPath: string = dirTreeItem instanceof DirectoryTreeItem ? path.join(dirTreeItem.parentPath, dirTreeItem.directory.name) : '';
 
         let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
