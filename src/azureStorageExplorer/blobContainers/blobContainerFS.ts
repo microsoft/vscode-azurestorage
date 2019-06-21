@@ -34,10 +34,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
         if (entry instanceof BlobContainerGroupTreeItem || entry instanceof BlobContainerTreeItem || entry instanceof BlobDirectoryTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
-            // console.log('DIRECTORY' + uri.path);
             return new FileStatImpl(vscode.FileType.Directory, 0, 0, 0);
         } else if (entry instanceof BlobTreeItem) {
-            // console.log('FILE' + uri.path);
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
             return new FileStatImpl(vscode.FileType.File, 0, 0, 0);
         }
