@@ -169,11 +169,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 throw new Error("Azure storage does not support nonrecursive deletion of folders.");
             }
 
-            let fileFound: EntryTreeItem | undefined = await this.lookup(uri);
-
-            if (fileFound === undefined) {
-                throw vscode.FileSystemError.FileNotFound(uri);
-            }
+            let fileFound: EntryTreeItem = await this.lookup(uri);
 
             if (fileFound instanceof FileTreeItem || fileFound instanceof DirectoryTreeItem) {
                 await fileFound.deleteTreeItem(context);
