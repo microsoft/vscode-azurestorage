@@ -142,9 +142,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
         let fileTreeItem: FileTreeItem = new FileTreeItem(dirTreeItem, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>dirTreeItem.share);
 
-        if (!options.overwrite) { return; }
-
-        await this.updateFileContent(fileTreeItem, content);
+        if (options.overwrite) {
+            await this.updateFileContent(fileTreeItem, content);
+        }
     }
 
     private async updateFileContent(fileTreeItem: FileTreeItem, content: Uint8Array): Promise<void> {
