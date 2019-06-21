@@ -186,20 +186,16 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 await this.findRoot(uri);
             }
 
-            let entry: EntryTreeItem;
             let root = this.rootMap.get(blobContainerName);
+            let entry: EntryTreeItem | undefined = !root ? undefined : root;
 
-            if (!root) {
+            if (!entry) {
                 throw new RangeError('Could not find Blob Container.');
-            } else {
-                entry = root;
             }
 
             let prefix = '';
 
-            // tslint:disable-next-line: prefer-template
             let blobSerivce = entry.root.createBlobService();
-
             for (let part of parts.slice(1)) {
                 if (entry instanceof BlobContainerGroupTreeItem || entry instanceof BlobTreeItem) {
                     throw vscode.FileSystemError.FileNotFound(uri);
@@ -209,7 +205,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 if (!!directoryResultChild) {
                     prefix = `${prefix}/${part}`;
                     entry = new BlobDirectoryTreeItem(entry, part, prefix, entry.container);
-                    //entry = new BlobTreeItem(entry, directoryResultChild, <azureStorage.BlobService.ContainerResult>entry.container);
                 } else {
                     let blobResultChild = await this.findChildBlob(blobSerivce, blobContainerName, prefix, part);
                     if (!blobResultChild) {

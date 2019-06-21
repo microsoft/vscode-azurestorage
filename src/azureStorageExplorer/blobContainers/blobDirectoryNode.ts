@@ -12,7 +12,7 @@ import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 
 export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
-  public loadMoreChildrenImpl(clearCache: boolean, context: import("vscode-azureextensionui").IActionContext): Promise<import("vscode-azureextensionui").AzExtTreeItem[]> {
+  public async loadMoreChildrenImpl(clearCache: boolean, context: import("vscode-azureextensionui").IActionContext): Promise<import("vscode-azureextensionui").AzExtTreeItem[]> {
     throw new Error("Method not implemented.");
   }
   public hasMoreChildrenImpl(): boolean {
