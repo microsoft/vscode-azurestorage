@@ -156,14 +156,14 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     throw vscode.FileSystemError.FileNotFound(uri);
                 }
 
+                prefix = path.join(prefix, part);
                 const listBlobDirectoryResult = await this.listAllChildDirectory(blobSerivce, blobContainerName, prefix);
-                const directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === `${prefix}${part}/`);
+                const directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === `${prefix}/`);
                 if (!!directoryResultChild) {
                     entry = new BlobDirectoryTreeItem(entry, part, prefix, entry.container);
-                    prefix = `${prefix}${part}/`;
                 } else {
                     const listBlobResult = await this.listAllChildBlob(blobSerivce, blobContainerName, prefix);
-                    const blobResultChild = listBlobResult.entries.find(element => element.name === prefix + part);
+                    const blobResultChild = listBlobResult.entries.find(element => element.name === prefix);
                     if (!blobResultChild) {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
