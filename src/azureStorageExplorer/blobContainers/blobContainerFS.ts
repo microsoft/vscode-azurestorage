@@ -45,28 +45,35 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         let entry: EntryTreeItem = await this.lookup(uri);
-
         let directoryChildren: [string, vscode.FileType][] = [];
-        if (entry instanceof BlobContainerGroupTreeItem) {
+
+        if (entry instanceof BlobTreeItem) {
+            throw vscode.FileSystemError.FileNotADirectory(uri);
+        } else if (entry instanceof BlobContainerGroupTreeItem) {
             let containerList: azureStorage.BlobService.ListContainerResult = await entry.listContainers(undefined);
 
             for (let con of containerList.entries) {
                 directoryChildren.push([con.name, vscode.FileType.Directory]);
             }
-        } else if (entry instanceof BlobContainerTreeItem) {
-            const blobContainerString = 'Blob Containers';
-            const prefix = uri.path.substring(uri.path.indexOf(blobContainerString) + blobContainerString.length, uri.path.lastIndexOf('/'));
+        } else {
+            let parsedUri: string[] = this.parseUri(uri);
+            let prefix = parsedUri[1] + parsedUri[2];
+            prefix = prefix === '' ? prefix : `${prefix}/`;
+            const blobContainerName = parsedUri[0];
+
             const blobSerivce = entry.root.createBlobService();
 
-            const listBlobResult = await this.listAllChildBlob(blobSerivce, entry.label, prefix);
-            const listBlobDirectoryResult = await this.listAllChildDirectory(blobSerivce, entry.label, prefix);
+            const listBlobResult = await this.listAllChildBlob(blobSerivce, blobContainerName, prefix);
+            const listDirectoryResult = await this.listAllChildDirectory(blobSerivce, blobContainerName, prefix);
 
-            for (let con of listBlobResult.entries) {
-                directoryChildren.push([con.name, vscode.FileType.File]);
+            for (let blobRes of listBlobResult.entries) {
+                let blobName = path.basename(blobRes.name);
+                directoryChildren.push([blobName, vscode.FileType.File]);
             }
 
-            for (let con of listBlobDirectoryResult.entries) {
-                directoryChildren.push([con.name, vscode.FileType.Directory]);
+            for (let dirRes of listDirectoryResult.entries) {
+                let dirName = entry instanceof BlobContainerTreeItem ? dirRes.name : dirRes.name.substring(dirRes.name.indexOf('/') + 1);
+                directoryChildren.push([dirName, vscode.FileType.Directory]);
             }
         }
 
@@ -80,11 +87,14 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         let treeItem: BlobTreeItem = await this.lookupAsBlob(uri);
 
+        let parsedUri: string[] = this.parseUri(uri);
+        const blobContainerName = parsedUri[0];
+        const blobName = parsedUri[1] + parsedUri[2];
+
         let blobSerivce: azureStorage.BlobService = treeItem.root.createBlobService();
-        let blobName: string = path.basename(uri.path);
 
         const result = await new Promise<string | undefined>((resolve, reject) => {
-            blobSerivce.getBlobToText(treeItem.container.name, blobName, (error?: Error, text?: string, _blockBlob?: azureStorage.BlobService.BlobResult, _response?: azureStorage.ServiceResponse) => {
+            blobSerivce.getBlobToText(blobContainerName, blobName, (error?: Error, text?: string, _blockBlob?: azureStorage.BlobService.BlobResult, _response?: azureStorage.ServiceResponse) => {
                 if (!!error) {
                     reject(error);
                 } else {
@@ -110,31 +120,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    private async findRoot(uri: vscode.Uri): Promise<BlobContainerTreeItem | null> {
-        return <BlobContainerTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
-
-            const blobContainerString = 'Blob Containers';
-            let endOfBlobContainerIndx = uri.path.indexOf(blobContainerString) + blobContainerString.length + 1;
-            let endOfBlobContainerName = uri.path.indexOf('/', endOfBlobContainerIndx) === -1 ? uri.path.length : uri.path.indexOf('/', endOfBlobContainerIndx);
-
-            let rootPath: string = uri.path.substring(0, endOfBlobContainerName);
-
-            let rootFound: BlobContainerTreeItem = <BlobContainerTreeItem>await ext.tree.findTreeItem(rootPath, context);
-
-            let fileBlobContainerName = uri.path.substring(endOfBlobContainerIndx, endOfBlobContainerName);
-
-            // tslint:disable-next-line: strict-boolean-expressions
-            if (!!rootFound) {
-                this.rootMap.set(fileBlobContainerName, rootFound);
-                return rootFound;
-            } else {
-                throw vscode.FileSystemError.FileNotFound(uri);
-            }
-        });
-    }
-
     private async lookupAsBlob(uri: vscode.Uri): Promise<BlobTreeItem> {
         const entry = await this.lookup(uri);
         if (entry instanceof BlobTreeItem) {
@@ -149,11 +134,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            const blobContainerString = 'Blob Containers';
-            const endOfBlobContainerIndx = uri.path.indexOf(blobContainerString) + blobContainerString.length + 1;
-            let parts = uri.path.substring(endOfBlobContainerIndx).split('/');
+            let parsedUri: string[] = this.parseUri(uri);
+            let parts = (parsedUri[1] + parsedUri[2]).split('/');
+            const blobContainerName = parsedUri[0];
 
-            const blobContainerName: string = parts[0] ? parts[0] : '';
             const foundRoot = this.rootMap.get(blobContainerName);
             let entry: EntryTreeItem | null = !!foundRoot ? foundRoot : await this.findRoot(uri);
 
@@ -162,21 +146,24 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             let prefix = '';
-
             let blobSerivce = entry.root.createBlobService();
-            for (let part of parts.slice(1)) {
+
+            for (let part of parts) {
+                if (part === '') {
+                    return entry;
+                }
                 if (entry instanceof BlobContainerGroupTreeItem || entry instanceof BlobTreeItem) {
                     throw vscode.FileSystemError.FileNotFound(uri);
                 }
 
                 const listBlobDirectoryResult = await this.listAllChildDirectory(blobSerivce, blobContainerName, prefix);
-                const directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === part);
+                const directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === `${prefix}${part}/`);
                 if (!!directoryResultChild) {
-                    prefix = `${prefix}/${part}`;
                     entry = new BlobDirectoryTreeItem(entry, part, prefix, entry.container);
+                    prefix = `${prefix}${part}/`;
                 } else {
                     const listBlobResult = await this.listAllChildBlob(blobSerivce, blobContainerName, prefix);
-                    const blobResultChild = listBlobResult.entries.find(element => element.name === part);
+                    const blobResultChild = listBlobResult.entries.find(element => element.name === prefix + part);
                     if (!blobResultChild) {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
@@ -184,6 +171,28 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             }
             return entry;
+        });
+    }
+
+    private async findRoot(uri: vscode.Uri): Promise<BlobContainerTreeItem | null> {
+        return <BlobContainerTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
+
+            const blobContainerString = 'Blob Containers';
+            let endOfBlobContainerIndx = uri.path.indexOf(blobContainerString) + blobContainerString.length + 1;
+            let endOfBlobContainerName = uri.path.indexOf('/', endOfBlobContainerIndx) === -1 ? uri.path.length : uri.path.indexOf('/', endOfBlobContainerIndx);
+
+            let rootPath: string = uri.path.substring(0, endOfBlobContainerName);
+            let rootFound: BlobContainerTreeItem | undefined = await ext.tree.findTreeItem(rootPath, context);
+
+            if (!rootFound) {
+                throw vscode.FileSystemError.FileNotFound(uri);
+            }
+
+            let fileBlobContainerName = uri.path.substring(endOfBlobContainerIndx, endOfBlobContainerName);
+            this.rootMap.set(fileBlobContainerName, rootFound);
+            return rootFound;
         });
     }
 
@@ -215,6 +224,21 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             });
         });
+    }
+
+    // returns [container name, prefix (post container name), basename]
+    private parseUri(uri: vscode.Uri): string[] {
+        const blobContainerString = 'Blob Containers';
+        let uriPath = uri.path.substring(uri.path.indexOf(blobContainerString) + blobContainerString.length + 1);
+
+        let firstSlashIndex = uriPath.indexOf('/');
+        let lastSlashIndex = uriPath.lastIndexOf('/');
+
+        let containerName = firstSlashIndex !== -1 ? uriPath.substring(0, firstSlashIndex) : uriPath;
+        let basename = firstSlashIndex !== -1 ? uriPath.substring(lastSlashIndex + 1) : '';
+        let prefix = firstSlashIndex !== lastSlashIndex ? uriPath.substring(firstSlashIndex + 1, lastSlashIndex + 1) : '';
+
+        return [containerName, prefix, basename];
     }
 
 }
