@@ -88,13 +88,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         let treeItem: BlobTreeItem = await this.lookupAsBlob(uri);
 
         let parsedUri: string[] = this.parseUri(uri);
-        const blobContainerName = parsedUri[0];
-        const blobName = parsedUri[1] + parsedUri[2];
-
         let blobSerivce: azureStorage.BlobService = treeItem.root.createBlobService();
 
         const result = await new Promise<string | undefined>((resolve, reject) => {
-            blobSerivce.getBlobToText(blobContainerName, blobName, (error?: Error, text?: string) => {
+            blobSerivce.getBlobToText(parsedUri[0], `${parsedUri[1]}${parsedUri[2]}`, (error?: Error, text?: string) => {
                 if (!!error) {
                     reject(error);
                 } else {
@@ -112,8 +109,20 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     // tslint:disable-next-line: no-reserved-keywords
-    delete(_uri: vscode.Uri, _options: { recursive: boolean; }): void | Thenable<void> {
-        throw new Error("Method not implemented.");
+    async delete(uri: vscode.Uri, _options: { recursive: boolean; }): Promise<void> {
+        let entry: BlobTreeItem = await this.lookupAsBlob(uri);
+        const blobSerivce = entry.root.createBlobService();
+        const parsedUri = this.parseUri(uri);
+
+        await new Promise<void>((resolve, reject) => {
+            blobSerivce.deleteBlob(parsedUri[0], `${parsedUri[1]}${parsedUri[2]}`, (error?: Error) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
     }
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void | Thenable<void> {
