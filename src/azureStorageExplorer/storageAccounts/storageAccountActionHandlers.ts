@@ -75,9 +75,9 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
         context,
         {
             mustBeWebsiteCapable: true,
-            askToConfigureWebsite: true
+            askToConfigureWebsite: false
         });
-
+    await destAccountTreeItem.configureStaticWebsite();
     //  Ask for source folder if needed
     if (!sourcePath) {
         sourcePath = await showWorkspaceFoldersQuickPick("Select the folder to deploy", context, configurationSettingsKeys.deployPath);
