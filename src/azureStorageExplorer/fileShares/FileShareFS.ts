@@ -6,23 +6,17 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, ICreateChildImplContext } from "vscode-azureextensionui";
+import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
 import { ext } from '../../extensionVariables';
 import { DirectoryTreeItem } from './directoryNode';
-import { askAndCreateChildDirectory } from "./directoryUtils";
+import { createDirectory } from "./directoryUtils";
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
 import { createFile } from "./fileUtils";
+import { validateDirectoryName } from "./validateNames";
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
-
-export class ICreateChildContextImpl implements ICreateChildImplContext {
-    showCreatingTreeItem(label: string): void {
-        console.log(label);
-    } telemetry: import("vscode-azureextensionui").ITelemetryContext;
-    errorHandling: import("vscode-azureextensionui").IErrorHandlingContext;
-}
 
 class FileStatImpl implements vscode.FileStat {
     // tslint:disable-next-line: no-reserved-keywords
@@ -91,17 +85,33 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
-        await callWithTelemetryAndErrorHandling('fs.createDirectory', async (context: ICreateChildContextImpl) => {
-            let dirUri = vscode.Uri.file(path.dirname(uri.path));
-            let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
+        let parsedUri = this.parseUri(uri);
 
-            if (dirTreeItem instanceof FileShareTreeItem) {
-                await askAndCreateChildDirectory(dirTreeItem, '', dirTreeItem.share, context);
-            } else {
-                let fullPath: string = path.posix.join(dirTreeItem.parentPath, dirTreeItem.directory.name);
-                await askAndCreateChildDirectory(dirTreeItem, fullPath, dirTreeItem.share, context);
-            }
+        const foundRoot = this._rootMap.get(parsedUri.fileShareName);
+        const root = !!foundRoot ? foundRoot : await this.findRoot(uri);
+
+        if (!root) {
+            throw new Error('Cannot make a directory that is more than one level down.');
+        }
+
+        let dirName = parsedUri.baseName;
+        let parentPath = parsedUri.parentPath;
+
+        let response: string | undefined | null = validateDirectoryName(dirName);
+        if (response) {
+            throw new Error(response); // how to show to user???
+        }
+
+        await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
+            progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
+            let dir = await createDirectory(root.share, root.root, parentPath, dirName);
+
+            // DirectoryResult.name contains the parent path in this call, but doesn't in other places such as listing directories.
+            // Remove it here to be consistent.
+            dir.name = dirName;
         });
+
+        // have a reset here
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
@@ -291,5 +301,26 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }
         });
+    }
+
+    // returns [up to and including File Share (subscription stuff), file share name, parentPath, base name]
+    private parseUri(uri: vscode.Uri): { rootPath: string, fileShareName: string, parentPath: string, baseName: string } {
+        let parsedUri = path.parse(uri.path);
+        const baseName = parsedUri.base;
+
+        const fileShareString = 'File Shares';
+        const endOfRootPathIndx = parsedUri.dir.indexOf(fileShareString) + fileShareString.length;
+
+        const rootPath = parsedUri.dir.substring(0, endOfRootPathIndx);
+
+        const postRootPath = parsedUri.dir.substring(endOfRootPathIndx + 1);
+
+        let endOfFileShareNameIndx = postRootPath.indexOf('/');
+
+        const fileShareName = postRootPath.substring(0, endOfFileShareNameIndx);
+
+        const parentPath = postRootPath.substring(endOfFileShareNameIndx + 1);
+
+        return { rootPath, fileShareName, parentPath, baseName };
     }
 }

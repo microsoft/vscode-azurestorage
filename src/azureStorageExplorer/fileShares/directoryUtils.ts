@@ -38,7 +38,7 @@ export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<ISt
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-function createDirectory(share: azureStorage.FileService.ShareResult, root: IStorageRoot, parentPath: string, name: string): Promise<azureStorage.BlobService.BlobResult> {
+export function createDirectory(share: azureStorage.FileService.ShareResult, root: IStorageRoot, parentPath: string, name: string): Promise<azureStorage.BlobService.BlobResult> {
     return new Promise((resolve, reject) => {
         const fileService = root.createFileService();
         fileService.createDirectory(share.name, path.posix.join(parentPath, name), (err: Error, result: azureStorage.BlobService.BlobResult) => {
