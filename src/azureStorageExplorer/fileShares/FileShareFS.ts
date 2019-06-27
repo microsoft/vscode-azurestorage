@@ -57,7 +57,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         if (treeItem instanceof FileTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
             return new FileStatImpl(vscode.FileType.File, 0, 0, 0);
-        } else if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
+        } else if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof FileShareGroupTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
             return new FileStatImpl(vscode.FileType.Directory, 0, 0, 0);
         }
