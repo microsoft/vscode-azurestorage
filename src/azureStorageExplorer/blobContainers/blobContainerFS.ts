@@ -56,10 +56,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 directoryChildren.push([con.name, vscode.FileType.Directory]);
             }
         } else {
-            let parsedUri: string[] = this.parseUri(uri);
-            let prefix = parsedUri[1] + parsedUri[2];
+            let parsedUri = this.parseUri(uri);
+            let prefix = `${parsedUri.prefix}${parsedUri.basename}`;
             prefix = prefix === '' ? prefix : `${prefix}/`;
-            const blobContainerName = parsedUri[0];
+            const blobContainerName = parsedUri.containerName;
 
             const blobSerivce = entry.root.createBlobService();
 
@@ -87,11 +87,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         let treeItem: BlobTreeItem = await this.lookupAsBlob(uri);
 
-        let parsedUri: string[] = this.parseUri(uri);
+        let parsedUri = this.parseUri(uri);
         let blobSerivce: azureStorage.BlobService = treeItem.root.createBlobService();
 
         const result = await new Promise<string | undefined>((resolve, reject) => {
-            blobSerivce.getBlobToText(parsedUri[0], `${parsedUri[1]}${parsedUri[2]}`, (error?: Error, text?: string) => {
+            blobSerivce.getBlobToText(parsedUri.containerName, `${parsedUri.prefix}${parsedUri.basename}`, (error?: Error, text?: string) => {
                 if (!!error) {
                     reject(error);
                 } else {
@@ -115,7 +115,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         const parsedUri = this.parseUri(uri);
 
         await new Promise<void>((resolve, reject) => {
-            blobSerivce.deleteBlob(parsedUri[0], `${parsedUri[1]}${parsedUri[2]}`, (error?: Error) => {
+            blobSerivce.deleteBlob(parsedUri.containerName, `${parsedUri.prefix}${parsedUri.basename}`, (error?: Error) => {
                 if (!!error) {
                     reject(error);
                 } else {
@@ -143,9 +143,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            let parsedUri: string[] = this.parseUri(uri);
-            let parts = (parsedUri[1] + parsedUri[2]).split('/');
-            const blobContainerName = parsedUri[0];
+            let parsedUri = this.parseUri(uri);
+            let parts = (`${parsedUri.prefix}${parsedUri.basename}`).split('/');
+            const blobContainerName = parsedUri.containerName;
 
             const foundRoot = this.rootMap.get(blobContainerName);
             let entry: EntryTreeItem | null = !!foundRoot ? foundRoot : await this.findRoot(uri);
@@ -237,7 +237,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     // returns [container name, prefix (post container name), basename]
-    private parseUri(uri: vscode.Uri): string[] {
+    private parseUri(uri: vscode.Uri): { containerName: string, prefix: string, basename: string } {
         const blobContainerString = 'Blob Containers';
         let uriPath = uri.path.substring(uri.path.indexOf(blobContainerString) + blobContainerString.length + 1);
 
@@ -248,7 +248,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         let basename = firstSlashIndex !== -1 ? uriPath.substring(lastSlashIndex + 1) : '';
         let prefix = firstSlashIndex !== lastSlashIndex ? uriPath.substring(firstSlashIndex + 1, lastSlashIndex + 1) : '';
 
-        return [containerName, prefix, basename];
+        return { containerName, prefix, basename };
     }
 
 }
