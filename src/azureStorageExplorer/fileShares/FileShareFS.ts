@@ -66,14 +66,23 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri);
+        let entry: DirectoryTreeItem | FileShareTreeItem | FileShareGroupTreeItem = await this.lookupAsDirectory(uri);
+        let result: [string, vscode.FileType][] = [];
+
+        if (entry instanceof FileShareGroupTreeItem) {
+            // tslint:disable-next-line: no-non-null-assertion
+            let listShareResults = await entry.listFileShares(<azureStorage.common.ContinuationToken>undefined!);
+            for (const listShare of listShareResults.entries) {
+                result.push([listShare.name, vscode.FileType.Directory]);
+            }
+            return result;
+        }
 
         // Intentionally passing undefined for token - only supports listing first batch of files for now
         // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
         let listFilesandDirectoryResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
         let entries = listFilesandDirectoryResult.entries;
 
-        let result: [string, vscode.FileType][] = [];
         for (const directory of entries.directories) {
             result.push([directory.name, vscode.FileType.Directory]);
         }
@@ -90,6 +99,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         const foundRoot = this._rootMap.get(parsedUri.fileShareName);
         const root = !!foundRoot ? foundRoot : await this.findRoot(uri);
 
+        if (root instanceof FileShareGroupTreeItem) {
+            throw new Error('Cannot create a File Share directory.');
+        }
         if (!root) {
             throw new Error('Cannot make a directory that is more than one level down.');
         }
@@ -139,13 +151,18 @@ export class FileShareFS implements vscode.FileSystemProvider {
         }
 
         let dirUri = vscode.Uri.file(path.dirname(uri.path));
-        let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
+        let dirTreeItem: FileShareTreeItem | DirectoryTreeItem | FileShareGroupTreeItem = await this.lookupAsDirectory(dirUri);
 
         const parentPath: string = dirTreeItem instanceof DirectoryTreeItem ? path.join(dirTreeItem.parentPath, dirTreeItem.directory.name) : '';
 
+        if (dirTreeItem instanceof FileShareGroupTreeItem) {
+            throw new RangeError('Cannot create a folder at the File Share level');
+        }
+
+        let fileShareOrDirTreeItem = <FileShareTreeItem | DirectoryTreeItem>dirTreeItem;
         let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
             const fileService = dirTreeItem.root.createFileService();
-            fileService.doesFileExist(dirTreeItem.share.name, parentPath, path.basename(uri.path), (error?: Error, result?: azureStorage.FileService.FileResult) => {
+            fileService.doesFileExist(fileShareOrDirTreeItem.share.name, parentPath, path.basename(uri.path), (error?: Error, result?: azureStorage.FileService.FileResult) => {
                 if (!!error) {
                     reject(error);
                 } else {
@@ -217,10 +234,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileNotFound(uri);
     }
 
-    private async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem> {
+    private async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem | FileShareGroupTreeItem> {
         let entry = await this.lookup(uri);
-        if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
-
+        if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem || entry instanceof FileShareGroupTreeItem) {
             return entry;
         }
 
@@ -235,6 +251,10 @@ export class FileShareFS implements vscode.FileSystemProvider {
             const fileShareString = 'File Shares';
             const endOfRootPathIndx = uri.path.indexOf(fileShareString) + fileShareString.length;
             let parts = uri.path.substring(endOfRootPathIndx).split('/').slice(1);
+
+            if (parts.length === 0) {
+                return await this.findRoot(uri);
+            }
 
             const foundRoot = this._rootMap.get(parts[0]);
             const root = !!foundRoot ? foundRoot : await this.findRoot(uri);
@@ -275,7 +295,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async findRoot(uri: vscode.Uri): Promise<FileShareTreeItem | null> {
+    private async findRoot(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem | null> {
         return <FileShareTreeItem>await callWithTelemetryAndErrorHandling('fs.findRoot', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
@@ -285,7 +305,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             const rootFound = await ext.tree.findTreeItem(rootPath, context);
 
-            if (rootFound instanceof FileShareTreeItem) {
+            if (rootFound instanceof FileShareGroupTreeItem) {
+                return <FileShareGroupTreeItem>rootFound;
+            } else if (rootFound instanceof FileShareTreeItem) {
                 // const fileShareName = uri.path.substring(endOfFileShareIndx, endOfFileShareName);
                 this._rootMap.set(parsedUri.fileShareName, <FileShareTreeItem>rootFound);
                 return <FileShareTreeItem>rootFound;
@@ -306,7 +328,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         let endOfFileShareNameIndx = postRootPath.indexOf('/');
 
         let rootPath = parsedUri.dir.substring(0, endOfRootPathIndx);
-        let fileShareName = endOfFileShareNameIndx === -1 ? '' : postRootPath.substring(0, endOfFileShareNameIndx);
+        let fileShareName = endOfFileShareNameIndx === -1 ? postRootPath : postRootPath.substring(0, endOfFileShareNameIndx);
         let parentPath = endOfFileShareNameIndx === -1 ? '' : postRootPath.substring(endOfFileShareNameIndx + 1);
         let baseName = parsedUri.base;
 
