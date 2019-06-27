@@ -257,8 +257,11 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             const foundRoot = this._rootMap.get(parts[0]);
-            const root = !!foundRoot ? foundRoot : await this.findRoot(uri);
-            let entry: EntryTreeItem | undefined = !root ? undefined : root;
+            let entry: EntryTreeItem | undefined = !!foundRoot ? foundRoot : await this.findRoot(uri);
+
+            if (entry instanceof FileShareGroupTreeItem) {
+                throw new Error('Looking into fake files');
+            }
 
             if (!entry) {
                 throw new RangeError('Could not find File Share.');
@@ -295,7 +298,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async findRoot(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem | null> {
+    private async findRoot(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem | undefined> {
         return <FileShareTreeItem>await callWithTelemetryAndErrorHandling('fs.findRoot', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
@@ -322,13 +325,21 @@ export class FileShareFS implements vscode.FileSystemProvider {
     private parseUri(uri: vscode.Uri): { rootPath: string, fileShareName: string, parentPath: string, baseName: string } {
         let parsedUri = path.parse(uri.path);
 
+        if (parsedUri.base === 'File Shares') {
+            return { rootPath: uri.path, fileShareName: '', parentPath: '', baseName: '' };
+        }
+
+        if (uri.path.includes('onelevel')) {
+            console.log('ugh');
+        }
+
         let fileShareString = 'File Shares';
         let endOfRootPathIndx = parsedUri.dir.indexOf(fileShareString) + fileShareString.length;
-        let postRootPath = endOfRootPathIndx === parsedUri.dir.length - 1 ? '' : parsedUri.dir.substring(endOfRootPathIndx + 1);
+        let postRootPath = endOfRootPathIndx === parsedUri.dir.length ? '' : parsedUri.dir.substring(endOfRootPathIndx + 1);
         let endOfFileShareNameIndx = postRootPath.indexOf('/');
 
         let rootPath = parsedUri.dir.substring(0, endOfRootPathIndx);
-        let fileShareName = endOfFileShareNameIndx === -1 ? postRootPath : postRootPath.substring(0, endOfFileShareNameIndx);
+        let fileShareName = endOfFileShareNameIndx === -1 ? (postRootPath === '' ? parsedUri.base : postRootPath) : postRootPath.substring(0, endOfFileShareNameIndx);
         let parentPath = endOfFileShareNameIndx === -1 ? '' : postRootPath.substring(endOfFileShareNameIndx + 1);
         let baseName = parsedUri.base;
 
