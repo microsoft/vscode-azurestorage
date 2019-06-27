@@ -329,10 +329,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
             return { rootPath: uri.path, fileShareName: '', parentPath: '', baseName: '' };
         }
 
-        if (uri.path.includes('onelevel')) {
-            console.log('ugh');
-        }
-
         let fileShareString = 'File Shares';
         let endOfRootPathIndx = parsedUri.dir.indexOf(fileShareString) + fileShareString.length;
         let postRootPath = endOfRootPathIndx === parsedUri.dir.length ? '' : parsedUri.dir.substring(endOfRootPathIndx + 1);
