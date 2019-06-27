@@ -110,19 +110,41 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, _options: { recursive: boolean; }): Promise<void> {
-        let entry: BlobTreeItem = await this.lookupAsBlob(uri);
-        const blobSerivce = entry.root.createBlobService();
-        const parsedUri = this.parseUri(uri);
+        let entry: EntryTreeItem = await this.lookup(uri);
+        let parsedUri = this.parseUri(uri);
 
-        await new Promise<void>((resolve, reject) => {
-            blobSerivce.deleteBlob(parsedUri.containerName, `${parsedUri.prefix}${parsedUri.basename}`, (error?: Error) => {
-                if (!!error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
+        if (entry instanceof BlobTreeItem) {
+            const blobSerivce = entry.root.createBlobService();
+
+            await new Promise<void>((resolve, reject) => {
+                blobSerivce.deleteBlob(parsedUri.containerName, `${parsedUri.prefix}${parsedUri.basename}`, (error?: Error) => {
+                    if (!!error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
             });
-        });
+        } else if (entry instanceof BlobDirectoryTreeItem) {
+            const blobSerivce = entry.root.createBlobService();
+
+            let prefix = `${parsedUri.prefix}${parsedUri.basename}`;
+            prefix = prefix === '' ? prefix : `${prefix}/`;
+
+            let childBlob = await this.listAllChildBlob(blobSerivce, parsedUri.containerName, prefix);
+
+            for (const blob of childBlob.entries) {
+                await new Promise<void>((resolve, reject) => {
+                    blobSerivce.deleteBlob(parsedUri.containerName, blob.name, (error?: Error) => {
+                        if (!!error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+            }
+        }
     }
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void | Thenable<void> {
@@ -137,7 +159,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileIsADirectory(uri);
     }
 
-    // In the case that the file and the directory have the same name, we return BlobTreeItem, BlobDirectoryTreeItem
     private async lookup(uri: vscode.Uri): Promise<EntryTreeItem> {
         return <EntryTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
             context.errorHandling.rethrow = true;
