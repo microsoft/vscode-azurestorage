@@ -109,7 +109,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     // tslint:disable-next-line: no-reserved-keywords
-    async delete(uri: vscode.Uri, _options: { recursive: boolean; }): Promise<void> {
+    async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
+        if (!options.recursive) {
+            throw new RangeError('Do not support non recursive deletion of folders or files???'); // TODO better error
+        }
+
         let entry: EntryTreeItem = await this.lookup(uri);
         let parsedUri = this.parseUri(uri);
 
@@ -126,24 +130,38 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 });
             });
         } else if (entry instanceof BlobDirectoryTreeItem) {
-            const blobSerivce = entry.root.createBlobService();
+            await this.recursiveDeleteFolder(entry);
+        }
+    }
 
-            let prefix = `${parsedUri.prefix}${parsedUri.basename}`;
-            prefix = prefix === '' ? prefix : `${prefix}/`;
+    private async recursiveDeleteFolder(entry: BlobDirectoryTreeItem): Promise<void> {
+        const blobSerivce = entry.root.createBlobService();
+        let parsedUri = this.parseUri(vscode.Uri.file(entry.fullId));
 
-            let childBlob = await this.listAllChildBlob(blobSerivce, parsedUri.containerName, prefix);
+        let prefix = `${parsedUri.prefix}${parsedUri.basename}`;
+        prefix = prefix === '' || prefix[prefix.length - 1] === '/' ? prefix : `${prefix}/`;
 
-            for (const blob of childBlob.entries) {
-                await new Promise<void>((resolve, reject) => {
-                    blobSerivce.deleteBlob(parsedUri.containerName, blob.name, (error?: Error) => {
-                        if (!!error) {
-                            reject(error);
-                        } else {
-                            resolve();
-                        }
-                    });
+        let childBlob = await this.listAllChildBlob(blobSerivce, parsedUri.containerName, prefix);
+
+        for (const blob of childBlob.entries) {
+            await new Promise<void>((resolve, reject) => {
+                blobSerivce.deleteBlob(parsedUri.containerName, blob.name, (error?: Error) => {
+                    if (!!error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
                 });
-            }
+            });
+        }
+
+        let childDir = await this.listAllChildDirectory(blobSerivce, parsedUri.containerName, prefix);
+
+        for (const dir of childDir.entries) {
+            let temp = dir.name.substring(0, dir.name.length - 1);
+            let basename = temp.substring(temp.lastIndexOf('/') + 1);
+            let dirTreeItem = new BlobDirectoryTreeItem(entry, basename, '', entry.container);
+            await this.recursiveDeleteFolder(dirTreeItem);
         }
     }
 
@@ -169,7 +187,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             const blobContainerName = parsedUri.containerName;
 
             const foundRoot = this.rootMap.get(blobContainerName);
-            let entry: EntryTreeItem | null = !!foundRoot ? foundRoot : await this.findRoot(uri);
+            let entry: EntryTreeItem = !!foundRoot ? foundRoot : await this.findRoot(uri);
 
             if (!entry) {
                 throw new RangeError('Could not find Blob Container.');
@@ -205,7 +223,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async findRoot(uri: vscode.Uri): Promise<BlobContainerTreeItem | null> {
+    private async findRoot(uri: vscode.Uri): Promise<BlobContainerTreeItem> {
         return <BlobContainerTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
@@ -261,6 +279,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     private parseUri(uri: vscode.Uri): { containerName: string, prefix: string, basename: string } {
         const blobContainerString = 'Blob Containers';
         let uriPath = uri.path.substring(uri.path.indexOf(blobContainerString) + blobContainerString.length + 1);
+        uriPath = uriPath[uriPath.length - 1] === '/' ? uriPath.substring(0, uriPath.length - 1) : uriPath;
 
         let firstSlashIndex = uriPath.indexOf('/');
         let lastSlashIndex = uriPath.lastIndexOf('/');
