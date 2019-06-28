@@ -6,19 +6,12 @@
 import * as vscode from 'vscode';
 
 export class FileStatImpl implements vscode.FileStat {
-    // tslint:disable-next-line: no-reserved-keywords
-    type: vscode.FileType;
-    ctime: number;
-    mtime: number;
-    size: number;
-
     constructor(
         // tslint:disable-next-line: no-reserved-keywords
-        type: vscode.FileType,
-        ctime: number,
-        mtime: number,
-        size: number
-    ) {
+        public type: vscode.FileType,
+        public ctime: number,
+        public mtime: number,
+        public size: number) {
         this.type = type;
         this.ctime = ctime;
         this.mtime = mtime;

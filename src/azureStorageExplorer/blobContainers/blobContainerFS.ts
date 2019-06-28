@@ -11,6 +11,7 @@ import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
 import { ext } from "../../extensionVariables";
 import { FileShareFS } from '../fileShares/FileShareFS';
 import { FileStatImpl } from "../FileStatImpl";
+import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerGroupTreeItem } from './blobContainerGroupNode';
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
@@ -145,6 +146,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             let prefix = '';
             let blobSerivce = entry.root.createBlobService();
+            let root: IStorageRoot = entry.root;
+            const firstEntry = entry;
 
             for (let part of parts) {
                 if (part === '') {
@@ -159,14 +162,14 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 const listBlobDirectoryResult = await this.listAllChildDirectory(blobSerivce, blobContainerName, prefix);
                 const directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === `${prefix}/`);
                 if (!!directoryResultChild) {
-                    entry = new BlobDirectoryTreeItem(entry, part, prefix, entry.container);
+                    entry = new BlobDirectoryTreeItem(root, part, prefix, entry.container);
                 } else {
                     const listBlobResult = await this.listAllChildBlob(blobSerivce, blobContainerName, prefix);
                     const blobResultChild = listBlobResult.entries.find(element => element.name === prefix);
                     if (!blobResultChild) {
                         throw vscode.FileSystemError.FileNotFound(uri);
                     }
-                    entry = new BlobTreeItem(entry, blobResultChild, entry.container);
+                    entry = new BlobTreeItem(firstEntry, blobResultChild, entry.container);
                 }
             }
             return entry;
