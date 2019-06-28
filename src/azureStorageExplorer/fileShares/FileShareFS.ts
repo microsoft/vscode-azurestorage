@@ -254,4 +254,30 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
         });
     }
+
+    // Assumes 'File Shares' will be in the uri
+    // returns [up to and including File Share (subscription stuff), file share name, parentPath, base name]
+    static parseUri(uri: vscode.Uri, fileType: string): { rootPath: string, fileShareName: string, parentPath: string, baseName: string } {
+        let parsedUri = path.parse(uri.path);
+
+        if (parsedUri.base === fileType) {
+            return { rootPath: uri.path, fileShareName: '', parentPath: '', baseName: '' };
+        }
+
+        let fileShareString = fileType;
+        let endOfRootPathIndx = parsedUri.dir.indexOf(fileShareString) + fileShareString.length;
+        let postRootPath = endOfRootPathIndx === parsedUri.dir.length ? '' : parsedUri.dir.substring(endOfRootPathIndx + 1);
+        let endOfFileShareNameIndx = postRootPath.indexOf('/');
+
+        let rootPath = parsedUri.dir.substring(0, endOfRootPathIndx);
+        let fileShareName = endOfFileShareNameIndx === -1 ? (postRootPath === '' ? parsedUri.base : postRootPath) : postRootPath.substring(0, endOfFileShareNameIndx);
+        let parentPath = endOfFileShareNameIndx === -1 ? '' : postRootPath.substring(endOfFileShareNameIndx + 1);
+        let baseName = parsedUri.base;
+
+        if (baseName === fileShareName) {
+            return { rootPath, fileShareName, parentPath: '', baseName: '' };
+        }
+
+        return { rootPath, fileShareName, parentPath, baseName };
+    }
 }

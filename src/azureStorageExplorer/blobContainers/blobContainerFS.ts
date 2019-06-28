@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
 import { ext } from "../../extensionVariables";
+import { FileShareFS } from '../fileShares/FileShareFS';
 import { FileStatImpl } from "../FileStatImpl";
 import { BlobContainerGroupTreeItem } from './blobContainerGroupNode';
 import { BlobContainerTreeItem } from './blobContainerNode';
@@ -55,10 +56,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 directoryChildren.push([con.name, vscode.FileType.Directory]);
             }
         } else {
-            let parsedUri: string[] = this.parseUri(uri);
-            let prefix = parsedUri[1] + parsedUri[2];
-            prefix = prefix === '' ? prefix : `${prefix}/`;
-            const blobContainerName = parsedUri[0];
+            let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
+            let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : `${path.join(parsedUri.parentPath, parsedUri.baseName)}/`;
+            const blobContainerName = parsedUri.fileShareName;
 
             const blobSerivce = entry.root.createBlobService();
 
@@ -132,7 +132,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            let parsedUri: string[] = this.parseUri(uri);
+            // let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
+            let parsedUri = this.parseUri(uri);
             let parts = (parsedUri[1] + parsedUri[2]).split('/');
             const blobContainerName = parsedUri[0];
 
