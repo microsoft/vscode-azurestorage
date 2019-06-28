@@ -77,13 +77,9 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let blobs = await this.listBlobs(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = blobs;
         this._continuationToken = continuationToken;
-        const result = (<(AzExtTreeItem)[]>[])
-            .concat(entries.map((blob: azureStorage.BlobService.BlobResult) => {
-                return new BlobTreeItem(this, blob, this.container);
-            }));
+        const result: AzExtTreeItem[] = entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, blob, this.container));
 
-        // tslint:disable-next-line: strict-boolean-expressions
-        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
+        if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
             const ti = new GenericTreeItem(this, {
                 label: 'Open in File Explorer...',
                 commandId: 'azureStorage.openBlobContainerInFileExplorer',

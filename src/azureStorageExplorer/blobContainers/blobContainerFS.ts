@@ -9,10 +9,10 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
 import { ext } from "../../extensionVariables";
-import { FileStatImpl } from "../fileShares/FileShareFS";
+import { FileStatImpl } from "../FileStatImpl";
 import { BlobContainerGroupTreeItem } from './blobContainerGroupNode';
 import { BlobContainerTreeItem } from './blobContainerNode';
-import { BlobDirectoryTreeItem } from "./blobDirectoryNode";
+import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobTreeItem } from './blobNode';
 
 export type EntryTreeItem = BlobContainerGroupTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem | BlobTreeItem;
@@ -21,8 +21,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     private rootMap: Map<string, BlobContainerTreeItem> = new Map<string, BlobContainerTreeItem>();
 
-    // tslint:disable-next-line: typedef
-    private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+    private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
@@ -128,7 +127,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileIsADirectory(uri);
     }
 
-    // In the case that the file and the directory have the same name, we return BlobTreeItem, BlobDirectoryTreeItem
     private async lookup(uri: vscode.Uri): Promise<EntryTreeItem> {
         return <EntryTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
             context.errorHandling.rethrow = true;

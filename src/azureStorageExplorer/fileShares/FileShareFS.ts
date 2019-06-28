@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
 import { ext } from '../../extensionVariables';
+import { FileStatImpl } from "../FileStatImpl";
 import { DirectoryTreeItem } from './directoryNode';
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
@@ -15,27 +16,6 @@ import { FileShareTreeItem } from "./fileShareNode";
 import { createFile } from "./fileUtils";
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
-
-export class FileStatImpl implements vscode.FileStat {
-    // tslint:disable-next-line: no-reserved-keywords
-    type: vscode.FileType;
-    ctime: number;
-    mtime: number;
-    size: number;
-
-    constructor(
-        // tslint:disable-next-line: no-reserved-keywords
-        type: vscode.FileType,
-        ctime: number,
-        mtime: number,
-        size: number
-    ) {
-        this.type = type;
-        this.ctime = ctime;
-        this.mtime = mtime;
-        this.size = size;
-    }
-}
 
 export class FileShareFS implements vscode.FileSystemProvider {
 
