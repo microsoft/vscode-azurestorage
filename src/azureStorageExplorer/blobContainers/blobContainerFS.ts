@@ -87,7 +87,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         let treeItem: BlobTreeItem = await this.lookupAsBlob(uri);
 
         let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
-        // let parsedUri: string[] = this.parseUri(uri);
         const blobContainerName = parsedUri.fileShareName;
         const blobName = path.join(parsedUri.parentPath, parsedUri.baseName);
 
@@ -133,10 +132,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            // let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
-            let parsedUri = this.parseUri(uri);
-            let parts = (parsedUri[1] + parsedUri[2]).split('/');
-            const blobContainerName = parsedUri[0];
+            let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
+            let parts = (parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : path.join(parsedUri.parentPath, parsedUri.baseName)).split('/');
+            const blobContainerName = parsedUri.fileShareName;
 
             const foundRoot = this.rootMap.get(blobContainerName);
             let entry: EntryTreeItem | null = !!foundRoot ? foundRoot : await this.findRoot(uri);
