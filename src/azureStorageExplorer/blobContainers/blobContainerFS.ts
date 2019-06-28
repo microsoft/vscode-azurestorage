@@ -178,18 +178,15 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            const blobContainerString = 'Blob Containers';
-            let endOfBlobContainerIndx = uri.path.indexOf(blobContainerString) + blobContainerString.length + 1;
-            let endOfBlobContainerName = uri.path.indexOf('/', endOfBlobContainerIndx) === -1 ? uri.path.length : uri.path.indexOf('/', endOfBlobContainerIndx);
-
-            let rootPath: string = uri.path.substring(0, endOfBlobContainerName);
+            let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
+            let rootPath = path.join(parsedUri.rootPath, parsedUri.fileShareName);
             let rootFound: BlobContainerTreeItem | undefined = await ext.tree.findTreeItem(rootPath, context);
 
             if (!rootFound) {
                 throw vscode.FileSystemError.FileNotFound(uri);
             }
 
-            let fileBlobContainerName = uri.path.substring(endOfBlobContainerIndx, endOfBlobContainerName);
+            let fileBlobContainerName = parsedUri.fileShareName;
             this.rootMap.set(fileBlobContainerName, rootFound);
             return rootFound;
         });
