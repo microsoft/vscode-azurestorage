@@ -86,9 +86,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         let treeItem: BlobTreeItem = await this.lookupAsBlob(uri);
 
-        let parsedUri: string[] = this.parseUri(uri);
-        const blobContainerName = parsedUri[0];
-        const blobName = parsedUri[1] + parsedUri[2];
+        let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
+        // let parsedUri: string[] = this.parseUri(uri);
+        const blobContainerName = parsedUri.fileShareName;
+        const blobName = path.join(parsedUri.parentPath, parsedUri.baseName);
 
         let blobSerivce: azureStorage.BlobService = treeItem.root.createBlobService();
 
