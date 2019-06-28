@@ -184,9 +184,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            const fileShareString = 'File Shares';
-            const endOfRootPathIndx = uri.path.indexOf(fileShareString) + fileShareString.length;
-            let parts = uri.path.substring(endOfRootPathIndx).split('/').slice(1);
+            let parsedUri = FileShareFS.parseUri(uri, 'File Shares');
+            let parts = path.join(parsedUri.groupTreeItemName, parsedUri.parentPath, parsedUri.baseName).split('/');
 
             if (parts.length === 0) {
                 return await this.updateRootMap(uri);
