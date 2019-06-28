@@ -58,7 +58,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         } else {
             let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
             let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : `${path.join(parsedUri.parentPath, parsedUri.baseName)}/`;
-            const blobContainerName = parsedUri.fileShareName;
+            const blobContainerName = parsedUri.groupTreeItemName;
 
             const blobSerivce = entry.root.createBlobService();
 
@@ -87,7 +87,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         let treeItem: BlobTreeItem = await this.lookupAsBlob(uri);
 
         let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
-        const blobContainerName = parsedUri.fileShareName;
+        const blobContainerName = parsedUri.groupTreeItemName;
         const blobName = path.join(parsedUri.parentPath, parsedUri.baseName);
 
         let blobSerivce: azureStorage.BlobService = treeItem.root.createBlobService();
@@ -134,7 +134,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
             let parts = (parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : path.join(parsedUri.parentPath, parsedUri.baseName)).split('/');
-            const blobContainerName = parsedUri.fileShareName;
+            const blobContainerName = parsedUri.groupTreeItemName;
 
             const foundRoot = this.rootMap.get(blobContainerName);
             let entry: EntryTreeItem | undefined = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
@@ -182,7 +182,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         if (!root) {
             throw vscode.FileSystemError.FileNotFound(uri);
         } else if (root instanceof BlobContainerTreeItem) {
-            let fileBlobContainerName = parsedUri.fileShareName;
+            let fileBlobContainerName = parsedUri.groupTreeItemName;
             this.rootMap.set(fileBlobContainerName, root);
             return root;
         } else {
