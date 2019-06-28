@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
 import { ext } from "../../extensionVariables";
-import { FileStatImpl } from "../fileShares/FileShareFS";
+import { FileShareFS, FileStatImpl } from "../fileShares/FileShareFS";
 import { BlobContainerGroupTreeItem } from './blobContainerGroupNode';
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./blobDirectoryNode";
@@ -111,15 +111,15 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         if (!options.recursive) {
-            throw new RangeError('Do not support non recursive deletion of folders or files???'); // TODO better error message sent to user
+            throw new RangeError('Do not support non recursive deletion of folders or files.');
         }
 
         let entry: EntryTreeItem = await this.lookup(uri);
-        let parsedUri = this.parseUri(uri);
+        let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
 
         const blobService = entry.root.createBlobService();
         if (entry instanceof BlobTreeItem) {
-            await this.deleteSingleBlob(parsedUri.containerName, `${parsedUri.prefix}${parsedUri.basename}`, blobService);
+            await this.deleteSingleBlob(parsedUri.groupTreeItemName, `${parsedUri.parentPath}${parsedUri.baseName}`, blobService);
         } else if (entry instanceof BlobDirectoryTreeItem) {
             await this.recursiveDeleteFolder(entry, blobService);
         }
@@ -183,6 +183,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             const foundRoot = this.rootMap.get(blobContainerName);
             let entry: EntryTreeItem = !!foundRoot ? foundRoot : await this.findRoot(uri);
 
+            // tslint:disable-next-line: strict-boolean-expressions
             if (!entry) {
                 throw new RangeError('Could not find Blob Container.');
             }

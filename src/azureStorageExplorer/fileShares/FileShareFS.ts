@@ -273,4 +273,27 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
         });
     }
+
+    static parseUri(uri: vscode.Uri, fileType: string): { rootPath: string, groupTreeItemName: string, parentPath: string, baseName: string } {
+        let parsedUri = path.parse(uri.path);
+
+        if (parsedUri.base === fileType) {
+            return { rootPath: uri.path, groupTreeItemName: '', parentPath: '', baseName: '' };
+        }
+
+        let rootPathEndIndx = parsedUri.dir.indexOf(fileType) + fileType.length;
+        let postRootPath = rootPathEndIndx === parsedUri.dir.length ? '' : parsedUri.dir.substring(rootPathEndIndx + 1);
+        let groupTreeItemNameEndIndx = postRootPath.indexOf('/');
+
+        let rootPath = parsedUri.dir.substring(0, rootPathEndIndx);
+        let groupTreeItemName = groupTreeItemNameEndIndx === -1 ? (postRootPath === '' ? parsedUri.base : postRootPath) : postRootPath.substring(0, groupTreeItemNameEndIndx);
+        let parentPath = groupTreeItemNameEndIndx === -1 ? '' : postRootPath.substring(groupTreeItemNameEndIndx + 1);
+        let baseName = parsedUri.base;
+
+        if (baseName === groupTreeItemName) {
+            return { rootPath, groupTreeItemName, parentPath: '', baseName: '' };
+        }
+
+        return { rootPath, groupTreeItemName, parentPath, baseName };
+    }
 }
