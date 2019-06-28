@@ -221,20 +221,4 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             });
         });
     }
-
-    // returns [container name, prefix (post container name), basename]
-    private parseUri(uri: vscode.Uri): string[] {
-        const blobContainerString = 'Blob Containers';
-        let uriPath = uri.path.substring(uri.path.indexOf(blobContainerString) + blobContainerString.length + 1);
-
-        let firstSlashIndex = uriPath.indexOf('/');
-        let lastSlashIndex = uriPath.lastIndexOf('/');
-
-        let containerName = firstSlashIndex !== -1 ? uriPath.substring(0, firstSlashIndex) : uriPath;
-        let basename = firstSlashIndex !== -1 ? uriPath.substring(lastSlashIndex + 1) : '';
-        let prefix = firstSlashIndex !== lastSlashIndex ? uriPath.substring(firstSlashIndex + 1, lastSlashIndex + 1) : '';
-
-        return [containerName, prefix, basename];
-    }
-
 }
