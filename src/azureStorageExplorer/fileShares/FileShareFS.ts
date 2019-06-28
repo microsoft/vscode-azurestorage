@@ -196,7 +196,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             let entry: EntryTreeItem | undefined = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
 
             if (entry instanceof FileShareGroupTreeItem) {
-                throw new RangeError('Looking into nonexistent uhhhh'); // TODO
+                throw new RangeError('Looking into nonexistent File Share.');
             }
 
             if (!entry) {
