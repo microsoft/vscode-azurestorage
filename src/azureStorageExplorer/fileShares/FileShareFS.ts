@@ -188,12 +188,19 @@ export class FileShareFS implements vscode.FileSystemProvider {
             const endOfRootPathIndx = uri.path.indexOf(fileShareString) + fileShareString.length;
             let parts = uri.path.substring(endOfRootPathIndx).split('/').slice(1);
 
+            if (parts.length === 0) {
+                return await this.findRoot(uri);
+            }
+
             const foundRoot = this._rootMap.get(parts[0]);
-            const root = !!foundRoot ? foundRoot : await this.findRoot(uri);
-            let entry: EntryTreeItem | undefined = !root ? undefined : root;
+            let entry: EntryTreeItem | undefined = !!foundRoot ? foundRoot : await this.findRoot(uri);
+
+            if (entry instanceof FileShareGroupTreeItem) {
+                throw new RangeError('Looking into nonexistent uhhhh'); // TODO
+            }
 
             if (!entry) {
-                throw new RangeError('Could not find File Share.');
+                throw new Error('Could not find File Share.');
             }
 
             let parentPath = '';
@@ -227,27 +234,21 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async findRoot(uri: vscode.Uri): Promise<FileShareTreeItem | null> {
+    private async findRoot(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem | undefined> {
         return <FileShareTreeItem>await callWithTelemetryAndErrorHandling('fs.findRoot', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            const fileShareString = 'File Shares';
-            const endOfFileShareIndx = uri.path.indexOf(fileShareString) + fileShareString.length + 1;
-            const endOfFileShareName = uri.path.indexOf('/', endOfFileShareIndx);
-            let rootPath: string;
-
-            if (endOfFileShareName === -1) {
-                rootPath = uri.path;
-            } else {
-                rootPath = uri.path.substring(0, endOfFileShareName);
-            }
+            let parsedUri = FileShareFS.parseUri(uri, 'File Shares');
+            let rootPath = path.join(parsedUri.rootPath, parsedUri.fileShareName);
 
             const rootFound = await ext.tree.findTreeItem(rootPath, context);
 
-            if (rootFound instanceof FileShareTreeItem) {
-                const fileShareName = uri.path.substring(endOfFileShareIndx, endOfFileShareName);
-                this._rootMap.set(fileShareName, <FileShareTreeItem>rootFound);
+            if (rootFound instanceof FileShareGroupTreeItem) {
+                return <FileShareGroupTreeItem>rootFound;
+            } else if (rootFound instanceof FileShareTreeItem) {
+                // const fileShareName = uri.path.substring(endOfFileShareIndx, endOfFileShareName);
+                this._rootMap.set(parsedUri.fileShareName, <FileShareTreeItem>rootFound);
                 return <FileShareTreeItem>rootFound;
             } else {
                 throw vscode.FileSystemError.FileNotFound(uri);
@@ -255,7 +256,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    // Assumes 'File Shares' will be in the uri
     // returns [up to and including File Share (subscription stuff), file share name, parentPath, base name]
     static parseUri(uri: vscode.Uri, fileType: string): { rootPath: string, fileShareName: string, parentPath: string, baseName: string } {
         let parsedUri = path.parse(uri.path);
