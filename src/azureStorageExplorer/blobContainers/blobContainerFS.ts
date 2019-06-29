@@ -56,10 +56,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 directoryChildren.push([con.name, vscode.FileType.Directory]);
             }
         } else {
-            let parsedUri = this.parseUri(uri);
-            let prefix = `${parsedUri.prefix}${parsedUri.basename}`;
+            let parsedUri = FileShareFS.parseUri(uri, 'Blob Containers');
+            let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : path.join(parsedUri.parentPath, parsedUri.baseName);
             prefix = prefix === '' ? prefix : `${prefix}/`;
-            const blobContainerName = parsedUri.containerName;
+            const blobContainerName = parsedUri.groupTreeItemName;
 
             const blobSerivce = entry.root.createBlobService();
 
@@ -72,7 +72,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             for (let dirRes of listDirectoryResult.entries) {
-                let dirName = entry instanceof BlobContainerTreeItem ? dirRes.name : dirRes.name.substring(dirRes.name.indexOf('/') + 1);
+                let basename = path.parse(dirRes.name.substring(0, dirRes.name.length - 1)).base;
+                let dirName = entry instanceof BlobContainerTreeItem ? dirRes.name : basename;
                 directoryChildren.push([dirName, vscode.FileType.Directory]);
             }
         }
@@ -129,7 +130,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         let parsedUri = this.parseUri(vscode.Uri.file(entry.fullId));
 
         let prefix = `${parsedUri.prefix}${parsedUri.basename}`;
-        prefix = prefix === '' || prefix[prefix.length - 1] === '/' ? prefix : `${prefix}/`;
+        prefix = prefix === '' ? prefix : `${prefix}/`;
 
         let childBlob = await this.listAllChildBlob(blobService, parsedUri.containerName, prefix);
 
