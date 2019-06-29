@@ -127,22 +127,21 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     private async recursiveDeleteFolder(entry: BlobDirectoryTreeItem, blobService: azureStorage.BlobService): Promise<void> {
-        let parsedUri = this.parseUri(vscode.Uri.file(entry.fullId));
+        let parsedUri = FileShareFS.parseUri(vscode.Uri.file(entry.fullId), 'Blob Containers');
 
-        let prefix = `${parsedUri.prefix}${parsedUri.basename}`;
+        let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : path.join(parsedUri.parentPath, parsedUri.baseName);
         prefix = prefix === '' ? prefix : `${prefix}/`;
 
-        let childBlob = await this.listAllChildBlob(blobService, parsedUri.containerName, prefix);
+        let childBlob = await this.listAllChildBlob(blobService, parsedUri.groupTreeItemName, prefix);
 
         for (const blob of childBlob.entries) {
-            await this.deleteSingleBlob(parsedUri.containerName, blob.name, blobService);
+            await this.deleteSingleBlob(parsedUri.groupTreeItemName, blob.name, blobService);
         }
 
-        let childDir = await this.listAllChildDirectory(blobService, parsedUri.containerName, prefix);
+        let childDir = await this.listAllChildDirectory(blobService, parsedUri.groupTreeItemName, prefix);
 
         for (const dir of childDir.entries) {
-            let temp = dir.name.substring(0, dir.name.length - 1);
-            let basename = temp.substring(temp.lastIndexOf('/') + 1);
+            let basename = path.parse(dir.name.substring(0, dir.name.length - 1)).base;
             let dirTreeItem = new BlobDirectoryTreeItem(entry, basename, '', entry.container);
             await this.recursiveDeleteFolder(dirTreeItem, blobService);
         }
