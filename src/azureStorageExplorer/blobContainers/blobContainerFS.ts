@@ -1,4 +1,3 @@
-
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -19,7 +18,7 @@ export type EntryTreeItem = BlobContainerGroupTreeItem | BlobContainerTreeItem |
 
 export class BlobContainerFS implements vscode.FileSystemProvider {
 
-    private rootMap: Map<[string, string], BlobContainerTreeItem> = new Map<[string, string], BlobContainerTreeItem>();
+    private _rootMap: Map<string, BlobContainerTreeItem> = new Map<string, BlobContainerTreeItem>();
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
@@ -131,7 +130,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let parts = (parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : path.join(parsedUri.parentPath, parsedUri.baseName)).split('/');
             const blobContainerName = parsedUri.groupTreeItemName;
 
-            const foundRoot = this.rootMap.get([parsedUri.accountName, blobContainerName]);
+            const foundRoot = this._rootMap.get(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName));
             let entry: EntryTreeItem | undefined = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
 
             if (!entry) {
@@ -177,8 +176,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         if (!root) {
             throw vscode.FileSystemError.FileNotFound(uri);
         } else if (root instanceof BlobContainerTreeItem) {
-            let fileBlobContainerName = parsedUri.groupTreeItemName;
-            this.rootMap.set([parsedUri.accountName, fileBlobContainerName], root);
+            this._rootMap.set(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName), root);
             return root;
         } else {
             throw vscode.FileSystemError.FileNotFound(uri);

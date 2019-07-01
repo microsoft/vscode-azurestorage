@@ -18,7 +18,7 @@ export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTre
 
 export class FileShareFS implements vscode.FileSystemProvider {
 
-    private _rootMap: Map<[string, string], FileShareTreeItem> = new Map<[string, string], FileShareTreeItem>();
+    private _rootMap: Map<string, FileShareTreeItem> = new Map<string, FileShareTreeItem>();
 
     // tslint:disable-next-line: typedef
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -190,7 +190,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 return await this.updateRootMap(uri);
             }
 
-            const foundRoot = this._rootMap.get([parsedUri.accountName, parts[0]]);
+            const foundRoot = this._rootMap.get(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName));
             let entry: EntryTreeItem | undefined = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
 
             if (entry instanceof FileShareGroupTreeItem) {
@@ -239,7 +239,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         if (root instanceof FileShareGroupTreeItem) {
             return <FileShareGroupTreeItem>root;
         } else if (root instanceof FileShareTreeItem) {
-            this._rootMap.set([parsedUri.accountName, parsedUri.groupTreeItemName], <FileShareTreeItem>root);
+            this._rootMap.set(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName), <FileShareTreeItem>root);
             return <FileShareTreeItem>root;
         } else {
             throw vscode.FileSystemError.FileNotFound(uri);
