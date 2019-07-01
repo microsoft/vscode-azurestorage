@@ -9,12 +9,19 @@ import { AzExtTreeItem, callWithTelemetryAndErrorHandling } from 'vscode-azureex
 import { ext } from '../extensionVariables';
 import { FileShareTreeItem } from './fileShares/fileShareNode';
 
-export function parseUri(uri: vscode.Uri, fileType: string): { accountName: string, rootPath: string, groupTreeItemName: string, parentPath: string, baseName: string } {
+export function parseUri2(uri: vscode.Uri, fileType: string): { accountName: string, rootPath: string, groupTreeItemName: string, parentPath: string, baseName: string } {
     let parsedUri = path.parse(uri.path);
     let subscriptUri = parsedUri.dir.substring(0, parsedUri.dir.indexOf(fileType) - 1);
     let accountName = subscriptUri.substring(subscriptUri.lastIndexOf('/') + 1);
 
-    const matches: RegExpMatchArray | null = uri.path.match('^\/subscriptions\/.*\/resourceGroups\/.*\/providers\/.*\/storageAccounts\/(.*)\/File Shares\/(.*)\/(.*)\/(.*)$');
+    const matches: RegExpMatchArray | null = uri.path.match(`^\/subscriptions\/.*\/resourceGroups\/.*\/providers\/.*\/storageAccounts\/(.*)\/${fileType}\/?([^\/]*)\/?(.*?)\/?([^\/]*)$`);
+
+    const matchesTemp: RegExpMatchArray | null = uri.path.match('^(.*)\/File Shares\/(.*)$');
+    if (!matchesTemp) {
+        throw new RangeError('Not valid File Share uri');
+    }
+
+    let rootPath2: string = `${matchesTemp[1]}/File Shares`;
 
     if (parsedUri.base === fileType && parsedUri.dir === '') {
         return { accountName: accountName, rootPath: uri.path, groupTreeItemName: '', parentPath: '', baseName: '' };
@@ -36,23 +43,31 @@ export function parseUri(uri: vscode.Uri, fileType: string): { accountName: stri
     return { accountName: accountName, rootPath, groupTreeItemName, parentPath, baseName };
 }
 
-export function parseUri2(uri: vscode.Uri, fileType: string): { accountName: string, rootPath: string, groupTreeItemName: string, parentPath: string, baseName: string } {
+export function parseUri(uri: vscode.Uri, fileType: string): { accountName: string, rootPath: string, groupTreeItemName: string, parentPath: string, baseName: string } {
 
-    const matches: RegExpMatchArray | null = uri.path.match('^\/subscriptions\/.*\/resourceGroups\/.*\/providers\/.*\/storageAccounts\/(.*)\/File Shares\/?(.*)$');
+    const matches: RegExpMatchArray | null = uri.path.match(`^\/subscriptions\/.*\/resourceGroups\/.*\/providers\/.*\/storageAccounts\/(.*)\/${fileType}\/?([^\/]*)\/?(.*?)\/?([^\/]*)$`);
 
-    if (!matches || matches.length <= 1) {
+    if (!matches || matches[1] === '') {
         throw new RangeError('Uri not understood.');
     }
 
     let accountName = matches[1];
-    if (matches.length === 2) {
-        return { accountName: accountName, rootPath: uri.path, groupTreeItemName: '', parentPath: '', baseName: '' };
-    } else {
-        let temp: RegExpMatchArray | null = matches[2].match();
+    if (matches[2] === '') {
+        if (matches[3] === '' && matches[3] === '') {
+            return { accountName: accountName, rootPath: uri.path, groupTreeItemName: '', parentPath: '', baseName: '' };
+        } else {
+            throw new Error(`${fileType} name in uri not properly formatted.`);
+        }
     }
 
-    const temp = matches[2];
+    const matchesTemp: RegExpMatchArray | null = uri.path.match(`^(.*)\/${fileType}\/(.*)$`);
+    if (!matchesTemp) {
+        throw new RangeError(`Not valid ${fileType} uri`);
+    }
 
+    let rootPath: string = `${matchesTemp[1]}/${fileType}`;
+
+    return { accountName, rootPath, groupTreeItemName: matches[2], parentPath: matches[3], baseName: matches[4] };
 }
 
 export async function findRoot(uri: vscode.Uri, fileTypeString: string): Promise<AzExtTreeItem | undefined> {
