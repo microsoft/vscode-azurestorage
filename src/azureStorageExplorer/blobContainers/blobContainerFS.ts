@@ -112,7 +112,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         if (!options.recursive) {
-            throw new RangeError('Do not support non recursive deletion of folders or files.');
+            throw new Error('Do not support non recursive deletion of folders or files.');
         }
 
         let entry: EntryTreeItem = await this.lookup(uri);
@@ -124,13 +124,13 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         } else if (entry instanceof BlobDirectoryTreeItem) {
             await this.recursiveDeleteFolder(entry, blobService);
         }
+
     }
 
     private async recursiveDeleteFolder(entry: BlobDirectoryTreeItem, blobService: azureStorage.BlobService): Promise<void> {
         let parsedUri = FileShareFS.parseUri(vscode.Uri.file(entry.fullId), 'Blob Containers');
 
-        let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : path.join(parsedUri.parentPath, parsedUri.baseName);
-        prefix = prefix === '' ? prefix : `${prefix}/`;
+        let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : `${path.join(parsedUri.parentPath, parsedUri.baseName)}/`;
 
         let childBlob = await this.listAllChildBlob(blobService, parsedUri.groupTreeItemName, prefix);
 
