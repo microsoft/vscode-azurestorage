@@ -14,15 +14,6 @@ export function parseUri2(uri: vscode.Uri, fileType: string): { accountName: str
     let subscriptUri = parsedUri.dir.substring(0, parsedUri.dir.indexOf(fileType) - 1);
     let accountName = subscriptUri.substring(subscriptUri.lastIndexOf('/') + 1);
 
-    const matches: RegExpMatchArray | null = uri.path.match(`^\/subscriptions\/.*\/resourceGroups\/.*\/providers\/.*\/storageAccounts\/(.*)\/${fileType}\/?([^\/]*)\/?(.*?)\/?([^\/]*)$`);
-
-    const matchesTemp: RegExpMatchArray | null = uri.path.match('^(.*)\/File Shares\/(.*)$');
-    if (!matchesTemp) {
-        throw new RangeError('Not valid File Share uri');
-    }
-
-    let rootPath2: string = `${matchesTemp[1]}/File Shares`;
-
     if (parsedUri.base === fileType && parsedUri.dir === '') {
         return { accountName: accountName, rootPath: uri.path, groupTreeItemName: '', parentPath: '', baseName: '' };
     }
