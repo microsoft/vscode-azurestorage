@@ -6,9 +6,8 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
-import { ext } from '../../extensionVariables';
-import { FileStatImpl } from "../FileStatImpl";
+import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
+import { findRoot, parseUri } from "../fsp";
 import { DirectoryTreeItem } from './directoryNode';
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
@@ -19,7 +18,7 @@ export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTre
 
 export class FileShareFS implements vscode.FileSystemProvider {
 
-    private _rootMap: Map<string, FileShareTreeItem> = new Map<string, FileShareTreeItem>();
+    private _rootMap: Map<[string, string], FileShareTreeItem> = new Map<[string, string], FileShareTreeItem>();
 
     // tslint:disable-next-line: typedef
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -32,12 +31,12 @@ export class FileShareFS implements vscode.FileSystemProvider {
     async stat(uri: vscode.Uri): Promise<vscode.FileStat | Thenable<vscode.FileStat>> {
         let treeItem: EntryTreeItem = await this.lookup(uri);
 
-        if (treeItem instanceof FileTreeItem) {
+        if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
-            return new FileStatImpl(vscode.FileType.File, 0, 0, 0);
-        } else if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
+            return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
+        } else if (treeItem instanceof FileTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
-            return new FileStatImpl(vscode.FileType.Directory, 0, 0, 0);
+            return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
         }
 
         throw vscode.FileSystemError.FileNotFound(uri);
@@ -184,14 +183,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            let parsedUri = FileShareFS.parseUri(uri, 'File Shares');
+            let parsedUri = parseUri(uri, 'File Shares');
             let parts = path.join(parsedUri.groupTreeItemName, parsedUri.parentPath, parsedUri.baseName).split('/');
 
             if (parts.length === 0) {
                 return await this.updateRootMap(uri);
             }
 
-            const foundRoot = this._rootMap.get(parts[0]);
+            const foundRoot = this._rootMap.get([parsedUri.accountName, parts[0]]);
             let entry: EntryTreeItem | undefined = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
 
             if (entry instanceof FileShareGroupTreeItem) {
@@ -234,51 +233,16 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     private async updateRootMap(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem | undefined> {
-        let root = await FileShareFS.findRoot(uri, 'File Shares');
-        let parsedUri = FileShareFS.parseUri(uri, 'File Shares');
+        let root = await findRoot(uri, 'File Shares');
+        let parsedUri = parseUri(uri, 'File Shares');
 
         if (root instanceof FileShareGroupTreeItem) {
             return <FileShareGroupTreeItem>root;
         } else if (root instanceof FileShareTreeItem) {
-            this._rootMap.set(parsedUri.groupTreeItemName, <FileShareTreeItem>root);
+            this._rootMap.set([parsedUri.accountName, parsedUri.groupTreeItemName], <FileShareTreeItem>root);
             return <FileShareTreeItem>root;
         } else {
             throw vscode.FileSystemError.FileNotFound(uri);
         }
-    }
-
-    static async findRoot(uri: vscode.Uri, fileTypeString: string): Promise<AzExtTreeItem | undefined> {
-        return <FileShareTreeItem>await callWithTelemetryAndErrorHandling('(blob/fs).findRoot', async (context) => {
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
-
-            let parsedUri = FileShareFS.parseUri(uri, fileTypeString);
-            let rootPath = path.join(parsedUri.rootPath, parsedUri.groupTreeItemName);
-            return await ext.tree.findTreeItem(rootPath, context);
-        });
-    }
-
-    // returns [up to and including File Share (subscription stuff), group tree item name, parentPath, base name]
-    static parseUri(uri: vscode.Uri, fileType: string): { rootPath: string, groupTreeItemName: string, parentPath: string, baseName: string } {
-        let parsedUri = path.parse(uri.path);
-
-        if (parsedUri.base === fileType) {
-            return { rootPath: uri.path, groupTreeItemName: '', parentPath: '', baseName: '' };
-        }
-
-        let rootPathEndIndx = parsedUri.dir.indexOf(fileType) + fileType.length;
-        let postRootPath = rootPathEndIndx === parsedUri.dir.length ? '' : parsedUri.dir.substring(rootPathEndIndx + 1);
-        let groupTreeItemNameEndIndx = postRootPath.indexOf('/');
-
-        let rootPath = parsedUri.dir.substring(0, rootPathEndIndx);
-        let groupTreeItemName = groupTreeItemNameEndIndx === -1 ? (postRootPath === '' ? parsedUri.base : postRootPath) : postRootPath.substring(0, groupTreeItemNameEndIndx);
-        let parentPath = groupTreeItemNameEndIndx === -1 ? '' : postRootPath.substring(groupTreeItemNameEndIndx + 1);
-        let baseName = parsedUri.base;
-
-        if (baseName === groupTreeItemName) {
-            return { rootPath, groupTreeItemName, parentPath: '', baseName: '' };
-        }
-
-        return { rootPath, groupTreeItemName, parentPath, baseName };
     }
 }
