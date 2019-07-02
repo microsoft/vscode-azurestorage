@@ -18,8 +18,7 @@ export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTre
 
 export class FileShareFS implements vscode.FileSystemProvider {
 
-    private fileShareString = 'File Shares';
-
+    private fileShareString: string = 'File Shares';
     private _rootMap: Map<string, FileShareTreeItem> = new Map<string, FileShareTreeItem>();
 
     // tslint:disable-next-line: typedef
@@ -45,7 +44,11 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri);
+        let entry: DirectoryTreeItem | FileShareTreeItem | FileShareGroupTreeItem = await this.lookupAsDirectory(uri);
+
+        if (entry instanceof FileShareGroupTreeItem) {
+            throw new Error('Cannot view multiple file shares simultaneously.');
+        }
 
         // Intentionally passing undefined for token - only supports listing first batch of files for now
         // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
@@ -92,13 +95,17 @@ export class FileShareFS implements vscode.FileSystemProvider {
         }
 
         let dirUri = vscode.Uri.file(path.dirname(uri.path));
-        let dirTreeItem: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(dirUri);
+        let dirTreeItem: DirectoryTreeItem | FileShareTreeItem | FileShareGroupTreeItem = await this.lookupAsDirectory(dirUri);
+
+        if (dirTreeItem instanceof FileShareGroupTreeItem) {
+            throw new Error('Cannot write or create a File Share.');
+        }
 
         const parentPath: string = dirTreeItem instanceof DirectoryTreeItem ? path.join(dirTreeItem.parentPath, dirTreeItem.directory.name) : '';
-
+        let dir = <DirectoryTreeItem | FileShareTreeItem>dirTreeItem;
         let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
-            const fileService = dirTreeItem.root.createFileService();
-            fileService.doesFileExist(dirTreeItem.share.name, parentPath, path.basename(uri.path), (error?: Error, result?: azureStorage.FileService.FileResult) => {
+            const fileService = dir.root.createFileService();
+            fileService.doesFileExist(dir.share.name, parentPath, path.basename(uri.path), (error?: Error, result?: azureStorage.FileService.FileResult) => {
                 if (!!error) {
                     reject(error);
                 } else {
@@ -170,9 +177,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileNotFound(uri);
     }
 
-    private async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem> {
+    private async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem | FileShareGroupTreeItem> {
         let entry = await this.lookup(uri);
-        if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
+        if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem || entry instanceof FileShareGroupTreeItem) {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
@@ -185,35 +192,32 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let parsedUri = parseUri(uri, this.fileShareString);
             let parts = path.join(parsedUri.groupTreeItemName, parsedUri.parentPath, parsedUri.baseName).split('/');
-
-            if (parts.length === 0) {
-                return await this.updateRootMap(uri);
-            }
-
             const foundRoot = this._rootMap.get(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName));
             let entry: EntryTreeItem = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
+
+            if (parts.length === 0) {
+                return entry;
+            }
 
             if (entry instanceof FileShareGroupTreeItem) {
                 throw new RangeError('Looking into nonexistent File Share.');
             }
 
             let parentPath = '';
-
             for (let part of parts.slice(1)) {
                 if (entry instanceof FileShareTreeItem || entry instanceof DirectoryTreeItem) {
                     // Intentionally passing undefined for token - only supports listing first batch of files for now
                     // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
                     let listFilesAndDirectoriesResult: azureStorage.FileService.ListFilesAndDirectoriesResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
-
                     let entries = listFilesAndDirectoriesResult.entries;
 
                     let directoryResultChild = entries.directories.find(element => element.name === part);
-                    if (directoryResultChild) {
+                    if (!!directoryResultChild) {
                         entry = new DirectoryTreeItem(entry, parentPath, directoryResultChild, <azureStorage.FileService.ShareResult>entry.share);
                         parentPath = path.join(parentPath, part);
                     } else {
                         let fileResultChild = entries.files.find(element => element.name === part);
-                        if (fileResultChild) {
+                        if (!!fileResultChild) {
                             entry = new FileTreeItem(entry, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>entry.share);
                         } else {
                             throw vscode.FileSystemError.FileNotFound(uri);
@@ -228,13 +232,11 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async updateRootMap(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem> {
+    private async updateRootMap(uri: vscode.Uri): Promise<FileShareTreeItem> {
         let root = await findRoot(uri, this.fileShareString);
         let parsedUri = parseUri(uri, this.fileShareString);
 
-        if (root instanceof FileShareGroupTreeItem) {
-            return <FileShareGroupTreeItem>root;
-        } else if (root instanceof FileShareTreeItem) {
+        if (root instanceof FileShareTreeItem) {
             this._rootMap.set(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName), <FileShareTreeItem>root);
             return <FileShareTreeItem>root;
         } else {
