@@ -13,7 +13,7 @@ import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobTreeItem } from './blobNode';
 
-export type EntryTreeItem = BlobContainerGroupTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem | BlobTreeItem;
+export type EntryTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
 export class BlobContainerFS implements vscode.FileSystemProvider {
 
@@ -42,34 +42,27 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        let entry: EntryTreeItem = await this.lookup(uri);
+        let entry: BlobDirectoryTreeItem | BlobContainerTreeItem = await this.lookupAsDirectory(uri);
         let directoryChildren: [string, vscode.FileType][] = [];
 
-        if (entry instanceof BlobContainerGroupTreeItem) {
-            throw new Error('Cannot view multiple blob containers at once.');
-        } else if (entry instanceof BlobTreeItem) {
-            throw vscode.FileSystemError.FileNotADirectory(uri);
-        } else {
-            let parsedUri = parseUri(uri, this.blobContainerString);
-            let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : `${path.join(parsedUri.parentPath, parsedUri.baseName)}/`;
-            const blobContainerName = parsedUri.groupTreeItemName;
+        let parsedUri = parseUri(uri, this.blobContainerString);
+        let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : `${path.join(parsedUri.parentPath, parsedUri.baseName)}/`;
+        const blobContainerName = parsedUri.groupTreeItemName;
 
-            const blobSerivce = entry.root.createBlobService();
+        const blobSerivce = entry.root.createBlobService();
 
-            const listBlobResult = await this.listAllChildBlob(blobSerivce, blobContainerName, prefix);
-            const listDirectoryResult = await this.listAllChildDirectory(blobSerivce, blobContainerName, prefix);
+        const listBlobResult = await this.listAllChildBlob(blobSerivce, blobContainerName, prefix);
+        const listDirectoryResult = await this.listAllChildDirectory(blobSerivce, blobContainerName, prefix);
 
-            for (let blobRes of listBlobResult.entries) {
-                let blobName = path.basename(blobRes.name);
-                directoryChildren.push([blobName, vscode.FileType.File]);
-            }
-
-            for (let dirRes of listDirectoryResult.entries) {
-                let dirName = path.basename(dirRes.name);
-                directoryChildren.push([dirName, vscode.FileType.Directory]);
-            }
+        for (let blobRes of listBlobResult.entries) {
+            let blobName = path.basename(blobRes.name);
+            directoryChildren.push([blobName, vscode.FileType.File]);
         }
 
+        for (let dirRes of listDirectoryResult.entries) {
+            let dirName = path.basename(dirRes.name);
+            directoryChildren.push([dirName, vscode.FileType.Directory]);
+        }
         return directoryChildren;
     }
 
@@ -121,16 +114,16 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileIsADirectory(uri);
     }
 
-    private async lookupAsDirectory(uri: vscode.Uri): Promise<BlobDirectoryTreeItem> {
+    private async lookupAsDirectory(uri: vscode.Uri): Promise<BlobDirectoryTreeItem | BlobContainerTreeItem> {
         let entry = await this.lookup(uri);
-        if (entry instanceof BlobDirectoryTreeItem) {
+        if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
-    private async lookup(uri: vscode.Uri): Promise<BlobTreeItem | BlobDirectoryTreeItem> {
-        return <BlobTreeItem | BlobDirectoryTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
+    private async lookup(uri: vscode.Uri): Promise<EntryTreeItem> {
+        return <EntryTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
