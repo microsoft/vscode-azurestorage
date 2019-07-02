@@ -121,16 +121,22 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileIsADirectory(uri);
     }
 
-    private async lookup(uri: vscode.Uri): Promise<EntryTreeItem> {
-        return <EntryTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
+    private async lookupAsDirectory(uri: vscode.Uri): Promise<BlobDirectoryTreeItem> {
+        let entry = await this.lookup(uri);
+        if (entry instanceof BlobDirectoryTreeItem) {
+            return entry;
+        }
+        throw vscode.FileSystemError.FileNotADirectory(uri);
+    }
+
+    private async lookup(uri: vscode.Uri): Promise<BlobTreeItem | BlobDirectoryTreeItem> {
+        return <BlobTreeItem | BlobDirectoryTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
             let parsedUri = parseUri(uri, this.blobContainerString);
-            const blobContainerName = parsedUri.groupTreeItemName;
             const foundRoot = this._rootMap.get(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName));
             let entry: BlobContainerTreeItem = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
-
             if (`${parsedUri.parentPath}${parsedUri.baseName}` === '') {
                 return entry;
             }
@@ -138,12 +144,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let prefix = parsedUri.parentPath === '' ? '' : `${parsedUri.parentPath}/`;
             let blobSerivce = entry.root.createBlobService();
 
-            const listBlobDirectoryResult = await this.listAllChildDirectory(blobSerivce, blobContainerName, prefix);
+            const listBlobDirectoryResult = await this.listAllChildDirectory(blobSerivce, parsedUri.groupTreeItemName, prefix);
             const directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === `${prefix}${parsedUri.baseName}/`);
             if (!!directoryResultChild) {
                 return new BlobDirectoryTreeItem(entry.root, parsedUri.baseName, prefix, entry.container);
             } else {
-                const listBlobResult = await this.listAllChildBlob(blobSerivce, blobContainerName, prefix);
+                const listBlobResult = await this.listAllChildBlob(blobSerivce, parsedUri.groupTreeItemName, prefix);
                 const blobResultChild = listBlobResult.entries.find(element => element.name === `${prefix}${parsedUri.baseName}`);
                 if (!blobResultChild) {
                     throw vscode.FileSystemError.FileNotFound(uri);

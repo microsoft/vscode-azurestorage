@@ -173,10 +173,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
     private async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem> {
         let entry = await this.lookup(uri);
         if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
-
             return entry;
         }
-
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
