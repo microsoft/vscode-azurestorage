@@ -43,17 +43,16 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         let entry: BlobDirectoryTreeItem | BlobContainerTreeItem = await this.lookupAsDirectory(uri);
-        let directoryChildren: [string, vscode.FileType][] = [];
 
         let parsedUri = parseUri(uri, this.blobContainerString);
         let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : `${path.join(parsedUri.parentPath, parsedUri.baseName)}/`;
         const blobContainerName = parsedUri.groupTreeItemName;
 
         const blobSerivce = entry.root.createBlobService();
-
         const listBlobResult = await this.listAllChildBlob(blobSerivce, blobContainerName, prefix);
         const listDirectoryResult = await this.listAllChildDirectory(blobSerivce, blobContainerName, prefix);
 
+        let directoryChildren: [string, vscode.FileType][] = [];
         for (let blobRes of listBlobResult.entries) {
             let blobName = path.basename(blobRes.name);
             directoryChildren.push([blobName, vscode.FileType.File]);
@@ -74,13 +73,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         let treeItem: BlobTreeItem = await this.lookupAsBlob(uri);
 
         let parsedUri = parseUri(uri, this.blobContainerString);
-        const blobContainerName = parsedUri.groupTreeItemName;
         const blobName = path.join(parsedUri.parentPath, parsedUri.baseName);
 
-        let blobSerivce: azureStorage.BlobService = treeItem.root.createBlobService();
-
         const result = await new Promise<string | undefined>((resolve, reject) => {
-            blobSerivce.getBlobToText(blobContainerName, blobName, (error?: Error, text?: string) => {
+            let blobSerivce: azureStorage.BlobService = treeItem.root.createBlobService();
+            blobSerivce.getBlobToText(parsedUri.groupTreeItemName, blobName, (error?: Error, text?: string) => {
                 if (!!error) {
                     reject(error);
                 } else {

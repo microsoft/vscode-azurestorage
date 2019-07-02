@@ -10,7 +10,6 @@ import { ext } from '../extensionVariables';
 import { FileShareTreeItem } from './fileShares/fileShareNode';
 
 export function parseUri(uri: vscode.Uri, fileType: string): { accountName: string, rootPath: string, groupTreeItemName: string, parentPath: string, baseName: string } {
-
     const matches: RegExpMatchArray | null = uri.path.match(`^\/subscriptions\/.*\/resourceGroups\/.*\/providers\/.*\/storageAccounts\/(.*)\/${fileType}\/?([^\/]*)\/?(.*?)\/?([^\/]*)$`);
     if (!matches || matches[1] === '') {
         throw new RangeError(`Not valid ${fileType} uri`);
