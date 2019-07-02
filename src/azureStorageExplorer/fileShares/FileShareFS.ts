@@ -18,6 +18,8 @@ export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTre
 
 export class FileShareFS implements vscode.FileSystemProvider {
 
+    private fileShareString = 'File Shares';
+
     private _rootMap: Map<string, FileShareTreeItem> = new Map<string, FileShareTreeItem>();
 
     // tslint:disable-next-line: typedef
@@ -183,7 +185,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            let parsedUri = parseUri(uri, 'File Shares');
+            let parsedUri = parseUri(uri, this.fileShareString);
             let parts = path.join(parsedUri.groupTreeItemName, parsedUri.parentPath, parsedUri.baseName).split('/');
 
             if (parts.length === 0) {
@@ -233,8 +235,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     private async updateRootMap(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem | undefined> {
-        let root = await findRoot(uri, 'File Shares');
-        let parsedUri = parseUri(uri, 'File Shares');
+        let root = await findRoot(uri, this.fileShareString);
+        let parsedUri = parseUri(uri, this.fileShareString);
 
         if (root instanceof FileShareGroupTreeItem) {
             return <FileShareGroupTreeItem>root;

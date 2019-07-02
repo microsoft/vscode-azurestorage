@@ -12,7 +12,7 @@ import { AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureAccountTreeItem } from './azureStorageExplorer/AzureAccountTreeItem';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
-import { BlobContainerFS } from './azureStorageExplorer/blobContainers/blobContainerFS';
+import { BlobContainerFS } from './azureStorageExplorer/blobContainers/BlobContainerFS';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
 import { BlobContainerTreeItem } from './azureStorageExplorer/blobContainers/blobContainerNode';
 import { registerDirectoryActionHandlers } from './azureStorageExplorer/fileShares/directoryActionHandlers';
