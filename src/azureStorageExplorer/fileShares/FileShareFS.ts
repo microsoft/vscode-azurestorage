@@ -168,7 +168,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let fileFound: EntryTreeItem = await this.lookup(uri);
-
             if (fileFound instanceof FileTreeItem || fileFound instanceof DirectoryTreeItem) {
                 await fileFound.deleteTreeItem(context);
             } else {

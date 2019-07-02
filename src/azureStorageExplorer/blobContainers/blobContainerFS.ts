@@ -120,26 +120,22 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
         const blobService = entry.root.createBlobService();
         if (entry instanceof BlobTreeItem) {
-            await this.deleteSingleBlob(parsedUri.groupTreeItemName, `${parsedUri.parentPath}${parsedUri.baseName}`, blobService);
+            await this.deleteSingleBlob(parsedUri.groupTreeItemName, path.join(parsedUri.parentPath, parsedUri.baseName), blobService);
         } else if (entry instanceof BlobDirectoryTreeItem) {
             await this.recursiveDeleteFolder(entry, blobService);
         }
-
     }
 
     private async recursiveDeleteFolder(entry: BlobDirectoryTreeItem, blobService: azureStorage.BlobService): Promise<void> {
         let parsedUri = FileShareFS.parseUri(vscode.Uri.file(entry.fullId), 'Blob Containers');
-
-        let prefix = parsedUri.parentPath === '' && parsedUri.baseName === '' ? '' : `${path.join(parsedUri.parentPath, parsedUri.baseName)}/`;
+        let prefix = `${parsedUri.parentPath}${parsedUri.baseName}` === '' ? '' : `${path.join(parsedUri.parentPath, parsedUri.baseName)}/`;
 
         let childBlob = await this.listAllChildBlob(blobService, parsedUri.groupTreeItemName, prefix);
-
         for (const blob of childBlob.entries) {
             await this.deleteSingleBlob(parsedUri.groupTreeItemName, blob.name, blobService);
         }
 
         let childDir = await this.listAllChildDirectory(blobService, parsedUri.groupTreeItemName, prefix);
-
         for (const dir of childDir.entries) {
             let basename = path.parse(dir.name.substring(0, dir.name.length - 1)).base;
             let dirTreeItem = new BlobDirectoryTreeItem(entry, basename, '', entry.container);
