@@ -19,7 +19,7 @@ export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTre
 export class FileShareFS implements vscode.FileSystemProvider {
 
     private fileShareString: string = 'File Shares';
-    private _rootMap: Map<string, FileShareTreeItem> = new Map<string, FileShareTreeItem>();
+    private _rootMap: Map<string, FileShareTreeItem | FileShareGroupTreeItem> = new Map<string, FileShareTreeItem | FileShareGroupTreeItem>();
 
     // tslint:disable-next-line: typedef
     private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -32,7 +32,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     async stat(uri: vscode.Uri): Promise<vscode.FileStat | Thenable<vscode.FileStat>> {
         let treeItem: EntryTreeItem = await this.lookup(uri);
 
-        if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
+        if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof FileShareGroupTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
             return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
         } else if (treeItem instanceof FileTreeItem) {
@@ -44,26 +44,30 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        let entry: DirectoryTreeItem | FileShareTreeItem | FileShareGroupTreeItem = await this.lookupAsDirectory(uri);
+        return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('fs.lookup', async (context) => {
+            context.errorHandling.rethrow = true;
 
-        if (entry instanceof FileShareGroupTreeItem) {
-            throw new Error('Cannot view multiple file shares simultaneously.');
-        }
+            let entry: DirectoryTreeItem | FileShareTreeItem | FileShareGroupTreeItem = await this.lookupAsDirectory(uri);
 
-        // Intentionally passing undefined for token - only supports listing first batch of files for now
-        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-        let listFilesandDirectoryResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
-        let entries = listFilesandDirectoryResult.entries;
+            if (entry instanceof FileShareGroupTreeItem) {
+                throw new Error('Cannot view multiple file shares simultaneously.');
+            }
 
-        let result: [string, vscode.FileType][] = [];
-        for (const directory of entries.directories) {
-            result.push([directory.name, vscode.FileType.Directory]);
-        }
-        for (const file of entries.files) {
-            result.push([file.name, vscode.FileType.File]);
-        }
+            // Intentionally passing undefined for token - only supports listing first batch of files for now
+            // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
+            let listFilesandDirectoryResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
+            let entries = listFilesandDirectoryResult.entries;
 
-        return result;
+            let result: [string, vscode.FileType][] = [];
+            for (const directory of entries.directories) {
+                result.push([directory.name, vscode.FileType.Directory]);
+            }
+            for (const file of entries.files) {
+                result.push([file.name, vscode.FileType.File]);
+            }
+
+            return result;
+        });
     }
 
     createDirectory(_uri: vscode.Uri): void | Thenable<void> {
@@ -195,7 +199,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             const foundRoot = this._rootMap.get(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName));
             let entry: EntryTreeItem = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
 
-            if (parts.length === 0) {
+            if (`${parsedUri.parentPath}${parsedUri.baseName}` === '') {
                 return entry;
             }
 
@@ -232,11 +236,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async updateRootMap(uri: vscode.Uri): Promise<FileShareTreeItem> {
+    private async updateRootMap(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem> {
         let root = await findRoot(uri, this.fileShareString);
         let parsedUri = parseUri(uri, this.fileShareString);
 
-        if (root instanceof FileShareTreeItem) {
+        if (root instanceof FileShareGroupTreeItem) {
+            this._rootMap.set(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName), <FileShareGroupTreeItem>root);
+            return <FileShareGroupTreeItem>root;
+        } else if (root instanceof FileShareTreeItem) {
             this._rootMap.set(path.join(parsedUri.rootPath, parsedUri.groupTreeItemName), <FileShareTreeItem>root);
             return <FileShareTreeItem>root;
         } else {
