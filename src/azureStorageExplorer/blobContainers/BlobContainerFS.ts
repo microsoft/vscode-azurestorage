@@ -148,7 +148,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     private async getRoot(uri: vscode.Uri): Promise<BlobContainerTreeItem> {
         return <BlobContainerTreeItem>await callWithTelemetryAndErrorHandling('blob.getRoot', async (context) => {
             let root = await findRoot(context, uri, this._blobContainerString);
-            if (root instanceof BlobContainerTreeItem){
+            if (root instanceof BlobContainerTreeItem) {
                 return root;
             } else {
                 throw new RangeError('The root found must be a BlobContainerTreeItem.');
