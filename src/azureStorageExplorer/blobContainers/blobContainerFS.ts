@@ -123,26 +123,25 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             let parsedUri = parseUri(uri, this._blobContainerString);
 
-            const foundRoot = this._rootMap.get(path.join(parsedUri.rootPath, parsedUri.rootName));
+            const foundRoot = this._rootMap.get(parsedUri.rootPath);
             let entry: BlobContainerTreeItem = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
             if (parsedUri.filePath === '') {
                 return entry;
             }
 
-            let prefix = parsedUri.parentDirPath;
             let blobSerivce = entry.root.createBlobService();
 
-            const listBlobDirectoryResult = await this.listAllChildDirectory(blobSerivce, parsedUri.rootName, prefix);
+            const listBlobDirectoryResult = await this.listAllChildDirectory(blobSerivce, parsedUri.rootName, parsedUri.parentDirPath);
             const directoryResultChild = listBlobDirectoryResult.entries.find(element => element.name === parsedUri.dirPath);
             if (!!directoryResultChild) {
-                return new BlobDirectoryTreeItem(entry.root, parsedUri.baseName, prefix, entry.container);
+                return new BlobDirectoryTreeItem(entry.root, parsedUri.baseName, parsedUri.parentDirPath, entry.container);
             } else {
-                const listBlobResult = await this.listAllChildBlob(blobSerivce, parsedUri.rootName, prefix);
+                const listBlobResult = await this.listAllChildBlob(blobSerivce, parsedUri.rootName, parsedUri.parentDirPath);
                 const blobResultChild = listBlobResult.entries.find(element => element.name === parsedUri.filePath);
-                if (!blobResultChild) {
-                    throw vscode.FileSystemError.FileNotFound(uri);
+                if (!!blobResultChild) {
+                    return new BlobTreeItem(entry, blobResultChild, entry.container);
                 }
-                return new BlobTreeItem(entry, blobResultChild, entry.container);
+                throw vscode.FileSystemError.FileNotFound(uri);
             }
         });
     }
@@ -154,7 +153,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         if (!root) {
             throw vscode.FileSystemError.FileNotFound(uri);
         } else if (root instanceof BlobContainerTreeItem) {
-            this._rootMap.set(path.join(parsedUri.rootPath, parsedUri.rootName), root);
+            this._rootMap.set(parsedUri.rootPath, root);
             return root;
         } else {
             throw vscode.FileSystemError.FileNotFound(uri);
