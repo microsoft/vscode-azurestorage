@@ -30,12 +30,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
     async stat(uri: vscode.Uri): Promise<vscode.FileStat | Thenable<vscode.FileStat>> {
         let treeItem: EntryTreeItem = await this.lookup(uri);
 
-        if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof FileShareGroupTreeItem) {
+        if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
             return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
         } else if (treeItem instanceof FileTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
             return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
+        } else if (treeItem instanceof FileShareGroupTreeItem) {
+            throw new Error('Cannot view multiple File Shares at once.');
         }
 
         throw vscode.FileSystemError.FileNotFound(uri);
@@ -125,19 +127,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
                     });
                 });
             }
-        });
-    }
-
-    private async updateFileContent(fileTreeItem: FileTreeItem, content: Uint8Array): Promise<void> {
-        const fileService = fileTreeItem.root.createFileService();
-        await new Promise<void>((resolve, reject) => {
-            fileService.createFileFromText(fileTreeItem.share.name, fileTreeItem.directoryPath, fileTreeItem.file.name, content.toString(), (error?: Error) => {
-                if (!!error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
         });
     }
 
