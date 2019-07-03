@@ -47,11 +47,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
             context.errorHandling.rethrow = true;
 
-            let entry: DirectoryTreeItem | FileShareTreeItem | FileShareGroupTreeItem = await this.lookupAsDirectory(uri);
-
-            if (entry instanceof FileShareGroupTreeItem) {
-                throw new Error('Cannot view multiple file shares simultaneously.');
-            }
+            let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri);
 
             // Intentionally passing undefined for token - only supports listing first batch of files for now
             // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
@@ -160,9 +156,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileNotFound(uri);
     }
 
-    private async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem | FileShareGroupTreeItem> {
+    private async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem> {
         let entry = await this.lookup(uri);
-        if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem || entry instanceof FileShareGroupTreeItem) {
+        if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
