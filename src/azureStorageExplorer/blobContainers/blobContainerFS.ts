@@ -7,7 +7,7 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
-import { findRoot } from "../fsp";
+import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
@@ -18,7 +18,6 @@ export type EntryTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainer
 export class BlobContainerFS implements vscode.FileSystemProvider {
 
     private _blobContainerString: string = 'Blob Containers';
-    private _rootMap: Map<string, BlobContainerTreeItem> = new Map<string, BlobContainerTreeItem>();
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
@@ -123,8 +122,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             let parsedUri = parseUri(uri, this._blobContainerString);
 
-            const foundRoot = this._rootMap.get(parsedUri.rootPath);
-            let entry: BlobContainerTreeItem = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
+            let entry = await this.getRoot(uri);
+            // let entry: BlobContainerTreeItem = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
             if (parsedUri.filePath === '') {
                 return entry;
             }
@@ -146,18 +145,15 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async updateRootMap(uri: vscode.Uri): Promise<BlobContainerTreeItem> {
-        let root = await findRoot(uri, this._blobContainerString);
-        let parsedUri = parseUri(uri, this._blobContainerString);
-
-        if (!root) {
-            throw vscode.FileSystemError.FileNotFound(uri);
-        } else if (root instanceof BlobContainerTreeItem) {
-            this._rootMap.set(parsedUri.rootPath, root);
-            return root;
-        } else {
-            throw vscode.FileSystemError.FileNotFound(uri);
-        }
+    private async getRoot(uri: vscode.Uri): Promise<BlobContainerTreeItem> {
+        return <BlobContainerTreeItem>await callWithTelemetryAndErrorHandling('blob.getRoot', async (context) => {
+            let root = await findRoot(context, uri, this._blobContainerString);
+            if (root instanceof BlobContainerTreeItem){
+                return root;
+            } else {
+                throw new RangeError('The root found must be a BlobContainerTreeItem.');
+            }
+        });
     }
 
     private async listAllChildDirectory(blobSerivce: azureStorage.BlobService, blobContainerName: string, prefix: string): Promise<azureStorage.BlobService.ListBlobDirectoriesResult> {

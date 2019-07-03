@@ -7,7 +7,7 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
-import { findRoot } from "../fsp";
+import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
 import { FileTreeItem } from "./fileNode";
@@ -20,10 +20,8 @@ export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTre
 export class FileShareFS implements vscode.FileSystemProvider {
 
     private _fileShareString: string = 'File Shares';
-    private _rootMap: Map<string, FileShareTreeItem | FileShareGroupTreeItem> = new Map<string, FileShareTreeItem | FileShareGroupTreeItem>();
 
-    // tslint:disable-next-line: typedef
-    private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+    private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
@@ -191,8 +189,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.suppressDisplay = true;
 
             let parsedUri = parseUri(uri, this._fileShareString);
-            const foundRoot = this._rootMap.get(parsedUri.rootPath);
-            let entry: EntryTreeItem = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
+            let entry: EntryTreeItem = await this.getRoot(uri);
             if (parsedUri.filePath === '') {
                 return entry;
             }
@@ -230,18 +227,15 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async updateRootMap(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem> {
-        let root = await findRoot(uri, this._fileShareString);
-        let parsedUri = parseUri(uri, this._fileShareString);
+    private async getRoot(uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem> {
+        return <FileShareTreeItem | FileShareGroupTreeItem>await callWithTelemetryAndErrorHandling('fs.getRoot', async (context) => {
+            let root = await findRoot(context, uri, this._fileShareString);
 
-        if (root instanceof FileShareGroupTreeItem) {
-            this._rootMap.set(path.posix.join(parsedUri.rootPath, parsedUri.rootName), <FileShareGroupTreeItem>root);
-            return <FileShareGroupTreeItem>root;
-        } else if (root instanceof FileShareTreeItem) {
-            this._rootMap.set(path.posix.join(parsedUri.rootPath, parsedUri.rootName), <FileShareTreeItem>root);
-            return <FileShareTreeItem>root;
-        } else {
-            throw vscode.FileSystemError.FileNotFound(uri);
-        }
+            if (root instanceof FileShareTreeItem || root instanceof FileShareGroupTreeItem) {
+                return root;
+            } else {
+                throw new RangeError('The root found must be either a FileShareTreeItem or FileShareGroupTreeItem.');
+            }
+        });
     }
 }
