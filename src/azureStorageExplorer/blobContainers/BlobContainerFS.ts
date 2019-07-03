@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
+import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { BlobContainerTreeItem } from './blobContainerNode';
@@ -122,8 +122,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             let parsedUri = parseUri(uri, this._blobContainerString);
 
-            let entry = await this.getRoot(uri);
-            // let entry: BlobContainerTreeItem = !!foundRoot ? foundRoot : await this.updateRootMap(uri);
+            let entry = await this.getRoot(context, uri);
             if (parsedUri.filePath === '') {
                 return entry;
             }
@@ -145,15 +144,13 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async getRoot(uri: vscode.Uri): Promise<BlobContainerTreeItem> {
-        return <BlobContainerTreeItem>await callWithTelemetryAndErrorHandling('blob.getRoot', async (context) => {
-            let root = await findRoot(context, uri, this._blobContainerString);
-            if (root instanceof BlobContainerTreeItem) {
-                return root;
-            } else {
-                throw new RangeError('The root found must be a BlobContainerTreeItem.');
-            }
-        });
+    private async getRoot(context: IActionContext, uri: vscode.Uri): Promise<BlobContainerTreeItem> {
+        let root = await findRoot(context, uri, this._blobContainerString);
+        if (root instanceof BlobContainerTreeItem) {
+            return root;
+        } else {
+            throw new RangeError('The root found must be a BlobContainerTreeItem.');
+        }
     }
 
     private async listAllChildDirectory(blobSerivce: azureStorage.BlobService, blobContainerName: string, prefix: string): Promise<azureStorage.BlobService.ListBlobDirectoriesResult> {
