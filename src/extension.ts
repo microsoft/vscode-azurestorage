@@ -12,7 +12,9 @@ import { AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureAccountTreeItem } from './azureStorageExplorer/AzureAccountTreeItem';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
+import { BlobContainerFS } from './azureStorageExplorer/blobContainers/BlobContainerFS';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
+import { BlobContainerTreeItem } from './azureStorageExplorer/blobContainers/blobContainerNode';
 import { registerDirectoryActionHandlers } from './azureStorageExplorer/fileShares/directoryActionHandlers';
 import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fileActionHandlers';
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
@@ -66,12 +68,16 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         // tslint:disable-next-line: strict-boolean-expressions
         if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
-            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', new FileShareFS(), { isCaseSensitive: true }));
+            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestoragefile', new FileShareFS(), { isCaseSensitive: true }));
+            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorageblob', new BlobContainerFS(), { isCaseSensitive: true }));
         }
-
-        registerCommand('azureStorage.openInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
+        registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
             // tslint:disable-next-line: prefer-template
-            await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorage://' + treeItem.fullId));
+            await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestoragefile://' + treeItem.fullId));
+        });
+        registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem: BlobContainerTreeItem) => {
+            // tslint:disable-next-line: prefer-template
+            await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorageblob://' + treeItem.fullId));
         });
         registerCommand('azureStorage.refresh', async (_actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(treeItem));
         registerCommand('azureStorage.loadMore', async (actionContext: IActionContext, treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem, actionContext));
