@@ -30,8 +30,10 @@
 	"preview": true,
 	"activationEvents": [
 		"onView:azureStorage",
-		"onCommand:azureStorage.openInFileExplorer",
-		"onFileSystem:azurestorage",
+		"onCommand:azureStorage.openFileShareInFileExplorer",
+		"onCommand:azureStorage.openBlobContainerInFileExplorer",
+		"onFileSystem:azurestoragefile",
+		"onFileSystem:azurestorageblob",
 		"onCommand:azureStorage.deployStaticWebsite",
 		"onCommand:azureStorage.configureStaticWebsite",
 		"onCommand:azureStorage.disableStaticWebsite",
@@ -91,8 +93,13 @@
 		},
 		"commands": [
 			{
-				"command": "azureStorage.openInFileExplorer",
+				"command": "azureStorage.openFileShareInFileExplorer",
 				"title": "File Share",
+				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.openBlobContainerInFileExplorer",
+				"title": "Blob Container",
 				"category": "Azure Storage"
 			},
 			{
@@ -675,7 +682,7 @@
 				},
 				"azureStorage.enableViewInFileExplorer": {
 					"type": "boolean",
-					"description": "Enable preview support for file share files in file explorer.",
+					"description": "Enable preview support for file share files and blob containers in file explorer.",
 					"default": false
 				}
 			}

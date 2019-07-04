@@ -59,8 +59,8 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
             const ti = new GenericTreeItem(this, {
                 label: 'Open in File Explorer...',
-                commandId: 'azureStorage.openInFileExplorer',
-                contextValue: 'openFileExplorer'
+                commandId: 'azureStorage.openFileShareInFileExplorer',
+                contextValue: 'openFileShareInFileExplorer'
             });
 
             ti.commandArgs = [this];
