@@ -94,7 +94,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 throw vscode.FileSystemError.NoPermissions(uri);
             }
 
-            let parsedUri = parseUri(uri, 'File Shares');
+            let parsedUri = parseUri(uri, this._fileShareString);
             let root: FileShareTreeItem | FileShareGroupTreeItem = await this.getRoot(context, uri);
 
             const fileService = root.root.createFileService();
