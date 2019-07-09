@@ -18,7 +18,7 @@ export type EntryTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainer
 export class BlobContainerFS implements vscode.FileSystemProvider {
 
     private _blobContainerString: string = 'Blob Containers';
-    private _virtualDirCreatedUri: vscode.Uri[] = [];
+    private _virtualDirCreatedUri: string[] = [];
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
@@ -28,7 +28,15 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
+        if (this._virtualDirCreatedUri.indexOf(uri.path) > -1) {
+            return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
+        }
+
         let entry: EntryTreeItem = await this.lookup(uri);
+
+        // if (this._virtualDirCreatedUri.indexOf(uri) > -1) {
+        //     return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
+        // }
 
         if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
@@ -61,8 +69,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             directoryChildren.push([dirName, vscode.FileType.Directory]);
         }
         for (let dirCreated of this._virtualDirCreatedUri) {
-            if (dirCreated.path.includes(uri.path)) {
-                let dirName = path.basename(dirCreated.path);
+            if (dirCreated.includes(uri.path)) {
+                let dirName = path.basename(dirCreated);
                 directoryChildren.push([dirName, vscode.FileType.Directory]);
             }
         }
@@ -71,7 +79,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     createDirectory(uri: vscode.Uri): void {
-        this._virtualDirCreatedUri.push(uri);
+        this._virtualDirCreatedUri.push(uri.path);
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
