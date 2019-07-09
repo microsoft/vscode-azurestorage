@@ -73,26 +73,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
 
             let parsedUri = parseUri(uri, this._fileShareString);
-            let root = await this.getRoot(context, uri);
-
-            if (root instanceof FileShareGroupTreeItem) {
-                throw new Error('Cannot create a File Share directory.');
-            }
+            let root: FileShareTreeItem = await this.getRoot(context, uri);
 
             let response: string | undefined | null = validateDirectoryName(parsedUri.baseName);
             if (response) {
                 throw new Error(response);
             }
 
-            let fileShareTreeItem = <FileShareTreeItem>root;
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-                progress.report({ message: `Azure Storage: Creating directory ${parsedUri.filePath}` });
-                let dir = await createDirectory(fileShareTreeItem.share, root.root, parsedUri.parentDirPath, parsedUri.baseName);
-
-                // DirectoryResult.name contains the parent path in this call, but doesn't in other places such as listing directories.
-                // Remove it here to be consistent.
-                dir.name = parsedUri.baseName;
-            });
+            await createDirectory(root.share, root.root, parsedUri.parentDirPath, parsedUri.baseName);
         });
     }
 
@@ -121,7 +109,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, 'File Shares');
-            let root: FileShareTreeItem | FileShareGroupTreeItem = await this.getRoot(context, uri);
+            let root: FileShareTreeItem = await this.getRoot(context, uri);
 
             const fileService = root.root.createFileService();
             let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
@@ -201,10 +189,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 return entry;
             }
 
-            if (entry instanceof FileShareGroupTreeItem) {
-                throw new RangeError('Looking into nonexistent File Share.');
-            }
-
             let parentPath = '';
             let parts = parsedUri.filePath.split('/');
             for (let part of parts) {
@@ -234,10 +218,10 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async getRoot(context: IActionContext, uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem> {
+    private async getRoot(context: IActionContext, uri: vscode.Uri): Promise<FileShareTreeItem> {
         let root = await findRoot(context, uri, this._fileShareString);
 
-        if (root instanceof FileShareTreeItem || root instanceof FileShareGroupTreeItem) {
+        if (root instanceof FileShareTreeItem) {
             return root;
         } else {
             throw new RangeError('The root found must be either a FileShareTreeItem or FileShareGroupTreeItem.');
