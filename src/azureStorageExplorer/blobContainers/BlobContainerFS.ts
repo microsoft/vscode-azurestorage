@@ -47,7 +47,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('blob.readDirectory', async (context) => {
-            // let entry: BlobDirectoryTreeItem | BlobContainerTreeItem = await this.lookupAsDirectory(uri);
             let root: BlobContainerTreeItem = await this.getRoot(context, uri);
             let parsedUri = parseUri(uri, this._blobContainerString);
 
@@ -81,23 +80,25 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        let treeItem: BlobTreeItem = await this.lookupAsBlob(uri);
+        return <Uint8Array>await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
+            let root: BlobContainerTreeItem = await this.getRoot(context, uri);
 
-        let parsedUri = parseUri(uri, this._blobContainerString);
+            let parsedUri = parseUri(uri, this._blobContainerString);
 
-        let blobSerivce: azureStorage.BlobService = treeItem.root.createBlobService();
-        const result = await new Promise<string | undefined>((resolve, reject) => {
-            blobSerivce.getBlobToText(parsedUri.rootName, parsedUri.filePath, (error?: Error, text?: string) => {
-                if (!!error) {
-                    reject(error);
-                } else {
-                    resolve(text);
-                }
+            let blobSerivce: azureStorage.BlobService = root.root.createBlobService();
+            const result = await new Promise<string | undefined>((resolve, reject) => {
+                blobSerivce.getBlobToText(parsedUri.rootName, parsedUri.filePath, (error?: Error, text?: string) => {
+                    if (!!error) {
+                        reject(error);
+                    } else {
+                        resolve(text);
+                    }
+                });
             });
-        });
 
-        // tslint:disable-next-line: strict-boolean-expressions
-        return Buffer.from(result || '');
+            // tslint:disable-next-line: strict-boolean-expressions
+            return Buffer.from(result || '');
+        });
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
@@ -151,21 +152,21 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    private async lookupAsBlob(uri: vscode.Uri): Promise<BlobTreeItem> {
-        const entry = await this.lookup(uri);
-        if (entry instanceof BlobTreeItem) {
-            return entry;
-        }
-        throw vscode.FileSystemError.FileIsADirectory(uri);
-    }
+    // private async lookupAsBlob(uri: vscode.Uri): Promise<BlobTreeItem> {
+    //     const entry = await this.lookup(uri);
+    //     if (entry instanceof BlobTreeItem) {
+    //         return entry;
+    //     }
+    //     throw vscode.FileSystemError.FileIsADirectory(uri);
+    // }
 
-    private async lookupAsDirectory(uri: vscode.Uri): Promise<BlobDirectoryTreeItem | BlobContainerTreeItem> {
-        let entry = await this.lookup(uri);
-        if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
-            return entry;
-        }
-        throw vscode.FileSystemError.FileNotADirectory(uri);
-    }
+    // private async lookupAsDirectory(uri: vscode.Uri): Promise<BlobDirectoryTreeItem | BlobContainerTreeItem> {
+    //     let entry = await this.lookup(uri);
+    //     if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
+    //         return entry;
+    //     }
+    //     throw vscode.FileSystemError.FileNotADirectory(uri);
+    // }
 
     private async lookup(uri: vscode.Uri): Promise<EntryTreeItem> {
         return <EntryTreeItem>await callWithTelemetryAndErrorHandling('blob.lookup', async (context) => {
