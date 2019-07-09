@@ -18,6 +18,7 @@ export type EntryTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainer
 export class BlobContainerFS implements vscode.FileSystemProvider {
 
     private _blobContainerString: string = 'Blob Containers';
+    private _virtualDirCreatedUri: vscode.Uri[] = [];
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
@@ -59,11 +60,18 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let dirName = path.basename(dirRes.name);
             directoryChildren.push([dirName, vscode.FileType.Directory]);
         }
+        for (let dirCreated of this._virtualDirCreatedUri) {
+            if (dirCreated.path.includes(uri.path)) {
+                let dirName = path.basename(dirCreated.path);
+                directoryChildren.push([dirName, vscode.FileType.Directory]);
+            }
+        }
+
         return directoryChildren;
     }
 
-    createDirectory(_uri: vscode.Uri): void | Thenable<void> {
-        throw new Error("Method not implemented.");
+    createDirectory(uri: vscode.Uri): void {
+        this._virtualDirCreatedUri.push(uri);
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
