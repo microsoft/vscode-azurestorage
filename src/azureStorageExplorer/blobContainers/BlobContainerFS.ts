@@ -94,8 +94,42 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         return Buffer.from(result || '');
     }
 
-    writeFile(_uri: vscode.Uri, _content: Uint8Array, _options: { create: boolean; overwrite: boolean; }): void | Thenable<void> {
-        throw new Error("Method not implemented.");
+    async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
+        await callWithTelemetryAndErrorHandling('blob.writeFile', async (context) => {
+            if (!options.create && !options.overwrite) {
+                throw vscode.FileSystemError.NoPermissions(uri);
+            }
+
+            let parsedUri = parseUri(uri, this._blobContainerString);
+            let root: BlobContainerTreeItem = await this.getRoot(context, uri);
+
+            const blobSerivce = root.root.createBlobService();
+            let blobResultChild = await new Promise<azureStorage.BlobService.BlobResult>((resolve, reject) => {
+                blobSerivce.doesBlobExist(parsedUri.rootName, parsedUri.filePath, (error?: Error, result?: azureStorage.BlobService.BlobResult) => {
+                    if (!!error) {
+                        reject(error);
+                    } else {
+                        resolve(result);
+                    }
+                });
+            });
+
+            if (!blobResultChild.exists && !options.create) {
+                throw vscode.FileSystemError.FileNotFound(uri);
+            } else if (blobResultChild.exists && !options.overwrite) {
+                throw vscode.FileSystemError.FileExists(uri);
+            } else {
+                await new Promise<void>((resolve, reject) => {
+                    blobSerivce.createBlockBlobFromText(parsedUri.rootName, parsedUri.filePath, content.toString(), (error?: Error) => {
+                        if (!!error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+            }
+        });
     }
 
     // tslint:disable-next-line: no-reserved-keywords
