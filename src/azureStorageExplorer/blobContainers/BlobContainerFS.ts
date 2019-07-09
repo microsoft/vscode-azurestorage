@@ -18,7 +18,7 @@ export type EntryTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainer
 export class BlobContainerFS implements vscode.FileSystemProvider {
 
     private _blobContainerString: string = 'Blob Containers';
-    private _virtualDirCreatedUri: string[] = [];
+    private _virtualDirCreatedUri: Set<string> = new Set();
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
@@ -28,15 +28,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        if (this._virtualDirCreatedUri.indexOf(uri.path) > -1) {
+        if (this._virtualDirCreatedUri.has(uri.path)) {
             return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
         }
 
         let entry: EntryTreeItem = await this.lookup(uri);
-
-        // if (this._virtualDirCreatedUri.indexOf(uri) > -1) {
-        //     return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
-        // }
 
         if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
             // creation and modification times as well as size of tree item are intentionally set to 0 for now
@@ -50,36 +46,38 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        let entry: BlobDirectoryTreeItem | BlobContainerTreeItem = await this.lookupAsDirectory(uri);
+        return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('blob.readDirectory', async (context) => {
+            // let entry: BlobDirectoryTreeItem | BlobContainerTreeItem = await this.lookupAsDirectory(uri);
+            let root: BlobContainerTreeItem = await this.getRoot(context, uri);
+            let parsedUri = parseUri(uri, this._blobContainerString);
 
-        let parsedUri = parseUri(uri, this._blobContainerString);
+            const blobSerivce = root.root.createBlobService();
+            const listBlobResult = await this.listAllChildBlob(blobSerivce, parsedUri.rootName, parsedUri.dirPath);
+            const listDirectoryResult = await this.listAllChildDirectory(blobSerivce, parsedUri.rootName, parsedUri.dirPath);
 
-        const blobSerivce = entry.root.createBlobService();
-        const listBlobResult = await this.listAllChildBlob(blobSerivce, parsedUri.rootName, parsedUri.dirPath);
-        const listDirectoryResult = await this.listAllChildDirectory(blobSerivce, parsedUri.rootName, parsedUri.dirPath);
+            let directoryChildren: [string, vscode.FileType][] = [];
+            for (let blobRes of listBlobResult.entries) {
+                let blobName = path.basename(blobRes.name);
+                directoryChildren.push([blobName, vscode.FileType.File]);
+            }
 
-        let directoryChildren: [string, vscode.FileType][] = [];
-        for (let blobRes of listBlobResult.entries) {
-            let blobName = path.basename(blobRes.name);
-            directoryChildren.push([blobName, vscode.FileType.File]);
-        }
-
-        for (let dirRes of listDirectoryResult.entries) {
-            let dirName = path.basename(dirRes.name);
-            directoryChildren.push([dirName, vscode.FileType.Directory]);
-        }
-        for (let dirCreated of this._virtualDirCreatedUri) {
-            if (dirCreated.includes(uri.path)) {
-                let dirName = path.basename(dirCreated);
+            for (let dirRes of listDirectoryResult.entries) {
+                let dirName = path.basename(dirRes.name);
                 directoryChildren.push([dirName, vscode.FileType.Directory]);
             }
-        }
+            for (let dirCreated of this._virtualDirCreatedUri) {
+                let dirCreatedUriParsed = parseUri(dirCreated, this._blobContainerString);
+                if (`${uri.path}/` === path.join(dirCreatedUriParsed.rootPath, dirCreatedUriParsed.parentDirPath)) {
+                    directoryChildren.push([dirCreatedUriParsed.baseName, vscode.FileType.Directory]);
+                }
+            }
 
-        return directoryChildren;
+            return directoryChildren;
+        });
     }
 
     createDirectory(uri: vscode.Uri): void {
-        this._virtualDirCreatedUri.push(uri.path);
+        this._virtualDirCreatedUri.add(uri.path);
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
@@ -136,6 +134,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                         }
                     });
                 });
+
+                // if (this._virtualDirCreatedUri.has(path.join(parsedUri.rootPath, parsedUri.parentDirPath))) {
+                //     this._virtualDirCreatedUri.delete(path.join(parsedUri.rootPath, parsedUri.parentDirPath));
+                // }
             }
         });
     }
