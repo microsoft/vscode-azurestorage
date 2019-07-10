@@ -90,7 +90,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return <Uint8Array>await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
-            // let root: FileShareTreeItem | FileShareGroupTreeItem = await this.getRoot(context, uri);
             let treeItem: FileTreeItem = await this.lookupAsFile(context, uri);
 
             let fileService = treeItem.root.createFileService();
@@ -172,7 +171,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    public async lookupAsFile(context: IActionContext, uri: vscode.Uri): Promise<FileTreeItem> {
+    private async lookupAsFile(context: IActionContext, uri: vscode.Uri): Promise<FileTreeItem> {
         let entry = await this.lookup(context, uri);
         if (entry instanceof FileTreeItem) {
             return entry;
