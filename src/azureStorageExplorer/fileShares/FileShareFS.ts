@@ -10,9 +10,13 @@ import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azuree
 import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
+import { deleteDirectoryAndContents } from "./directoryUtils";
+import { createDirectory } from "./directoryUtils";
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
+import { deleteFile } from "./fileUtils";
+import { validateDirectoryName } from "./validateNames";
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
@@ -29,7 +33,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return <vscode.FileStat>await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
-            let treeItem: EntryTreeItem = await this.lookup(uri, context);
+            let treeItem: EntryTreeItem = await this.lookup(context, uri);
 
             if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
@@ -49,7 +53,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
             context.errorHandling.rethrow = true;
 
-            let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, context);
+            let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(context, uri);
 
             // Intentionally passing undefined for token - only supports listing first batch of files for now
             // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
@@ -68,14 +72,25 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    createDirectory(_uri: vscode.Uri): void | Thenable<void> {
-        throw new Error("Method not implemented.");
+    async createDirectory(uri: vscode.Uri): Promise<void> {
+        return await callWithTelemetryAndErrorHandling('fs.createDirectory', async (context) => {
+            context.errorHandling.rethrow = true;
+
+            let parsedUri = parseUri(uri, this._fileShareString);
+            let root: FileShareTreeItem = await this.getRoot(context, uri);
+
+            let response: string | undefined | null = validateDirectoryName(parsedUri.baseName);
+            if (response) {
+                throw new Error(response);
+            }
+
+            await createDirectory(root.share, root.root, parsedUri.parentDirPath, parsedUri.baseName);
+        });
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return <Uint8Array>await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
-            // let root: FileShareTreeItem | FileShareGroupTreeItem = await this.getRoot(context, uri);
-            let treeItem: FileTreeItem = await this.lookupAsFile(uri, context);
+            let treeItem: FileTreeItem = await this.lookupAsFile(context, uri);
 
             let fileService = treeItem.root.createFileService();
             const result = await new Promise<string | undefined>((resolve, reject) => {
@@ -100,7 +115,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, this._fileShareString);
-            let root: FileShareTreeItem | FileShareGroupTreeItem = await this.getRoot(context, uri);
+            let root: FileShareTreeItem = await this.getRoot(context, uri);
 
             const fileService = root.root.createFileService();
             let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
@@ -140,9 +155,12 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 throw new Error("Azure storage does not support nonrecursive deletion of folders.");
             }
 
-            let fileFound: EntryTreeItem = await this.lookup(uri, context);
-            if (fileFound instanceof FileTreeItem || fileFound instanceof DirectoryTreeItem) {
-                await fileFound.deleteTreeItem(context);
+            let parsedUri = parseUri(uri, this._fileShareString);
+            let fileFound: EntryTreeItem = await this.lookup(context, uri);
+            if (fileFound instanceof FileTreeItem) {
+                await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
+            } else if (fileFound instanceof DirectoryTreeItem) {
+                await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
             } else {
                 throw new RangeError("Tried to delete a FileShare or the folder of FileShares.");
             }
@@ -153,23 +171,23 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    public async lookupAsFile(uri: vscode.Uri, context: IActionContext): Promise<FileTreeItem> {
-        let entry = await this.lookup(uri, context);
+    private async lookupAsFile(context: IActionContext, uri: vscode.Uri): Promise<FileTreeItem> {
+        let entry = await this.lookup(context, uri);
         if (entry instanceof FileTreeItem) {
             return entry;
         }
         throw vscode.FileSystemError.FileNotFound(uri);
     }
 
-    private async lookupAsDirectory(uri: vscode.Uri, context: IActionContext): Promise<DirectoryTreeItem | FileShareTreeItem> {
-        let entry = await this.lookup(uri, context);
+    private async lookupAsDirectory(context: IActionContext, uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem> {
+        let entry = await this.lookup(context, uri);
         if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
-    private async lookup(uri: vscode.Uri, context: IActionContext): Promise<EntryTreeItem> {
+    private async lookup(context: IActionContext, uri: vscode.Uri): Promise<EntryTreeItem> {
         context.errorHandling.rethrow = true;
         context.errorHandling.suppressDisplay = true;
 
