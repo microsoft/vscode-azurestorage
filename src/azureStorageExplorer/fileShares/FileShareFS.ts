@@ -224,7 +224,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         if (root instanceof FileShareTreeItem) {
             return root;
         } else {
-            throw new RangeError('The root found must be either a FileShareTreeItem or FileShareGroupTreeItem.');
+            throw new RangeError('The root found must be a FileShareTreeItem.');
         }
     }
 }
