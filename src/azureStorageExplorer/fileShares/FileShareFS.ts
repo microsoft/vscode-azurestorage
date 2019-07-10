@@ -10,9 +10,11 @@ import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azuree
 import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
+import { deleteDirectoryAndContents } from "./directoryUtils";
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
+import { deleteFile } from "./fileUtils";
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
@@ -135,9 +137,12 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 throw new Error("Azure storage does not support nonrecursive deletion of folders.");
             }
 
+            let parsedUri = parseUri(uri, this._fileShareString);
             let fileFound: EntryTreeItem = await this.lookup(uri);
-            if (fileFound instanceof FileTreeItem || fileFound instanceof DirectoryTreeItem) {
-                await fileFound.deleteTreeItem(context);
+            if (fileFound instanceof FileTreeItem) {
+                await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
+            } else if (fileFound instanceof DirectoryTreeItem) {
+                await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
             } else {
                 throw new RangeError("Tried to delete a FileShare or the folder of FileShares.");
             }
