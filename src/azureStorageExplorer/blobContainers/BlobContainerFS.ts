@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
-import { parseUri } from "../parseUri";
+import { IParsedUri, parseUri } from "../parseUri";
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobTreeItem } from './blobNode';
@@ -91,8 +91,58 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     // tslint:disable-next-line: no-reserved-keywords
-    delete(_uri: vscode.Uri, _options: { recursive: boolean; }): void | Thenable<void> {
-        throw new Error("Method not implemented.");
+    async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
+        return await callWithTelemetryAndErrorHandling('blob.delete', async (context) => {
+            context.errorHandling.rethrow = true;
+            if (!options.recursive) {
+                throw new Error('Do not support non recursive deletion of folders or files.');
+            }
+
+            let entry: EntryTreeItem = await this.lookup(uri);
+            let parsedUri = parseUri(uri, this._blobContainerString);
+
+            const blobService = entry.root.createBlobService();
+            if (entry instanceof BlobTreeItem) {
+                await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
+            } else if (entry instanceof BlobDirectoryTreeItem) {
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                    progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
+                    await this.deleteFolder(parsedUri, blobService);
+                });
+            } else if (entry instanceof BlobContainerTreeItem) {
+                throw new Error('Cannot delete a Blob Container.');
+            }
+        });
+    }
+
+    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<void> {
+        let dirPaths: string[] = [];
+        let dirPath: string | undefined = parsedUri.dirPath;
+        while (dirPath) {
+            let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
+            for (const blob of childBlob.entries) {
+                await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
+            }
+
+            let childDir = await this.listAllChildDirectory(blobService, parsedUri.rootName, dirPath);
+            for (const dir of childDir.entries) {
+                dirPaths.push(dir.name);
+            }
+
+            dirPath = dirPaths.pop();
+        }
+    }
+
+    private async deleteBlob(containerName: string, prefix: string, blobService: azureStorage.BlobService): Promise<void> {
+        await new Promise<void>((resolve, reject) => {
+            blobService.deleteBlob(containerName, prefix, (error?: Error) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
     }
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void | Thenable<void> {
