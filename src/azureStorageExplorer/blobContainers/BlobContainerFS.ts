@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
-import { parseUri } from "../parseUri";
+import { IParsedUri, parseUri } from "../parseUri";
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobTreeItem } from './blobNode';
@@ -105,10 +105,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             if (entry instanceof BlobTreeItem) {
                 await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
             } else if (entry instanceof BlobDirectoryTreeItem) {
-                let blobDir = <BlobDirectoryTreeItem>entry;
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                    await this.deleteFolder(blobDir, blobService);
+                    await this.deleteFolder(parsedUri, blobService);
                 });
             } else if (entry instanceof BlobContainerTreeItem) {
                 throw new Error('Cannot delete a Blob Container.');
@@ -116,23 +115,21 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async deleteFolder(entry: BlobDirectoryTreeItem, blobService: azureStorage.BlobService): Promise<void> {
-        let dirPaths: Set<string> = new Set();
-        let rootName = entry.container.name;
-
-        dirPaths.add(`${entry.prefix}${entry.directory}/`);
-
-        for (let dirName of dirPaths) {
-            let childBlob = await this.listAllChildBlob(blobService, rootName, dirName);
+    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<void> {
+        let dirPaths: string[] = [];
+        let dirPath: string | undefined = parsedUri.dirPath;
+        while (dirPath) {
+            let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
             for (const blob of childBlob.entries) {
-                await this.deleteBlob(rootName, blob.name, blobService);
+                await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
             }
 
-            let childDir = await this.listAllChildDirectory(blobService, rootName, dirName);
+            let childDir = await this.listAllChildDirectory(blobService, parsedUri.rootName, dirPath);
             for (const dir of childDir.entries) {
-                dirPaths.add(dir.name);
+                dirPaths.push(dir.name);
             }
-            dirPaths.delete(dirName);
+
+            dirPath = dirPaths.pop();
         }
     }
 
