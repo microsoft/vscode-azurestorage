@@ -10,9 +10,11 @@ import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azuree
 import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
+import { createDirectory } from "./directoryUtils";
 import { FileTreeItem } from "./fileNode";
 import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
+import { validateDirectoryName } from "./validateNames";
 
 export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
@@ -66,8 +68,20 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    createDirectory(_uri: vscode.Uri): void | Thenable<void> {
-        throw new Error("Method not implemented.");
+    async createDirectory(uri: vscode.Uri): Promise<void> {
+        return await callWithTelemetryAndErrorHandling('fs.createDirectory', async (context) => {
+            context.errorHandling.rethrow = true;
+
+            let parsedUri = parseUri(uri, this._fileShareString);
+            let root: FileShareTreeItem = await this.getRoot(context, uri);
+
+            let response: string | undefined | null = validateDirectoryName(parsedUri.baseName);
+            if (response) {
+                throw new Error(response);
+            }
+
+            await createDirectory(root.share, root.root, parsedUri.parentDirPath, parsedUri.baseName);
+        });
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
@@ -95,7 +109,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, 'File Shares');
-            let root: FileShareTreeItem | FileShareGroupTreeItem = await this.getRoot(context, uri);
+            let root: FileShareTreeItem = await this.getRoot(context, uri);
 
             const fileService = root.root.createFileService();
             let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
@@ -175,10 +189,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 return entry;
             }
 
-            if (entry instanceof FileShareGroupTreeItem) {
-                throw new RangeError('Looking into nonexistent File Share.');
-            }
-
             let parentPath = '';
             let parts = parsedUri.filePath.split('/');
             for (let part of parts) {
@@ -208,13 +218,13 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async getRoot(context: IActionContext, uri: vscode.Uri): Promise<FileShareTreeItem | FileShareGroupTreeItem> {
+    private async getRoot(context: IActionContext, uri: vscode.Uri): Promise<FileShareTreeItem> {
         let root = await findRoot(context, uri, this._fileShareString);
 
-        if (root instanceof FileShareTreeItem || root instanceof FileShareGroupTreeItem) {
+        if (root instanceof FileShareTreeItem) {
             return root;
         } else {
-            throw new RangeError('The root found must be either a FileShareTreeItem or FileShareGroupTreeItem.');
+            throw new RangeError('The root found must be a FileShareTreeItem.');
         }
     }
 }
