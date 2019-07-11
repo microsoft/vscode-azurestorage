@@ -156,19 +156,27 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 throw new Error('Do not support non recursive deletion of folders or files.');
             }
 
-            let entry: EntryTreeItem = await this.lookup(uri);
-            let parsedUri = parseUri(uri, this._blobContainerString);
+            let entry: EntryTreeItem;
+            try {
+                entry = await this.lookup(uri);
+                let parsedUri = parseUri(uri, this._blobContainerString);
 
-            const blobService = entry.root.createBlobService();
-            if (entry instanceof BlobTreeItem) {
-                await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
-            } else if (entry instanceof BlobDirectoryTreeItem) {
-                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-                    progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                    await this.deleteFolder(parsedUri, blobService);
-                });
-            } else if (entry instanceof BlobContainerTreeItem) {
-                throw new Error('Cannot delete a Blob Container.');
+                const blobService = entry.root.createBlobService();
+                if (entry instanceof BlobTreeItem) {
+                    await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
+                } else if (entry instanceof BlobDirectoryTreeItem) {
+                    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                        progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
+                        await this.deleteFolder(parsedUri, blobService);
+                    });
+                } else if (entry instanceof BlobContainerTreeItem) {
+                    throw new Error('Cannot delete a Blob Container.');
+                }
+            } catch (err) {
+                if (this._virtualDirCreatedUri.has(uri.path)) {
+                    this._virtualDirCreatedUri.delete(uri.path);
+                    return;
+                }
             }
         });
     }
