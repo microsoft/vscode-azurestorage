@@ -51,6 +51,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let root: BlobContainerTreeItem = await this.getRoot(context, uri);
             let parsedUri = parseUri(uri, this._blobContainerString);
 
+            if (parsedUri.filePath === '') {
+                console.log('hi');
+            }
+
             const blobSerivce = root.root.createBlobService();
             const listBlobResult = await this.listAllChildBlob(blobSerivce, parsedUri.rootName, parsedUri.dirPath);
             const listDirectoryResult = await this.listAllChildDirectory(blobSerivce, parsedUri.rootName, parsedUri.dirPath);
@@ -68,7 +72,13 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             for (let dirCreated of this._virtualDirCreatedUri) {
                 let dirCreatedParsedUri = parseUri(dirCreated, this._blobContainerString);
-                if (`${uri.path}/` === path.posix.join(dirCreatedParsedUri.rootPath, dirCreatedParsedUri.parentDirPath)) {
+
+                let parentPath = path.posix.join(dirCreatedParsedUri.rootPath, dirCreatedParsedUri.parentDirPath);
+                if (parentPath.endsWith("/")) {
+                    parentPath = parentPath.substring(0, parentPath.length - 1);
+                }
+
+                if (uri.path === parentPath) {
                     directoryChildren.push([dirCreatedParsedUri.baseName, vscode.FileType.Directory]);
                 }
             }
