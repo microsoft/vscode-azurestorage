@@ -16,7 +16,6 @@ import { BlobTreeItem } from './blobNode';
 export type EntryTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
 export class BlobContainerFS implements vscode.FileSystemProvider {
-
     private _blobContainerString: string = 'Blob Containers';
     private _virtualDirCreatedUri: Set<string> = new Set();
 
@@ -156,11 +155,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 throw new Error('Do not support non recursive deletion of folders or files.');
             }
 
-            let entry: EntryTreeItem;
+            let parsedUri = parseUri(uri, this._blobContainerString);
             try {
-                entry = await this.lookup(uri);
-                let parsedUri = parseUri(uri, this._blobContainerString);
-
+                let entry: EntryTreeItem = await this.lookup(uri);
                 const blobService = entry.root.createBlobService();
                 if (entry instanceof BlobTreeItem) {
                     await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
@@ -175,7 +172,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             } catch (err) {
                 if (this._virtualDirCreatedUri.has(uri.path)) {
                     this._virtualDirCreatedUri.delete(uri.path);
-                    return;
+
+                    this._virtualDirCreatedUri.forEach(value => {
+                        if (value.includes(uri.path)) {
+                            this._virtualDirCreatedUri.delete(value);
+                        }
+                    });
                 }
             }
         });
@@ -281,5 +283,26 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             });
         });
+    }
+}
+
+export module BlobContainerFS {
+    export class TreeNode {
+        constructor(
+            public rootPath: string,
+            public parentDirPath: string,
+            public basename: string,
+            private isLeaf: boolean,
+            private parent: TreeNode,
+            private children: Set<TreeNode>
+        ) { }
+
+        public isNodeLeaf(): boolean {
+            return this.isLeaf;
+        }
+
+        public deleteNode(): void {
+            this.parent.children.delete(this);
+        }
     }
 }
