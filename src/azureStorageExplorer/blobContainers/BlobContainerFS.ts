@@ -136,9 +136,14 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     });
                 });
 
-                // if (this._virtualDirCreatedUri.has(path.join(parsedUri.rootPath, parsedUri.parentDirPath))) {
-                //     this._virtualDirCreatedUri.delete(path.join(parsedUri.rootPath, parsedUri.parentDirPath));
-                // }
+                let fullPath: string = path.posix.join(parsedUri.rootPath, parsedUri.parentDirPath);
+                if (fullPath.endsWith("/")) {
+                    fullPath = fullPath.substring(0, fullPath.length - 1);
+                }
+
+                if (this._virtualDirCreatedUri.has(fullPath)) {
+                    this._virtualDirCreatedUri.delete(fullPath);
+                }
             }
         });
     }
