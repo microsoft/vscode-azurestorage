@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
+import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
@@ -141,7 +142,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 throw vscode.FileSystemError.FileExists(uri);
             } else {
                 await new Promise<void>((resolve, reject) => {
-                    blobSerivce.createBlockBlobFromText(parsedUri.rootName, parsedUri.filePath, content.toString(), (error?: Error) => {
+                    let contentType: string | null = mime.getType(parsedUri.filePath);
+                    let temp: string | undefined = contentType === null ? undefined : contentType;
+                    blobSerivce.createBlockBlobFromText(parsedUri.rootName, parsedUri.filePath, content.toString(), { contentSettings: { contentType: temp } }, (error?: Error) => {
                         if (!!error) {
                             reject(error);
                         } else {
