@@ -308,24 +308,3 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
     }
 }
-
-export module BlobContainerFS {
-    export class TreeNode {
-        constructor(
-            public rootPath: string,
-            public parentDirPath: string,
-            public basename: string,
-            private isLeaf: boolean,
-            private parent: TreeNode,
-            private children: Set<TreeNode>
-        ) { }
-
-        public isNodeLeaf(): boolean {
-            return this.isLeaf;
-        }
-
-        public deleteNode(): void {
-            this.parent.children.delete(this);
-        }
-    }
-}
