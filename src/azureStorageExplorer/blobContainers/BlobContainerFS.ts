@@ -23,6 +23,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
+    private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
+    private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git'];
+
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
     }
@@ -130,15 +133,23 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             } else if (blobResultChild.exists && !options.overwrite) {
                 throw vscode.FileSystemError.FileExists(uri);
             } else {
-                await new Promise<void>((resolve, reject) => {
-                    let contentType: string | null = mime.getType(parsedUri.filePath);
-                    let temp: string | undefined = contentType === null ? undefined : contentType;
-                    blobSerivce.createBlockBlobFromText(parsedUri.rootName, parsedUri.filePath, content.toString(), { contentSettings: { contentType: temp } }, (error?: Error) => {
-                        if (!!error) {
-                            reject(error);
-                        } else {
-                            resolve();
-                        }
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                    if (blobResultChild.exists) {
+                        progress.report({ message: `Saving blob ${parsedUri.filePath}` });
+                    } else {
+                        progress.report({ message: `Creating blob ${parsedUri.filePath}` });
+                    }
+
+                    await new Promise<void>((resolve, reject) => {
+                        let contentType: string | null = mime.getType(parsedUri.filePath);
+                        let temp: string | undefined = contentType === null ? undefined : contentType;
+                        blobSerivce.createBlockBlobFromText(parsedUri.rootName, parsedUri.filePath, content.toString(), { contentSettings: { contentType: temp } }, (error?: Error) => {
+                            if (!!error) {
+                                reject(error);
+                            } else {
+                                resolve();
+                            }
+                        });
                     });
                 });
 
@@ -228,14 +239,17 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void | Thenable<void> {
-        throw new Error("Method not implemented.");
+        throw new Error("Do not support renaming/moving folders or files.");
     }
 
     private async lookup(context: IActionContext, uri: vscode.Uri): Promise<EntryTreeItem> {
         context.errorHandling.rethrow = true;
-        context.errorHandling.suppressDisplay = true;
 
         let parsedUri = parseUri(uri, this._blobContainerString);
+
+        if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
+            context.errorHandling.suppressDisplay = true;
+        }
 
         let entry = await this.getRoot(context, uri);
         if (parsedUri.filePath === '') {
@@ -263,7 +277,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         if (root instanceof BlobContainerTreeItem) {
             return root;
         } else {
-            throw new RangeError('The root found must be a BlobContainerTreeItem.');
+            throw new Error('The root found must be a BlobContainerTreeItem.');
         }
     }
 

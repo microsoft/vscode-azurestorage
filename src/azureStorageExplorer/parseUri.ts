@@ -50,7 +50,7 @@ export function parseUri(uri: vscode.Uri | string, fileType: string): IParsedUri
     let path: string = uri instanceof vscode.Uri ? uri.path : uri;
     const matches: RegExpMatchArray | null = path.match(`^(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/${fileType}\/([^\/]+))\/?((.*?\/?)([^\/]*))$`);
     if (!matches) {
-        throw new Error(`Invalid ${fileType} uri`);
+        throw new Error(`Invalid ${fileType} uri. Cannot view this directory.`);
     } else {
         return {
             rootPath: matches[1],
