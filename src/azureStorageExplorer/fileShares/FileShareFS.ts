@@ -26,6 +26,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
+    private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
+    private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git', '.vscode'];
+
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
     }
@@ -167,7 +170,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void {
-        throw new Error("Method not implemented.");
+        throw new Error("Do not support renaming/moving folders or files.");
     }
 
     private async lookupAsFile(context: IActionContext, uri: vscode.Uri): Promise<FileTreeItem> {
@@ -188,9 +191,13 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     private async lookup(context: IActionContext, uri: vscode.Uri): Promise<EntryTreeItem> {
         context.errorHandling.rethrow = true;
-        context.errorHandling.suppressDisplay = true;
 
         let parsedUri = parseUri(uri, this._fileShareString);
+
+        if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
+            context.errorHandling.suppressDisplay = true;
+        }
+
         let entry: EntryTreeItem = await this.getRoot(context, uri);
         if (parsedUri.filePath === '') {
             return entry;

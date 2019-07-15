@@ -24,7 +24,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
     private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
-    private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git'];
+    private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git', '.vscode'];
 
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
@@ -195,15 +195,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     throw new Error('Cannot delete a Blob Container.');
                 }
             } catch (err) {
-                if (this._virtualDirCreatedUri.has(uri.path)) {
-                    this._virtualDirCreatedUri.delete(uri.path);
-
-                    this._virtualDirCreatedUri.forEach(value => {
-                        if (value.includes(uri.path)) {
-                            this._virtualDirCreatedUri.delete(value);
-                        }
-                    });
-                }
+                this._virtualDirCreatedUri.forEach(value => {
+                    if (value.startsWith(uri.path)) {
+                        this._virtualDirCreatedUri.delete(value);
+                    }
+                });
             }
         });
     }

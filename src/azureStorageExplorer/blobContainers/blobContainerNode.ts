@@ -37,6 +37,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
     private _websiteHostingEnabled: boolean;
     private _openedInFileExplorer: boolean = false;
+    private _openInFileExplorerString: string = 'Open in File Explorer...';
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
@@ -82,7 +83,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
         if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer) && !this._openedInFileExplorer) {
             const ti = new GenericTreeItem(this, {
-                label: 'Open in File Explorer...',
+                label: this._openInFileExplorerString,
                 commandId: 'azureStorage.openBlobContainerInFileExplorer',
                 contextValue: 'openBlobContainerInFileExplorer'
             });
@@ -93,6 +94,16 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
 
         return result;
+    }
+
+    public compareChildrenImpl(ti1: BlobContainerTreeItem, ti2: BlobContainerTreeItem): number {
+        if (ti1.label === this._openInFileExplorerString) {
+            return -1;
+        } else if (ti2.label === this._openInFileExplorerString) {
+            return 1;
+        }
+
+        return ti1.label.localeCompare(ti2.label);
     }
 
     public async refreshImpl(): Promise<void> {
