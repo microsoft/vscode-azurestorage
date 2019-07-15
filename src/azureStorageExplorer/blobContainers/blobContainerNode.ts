@@ -36,6 +36,7 @@ export interface IExistingBlobContext extends IActionContext {
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
     private _websiteHostingEnabled: boolean;
+    private _openedInFileExplorer: boolean = false;
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
@@ -79,7 +80,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         this._continuationToken = continuationToken;
         const result: AzExtTreeItem[] = entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, blob, this.container));
 
-        if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
+        if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer) && !this._openedInFileExplorer) {
             const ti = new GenericTreeItem(this, {
                 label: 'Open in File Explorer...',
                 commandId: 'azureStorage.openBlobContainerInFileExplorer',
@@ -88,6 +89,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
             ti.commandArgs = [this];
             result.push(ti);
+            this._openedInFileExplorer = true;
         }
 
         return result;
@@ -97,6 +99,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         //tslint:disable-next-line:no-non-null-assertion
         const hostingStatus = await (<StorageAccountTreeItem>this!.parent!.parent).getActualWebsiteHostingStatus();
         this._websiteHostingEnabled = hostingStatus.enabled;
+        this._openedInFileExplorer = false;
     }
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
