@@ -170,7 +170,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void {
-        throw new Error("Do not support renaming/moving folders or files.");
+        throw new Error('Renaming/moving folders or files not supported.');
     }
 
     private async lookupAsFile(context: IActionContext, uri: vscode.Uri): Promise<FileTreeItem> {
