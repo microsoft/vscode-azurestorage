@@ -52,24 +52,13 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let root: BlobContainerTreeItem = await this.getRoot(context, uri);
             let parsedUri = parseUri(uri, this._blobContainerString);
 
-            if (parsedUri.filePath === '') {
-                console.log('hi');
-            }
-
             const blobSerivce = root.root.createBlobService();
             const listBlobResult = await this.listAllChildBlob(blobSerivce, parsedUri.rootName, parsedUri.dirPath);
             const listDirectoryResult = await this.listAllChildDirectory(blobSerivce, parsedUri.rootName, parsedUri.dirPath);
 
             let directoryChildren: [string, vscode.FileType][] = [];
-            for (let blobRes of listBlobResult.entries) {
-                let blobName = path.basename(blobRes.name);
-                directoryChildren.push([blobName, vscode.FileType.File]);
-            }
-
-            for (let dirRes of listDirectoryResult.entries) {
-                let dirName = path.basename(dirRes.name);
-                directoryChildren.push([dirName, vscode.FileType.Directory]);
-            }
+            listBlobResult.entries.forEach(value => directoryChildren.push([path.basename(value.name), vscode.FileType.File]));
+            listDirectoryResult.entries.forEach(value => directoryChildren.push([path.basename(value.name), vscode.FileType.Directory]));
 
             for (let dirCreated of this._virtualDirCreatedUri) {
                 let dirCreatedParsedUri = parseUri(dirCreated, this._blobContainerString);
@@ -296,7 +285,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         return await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
             // Intentionally passing undefined for token - only supports listing first batch of files for now
             // tslint:disable-next-line: no-non-null-assertion
-            let options = { delimiter: '/' };
+            let options = { maxResults: 500, delimiter: '/' };
             // tslint:disable-next-line: no-non-null-assertion
             blobSerivce.listBlobsSegmentedWithPrefix(blobContainerName, prefix, <azureStorage.common.ContinuationToken>undefined!, options, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
                 if (!!error) {
