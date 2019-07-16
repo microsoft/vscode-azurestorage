@@ -30,13 +30,19 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         );
     }
 
-    public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
+    public async createChildImpl(context: ICreationContext): Promise<AzureTreeItem> {
         let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
 
+        const wizardPromptSteps = [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()];
+        if (context.basicCreate) {
+            wizardPromptSteps.pop();
+            wizardContext.location = { name: 'westus' };
+        }
+
         const wizard = new AzureWizard(wizardContext, {
             title: "Create storage account",
-            promptSteps: [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
+            promptSteps: wizardPromptSteps,
             executeSteps: [new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS })],
         });
 
@@ -53,4 +59,8 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public hasMoreChildrenImpl(): boolean {
         return false;
     }
+}
+
+export interface ICreationContext extends ICreateChildImplContext {
+    basicCreate?: boolean;
 }

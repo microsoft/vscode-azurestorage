@@ -14,6 +14,7 @@ import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
 import { showWorkspaceFoldersQuickPick } from "../blobContainers/quickPickUtils";
 import { deleteNode } from '../commonTreeCommands';
 import { selectStorageAccountTreeItemForCommand } from '../selectStorageAccountNodeForCommand';
+import { ICreationContext, SubscriptionTreeItem } from '../SubscriptionTreeItem';
 import { StorageAccountTreeItem } from './storageAccountNode';
 
 export function registerStorageAccountActionHandlers(): void {
@@ -22,6 +23,17 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.copyConnectionString", copyConnectionString);
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
     registerCommand("azureStorage.deleteStorageAccount", async (context: IActionContext, treeItem?: StorageAccountTreeItem) => await deleteNode(context, StorageAccountTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.createGpv2Account", async (actionContext: ICreationContext, treeItem?: SubscriptionTreeItem) => {
+        let node = treeItem ? <SubscriptionTreeItem>treeItem : <SubscriptionTreeItem>await ext.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue, actionContext);
+        actionContext.basicCreate = false;
+        await node.createChild(actionContext);
+    });
+    registerCommand("azureStorage.basicCreateGpv2Account", async (actionContext: ICreationContext, treeItem?: SubscriptionTreeItem) => {
+        let node = treeItem ? <SubscriptionTreeItem>treeItem : <SubscriptionTreeItem>await ext.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue, actionContext);
+        actionContext.basicCreate = true;
+        await node.createChild(actionContext);
+    });
+
 }
 
 async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
