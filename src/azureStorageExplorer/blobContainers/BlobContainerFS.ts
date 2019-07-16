@@ -52,10 +52,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('blob.readDirectory', async (context) => {
-            let root: BlobContainerTreeItem = await this.getRoot(context, uri);
+            let blobContainer: BlobContainerTreeItem = await this.getRoot(context, uri);
             let parsedUri = parseUri(uri, this._blobContainerString);
 
-            const blobService = root.root.createBlobService();
+            const blobService = blobContainer.root.createBlobService();
             const listBlobResult = await this.listAllChildBlob(blobService, parsedUri.rootName, parsedUri.dirPath);
             const listDirectoryResult = await this.listAllChildDirectory(blobService, parsedUri.rootName, parsedUri.dirPath);
 
@@ -88,10 +88,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         return <Uint8Array>await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
             context.errorHandling.rethrow = true;
 
-            let root: BlobContainerTreeItem = await this.getRoot(context, uri);
+            let blobContainer: BlobContainerTreeItem = await this.getRoot(context, uri);
             let parsedUri = parseUri(uri, this._blobContainerString);
 
-            let blobService: azureStorage.BlobService = root.root.createBlobService();
+            let blobService: azureStorage.BlobService = blobContainer.root.createBlobService();
             let result = await new Promise<string | undefined>((resolve, reject) => {
                 blobService.getBlobToText(parsedUri.rootName, parsedUri.filePath, (error?: Error, text?: string) => {
                     if (!!error) {
@@ -113,10 +113,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 throw vscode.FileSystemError.NoPermissions(uri);
             }
 
-            let root: BlobContainerTreeItem = await this.getRoot(context, uri);
+            let blobContainer: BlobContainerTreeItem = await this.getRoot(context, uri);
             let parsedUri = parseUri(uri, this._blobContainerString);
 
-            const blobService = root.root.createBlobService();
+            const blobService = blobContainer.root.createBlobService();
             let blobResultChild = await new Promise<azureStorage.BlobService.BlobResult>((resolve, reject) => {
                 blobService.doesBlobExist(parsedUri.rootName, parsedUri.filePath, (error?: Error, result?: azureStorage.BlobService.BlobResult) => {
                     if (!!error) {
