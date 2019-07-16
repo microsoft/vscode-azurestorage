@@ -180,25 +180,32 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, this._blobContainerString);
+            let entry: EntryTreeItem;
             try {
-                let entry: EntryTreeItem = await this.lookup(context, uri);
-                const blobService = entry.root.createBlobService();
-                if (entry instanceof BlobTreeItem) {
-                    await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
-                } else if (entry instanceof BlobDirectoryTreeItem) {
-                    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-                        progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                        await this.deleteFolder(parsedUri, blobService);
-                    });
-                } else if (entry instanceof BlobContainerTreeItem) {
-                    throw new Error('Cannot delete a Blob Container.');
-                }
+                entry = await this.lookup(context, uri);
             } catch (err) {
-                this._virtualDirCreatedUri.forEach(value => {
-                    if (value.startsWith(uri.path)) {
-                        this._virtualDirCreatedUri.delete(value);
-                    }
+                if (this._virtualDirCreatedUri.has(uri.path)) {
+                    this._virtualDirCreatedUri.forEach(value => {
+                        if (value.startsWith(uri.path)) {
+                            this._virtualDirCreatedUri.delete(value);
+                        }
+                    });
+                    return;
+                } else {
+                    throw new Error(`Cannot delete ${parsedUri.filePath} because it wasn't found.`);
+                }
+            }
+
+            const blobService = entry.root.createBlobService();
+            if (entry instanceof BlobTreeItem) {
+                await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
+            } else if (entry instanceof BlobDirectoryTreeItem) {
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                    progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
+                    await this.deleteFolder(parsedUri, blobService);
                 });
+            } else if (entry instanceof BlobContainerTreeItem) {
+                throw new Error('Cannot delete a Blob Container.');
             }
         });
     }
