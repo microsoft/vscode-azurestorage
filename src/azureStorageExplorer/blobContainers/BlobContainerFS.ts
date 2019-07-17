@@ -22,6 +22,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+    // private _listener: vscode.Disposable = this.onDidChangeFile((e => {
+    //     console.log(e);
+    // }));
 
     private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
     private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git', '.vscode'];
@@ -41,12 +44,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
-            } else if (entry instanceof BlobTreeItem) {
+            } else {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
             }
-
-            throw vscode.FileSystemError.FileNotFound(uri);
         });
     }
 

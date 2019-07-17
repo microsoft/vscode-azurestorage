@@ -26,6 +26,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
+    // To detect uris that vscode automatically calls so that we do not throw unnecessary errors
     private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
     private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git', '.vscode'];
 
