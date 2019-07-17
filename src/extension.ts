@@ -33,6 +33,7 @@ import { configurationSettingsKeys, extensionPrefix } from './constants';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
+// tslint:disable-next-line: max-func-body-length
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }): Promise<AzureExtensionApiProvider> {
     console.log('Extension "Azure Storage Tools" is now active.');
 
@@ -72,14 +73,18 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorageblob', new BlobContainerFS(), { isCaseSensitive: true }));
         }
         registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
-            // tslint:disable-next-line: prefer-template
-            await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestoragefile://' + treeItem.fullId));
-            await commands.executeCommand('workbench.view.explorer');
+            await callWithTelemetryAndErrorHandling('blob.openInFileExplorer', async () => {
+                // tslint:disable-next-line: prefer-template
+                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestoragefile://' + treeItem.fullId));
+                await commands.executeCommand('workbench.view.explorer');
+            });
         });
         registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem: BlobContainerTreeItem) => {
-            // tslint:disable-next-line: prefer-template
-            await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorageblob://' + treeItem.fullId));
-            await commands.executeCommand('workbench.view.explorer');
+            await callWithTelemetryAndErrorHandling('blob.openInFileExplorer', async () => {
+                // tslint:disable-next-line: prefer-template
+                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorageblob://' + treeItem.fullId));
+                await commands.executeCommand('workbench.view.explorer');
+            });
         });
         registerCommand('azureStorage.refresh', async (_actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(treeItem));
         registerCommand('azureStorage.loadMore', async (actionContext: IActionContext, treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem, actionContext));
