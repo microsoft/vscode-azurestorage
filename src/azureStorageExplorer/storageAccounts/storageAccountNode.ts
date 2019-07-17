@@ -292,17 +292,17 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         });
     }
 
-    public async configureStaticWebsite(): Promise<void> {
+    public async configureStaticWebsite(options?: IStaticWebsiteConfigureOptions): Promise<void> {
         const defaultIndexDocumentName = 'index.html';
         let oldStatus = await this.getActualWebsiteHostingStatus();
         await this.ensureHostingCapable(oldStatus);
-        let indexDocument = await ext.ui.showInputBox({
+        let indexDocument = (options && options.indexDocument) || await ext.ui.showInputBox({
             prompt: "Enter the index document name",
             value: oldStatus.indexDocument ? oldStatus.indexDocument : defaultIndexDocumentName,
             validateInput: (value: string): string | undefined => this.validateIndexDocumentName(value)
         });
 
-        let errorDocument404Path: string = await ext.ui.showInputBox({
+        let errorDocument404Path: string = (options && options.errorDocument404Path) || await ext.ui.showInputBox({
             prompt: "Enter the 404 error document path",
             value: oldStatus.errorDocument404Path ? oldStatus.errorDocument404Path : "",
             placeHolder: 'e.g. error/documents/error.html',
@@ -415,4 +415,9 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             throw new Error("This storage account does not support static website hosting.");
         }
     }
+}
+
+export interface IStaticWebsiteConfigureOptions {
+    indexDocument?: string;
+    errorDocument404Path?: string;
 }

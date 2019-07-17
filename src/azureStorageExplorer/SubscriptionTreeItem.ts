@@ -53,7 +53,14 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             progress.report({ message: `Creating storage account '${wizardContext.newStorageAccountName}'` });
             await wizard.execute();
         });
-        return await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(<StorageAccount>nonNull(wizardContext.storageAccount)), storageManagementClient);
+
+        const treeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(<StorageAccount>nonNull(wizardContext.storageAccount)), storageManagementClient);
+
+        if (context.basicCreate) {
+            await treeItem.configureStaticWebsite({ indexDocument: "index.html", errorDocument404Path: "index.html" });
+        }
+
+        return treeItem;
     }
 
     public hasMoreChildrenImpl(): boolean {
