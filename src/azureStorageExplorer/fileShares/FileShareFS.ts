@@ -92,11 +92,17 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return <Uint8Array>await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
-            let treeItem: FileTreeItem = await this.lookupAsFile(context, uri);
+            context.errorHandling.rethrow = true;
+            let parsedUri = parseUri(uri, this._fileShareString);
 
+            if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
+                context.errorHandling.suppressDisplay = true;
+            }
+
+            let treeItem: FileShareTreeItem = await this.getRoot(context, uri);
             let fileService = treeItem.root.createFileService();
             const result = await new Promise<string | undefined>((resolve, reject) => {
-                fileService.getFileToText(treeItem.share.name, treeItem.directoryPath, treeItem.file.name, (error?: Error, text?: string) => {
+                fileService.getFileToText(treeItem.share.name, parsedUri.parentDirPath, parsedUri.baseName, (error?: Error, text?: string) => {
                     if (!!error) {
                         reject(error);
                     } else {
@@ -169,8 +175,11 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void {
-        throw new Error('Renaming/moving folders or files not supported.');
+    async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
+        return await callWithTelemetryAndErrorHandling('fs.rename', async (context) => {
+            context.errorHandling.rethrow = true;
+            throw new Error('Renaming/moving folders or files not supported.');
+        });
     }
 
     private async lookupAsFile(context: IActionContext, uri: vscode.Uri): Promise<FileTreeItem> {

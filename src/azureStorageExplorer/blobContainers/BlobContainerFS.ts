@@ -87,9 +87,13 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return <Uint8Array>await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
             context.errorHandling.rethrow = true;
+            let parsedUri = parseUri(uri, this._blobContainerString);
+
+            if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
+                context.errorHandling.suppressDisplay = true;
+            }
 
             let blobContainer: BlobContainerTreeItem = await this.getRoot(context, uri);
-            let parsedUri = parseUri(uri, this._blobContainerString);
 
             let blobService: azureStorage.BlobService = blobContainer.root.createBlobService();
             let result = await new Promise<string | undefined>((resolve, reject) => {
@@ -240,8 +244,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
     }
 
-    rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): void | Thenable<void> {
-        throw new Error('Renaming/moving folders or files not supported.');
+    async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
+        return await callWithTelemetryAndErrorHandling('blob.rename', async (context) => {
+            context.errorHandling.rethrow = true;
+            throw new Error('Renaming/moving folders or files not supported.');
+        });
     }
 
     private async lookup(context: IActionContext, uri: vscode.Uri): Promise<EntryTreeItem> {

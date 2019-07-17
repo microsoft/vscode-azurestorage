@@ -58,7 +58,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }));
 
         // tslint:disable-next-line: strict-boolean-expressions
-        if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer) && this._openedInFileExplorer) {
+        if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer) && !this._openedInFileExplorer) {
             const ti = new GenericTreeItem(this, {
                 label: this._openInFileExplorerString,
                 commandId: 'azureStorage.openFileShareInFileExplorer',
@@ -67,6 +67,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
             ti.commandArgs = [this];
             result.push(ti);
+            this._openedInFileExplorer = true;
         }
         return result;
     }
