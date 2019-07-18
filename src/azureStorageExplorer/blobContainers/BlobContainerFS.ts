@@ -22,9 +22,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
-    // private _listener: vscode.Disposable = this.onDidChangeFile((e => {
-    //     console.log(e);
-    // }));
 
     private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
     private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git', '.vscode'];

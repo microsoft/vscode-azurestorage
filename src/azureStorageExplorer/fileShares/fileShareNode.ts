@@ -19,7 +19,7 @@ import { askAndCreateEmptyTextFile } from './fileUtils';
 
 export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
-    private _openedInFileExplorer: boolean = false;
+    private _openInFileExplorerShown: boolean = false;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
 
     constructor(
@@ -58,7 +58,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }));
 
         // tslint:disable-next-line: strict-boolean-expressions
-        if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer) && !this._openedInFileExplorer) {
+        if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer) && !this._openInFileExplorerShown) {
             const ti = new GenericTreeItem(this, {
                 label: this._openInFileExplorerString,
                 commandId: 'azureStorage.openFileShareInFileExplorer',
@@ -67,7 +67,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
             ti.commandArgs = [this];
             result.push(ti);
-            this._openedInFileExplorer = true;
+            this._openInFileExplorerShown = true;
         }
         return result;
     }
@@ -80,10 +80,6 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         }
 
         return ti1.label.localeCompare(ti2.label);
-    }
-
-    public async refreshImpl(): Promise<void> {
-        this._openedInFileExplorer = false;
     }
 
     public async copyUrl(): Promise<void> {

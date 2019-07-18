@@ -73,7 +73,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorageblob', new BlobContainerFS(), { isCaseSensitive: true }));
         }
         registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
-            await callWithTelemetryAndErrorHandling('blob.openInFileExplorer', async () => {
+            await callWithTelemetryAndErrorHandling('fs.openInFileExplorer', async () => {
                 // tslint:disable-next-line: prefer-template
                 await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestoragefile://' + treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
