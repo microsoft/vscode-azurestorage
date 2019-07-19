@@ -19,7 +19,6 @@ import { askAndCreateEmptyTextFile } from './fileUtils';
 
 export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
-    private _openInFileExplorerShown: boolean = false;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
 
     constructor(
@@ -41,35 +40,33 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     }
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<(AzExtTreeItem)[]> {
+        const result: AzExtTreeItem[] = [];
+
         if (clearCache) {
             this._continuationToken = undefined;
+            // tslint:disable-next-line: strict-boolean-expressions
+            if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
+                const ti = new GenericTreeItem(this, {
+                    label: this._openInFileExplorerString,
+                    commandId: 'azureStorage.openFileShareInFileExplorer',
+                    contextValue: 'openFileShareInFileExplorer'
+                });
+
+                ti.commandArgs = [this];
+                result.push(ti);
+            }
         }
 
         // currentToken argument typed incorrectly in SDK
         let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
-        const result = (<(AzExtTreeItem)[]>[])
-            .concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
-                return new DirectoryTreeItem(this, '', directory, this.share);
-            }))
+        return result.concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
+            return new DirectoryTreeItem(this, '', directory, this.share);
+        }))
             .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
                 return new FileTreeItem(this, file, '', this.share);
             }));
-
-        // tslint:disable-next-line: strict-boolean-expressions
-        if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer) && !this._openInFileExplorerShown) {
-            const ti = new GenericTreeItem(this, {
-                label: this._openInFileExplorerString,
-                commandId: 'azureStorage.openFileShareInFileExplorer',
-                contextValue: 'openFileShareInFileExplorer'
-            });
-
-            ti.commandArgs = [this];
-            result.push(ti);
-            this._openInFileExplorerShown = true;
-        }
-        return result;
     }
 
     public compareChildrenImpl(ti1: FileShareTreeItem, ti2: FileShareTreeItem): number {
@@ -95,6 +92,20 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return new Promise((resolve, reject) => {
             let fileService = this.root.createFileService();
             fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
+    listLimitedFiles(currentToken: azureStorage.common.ContinuationToken, maxRes: number): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
+        return new Promise((resolve, reject) => {
+            let fileService = this.root.createFileService();
+            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: maxRes }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
                 if (err) {
                     reject(err);
                 } else {

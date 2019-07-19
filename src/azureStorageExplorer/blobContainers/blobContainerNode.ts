@@ -36,7 +36,6 @@ export interface IExistingBlobContext extends IActionContext {
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
     private _websiteHostingEnabled: boolean;
-    private _openInFileExplorerShown: boolean = false;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
 
     private constructor(
@@ -71,29 +70,26 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
+        const result: AzExtTreeItem[] = [];
         if (clearCache) {
             this._continuationToken = undefined;
+            if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
+                const ti = new GenericTreeItem(this, {
+                    label: this._openInFileExplorerString,
+                    commandId: 'azureStorage.openBlobContainerInFileExplorer',
+                    contextValue: 'openBlobContainerInFileExplorer'
+                });
+
+                ti.commandArgs = [this];
+                result.push(ti);
+            }
         }
 
         // currentToken argument typed incorrectly in SDK
         let blobs = await this.listBlobs(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = blobs;
         this._continuationToken = continuationToken;
-        const result: AzExtTreeItem[] = entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, blob, this.container));
-
-        if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer) && !this._openInFileExplorerShown) {
-            const ti = new GenericTreeItem(this, {
-                label: this._openInFileExplorerString,
-                commandId: 'azureStorage.openBlobContainerInFileExplorer',
-                contextValue: 'openBlobContainerInFileExplorer'
-            });
-
-            ti.commandArgs = [this];
-            result.push(ti);
-            this._openInFileExplorerShown = true;
-        }
-
-        return result;
+        return result.concat(entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, blob, this.container)));
     }
 
     public compareChildrenImpl(ti1: BlobContainerTreeItem, ti2: BlobContainerTreeItem): number {

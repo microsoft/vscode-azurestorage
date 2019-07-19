@@ -25,6 +25,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+    private _continuationTokens: Map<String, azureStorage.common.ContinuationToken | undefined> = new Map<String, azureStorage.common.ContinuationToken | undefined>();
 
     // To detect uris that vscode automatically calls so that we do not throw unnecessary errors
     private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
@@ -58,10 +59,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(context, uri);
 
-            // Intentionally passing undefined for token - only supports listing first batch of files for now
+            let parsedUri = parseUri(uri, this._fileShareString);
+            let continuationToken: azureStorage.common.ContinuationToken | undefined = this._continuationTokens.get(parsedUri.parentDirPath);
+
             // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-            let listFilesandDirectoryResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
+            let listFilesandDirectoryResult = await entry.listLimitedFiles(<azureStorage.common.ContinuationToken>continuationToken!, 2);
             let entries = listFilesandDirectoryResult.entries;
+
+            this._continuationTokens.set(parsedUri.parentDirPath, listFilesandDirectoryResult.continuationToken);
 
             let result: [string, vscode.FileType][] = [];
             for (const dir of entries.directories) {

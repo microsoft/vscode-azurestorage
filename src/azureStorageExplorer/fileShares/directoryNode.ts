@@ -75,6 +75,11 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return listFilesInDirectory(this.fullPath, this.share.name, this.root, 50, currentToken);
     }
 
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
+    listLimitedFiles(currentToken: azureStorage.common.ContinuationToken, maxRes: number): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
+        return listFilesInDirectory(this.fullPath, this.share.name, this.root, maxRes, currentToken);
+    }
+
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem | DirectoryTreeItem> {
         if (context.childType === FileTreeItem.contextValue) {
             return askAndCreateEmptyTextFile(this, this.fullPath, this.share, context);
