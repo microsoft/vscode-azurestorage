@@ -101,20 +101,6 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         });
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listLimitedFiles(currentToken: azureStorage.common.ContinuationToken, maxRes: number): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
-        return new Promise((resolve, reject) => {
-            let fileService = this.root.createFileService();
-            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: maxRes }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-    }
-
     public async deleteTreeItemImpl(): Promise<void> {
         const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
         const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);

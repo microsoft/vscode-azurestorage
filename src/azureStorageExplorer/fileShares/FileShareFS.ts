@@ -63,7 +63,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             let continuationToken: azureStorage.common.ContinuationToken | undefined = this._continuationTokens.get(parsedUri.parentDirPath);
 
             // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-            let listFilesandDirectoryResult = await entry.listLimitedFiles(<azureStorage.common.ContinuationToken>continuationToken!, 2);
+            let listFilesandDirectoryResult = await entry.listFiles(<azureStorage.common.ContinuationToken>continuationToken!);
             let entries = listFilesandDirectoryResult.entries;
 
             this._continuationTokens.set(parsedUri.parentDirPath, listFilesandDirectoryResult.continuationToken);
