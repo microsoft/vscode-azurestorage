@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
@@ -58,23 +58,27 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(context, uri);
 
-            // Intentionally passing undefined for token - only supports listing first batch of files for now
-            // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-            let listFilesandDirectoryResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
-            let entries = listFilesandDirectoryResult.entries;
+            let children: AzExtTreeItem[] = [];
+            if (entry.hasMoreChildrenImpl()) {
+                children = await entry.loadMoreChildrenImpl(false);
+            }
+            let previousChildren: AzExtTreeItem[] = await entry.getCachedChildren(context);
+            let allChildren: AzExtTreeItem[] = previousChildren.concat(children);
 
             let result: [string, vscode.FileType][] = [];
-            for (const dir of entries.directories) {
-                result.push([dir.name, vscode.FileType.Directory]);
+            for (const child of allChildren) {
+                if (child.label !== 'Open in File Explorer...') {
+                    result.push([child.label, vscode.FileType.File]);
+                }
             }
-            for (const file of entries.files) {
-                result.push([file.name, vscode.FileType.File]);
+
+            if (entry.hasMoreChildrenImpl()) {
+                result.push(['Load More...', vscode.FileType.File]);
             }
 
             return result;
         });
     }
-
     async createDirectory(uri: vscode.Uri): Promise<void> {
         return await callWithTelemetryAndErrorHandling('fs.createDirectory', async (context) => {
             context.errorHandling.rethrow = true;
@@ -95,6 +99,11 @@ export class FileShareFS implements vscode.FileSystemProvider {
         return <Uint8Array>await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
             context.errorHandling.rethrow = true;
             let parsedUri = parseUri(uri, this._fileShareString);
+
+            if (parsedUri.baseName === 'Load More...') {
+                // detect you are trying to load more instead of actually getting a file called load more...
+                return Buffer.from('');
+            }
 
             if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
                 context.errorHandling.suppressDisplay = true;
