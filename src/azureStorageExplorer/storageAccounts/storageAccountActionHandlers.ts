@@ -89,9 +89,24 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
         throw new Error(`Could not find $web blob container for storage account "${destAccountTreeItem.label}"`);
     }
 
+    const hasAsked = <boolean>vscode.workspace.getConfiguration(extensionPrefix).get("requestPredeploy", false);
+    if (!hasAsked) {
+        await configurePredeployTask(sourcePath);
+        vscode.workspace.getConfiguration(extensionPrefix).update("requestPredeploy", true, vscode.ConfigurationTarget.Workspace);
+    }
+
     await runPreDeployTask(sourcePath, context);
 
     return destContainerTreeItem.deployStaticWebsite(context, sourcePath);
+}
+
+async function configurePredeployTask(deployFsPath: string): Promise<void> {
+    const tasks: vscode.Task[] = await vscode.tasks.fetchTasks();
+    if (tasks.find((task: vscode.Task) => isTaskEqual("build", deployFsPath, task))) {
+        vscode.workspace.getConfiguration(extensionPrefix, vscode.Uri.file(deployFsPath)).update(configurationSettingsKeys.preDeployTask, "build");
+    } else {
+        vscode.window.showInformationMessage(`Please set your predeploy task under the setting "${extensionPrefix}.${configurationSettingsKeys.preDeployTask}".`);
+    }
 }
 
 async function runPreDeployTask(deployFsPath: string, context: IActionContext): Promise<void> {
