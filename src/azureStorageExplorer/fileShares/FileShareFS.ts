@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
@@ -35,26 +35,25 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        return <vscode.FileStat>await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
-            let treeItem: EntryTreeItem = await this.lookup(context, uri);
+        let treeItem: EntryTreeItem | undefined = await this.lookup(uri);
 
-            if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
-                // creation and modification times as well as size of tree item are intentionally set to 0 for now
-                return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
-            } else if (treeItem instanceof FileTreeItem) {
-                // creation and modification times as well as size of tree item are intentionally set to 0 for now
-                return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
-            } else {
-                throw new Error('Cannot view multiple File Shares at once.');
-            }
-        });
+        if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
+            // creation and modification times as well as size of tree item are intentionally set to 0 for now
+            return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
+        } else if (treeItem instanceof FileTreeItem) {
+            // creation and modification times as well as size of tree item are intentionally set to 0 for now
+            return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
+        } else if (treeItem instanceof FileShareGroupTreeItem) {
+            throw new Error('Cannot view multiple File Shares at once.');
+        } else {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
-            context.errorHandling.rethrow = true;
 
-            let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(context, uri);
+            let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri);
 
             let children: AzExtTreeItem[] = [];
             if (entry.hasMoreChildrenImpl()) {
@@ -77,6 +76,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             return result;
         });
     }
+
     async createDirectory(uri: vscode.Uri): Promise<void> {
         let parsedUri = parseUri(uri, this._fileShareString);
         let root: FileShareTreeItem = await this.getRoot(uri);
@@ -157,21 +157,21 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
-        await callWithTelemetryAndErrorHandling('fs.delete', async (context) => {
-            if (!options.recursive) {
-                throw new Error("Azure storage does not support nonrecursive deletion of folders.");
-            }
+        if (!options.recursive) {
+            throw new Error("Azure storage does not support nonrecursive deletion of folders.");
+        }
 
-            let parsedUri = parseUri(uri, this._fileShareString);
-            let fileFound: EntryTreeItem = await this.lookup(context, uri);
-            if (fileFound instanceof FileTreeItem) {
-                await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
-            } else if (fileFound instanceof DirectoryTreeItem) {
-                await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
-            } else {
-                throw new RangeError("Cannot delete a FileShare or the folder of FileShares.");
-            }
-        });
+        let parsedUri = parseUri(uri, this._fileShareString);
+        let fileFound: EntryTreeItem | undefined = await this.lookup(uri);
+        if (fileFound instanceof FileTreeItem) {
+            await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
+        } else if (fileFound instanceof DirectoryTreeItem) {
+            await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
+        } else if (fileFound instanceof FileShareGroupTreeItem || fileFound instanceof FileShareTreeItem) {
+            throw new RangeError("Cannot delete a FileShare or the folder of FileShares.");
+        } else {
+            throw vscode.FileSystemError.FileNotFound(uri);
+        }
     }
 
     async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
@@ -180,19 +180,19 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async lookupAsDirectory(context: IActionContext, uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem> {
-        let entry = await this.lookup(context, uri);
+    private async lookupAsDirectory(uri: vscode.Uri): Promise<DirectoryTreeItem | FileShareTreeItem> {
+        let entry = await this.lookup(uri);
         if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
             return entry;
         }
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
-    private async lookup(context: IActionContext, uri: vscode.Uri): Promise<EntryTreeItem> {
+    private async lookup(uri: vscode.Uri): Promise<EntryTreeItem | undefined> {
         let parsedUri = parseUri(uri, this._fileShareString);
 
         if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
-            context.errorHandling.suppressDisplay = true;
+            return undefined;
         }
 
         let entry: EntryTreeItem = await this.getRoot(uri);
