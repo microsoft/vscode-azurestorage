@@ -19,6 +19,7 @@ import { askAndCreateEmptyTextFile } from './fileUtils';
 
 export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
+    private _openInFileExplorerString: string = 'Open in File Explorer...';
 
     constructor(
         parent: AzureParentTreeItem,
@@ -39,34 +40,43 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     }
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<(AzExtTreeItem)[]> {
+        const result: AzExtTreeItem[] = [];
+
         if (clearCache) {
             this._continuationToken = undefined;
+            // tslint:disable-next-line: strict-boolean-expressions
+            if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
+                const ti = new GenericTreeItem(this, {
+                    label: this._openInFileExplorerString,
+                    commandId: 'azureStorage.openFileShareInFileExplorer',
+                    contextValue: 'openFileShareInFileExplorer'
+                });
+
+                ti.commandArgs = [this];
+                result.push(ti);
+            }
         }
 
         // currentToken argument typed incorrectly in SDK
         let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken);
         let { entries, continuationToken } = fileResults;
         this._continuationToken = continuationToken;
-        const result = (<(AzExtTreeItem)[]>[])
-            .concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
-                return new DirectoryTreeItem(this, '', directory, this.share);
-            }))
+        return result.concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
+            return new DirectoryTreeItem(this, '', directory, this.share);
+        }))
             .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
                 return new FileTreeItem(this, file, '', this.share);
             }));
+    }
 
-        // tslint:disable-next-line: strict-boolean-expressions
-        if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
-            const ti = new GenericTreeItem(this, {
-                label: 'Open in File Explorer...',
-                commandId: 'azureStorage.openFileShareInFileExplorer',
-                contextValue: 'openFileShareInFileExplorer'
-            });
-
-            ti.commandArgs = [this];
-            result.push(ti);
+    public compareChildrenImpl(ti1: FileShareTreeItem, ti2: FileShareTreeItem): number {
+        if (ti1.label === this._openInFileExplorerString) {
+            return -1;
+        } else if (ti2.label === this._openInFileExplorerString) {
+            return 1;
         }
-        return result;
+
+        return ti1.label.localeCompare(ti2.label);
     }
 
     public async copyUrl(): Promise<void> {
