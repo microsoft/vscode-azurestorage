@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, callWithTelemetryAndErrorHandling } from "vscode-azureextensionui";
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling, GenericTreeItem } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
@@ -64,8 +64,12 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let result: [string, vscode.FileType][] = [];
             for (const child of allChildren) {
-                if (child.label !== 'Open in File Explorer...') {
+                if (child instanceof DirectoryTreeItem) {
+                    result.push([child.label, vscode.FileType.Directory]);
+                } else if (child instanceof FileTreeItem) {
                     result.push([child.label, vscode.FileType.File]);
+                } else if (child instanceof GenericTreeItem) {
+                    // do nothing
                 }
             }
 
@@ -89,34 +93,32 @@ export class FileShareFS implements vscode.FileSystemProvider {
         await createDirectory(root.share, root.root, parsedUri.parentDirPath, parsedUri.baseName);
     }
 
-    async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        return <Uint8Array>await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
-            let parsedUri = parseUri(uri, this._fileShareString);
+    async readFile(uri: vscode.Uri): Promise<Uint8Array | undefined> {
+        let parsedUri = parseUri(uri, this._fileShareString);
 
-            if (parsedUri.baseName === 'Load More...') {
-                // detect you are trying to load more instead of actually getting a file called load more...
-                return Buffer.from('');
-            }
+        if (parsedUri.baseName === 'Load More...') {
+            // detect you are trying to load more instead of actually getting a file called load more...
+            return Buffer.from('');
+        }
 
-            if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
-                context.errorHandling.suppressDisplay = true;
-            }
+        if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
+            return undefined;
+        }
 
-            let treeItem: FileShareTreeItem = await this.getRoot(uri);
-            let fileService = treeItem.root.createFileService();
-            const result = await new Promise<string | undefined>((resolve, reject) => {
-                fileService.getFileToText(treeItem.share.name, parsedUri.parentDirPath, parsedUri.baseName, (error?: Error, text?: string) => {
-                    if (!!error) {
-                        reject(error);
-                    } else {
-                        resolve(text);
-                    }
-                });
+        let treeItem: FileShareTreeItem = await this.getRoot(uri);
+        let fileService = treeItem.root.createFileService();
+        const result = await new Promise<string | undefined>((resolve, reject) => {
+            fileService.getFileToText(treeItem.share.name, parsedUri.parentDirPath, parsedUri.baseName, (error?: Error, text?: string) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve(text);
+                }
             });
-
-            // tslint:disable-next-line: strict-boolean-expressions
-            return Buffer.from(result || '');
         });
+
+        // tslint:disable-next-line: strict-boolean-expressions
+        return Buffer.from(result || '');
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
