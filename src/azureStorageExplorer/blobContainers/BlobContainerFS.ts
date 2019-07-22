@@ -41,9 +41,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
-            } else {
+            } else if (entry instanceof BlobTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
+            } else {
+                throw this.getFileNotFoundError(uri, context);
             }
         });
     }
@@ -74,12 +76,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             }
 
-            return directoryChildren;
+            return directoryChildren.slice(0, 50);
         });
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
-        return <void>await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
+        return <void>await callWithTelemetryAndErrorHandling('blob.createDirectory', async (context) => {
             context.errorHandling.rethrow = true;
             this._virtualDirCreatedUri.add(uri.path);
         });
@@ -276,7 +278,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             if (!!blobResultChild) {
                 return new BlobTreeItem(entry, blobResultChild, entry.container);
             }
-            throw vscode.FileSystemError.FileNotFound(uri);
+            throw this.getFileNotFoundError(uri, context);
         }
     }
 
@@ -317,5 +319,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             });
         });
+    }
+
+    private getFileNotFoundError(uri: vscode.Uri, context: IActionContext): Error {
+        context.errorHandling.rethrow = true;
+        context.errorHandling.suppressDisplay = true;
+        return vscode.FileSystemError.FileNotFound(uri);
     }
 }
