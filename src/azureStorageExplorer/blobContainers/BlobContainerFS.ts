@@ -83,13 +83,22 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async createDirectory(uri: vscode.Uri): Promise<void> {
         return <void>await callWithTelemetryAndErrorHandling('blob.createDirectory', async (context) => {
             context.errorHandling.rethrow = true;
-            this._virtualDirCreatedUri.add(uri.path);
+            context.errorHandling.suppressDisplay = true;
+
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                let parsedUri = parseUri(uri, this._blobContainerString);
+                progress.report({ message: `Creating directory ${parsedUri.filePath}` });
+
+                this._virtualDirCreatedUri.add(uri.path);
+            });
         });
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return <Uint8Array>await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
+            context.errorHandling.suppressDisplay = true;
             context.errorHandling.rethrow = true;
+
             let parsedUri = parseUri(uri, this._blobContainerString);
 
             if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
@@ -135,7 +144,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             });
 
             if (!blobResultChild.exists && !options.create) {
-                throw vscode.FileSystemError.FileNotFound(uri);
+                throw this.getFileNotFoundError(uri, context);
             } else if (blobResultChild.exists && !options.overwrite) {
                 throw vscode.FileSystemError.FileExists(uri);
             } else {

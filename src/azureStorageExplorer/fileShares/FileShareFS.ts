@@ -74,25 +74,29 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 }
             }
 
-            if (entry.hasMoreChildrenImpl()) {
-                result.push(['Load More...', vscode.FileType.File]);
-            }
-
             return result;
         });
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
         return <void>await callWithTelemetryAndErrorHandling('fs.createDirectory', async (context) => {
-            let parsedUri = parseUri(uri, this._fileShareString);
-            let root: FileShareTreeItem = await this.getRoot(uri, context);
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
 
-            let response: string | undefined | null = validateDirectoryName(parsedUri.baseName);
-            if (response) {
-                throw new Error(response);
-            }
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                let parsedUri = parseUri(uri, this._fileShareString);
 
-            await createDirectory(root.share, root.root, parsedUri.parentDirPath, parsedUri.baseName);
+                progress.report({ message: `Creating directory ${parsedUri.filePath}` });
+
+                let root: FileShareTreeItem = await this.getRoot(uri, context);
+
+                let response: string | undefined | null = validateDirectoryName(parsedUri.baseName);
+                if (response) {
+                    throw new Error(response);
+                }
+
+                await createDirectory(root.share, root.root, parsedUri.parentDirPath, parsedUri.baseName);
+            });
         });
     }
 
@@ -102,11 +106,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
 
             let parsedUri = parseUri(uri, this._fileShareString);
-
-            if (parsedUri.baseName === 'Load More...') {
-                // detect you are trying to load more instead of actually getting a file called load more...
-                return Buffer.from('');
-            }
 
             if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
                 context.errorHandling.suppressDisplay = true;
@@ -151,15 +150,15 @@ export class FileShareFS implements vscode.FileSystemProvider {
             });
 
             if (!fileResultChild.exists && !options.create) {
-                throw vscode.FileSystemError.FileNotFound(uri);
+                throw this.getFileNotFoundError(uri, context);
             } else if (fileResultChild.exists && !options.overwrite) {
                 throw vscode.FileSystemError.FileExists(uri);
             } else {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     if (fileResultChild.exists) {
-                        progress.report({ message: `Saving blob ${parsedUri.filePath}` });
+                        progress.report({ message: `Saving file ${parsedUri.filePath}` });
                     } else {
-                        progress.report({ message: `Creating blob ${parsedUri.filePath}` });
+                        progress.report({ message: `Creating file ${parsedUri.filePath}` });
                     }
 
                     await new Promise<void>((resolve, reject) => {
@@ -192,7 +191,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             } else if (fileFound instanceof FileShareGroupTreeItem || fileFound instanceof FileShareTreeItem) {
                 throw new RangeError("Cannot delete a FileShare or the folder of FileShares.");
             } else {
-                throw vscode.FileSystemError.FileNotFound(uri);
+                throw this.getFileNotFoundError(uri, context);
             }
         });
     }
