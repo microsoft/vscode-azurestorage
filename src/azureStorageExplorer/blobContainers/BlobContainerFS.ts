@@ -16,11 +16,15 @@ import { BlobTreeItem } from './blobNode';
 export type EntryTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
 export class BlobContainerFS implements vscode.FileSystemProvider {
-
     private _blobContainerString: string = 'Blob Containers';
+    private _virtualDirCreatedUri: Set<string> = new Set();
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+
+    // To detect uris that vscode automatically calls so that we do not throw unnecessary errors
+    private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
+    private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git', '.vscode'];
 
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
