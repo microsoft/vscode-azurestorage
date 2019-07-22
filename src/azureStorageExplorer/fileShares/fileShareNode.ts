@@ -41,6 +41,10 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<(AzExtTreeItem)[]> {
         const result: AzExtTreeItem[] = [];
+<<<<<<< HEAD
+=======
+
+>>>>>>> c2a7d9a06c5128db198436b2727cdcde478a5980
         if (clearCache) {
             this._continuationToken = undefined;
             // tslint:disable-next-line: strict-boolean-expressions

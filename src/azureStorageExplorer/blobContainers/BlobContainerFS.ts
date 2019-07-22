@@ -76,7 +76,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             }
 
-            return directoryChildren.slice(0, 50);
+            return directoryChildren;
         });
     }
 
