@@ -34,9 +34,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new Error("Method not implemented.");
     }
 
-    async stat(uri: vscode.Uri): Promise<vscode.FileStat | Thenable<vscode.FileStat>> {
+    async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return <vscode.FileStat>await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
-            let treeItem: EntryTreeItem | undefined = await this.lookup(uri, context);
+            let treeItem: EntryTreeItem = await this.lookup(uri, context);
 
             if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
@@ -160,7 +160,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, this._fileShareString);
-            let fileFound: EntryTreeItem | undefined = await this.lookup(uri, context);
+            let fileFound: EntryTreeItem = await this.lookup(uri, context);
             if (fileFound instanceof FileTreeItem) {
                 await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
             } else if (fileFound instanceof DirectoryTreeItem) {
@@ -231,9 +231,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     private async getRoot(uri: vscode.Uri, context: IActionContext): Promise<FileShareTreeItem> {
-        context.errorHandling.rethrow = true;
-        context.errorHandling.suppressDisplay = true;
-
         let root = await findRoot(uri, this._fileShareString, context);
 
         if (root instanceof FileShareTreeItem) {

@@ -11,9 +11,6 @@ import { parseUri } from './parseUri';
 const rootMap: Map<string, AzExtTreeItem> = new Map<string, AzExtTreeItem>();
 
 export async function findRoot(uri: vscode.Uri, fileType: string, context: IActionContext): Promise<AzExtTreeItem> {
-    context.errorHandling.rethrow = true;
-    context.errorHandling.suppressDisplay = true;
-
     let rootPath = parseUri(uri, fileType).rootPath;
     let root = rootMap.get(rootPath);
     if (!!root) {

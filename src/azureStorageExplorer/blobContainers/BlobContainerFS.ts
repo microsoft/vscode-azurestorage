@@ -37,10 +37,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
             }
 
-            if (uri.path.includes('node_modules')) {
-                console.log('hi');
-            }
-
             let entry: EntryTreeItem = await this.lookup(uri, context);
             if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
@@ -96,7 +92,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
                 context.errorHandling.suppressDisplay = true;
-                throw new Error('These files are automatically looked for.');
             }
 
             let blobContainer: BlobContainerTreeItem = await this.getRoot(uri, context);
