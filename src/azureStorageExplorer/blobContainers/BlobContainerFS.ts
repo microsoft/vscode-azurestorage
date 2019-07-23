@@ -199,16 +199,17 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             const blobService = entry.root.createBlobService();
-            if (entry instanceof BlobTreeItem) {
-                await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
-            } else if (entry instanceof BlobDirectoryTreeItem) {
-                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                if (entry instanceof BlobTreeItem) {
+                    progress.report({ message: `Deleting blob ${parsedUri.filePath}` });
+                    await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
+                } else if (entry instanceof BlobDirectoryTreeItem) {
                     progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
                     await this.deleteFolder(parsedUri, blobService);
-                });
-            } else if (entry instanceof BlobContainerTreeItem) {
-                throw new Error('Cannot delete a Blob Container.');
-            }
+                } else if (entry instanceof BlobContainerTreeItem) {
+                    throw new Error('Cannot delete a Blob Container.');
+                }
+            });
         });
     }
 
