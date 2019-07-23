@@ -74,16 +74,16 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
-        return <void>await callWithTelemetryAndErrorHandling('fs.createDirectory', async (context) => {
+        await callWithTelemetryAndErrorHandling('fs.createDirectory', async (context) => {
             let parsedUri = parseUri(uri, this._fileShareString);
-            let root: FileShareTreeItem = await this.getRoot(uri, context);
+            let fileShare: FileShareTreeItem = await this.getRoot(uri, context);
 
             let response: string | undefined | null = validateDirectoryName(parsedUri.baseName);
             if (response) {
                 throw new Error(response);
             }
 
-            await createDirectory(root.share, root.root, parsedUri.parentDirPath, parsedUri.baseName);
+            await createDirectory(fileShare.share, fileShare.root, parsedUri.parentDirPath, parsedUri.baseName);
         });
     }
 
@@ -93,7 +93,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
                 context.errorHandling.suppressDisplay = true;
-                throw new Error('These files are automatically looked for.');
             }
 
             let treeItem: FileShareTreeItem = await this.getRoot(uri, context);
@@ -120,9 +119,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, this._fileShareString);
-            let root: FileShareTreeItem = await this.getRoot(uri, context);
+            let fileShare: FileShareTreeItem = await this.getRoot(uri, context);
 
-            const fileService = root.root.createFileService();
+            const fileService = fileShare.root.createFileService();
             let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
                 fileService.doesFileExist(parsedUri.rootName, parsedUri.parentDirPath, parsedUri.baseName, (error?: Error, result?: azureStorage.FileService.FileResult) => {
                     if (!!error) {
