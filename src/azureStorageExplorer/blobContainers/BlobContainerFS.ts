@@ -26,6 +26,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
     private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git', '.vscode'];
 
+    private _readDirChild: Set<string> = new Set<string>();
+
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
     }
@@ -33,6 +35,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return <vscode.FileStat>await callWithTelemetryAndErrorHandling('blob.stat', async (context) => {
             if (this._virtualDirCreatedUri.has(uri.path)) {
+                return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
+            }
+
+            if (this._readDirChild.has(path.posix.join(uri.path, "1"))) {
+                return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
+            } else if (this._readDirChild.has(path.posix.join(uri.path, "2"))) {
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
             }
 
@@ -58,8 +66,22 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             const listDirectoryResult = await this.listAllChildDirectory(blobService, parsedUri.rootName, parsedUri.dirPath);
 
             let directoryChildren: [string, vscode.FileType][] = [];
-            listBlobResult.entries.forEach(value => directoryChildren.push([path.basename(value.name), vscode.FileType.File]));
-            listDirectoryResult.entries.forEach(value => directoryChildren.push([path.basename(value.name), vscode.FileType.Directory]));
+            listBlobResult.entries.forEach(value => {
+                let baseName: string = path.basename(value.name);
+
+                directoryChildren.push([baseName, vscode.FileType.File]);
+
+                let childUri: string = path.posix.join(uri.path, baseName, "1");
+                this._readDirChild.add(childUri);
+            });
+            listDirectoryResult.entries.forEach(value => {
+                let baseName: string = path.basename(value.name);
+
+                directoryChildren.push([baseName, vscode.FileType.Directory]);
+
+                let childUri: string = path.posix.join(uri.path, baseName, "2");
+                this._readDirChild.add(childUri);
+            });
 
             for (let dirCreated of this._virtualDirCreatedUri) {
                 let dirCreatedParsedUri = parseUri(dirCreated, this._blobContainerString);
