@@ -7,7 +7,7 @@ import * as azureStorage from "azure-storage";
 import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
+import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
 import { IParsedUri, parseUri } from "../parseUri";
 import { BlobContainerTreeItem } from './blobContainerNode';
@@ -176,7 +176,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         return await callWithTelemetryAndErrorHandling('blob.delete', async (context) => {
-            context.errorHandling.rethrow = true;
             if (!options.recursive) {
                 throw new Error('Do not support non recursive deletion of folders or files.');
             }
@@ -199,26 +198,40 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             const blobService = entry.root.createBlobService();
+
             if (entry instanceof BlobTreeItem) {
-                await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
+                let snapshotsDetected: boolean = await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
+                if (snapshotsDetected) {
+                    context.errorHandling.suppressDisplay = true;
+                    context.errorHandling.rethrow = true;
+                    throw vscode.FileSystemError.NoPermissions('Cannot delete blobs with snapshots.');
+                }
             } else if (entry instanceof BlobDirectoryTreeItem) {
+                let snapshotsDetected: boolean = false;
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                    await this.deleteFolder(parsedUri, blobService);
+                    snapshotsDetected = await this.deleteFolder(parsedUri, blobService);
                 });
+                if (snapshotsDetected) {
+                    vscode.window.showInformationMessage(`Blobs with snapshots were detected when deleting ${parsedUri.filePath} and could be not deleted. All other blobs were successfully deleted. Please refresh to see the updates.`);
+                }
             } else if (entry instanceof BlobContainerTreeItem) {
                 throw new Error('Cannot delete a Blob Container.');
             }
+
         });
     }
 
-    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<void> {
+    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<boolean> {
         let dirPaths: string[] = [];
         let dirPath: string | undefined = parsedUri.dirPath;
+        let snapshotsDetected: boolean = false;
+
         while (dirPath) {
             let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
             for (const blob of childBlob.entries) {
-                await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
+                let blobSnapshot: boolean = await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
+                snapshotsDetected = blobSnapshot || snapshotsDetected;
             }
 
             let childDir = await this.listAllChildDirectory(blobService, parsedUri.rootName, dirPath);
@@ -228,18 +241,29 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             dirPath = dirPaths.pop();
         }
+
+        return snapshotsDetected;
     }
 
-    private async deleteBlob(containerName: string, prefix: string, blobService: azureStorage.BlobService): Promise<void> {
-        await new Promise<void>((resolve, reject) => {
-            blobService.deleteBlob(containerName, prefix, (error?: Error) => {
-                if (!!error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
+    private async deleteBlob(containerName: string, prefix: string, blobService: azureStorage.BlobService): Promise<boolean> {
+        try {
+            await new Promise<void>((resolve, reject) => {
+                blobService.deleteBlob(containerName, prefix, (error?: Error) => {
+                    if (!!error) {
+                        reject(error);
+                    } else {
+                        resolve();
+                    }
+                });
             });
-        });
+        } catch (error) {
+            const pe = parseError(error);
+            if (pe.errorType === "SnapshotsPresent") {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
