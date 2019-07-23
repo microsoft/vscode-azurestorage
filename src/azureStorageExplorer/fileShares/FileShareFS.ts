@@ -53,7 +53,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
+        return await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, context);
 
             // Intentionally passing undefined for token - only supports listing first batch of files for now
@@ -70,7 +70,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             return result;
-        });
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || [];
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
@@ -83,7 +84,13 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 throw new Error(response);
             }
 
-            await createDirectory(fileShare.share, fileShare.root, parsedUri.parentDirPath, parsedUri.baseName);
+            try {
+                await createDirectory(fileShare.share, fileShare.root, parsedUri.parentDirPath, parsedUri.baseName);
+            } catch (error) {
+                context.errorHandling.rethrow = true;
+                context.errorHandling.suppressDisplay = true;
+                throw vscode.FileSystemError.FileExists(uri);
+            }
         });
     }
 
@@ -91,21 +98,23 @@ export class FileShareFS implements vscode.FileSystemProvider {
         return <Uint8Array>await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
             let parsedUri = parseUri(uri, this._fileShareString);
 
-            if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
-                context.errorHandling.suppressDisplay = true;
-            }
-
             let treeItem: FileShareTreeItem = await this.getRoot(uri, context);
             let fileService = treeItem.root.createFileService();
-            const result = await new Promise<string | undefined>((resolve, reject) => {
-                fileService.getFileToText(treeItem.share.name, parsedUri.parentDirPath, parsedUri.baseName, (error?: Error, text?: string) => {
-                    if (!!error) {
-                        reject(error);
-                    } else {
-                        resolve(text);
-                    }
+
+            let result: string | undefined;
+            try {
+                result = await new Promise<string | undefined>((resolve, reject) => {
+                    fileService.getFileToText(treeItem.share.name, parsedUri.parentDirPath, parsedUri.baseName, (error?: Error, text?: string) => {
+                        if (!!error) {
+                            reject(error);
+                        } else {
+                            resolve(text);
+                        }
+                    });
                 });
-            });
+            } catch (error) {
+                throw this.getFileNotFoundError(uri, context);
+            }
 
             // tslint:disable-next-line: strict-boolean-expressions
             return Buffer.from(result || '');
@@ -115,6 +124,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
         await callWithTelemetryAndErrorHandling('fs.writeFile', async (context) => {
             if (!options.create && !options.overwrite) {
+                context.errorHandling.suppressDisplay = true;
+                context.errorHandling.rethrow = true;
                 throw vscode.FileSystemError.NoPermissions(uri);
             }
 
@@ -135,6 +146,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
             if (!fileResultChild.exists && !options.create) {
                 throw this.getFileNotFoundError(uri, context);
             } else if (fileResultChild.exists && !options.overwrite) {
+                context.errorHandling.suppressDisplay = true;
+                context.errorHandling.rethrow = true;
                 throw vscode.FileSystemError.FileExists(uri);
             } else {
                 await new Promise<void>((resolve, reject) => {
@@ -153,8 +166,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         await callWithTelemetryAndErrorHandling('fs.delete', async (context) => {
-            context.errorHandling.rethrow = true;
-
             if (!options.recursive) {
                 throw new Error("Azure storage does not support nonrecursive deletion of folders.");
             }
@@ -167,8 +178,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
             } else if (fileFound instanceof FileShareGroupTreeItem || fileFound instanceof FileShareTreeItem) {
                 throw new RangeError("Cannot delete a FileShare or the folder of FileShares.");
-            } else {
-                throw this.getFileNotFoundError(uri, context);
             }
         });
     }
@@ -184,18 +193,12 @@ export class FileShareFS implements vscode.FileSystemProvider {
         if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
             return entry;
         }
-        throw vscode.FileSystemError.FileNotADirectory(uri);
+        context.errorHandling.suppressDisplay = false;
+        throw new RangeError(`Unexpected entry ${entry.constructor.name}.`);
     }
 
     private async lookup(uri: vscode.Uri, context: IActionContext): Promise<EntryTreeItem> {
-        context.errorHandling.rethrow = true;
-        context.errorHandling.suppressDisplay = true;
-
         let parsedUri = parseUri(uri, this._fileShareString);
-
-        if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
-            context.errorHandling.suppressDisplay = true;
-        }
 
         let entry: EntryTreeItem = await this.getRoot(uri, context);
         if (parsedUri.filePath === '') {

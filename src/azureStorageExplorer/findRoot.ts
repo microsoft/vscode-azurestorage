@@ -18,6 +18,8 @@ export async function findRoot(uri: vscode.Uri, fileType: string, context: IActi
     } else {
         root = await ext.tree.findTreeItem(rootPath, context);
         if (!root) {
+            context.errorHandling.suppressDisplay = true;
+            context.errorHandling.rethrow = true;
             throw vscode.FileSystemError.FileNotFound(rootPath);
         } else {
             rootMap.set(rootPath, root);
