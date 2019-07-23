@@ -142,13 +142,21 @@ export class FileShareFS implements vscode.FileSystemProvider {
             } else if (fileResultChild.exists && !options.overwrite) {
                 throw vscode.FileSystemError.FileExists(uri);
             } else {
-                await new Promise<void>((resolve, reject) => {
-                    fileService.createFileFromText(parsedUri.rootName, parsedUri.parentDirPath, parsedUri.baseName, content.toString(), (error?: Error) => {
-                        if (!!error) {
-                            reject(error);
-                        } else {
-                            resolve();
-                        }
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                    if (fileResultChild.exists) {
+                        progress.report({ message: `Saving file ${parsedUri.filePath}` });
+                    } else {
+                        progress.report({ message: `Creating file ${parsedUri.filePath}` });
+                    }
+
+                    await new Promise<void>((resolve, reject) => {
+                        fileService.createFileFromText(parsedUri.rootName, parsedUri.parentDirPath, parsedUri.baseName, content.toString(), (error?: Error) => {
+                            if (!!error) {
+                                reject(error);
+                            } else {
+                                resolve();
+                            }
+                        });
                     });
                 });
             }
@@ -166,13 +174,18 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let parsedUri = parseUri(uri, this._fileShareString);
             let fileFound: EntryTreeItem = await this.lookup(context, uri);
-            if (fileFound instanceof FileTreeItem) {
-                await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
-            } else if (fileFound instanceof DirectoryTreeItem) {
-                await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
-            } else {
-                throw new RangeError("Tried to delete a FileShare or the folder of FileShares.");
-            }
+
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                if (fileFound instanceof FileTreeItem) {
+                    progress.report({ message: `Deleting file ${parsedUri.filePath}` });
+                    await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
+                } else if (fileFound instanceof DirectoryTreeItem) {
+                    progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
+                    await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
+                } else {
+                    throw new RangeError("Tried to delete a FileShare or the folder of FileShares.");
+                }
+            });
         });
     }
 
