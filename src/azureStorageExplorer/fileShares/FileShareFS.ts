@@ -30,12 +30,20 @@ export class FileShareFS implements vscode.FileSystemProvider {
     private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
     private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git', '.vscode'];
 
+    private _readDirChild: Set<string> = new Set<string>();
+
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return <vscode.FileStat>await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
+            if (this._readDirChild.has(path.posix.join(uri.path, "1"))) {
+                return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
+            } else if (this._readDirChild.has(path.posix.join(uri.path, "2"))) {
+                return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
+            }
+
             let treeItem: EntryTreeItem = await this.lookup(context, uri);
 
             if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
@@ -64,11 +72,21 @@ export class FileShareFS implements vscode.FileSystemProvider {
             let entries = listFilesandDirectoryResult.entries;
 
             let result: [string, vscode.FileType][] = [];
-            for (const dir of entries.directories) {
-                result.push([dir.name, vscode.FileType.Directory]);
-            }
             for (const file of entries.files) {
+                let baseName: string = path.basename(file.name);
+
                 result.push([file.name, vscode.FileType.File]);
+
+                let childUri: string = path.posix.join(uri.path, baseName, "1");
+                this._readDirChild.add(childUri);
+            }
+            for (const dir of entries.directories) {
+                let baseName: string = path.basename(dir.name);
+
+                result.push([dir.name, vscode.FileType.Directory]);
+
+                let childUri: string = path.posix.join(uri.path, baseName, "2");
+                this._readDirChild.add(childUri);
             }
 
             return result;
