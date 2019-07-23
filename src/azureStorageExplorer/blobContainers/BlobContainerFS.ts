@@ -34,6 +34,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return <vscode.FileStat>await callWithTelemetryAndErrorHandling('blob.stat', async (context) => {
+            if (uri.path.endsWith('/')) {
+                return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
+            }
+
             if (this._virtualDirCreatedUri.has(uri.path)) {
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
             }
@@ -77,7 +81,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             listDirectoryResult.entries.forEach(value => {
                 let baseName: string = path.basename(value.name);
 
-                directoryChildren.push([baseName, vscode.FileType.Directory]);
+                directoryChildren.push([`${baseName}/`, vscode.FileType.Directory]);
 
                 let childUri: string = path.posix.join(uri.path, baseName, "2");
                 this._readDirChild.add(childUri);
