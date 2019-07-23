@@ -89,8 +89,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return <Uint8Array>await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
-            context.errorHandling.rethrow = true;
-
             let parsedUri = parseUri(uri, this._fileShareString);
 
             if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
@@ -190,7 +188,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw vscode.FileSystemError.FileNotADirectory(uri);
     }
 
-    private async lookup(uri: vscode.Uri, context: IActionContext): Promise<EntryTreeItem | undefined> {
+    private async lookup(uri: vscode.Uri, context: IActionContext): Promise<EntryTreeItem> {
         context.errorHandling.rethrow = true;
         context.errorHandling.suppressDisplay = true;
 
@@ -198,7 +196,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
         if (this._configUri.includes(parsedUri.filePath) || this._configRootNames.includes(parsedUri.rootName)) {
             context.errorHandling.suppressDisplay = true;
-            return undefined;
         }
 
         let entry: EntryTreeItem = await this.getRoot(uri, context);

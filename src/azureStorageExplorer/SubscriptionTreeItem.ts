@@ -18,7 +18,6 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
-
         let accounts = await storageManagementClient.storageAccounts.list();
         return this.createTreeItemsWithErrorHandling(
             accounts,
