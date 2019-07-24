@@ -70,6 +70,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
         await callWithTelemetryAndErrorHandling('fs.createDirectory', async (context) => {
+            context.errorHandling.rethrow = true;
+
             let parsedUri = parseUri(uri, this._fileShareString);
             let fileShare: FileShareTreeItem = await this.getRoot(uri, context);
 

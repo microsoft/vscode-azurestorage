@@ -88,6 +88,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
         await callWithTelemetryAndErrorHandling('blob.createDirectory', async (context) => {
+            context.errorHandling.rethrow = true;
+
             if (this._virtualDirCreatedUri.has(uri.path)) {
                 throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
             }
