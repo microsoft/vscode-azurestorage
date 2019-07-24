@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
@@ -62,31 +62,33 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
-            context.errorHandling.rethrow = true;
-
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(context, uri);
 
-            // Intentionally passing undefined for token - only supports listing first batch of files for now
-            // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-            let listFilesandDirectoryResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
-            let entries = listFilesandDirectoryResult.entries;
+            let children: AzExtTreeItem[] = [];
+            if (entry.hasMoreChildrenImpl()) {
+                children = await entry.loadMoreChildrenImpl(false);
+            }
+
+            let previousChildren: AzExtTreeItem[] = await entry.getCachedChildren(context);
+            let allChildren: AzExtTreeItem[] = previousChildren.concat(children);
 
             let result: [string, vscode.FileType][] = [];
-            for (const file of entries.files) {
-                let baseName: string = path.basename(file.name);
+            for (const child of allChildren) {
+                if (child instanceof FileTreeItem) {
+                    let baseName: string = path.basename(child.label);
 
-                result.push([file.name, vscode.FileType.File]);
+                    result.push([baseName, vscode.FileType.File]);
 
-                let childUri: string = path.posix.join(uri.path, baseName, "1");
-                this._readDirChild.add(childUri);
-            }
-            for (const dir of entries.directories) {
-                let baseName: string = path.basename(dir.name);
+                    let childUri: string = path.posix.join(uri.path, baseName, "1");
+                    this._readDirChild.add(childUri);
+                } else if (child instanceof DirectoryTreeItem) {
+                    let baseName: string = path.basename(child.label);
 
-                result.push([dir.name, vscode.FileType.Directory]);
+                    result.push([baseName, vscode.FileType.Directory]);
 
-                let childUri: string = path.posix.join(uri.path, baseName, "2");
-                this._readDirChild.add(childUri);
+                    let childUri: string = path.posix.join(uri.path, baseName, "2");
+                    this._readDirChild.add(childUri);
+                }
             }
 
             return result;
