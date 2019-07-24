@@ -26,10 +26,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
-    // To detect uris that vscode automatically calls so that we do not throw unnecessary errors
-    private _configUri: string[] = ['pom.xml', 'node_modules', '.vscode', '.vscode/settings.json', '.vscode/tasks.json', '.vscode/launch.json', '.git/config'];
-    private _configRootNames: string[] = ['pom.xml', 'node_modules', '.git', '.vscode'];
-
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
     }
@@ -44,10 +40,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
             } else if (treeItem instanceof FileTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
-            } else if (treeItem instanceof FileShareGroupTreeItem) {
+            } else { // (treeItem instanceof FileShareGroupTreeItem)
                 throw new Error('Cannot view multiple File Shares at once.');
-            } else {
-                throw this.getFileNotFoundError(uri, context);
             }
         });
     }
@@ -150,13 +144,21 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 context.errorHandling.rethrow = true;
                 throw vscode.FileSystemError.FileExists(uri);
             } else {
-                await new Promise<void>((resolve, reject) => {
-                    fileService.createFileFromText(parsedUri.rootName, parsedUri.parentDirPath, parsedUri.baseName, content.toString(), (error?: Error) => {
-                        if (!!error) {
-                            reject(error);
-                        } else {
-                            resolve();
-                        }
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                    if (fileResultChild.exists) {
+                        progress.report({ message: `Saving file ${parsedUri.filePath}` });
+                    } else {
+                        progress.report({ message: `Creating file ${parsedUri.filePath}` });
+                    }
+
+                    await new Promise<void>((resolve, reject) => {
+                        fileService.createFileFromText(parsedUri.rootName, parsedUri.parentDirPath, parsedUri.baseName, content.toString(), (error?: Error) => {
+                            if (!!error) {
+                                reject(error);
+                            } else {
+                                resolve();
+                            }
+                        });
                     });
                 });
             }
@@ -171,14 +173,19 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, this._fileShareString);
+
             let fileFound: EntryTreeItem = await this.lookup(uri, context);
-            if (fileFound instanceof FileTreeItem) {
-                await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
-            } else if (fileFound instanceof DirectoryTreeItem) {
-                await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
-            } else if (fileFound instanceof FileShareGroupTreeItem || fileFound instanceof FileShareTreeItem) {
-                throw new RangeError("Cannot delete a FileShare or the folder of FileShares.");
-            }
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                if (fileFound instanceof FileTreeItem) {
+                    progress.report({ message: `Deleting file ${parsedUri.filePath}` });
+                    await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
+                } else if (fileFound instanceof DirectoryTreeItem) {
+                    progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
+                    await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
+                } else if (fileFound instanceof FileShareGroupTreeItem || fileFound instanceof FileShareTreeItem) {
+                    throw new RangeError("Tried to delete a FileShare or the folder of FileShares.");
+                }
+            });
         });
     }
 
@@ -235,7 +242,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     private async getRoot(uri: vscode.Uri, context: IActionContext): Promise<FileShareTreeItem> {
         let root = await findRoot(uri, this._fileShareString, context);
-
         if (root instanceof FileShareTreeItem) {
             return root;
         } else {

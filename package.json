@@ -25,7 +25,8 @@
 		"Azure",
 		"Blob Containers",
 		"File Share",
-		"Storage Account"
+		"Storage Account",
+		"Static website"
 	],
 	"preview": true,
 	"activationEvents": [
