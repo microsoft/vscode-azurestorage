@@ -154,17 +154,17 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return Object.assign({}, subRoot, {
             storageAccount: this.storageAccount,
             createBlobService: () => {
-                return azureStorage.createBlobService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.blob);
+                return azureStorage.createBlobService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.blob).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             },
             createFileService: () => {
-                return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file);
+                return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             },
             createQueueService: () => {
-                return azureStorage.createQueueService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.queue);
+                return azureStorage.createQueueService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.queue).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             },
             createTableService: () => {
                 // tslint:disable-next-line:no-any the typings for createTableService are incorrect
-                return azureStorage.createTableService(this.storageAccount.name, this.key.value, <any>this.storageAccount.primaryEndpoints.table);
+                return azureStorage.createTableService(this.storageAccount.name, this.key.value, <any>this.storageAccount.primaryEndpoints.table).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             }
         });
     }
