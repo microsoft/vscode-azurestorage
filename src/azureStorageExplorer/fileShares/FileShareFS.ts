@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
+import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
 import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
@@ -40,7 +40,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             } else if (treeItem instanceof FileTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
-            } else { // (treeItem instanceof FileShareGroupTreeItem)
+            } else {
                 throw new Error('Cannot view multiple File Shares at once.');
             }
         });
@@ -79,11 +79,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             try {
-                await createDirectory(fileShare.share, fileShare.root, parsedUri.parentDirPath, parsedUri.baseName);
+                await createDirectory(fileShare.share, fileShare.root, parsedUri.parentDirPath, 'lol');
             } catch (error) {
-                context.errorHandling.rethrow = true;
-                context.errorHandling.suppressDisplay = true;
-                throw vscode.FileSystemError.FileExists(uri);
+                let pe = parseError(error);
+                if (pe.errorType === "ResourceAlreadyExists") {
+                    throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
+                } else {
+                    throw error;
+                }
             }
         });
     }
@@ -107,7 +110,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                     });
                 });
             } catch (error) {
-                throw this.getFileNotFoundError(uri, context);
+                throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
             }
 
             // tslint:disable-next-line: strict-boolean-expressions
@@ -118,9 +121,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
         await callWithTelemetryAndErrorHandling('fs.writeFile', async (context) => {
             if (!options.create && !options.overwrite) {
-                context.errorHandling.suppressDisplay = true;
-                context.errorHandling.rethrow = true;
-                throw vscode.FileSystemError.NoPermissions(uri);
+                throw this.getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
             }
 
             let parsedUri = parseUri(uri, this._fileShareString);
@@ -138,7 +139,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             });
 
             if (!fileResultChild.exists && !options.create) {
-                throw this.getFileNotFoundError(uri, context);
+                throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
             } else if (fileResultChild.exists && !options.overwrite) {
                 context.errorHandling.suppressDisplay = true;
                 context.errorHandling.rethrow = true;
@@ -168,6 +169,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         await callWithTelemetryAndErrorHandling('fs.delete', async (context) => {
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
+
             if (!options.recursive) {
                 throw new Error("Azure storage does not support nonrecursive deletion of folders.");
             }
@@ -216,7 +220,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         let parts = parsedUri.filePath.split('/');
         for (let part of parts) {
             if (entry instanceof FileTreeItem) {
-                throw this.getFileNotFoundError(uri, context);
+                throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
             }
             // Intentionally passing undefined for token - only supports listing first batch of files for now
             // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
@@ -232,7 +236,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 if (!!fileResultChild) {
                     entry = new FileTreeItem(entry, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>entry.share);
                 } else {
-                    throw this.getFileNotFoundError(uri, context);
+                    throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
                 }
             }
         }
@@ -249,9 +253,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         }
     }
 
-    private getFileNotFoundError(uri: vscode.Uri, context: IActionContext): Error {
+    private getFileSystemError(uri: vscode.Uri, context: IActionContext, fsError: (messageOrUri?: string | vscode.Uri) => vscode.FileSystemError): vscode.FileSystemError {
         context.errorHandling.rethrow = true;
         context.errorHandling.suppressDisplay = true;
-        return vscode.FileSystemError.FileNotFound(uri);
+        return fsError(uri);
     }
 }
