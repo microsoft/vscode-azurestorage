@@ -17,6 +17,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     this.timeout(1200 * 1000);
     const resourceGroupsToDelete: string[] = [];
     const testAccount: TestAzureAccount = new TestAzureAccount(vscode);
+    let client: StorageManagementClient;
     const resourceName: string = getRandomHexString().toLowerCase();
 
     suiteSetup(async function (this: IHookCallbackContext): Promise<void> {
@@ -28,6 +29,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
         ext.azureAccountTreeItem = new AzureAccountTreeItem(testAccount);
         ext.tree = new AzExtTreeDataProvider(ext.azureAccountTreeItem, 'azureStorage.loadMore');
+        client = createAzureClient(testAccount.getSubscriptionContext(), StorageManagementClient);
     });
 
     suiteTeardown(async function (this: IHookCallbackContext): Promise<void> {
@@ -35,11 +37,11 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
             this.skip();
         }
 
-        const client = createAzureClient(testAccount.getSubscriptionContext(), ResourceManagementClient);
+        const resourceClient = createAzureClient(testAccount.getSubscriptionContext(), ResourceManagementClient);
         await Promise.all(resourceGroupsToDelete.map(async resourceGroup => {
-            if (await client.resourceGroups.checkExistence(resourceGroup)) {
+            if (await resourceClient.resourceGroups.checkExistence(resourceGroup)) {
                 console.log(`Deleting resource group "${resourceGroup}"...`);
-                await client.resourceGroups.deleteMethod(resourceGroup);
+                await resourceClient.resourceGroups.deleteMethod(resourceGroup);
                 console.log(`Resource group "${resourceGroup}" deleted.`);
             } else {
                 // If the test failed, the resource group might not actually exist
@@ -54,13 +56,11 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         await testUserInput.runWithInputs([resourceName, '$(plus) Create new resource group', resourceName, 'East US'], async () => {
             await vscode.commands.executeCommand('azureStorage.createGpv2Account');
         });
-        const client = createAzureClient(testAccount.getSubscriptionContext(), StorageManagementClient);
         const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
         assert.ok(createdAccount);
     });
 
     test("deleteStorageAccount", async () => {
-        const client = createAzureClient(testAccount.getSubscriptionContext(), StorageManagementClient);
         const createdAccount1: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
         assert.ok(createdAccount1);
         await testUserInput.runWithInputs([resourceName, DialogResponses.deleteResponse.title], async () => {
