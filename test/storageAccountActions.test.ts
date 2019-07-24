@@ -51,7 +51,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("createStorageAccount", async () => {
         resourceGroupsToDelete.push(resourceName);
-        await testUserInput.runWithInputs([resourceName, '$(plus) Create new resource group', resourceName, 'East US', 'test1'], async () => {
+        await testUserInput.runWithInputs([resourceName, '$(plus) Create new resource group', resourceName, 'East US'], async () => {
             await vscode.commands.executeCommand('azureStorage.createGpv2Account');
         });
         const client = createAzureClient(testAccount.getSubscriptionContext(), StorageManagementClient);
