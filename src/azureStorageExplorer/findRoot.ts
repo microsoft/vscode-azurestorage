@@ -6,6 +6,7 @@
 import * as vscode from 'vscode';
 import { AzExtTreeItem, IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
+import { getFileSystemError } from './getFileSystemError';
 import { parseUri } from './parseUri';
 
 const rootMap: Map<string, AzExtTreeItem> = new Map<string, AzExtTreeItem>();
@@ -18,9 +19,7 @@ export async function findRoot(uri: vscode.Uri, fileType: string, context: IActi
     } else {
         root = await ext.tree.findTreeItem(rootPath, context);
         if (!root) {
-            context.errorHandling.suppressDisplay = true;
-            context.errorHandling.rethrow = true;
-            throw vscode.FileSystemError.FileNotFound(rootPath);
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
         } else {
             rootMap.set(rootPath, root);
             return root;

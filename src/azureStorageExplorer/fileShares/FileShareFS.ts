@@ -32,7 +32,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        return <vscode.FileStat>await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
+        return await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
             let treeItem: EntryTreeItem = await this.lookup(uri, context);
 
             if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
@@ -44,7 +44,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
             } else {
                 throw new Error('Cannot view multiple File Shares at once.');
             }
-        });
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || { type: vscode.FileType.Unknown, ctime: 0, mtime: 0, size: 0 };
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
@@ -95,7 +96,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        return <Uint8Array>await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
+        return await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
             let parsedUri = parseUri(uri, this._fileShareString);
 
             let treeItem: FileShareTreeItem = await this.getRoot(uri, context);
@@ -116,9 +117,12 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
             }
 
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
             // tslint:disable-next-line: strict-boolean-expressions
             return Buffer.from(result || '');
-        });
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || Buffer.from('');
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
@@ -144,9 +148,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             if (!fileResultChild.exists && !options.create) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
             } else if (fileResultChild.exists && !options.overwrite) {
-                context.errorHandling.suppressDisplay = true;
-                context.errorHandling.rethrow = true;
-                throw vscode.FileSystemError.FileExists(uri);
+                throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
             } else {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     if (fileResultChild.exists) {
@@ -189,8 +191,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 } else if (fileFound instanceof DirectoryTreeItem) {
                     progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
                     await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
-                } else if (fileFound instanceof FileShareGroupTreeItem || fileFound instanceof FileShareTreeItem) {
-                    throw new RangeError("Tried to delete a FileShare or the folder of FileShares.");
+                } else {
+                    throw new RangeError(`Unexpected entry ${fileFound.constructor.name}.`);
                 }
             });
         });
@@ -207,7 +209,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
         if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
             return entry;
         }
-        context.errorHandling.suppressDisplay = false;
         throw new RangeError(`Unexpected entry ${entry.constructor.name}.`);
     }
 
@@ -252,7 +253,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         if (root instanceof FileShareTreeItem) {
             return root;
         } else {
-            throw new RangeError('The root found must be a FileShareTreeItem.');
+            throw new RangeError(`Unexpected entry ${root.constructor.name}.`);
         }
     }
 }

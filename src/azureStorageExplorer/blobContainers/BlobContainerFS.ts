@@ -29,7 +29,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        return <vscode.FileStat>await callWithTelemetryAndErrorHandling('blob.stat', async (context) => {
+        return await callWithTelemetryAndErrorHandling('blob.stat', async (context) => {
             if (this._virtualDirCreatedUri.has(uri.path)) {
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
             }
@@ -42,11 +42,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
             }
-        });
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || { type: vscode.FileType.Unknown, ctime: 0, mtime: 0, size: 0 };
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('blob.readDirectory', async (context) => {
+        return await callWithTelemetryAndErrorHandling('blob.readDirectory', async (context) => {
             let parsedUri = parseUri(uri, this._blobContainerString);
 
             let blobContainer: BlobContainerTreeItem = await this.getRoot(uri, context);
@@ -84,7 +85,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             return directoryChildren;
-        });
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || [];
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
@@ -193,6 +195,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         return await callWithTelemetryAndErrorHandling('blob.delete', async (context) => {
             context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
+
             if (!options.recursive) {
                 throw new Error('Do not support non recursive deletion of folders or files.');
             }
