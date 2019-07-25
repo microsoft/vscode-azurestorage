@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
 import { findRoot } from "../findRoot";
+import { getFileSystemError } from "../getFileSystemError";
 import { IParsedUri, parseUri } from "../parseUri";
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
@@ -60,7 +61,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             } catch (error) {
                 let pe = parseError(error);
                 if (pe.errorType === "ContainerNotFound") {
-                    throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+                    throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
                 }
                 throw error;
             }
@@ -91,21 +92,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
 
             if (this._virtualDirCreatedUri.has(uri.path)) {
-                throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
+                throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
             }
 
-            let entry = await this.getRoot(uri, context);
-            let blobService = entry.root.createBlobService();
-            let parsedUri = parseUri(uri, this._blobContainerString);
-
-            let blobResultChild = await this.listAllChildBlob(blobService, parsedUri.rootName, parsedUri.filePath);
-            let dirResultChild = await this.listAllChildDirectory(blobService, parsedUri.rootName, parsedUri.filePath);
-
-            if (blobResultChild.entries.length === 0 && dirResultChild.entries.length === 0) {
-                this._virtualDirCreatedUri.add(uri.path);
-            } else {
-                throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
-            }
+            this._virtualDirCreatedUri.add(uri.path);
         });
     }
 
@@ -116,9 +106,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let blobContainer: BlobContainerTreeItem = await this.getRoot(uri, context);
             let blobService: azureStorage.BlobService = blobContainer.root.createBlobService();
 
-            let result: string | undefined;
+            let result: string;
             try {
-                result = await new Promise<string | undefined>((resolve, reject) => {
+                result = await new Promise<string>((resolve, reject) => {
                     blobService.getBlobToText(parsedUri.rootName, parsedUri.filePath, (error?: Error, text?: string) => {
                         if (!!error) {
                             reject(error);
@@ -130,7 +120,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             } catch (error) {
                 let pe = parseError(error);
                 if (pe.errorType === 'BlobNotFound') {
-                    throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+                    throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
                 }
                 throw error;
             }
@@ -143,7 +133,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
         return await callWithTelemetryAndErrorHandling('blob.writeFile', async (context) => {
             if (!options.create && !options.overwrite) {
-                throw this.getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
+                throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
             }
 
             let parsedUri = parseUri(uri, this._blobContainerString);
@@ -161,9 +151,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             });
 
             if (!blobResultChild.exists && !options.create) {
-                throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+                throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
             } else if (blobResultChild.exists && !options.overwrite) {
-                throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
+                throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
             } else {
                 await new Promise<void>((resolve, reject) => {
                     let contentType: string | null = mime.getType(parsedUri.filePath);
@@ -199,6 +189,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         return await callWithTelemetryAndErrorHandling('blob.delete', async (context) => {
+            context.errorHandling.rethrow = true;
             if (!options.recursive) {
                 throw new Error('Do not support non recursive deletion of folders or files.');
             }
@@ -216,7 +207,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     });
                     return;
                 } else {
-                    throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+                    throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
                 }
             }
 
@@ -291,7 +282,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             if (!!blobResultChild) {
                 return new BlobTreeItem(entry, blobResultChild, entry.container);
             }
-            throw this.getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
         }
     }
 
@@ -330,11 +321,5 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             });
         });
-    }
-
-    private getFileSystemError(uri: vscode.Uri, context: IActionContext, fsError: (messageOrUri?: string | vscode.Uri) => vscode.FileSystemError): vscode.FileSystemError {
-        context.errorHandling.rethrow = true;
-        context.errorHandling.suppressDisplay = true;
-        return fsError(uri);
     }
 }
