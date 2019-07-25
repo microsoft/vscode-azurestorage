@@ -100,7 +100,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        return <Uint8Array>await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
+        return await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
             let parsedUri = parseUri(uri, this._blobContainerString);
 
             let blobContainer: BlobContainerTreeItem = await this.getRoot(uri, context);
@@ -125,9 +125,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 throw error;
             }
 
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
             // tslint:disable-next-line: strict-boolean-expressions
             return Buffer.from(result || '');
-        });
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || Buffer.from('');
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
