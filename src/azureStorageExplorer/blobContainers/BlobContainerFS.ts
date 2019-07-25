@@ -16,8 +16,6 @@ import { BlobTreeItem } from './blobNode';
 
 export type EntryTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
-export type blobDeletionErrors = { snapshotDetected: boolean, leaseDetected: boolean };
-
 export class BlobContainerFS implements vscode.FileSystemProvider {
     private _blobContainerString: string = 'Blob Containers';
     private _virtualDirCreatedUri: Set<string> = new Set();
@@ -204,27 +202,25 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             if (entry instanceof BlobTreeItem) {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting blob ${parsedUri.filePath}` });
-                    let deletionErrors: blobDeletionErrors = await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
-                    if (deletionErrors.snapshotDetected) {
-                        context.errorHandling.suppressDisplay = true;
+                    let deletionErrors: Error | undefined = await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
+                    if (deletionErrors) {
                         context.errorHandling.rethrow = true;
-                        throw vscode.FileSystemError.NoPermissions(`Failed to delete ${parsedUri.filePath}. This operation is not permitted because the blob has snapshots.`);
-                    } else if (deletionErrors.leaseDetected) {
                         context.errorHandling.suppressDisplay = true;
-                        context.errorHandling.rethrow = true;
-                        throw vscode.FileSystemError.NoPermissions(`Failed to delete ${parsedUri.filePath} because there is currenlty a lease on the blob.`);
+                        throw vscode.FileSystemError.NoPermissions(`${parseError(deletionErrors).message}`);
                     }
                 });
             } else if (entry instanceof BlobDirectoryTreeItem) {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                    let deletionErrors: blobDeletionErrors = await this.deleteFolder(parsedUri, blobService);
-                    if (deletionErrors.snapshotDetected && deletionErrors.leaseDetected) {
-                        vscode.window.showInformationMessage(`Blobs with snapshots and leases were detected when deleting ${parsedUri.filePath} and could be not deleted. All other blobs were successfully deleted. Please refresh to see the updates.`);
-                    } else if (deletionErrors.snapshotDetected) {
-                        vscode.window.showInformationMessage(`Blobs with snapshots were detected when deleting ${parsedUri.filePath} and could be not deleted. All other blobs were successfully deleted. Please refresh to see the updates.`);
-                    } else if (deletionErrors.leaseDetected) {
-                        vscode.window.showInformationMessage(`Blobs with snapshots were leases when deleting ${parsedUri.filePath} and could be not deleted. All other blobs were successfully deleted. Please refresh to see the updates.`);
+                    let deletionErrors: Error[] = await this.deleteFolder(parsedUri, blobService);
+                    if (deletionErrors.length > 0) {
+                        context.errorHandling.rethrow = false;
+                        context.errorHandling.suppressDisplay = false;
+                        let message: string = '';
+                        deletionErrors.forEach(element => {
+                            message = `${message}${element.message}\n`;
+                        });
+                        throw vscode.FileSystemError.NoPermissions(message);
                     }
                 });
             } else if (entry instanceof BlobContainerTreeItem) {
@@ -234,16 +230,18 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<blobDeletionErrors> {
+    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<Error[]> {
         let dirPaths: string[] = [];
         let dirPath: string | undefined = parsedUri.dirPath;
-        let errors: blobDeletionErrors = { snapshotDetected: false, leaseDetected: false };
 
+        let blobDeletionError: Error[] = [];
         while (dirPath) {
             let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
             for (const blob of childBlob.entries) {
-                let blobSnapshotLease: blobDeletionErrors = await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
-                errors = { snapshotDetected: (errors.snapshotDetected || blobSnapshotLease.snapshotDetected), leaseDetected: (errors.leaseDetected || blobSnapshotLease.leaseDetected) };
+                let error: Error | undefined = await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
+                if (error) {
+                    blobDeletionError.push(error);
+                }
             }
 
             let childDir = await this.listAllChildDirectory(blobService, parsedUri.rootName, dirPath);
@@ -254,10 +252,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             dirPath = dirPaths.pop();
         }
 
-        return errors;
+        return blobDeletionError;
     }
 
-    private async deleteBlob(containerName: string, prefix: string, blobService: azureStorage.BlobService): Promise<blobDeletionErrors> {
+    private async deleteBlob(containerName: string, prefix: string, blobService: azureStorage.BlobService): Promise<Error | undefined> {
         try {
             await new Promise<void>((resolve, reject) => {
                 blobService.deleteBlob(containerName, prefix, (error?: Error) => {
@@ -269,15 +267,13 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 });
             });
         } catch (error) {
-            const pe = parseError(error);
-            if (pe.errorType === "SnapshotsPresent") {
-                return { snapshotDetected: true, leaseDetected: false };
-            } else if (pe.errorType === 'LeaseIdMissing') {
-                return { snapshotDetected: false, leaseDetected: true };
+            if (error instanceof Error) {
+                return error;
             }
+            throw new RangeError('Unexpected type of error.');
         }
 
-        return { snapshotDetected: false, leaseDetected: false };
+        return undefined;
     }
 
     async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
