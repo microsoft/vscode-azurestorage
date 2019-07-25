@@ -220,6 +220,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                         deletionErrors.forEach(element => {
                             message = `${message}${element.message}\n`;
                         });
+                        message = `${message}Please refresh the file view to see the updates made.`;
                         throw vscode.FileSystemError.NoPermissions(message);
                     }
                 });
