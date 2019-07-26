@@ -104,7 +104,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             let result: string | undefined;
             try {
                 result = await new Promise<string | undefined>((resolve, reject) => {
-                    fileService.getFileToText(treeItem.share.name, parsedUri.parentDirPath, "parsedUri.baseName", (error?: Error, text?: string) => {
+                    fileService.getFileToText(treeItem.share.name, parsedUri.parentDirPath, parsedUri.baseName, (error?: Error, text?: string) => {
                         if (!!error) {
                             reject(error);
                         } else {
