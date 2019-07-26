@@ -13,15 +13,13 @@ import { parseUri } from "../parseUri";
 import { DirectoryTreeItem } from './directoryNode';
 import { createDirectory, deleteDirectoryAndContents } from "./directoryUtils";
 import { FileTreeItem } from "./fileNode";
-import { FileShareGroupTreeItem } from './fileShareGroupNode';
 import { FileShareTreeItem } from "./fileShareNode";
 import { deleteFile } from "./fileUtils";
 import { validateDirectoryName } from "./validateNames";
 
-export type EntryTreeItem = FileShareGroupTreeItem | FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
+export type EntryTreeItem = FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
 
 export class FileShareFS implements vscode.FileSystemProvider {
-
     private _fileShareString: string = 'File Shares';
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
@@ -38,11 +36,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
             if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
-            } else if (treeItem instanceof FileTreeItem) {
+            } else {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
-            } else {
-                throw new Error('Cannot view multiple File Shares at once.');
             }
             // tslint:disable-next-line: strict-boolean-expressions
         }) || { type: vscode.FileType.Unknown, ctime: 0, mtime: 0, size: 0 };
@@ -97,6 +93,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
+
             let parsedUri = parseUri(uri, this._fileShareString);
 
             let treeItem: FileShareTreeItem = await this.getRoot(uri, context);
@@ -105,7 +104,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             let result: string | undefined;
             try {
                 result = await new Promise<string | undefined>((resolve, reject) => {
-                    fileService.getFileToText(treeItem.share.name, parsedUri.parentDirPath, parsedUri.baseName, (error?: Error, text?: string) => {
+                    fileService.getFileToText(treeItem.share.name, parsedUri.parentDirPath, "parsedUri.baseName", (error?: Error, text?: string) => {
                         if (!!error) {
                             reject(error);
                         } else {
@@ -117,8 +116,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
             }
 
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
             // tslint:disable-next-line: strict-boolean-expressions
             return Buffer.from(result || '');
             // tslint:disable-next-line: strict-boolean-expressions

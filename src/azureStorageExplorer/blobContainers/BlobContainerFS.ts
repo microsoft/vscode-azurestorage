@@ -75,11 +75,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 let dirCreatedParsedUri = parseUri(dirCreated, this._blobContainerString);
 
                 let parentPath = path.posix.join(dirCreatedParsedUri.rootPath, dirCreatedParsedUri.parentDirPath);
-                if (parentPath.endsWith("/")) {
-                    parentPath = parentPath.substring(0, parentPath.length - 1);
-                }
-
-                if (uri.path === parentPath) {
+                if (uri.path === parentPath || `${uri.path}\/` === parentPath) {
                     directoryChildren.push([dirCreatedParsedUri.baseName, vscode.FileType.Directory]);
                 }
             }
@@ -103,6 +99,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
+
             let parsedUri = parseUri(uri, this._blobContainerString);
 
             let blobContainer: BlobContainerTreeItem = await this.getRoot(uri, context);
@@ -127,8 +126,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 throw error;
             }
 
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
             // tslint:disable-next-line: strict-boolean-expressions
             return Buffer.from(result || '');
             // tslint:disable-next-line: strict-boolean-expressions
@@ -298,7 +295,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         if (root instanceof BlobContainerTreeItem) {
             return root;
         } else {
-            throw new RangeError('The root found must be a BlobContainerTreeItem.');
+            throw new RangeError(`Unexpected entry ${root.constructor.name}.`);
         }
     }
 
