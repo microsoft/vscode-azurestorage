@@ -204,12 +204,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting blob ${parsedUri.filePath}` });
                     context.errorHandling.suppressDisplay = true;
-                    try {
-                        await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
-                    } catch (error) {
-                        ext.outputChannel.appendLine(`Cannot delete ${parsedUri.filePath}. ${parseError(error).message}`);
-                        throw error;
-                    }
+                    await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
                 });
             } else if (entry instanceof BlobDirectoryTreeItem) {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
@@ -227,7 +222,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         let dirPaths: string[] = [];
         let dirPath: string | undefined = parsedUri.dirPath;
 
-        ext.outputChannel.show();
         while (dirPath) {
             let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
             for (const blob of childBlob.entries) {
