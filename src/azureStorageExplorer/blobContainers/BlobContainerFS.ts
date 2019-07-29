@@ -209,7 +209,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             } else if (entry instanceof BlobDirectoryTreeItem) {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                    await this.deleteFolder(parsedUri, blobService);
+                    let errors: boolean = await this.deleteFolder(parsedUri, blobService);
+
+                    if (errors) {
+                        // tslint:disable-next-line: no-multiline-string
+                        ext.outputChannel.appendLine(`Please refresh the viewlet to see the changes made.`);
+                    }
                 });
             } else if (entry instanceof BlobContainerTreeItem) {
                 throw new Error('Cannot delete a Blob Container.');
@@ -218,9 +223,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<void> {
+    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<boolean> {
         let dirPaths: string[] = [];
         let dirPath: string | undefined = parsedUri.dirPath;
+
+        let errors: boolean = false;
 
         while (dirPath) {
             let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
@@ -229,6 +236,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
                 } catch (error) {
                     ext.outputChannel.appendLine(`Cannot delete ${blob.name}. ${parseError(error).message}`);
+                    errors = true;
                 }
             }
 
@@ -239,6 +247,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             dirPath = dirPaths.pop();
         }
+
+        return errors;
     }
 
     private async deleteBlob(containerName: string, prefix: string, blobService: azureStorage.BlobService): Promise<void> {
