@@ -96,7 +96,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    putChildrenIntoCache(uri: vscode.Uri, entry: DirectoryTreeItem | FileShareTreeItem, children: AzExtTreeItem[]): [string, vscode.FileType][] {
+    putChildrenIntoCache(uri: vscode.Uri, _entry: DirectoryTreeItem | FileShareTreeItem, children: AzExtTreeItem[]): [string, vscode.FileType][] {
         let result: [string, vscode.FileType][] = [];
         for (const child of children) {
             if (child instanceof FileTreeItem) {
@@ -190,7 +190,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         let parsedUri = parseUri(uri, this._fileShareString);
         let parentUri = vscode.Uri.file(path.posix.join(parsedUri.rootPath, parsedUri.parentDirPath));
 
-        let entry: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(context, parentUri);
+        let entry: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(parentUri, context);
 
         await ext.tree.loadMore(entry, context);
 
