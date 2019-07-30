@@ -248,13 +248,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let fileFound: EntryTreeItem = await this.lookup(uri, context);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-                if (fileFound instanceof FileTreeItem) {
-                    progress.report({ message: `Deleting file ${parsedUri.filePath}` });
-                    await fileFound.deleteTreeItem(<IDirectoryDeleteContext>{ ...context, suppressMessage: true });
-                    // await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
-                } else if (fileFound instanceof DirectoryTreeItem) {
-                    progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                    // await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
+                if (fileFound instanceof FileTreeItem || fileFound instanceof DirectoryTreeItem) {
+                    progress.report({ message: `Deleting ${parsedUri.filePath}` });
                     await fileFound.deleteTreeItem(<IDirectoryDeleteContext>{ ...context, suppressMessage: true });
                 } else {
                     throw new RangeError(`Unexpected entry ${fileFound.constructor.name}.`);
