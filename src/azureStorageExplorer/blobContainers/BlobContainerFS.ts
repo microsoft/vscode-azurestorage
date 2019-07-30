@@ -8,6 +8,7 @@ import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
+import { ext } from "../../extensionVariables";
 import { findRoot } from "../findRoot";
 import { getFileSystemError } from "../getFileSystemError";
 import { IParsedUri, parseUri } from "../parseUri";
@@ -255,27 +256,45 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             const blobService = entry.root.createBlobService();
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-                if (entry instanceof BlobTreeItem) {
+
+            if (entry instanceof BlobTreeItem) {
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting blob ${parsedUri.filePath}` });
                     await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
-                } else if (entry instanceof BlobDirectoryTreeItem) {
+                });
+            } else if (entry instanceof BlobDirectoryTreeItem) {
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                    await this.deleteFolder(parsedUri, blobService);
-                } else if (entry instanceof BlobContainerTreeItem) {
-                    throw new Error('Cannot delete a Blob Container.');
-                }
-            });
+                    let errors: boolean = await this.deleteFolder(parsedUri, blobService);
+
+                    if (errors) {
+                        vscode.window.showInformationMessage(`Errors occured when deleting ${parsedUri.filePath}. Please look at the output channel for more information.`);
+                        // tslint:disable-next-line: no-multiline-string
+                        ext.outputChannel.appendLine(`Please refresh the viewlet to see the changes made.`);
+                    }
+                });
+            } else if (entry instanceof BlobContainerTreeItem) {
+                throw new Error('Cannot delete a Blob Container.');
+            }
+
         });
     }
 
-    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<void> {
+    private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<boolean> {
         let dirPaths: string[] = [];
         let dirPath: string | undefined = parsedUri.dirPath;
+
+        let errors: boolean = false;
+
         while (dirPath) {
             let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
             for (const blob of childBlob.entries) {
-                await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
+                try {
+                    await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
+                } catch (error) {
+                    ext.outputChannel.appendLine(`Cannot delete ${blob.name}. ${parseError(error).message}`);
+                    errors = true;
+                }
             }
 
             let childDir = await this.listAllChildDirectory(blobService, parsedUri.rootName, dirPath);
@@ -285,6 +304,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             dirPath = dirPaths.pop();
         }
+
+        return errors;
     }
 
     private async deleteBlob(containerName: string, prefix: string, blobService: azureStorage.BlobService): Promise<void> {
@@ -297,6 +318,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             });
         });
+
     }
 
     async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
