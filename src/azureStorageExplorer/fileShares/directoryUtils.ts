@@ -38,10 +38,10 @@ export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<ISt
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-export function createDirectory(share: azureStorage.FileService.ShareResult, root: IStorageRoot, parentPath: string, name: string): Promise<azureStorage.BlobService.BlobResult> {
+export function createDirectory(share: azureStorage.FileService.ShareResult, root: IStorageRoot, parentPath: string, name: string): Promise<azureStorage.FileService.DirectoryResult> {
     return new Promise((resolve, reject) => {
         const fileService = root.createFileService();
-        fileService.createDirectory(share.name, path.posix.join(parentPath, name), (err: Error, result: azureStorage.BlobService.BlobResult) => {
+        fileService.createDirectory(share.name, path.posix.join(parentPath, name), (err: Error, result: azureStorage.FileService.DirectoryResult) => {
             // tslint:disable-next-line:strict-boolean-expressions // SDK is not strict-null-checking enabled, can't type err as optional
             if (err) {
                 reject(err);

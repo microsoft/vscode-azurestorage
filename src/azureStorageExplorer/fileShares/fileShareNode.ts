@@ -13,9 +13,9 @@ import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './directoryNode';
-import { askAndCreateChildDirectory } from './directoryUtils';
+import { askAndCreateChildDirectory, createDirectory } from './directoryUtils';
 import { FileTreeItem } from './fileNode';
-import { askAndCreateEmptyTextFile } from './fileUtils';
+import { askAndCreateEmptyTextFile, createFile, getFile } from './fileUtils';
 
 export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
@@ -120,8 +120,22 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem | FileTreeItem> {
         if (context.childType === FileTreeItem.contextValue) {
+            if (context.childName) {
+                const file = await createFile('', context.childName, this.share, this.root);
+                const actualFile = await getFile('', file.name, this.share, this.root);
+                return new FileTreeItem(this, actualFile, '', this.share);
+            }
             return askAndCreateEmptyTextFile(this, '', this.share, context);
         } else {
+            if (context.childName) {
+                let dir = await createDirectory(this.share, this.root, '', context.childName);
+
+                // DirectoryResult.name contains the parent path in this call, but doesn't in other places such as listing directories.
+                // Remove it here to be consistent.
+                dir.name = path.basename(dir.name);
+
+                return new DirectoryTreeItem(this, '', dir, this.share);
+            }
             return askAndCreateChildDirectory(this, '', this.share, context);
         }
     }
@@ -129,4 +143,5 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
 export interface IFileShareCreateChildContext extends IActionContext {
     childType: string;
+    childName?: string;
 }

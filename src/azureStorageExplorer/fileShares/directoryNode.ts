@@ -6,16 +6,16 @@
 import * as azureStorage from "azure-storage";
 import * as clipboardy from 'clipboardy';
 import * as path from 'path';
-import { Uri, window } from 'vscode';
-import { AzureParentTreeItem, DialogResponses, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { MessageItem, Uri, window } from 'vscode';
+import { AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
-import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from './directoryUtils';
+import { askAndCreateChildDirectory, createDirectory, deleteDirectoryAndContents, listFilesInDirectory } from './directoryUtils';
 import { FileTreeItem } from './fileNode';
 import { IFileShareCreateChildContext } from "./fileShareNode";
-import { askAndCreateEmptyTextFile } from './fileUtils';
+import { askAndCreateEmptyTextFile, createFile, getFile } from './fileUtils';
 
 export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     constructor(
@@ -77,16 +77,36 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem | DirectoryTreeItem> {
         if (context.childType === FileTreeItem.contextValue) {
+            if (context.childName) {
+                const file = await createFile(this.fullPath, context.childName, this.share, this.root);
+                const actualFile = await getFile(this.fullPath, file.name, this.share, this.root);
+                return new FileTreeItem(this, actualFile, this.fullPath, this.share);
+            }
             return askAndCreateEmptyTextFile(this, this.fullPath, this.share, context);
         } else {
+            if (context.childName) {
+                let dir = await createDirectory(this.share, this.root, this.fullPath, context.childName);
+
+                // DirectoryResult.name contains the parent path in this call, but doesn't in other places such as listing directories.
+                // Remove it here to be consistent.
+                dir.name = path.basename(dir.name);
+
+                return new DirectoryTreeItem(this, this.fullPath, dir, this.share);
+            }
             return askAndCreateChildDirectory(this, this.fullPath, this.share, context);
         }
     }
 
-    public async deleteTreeItemImpl(): Promise<void> {
-        // Note: Azure will fail the directory delete if it's not empty, so no need to ask about deleting contents
-        const message: string = `Are you sure you want to delete the directory '${this.label}' and all of its files and subdirectories?`;
-        const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+    public async deleteTreeItemImpl(context: IActionContext & IDirectoryDeleteContext): Promise<void> {
+        let result: MessageItem | undefined;
+        if (!context.suppressMessage) {
+            // Note: Azure will fail the directory delete if it's not empty, so no need to ask about deleting contents
+            const message: string = `Are you sure you want to delete the directory '${this.label}' and all of its files and subdirectories?`;
+            result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        } else {
+            result = DialogResponses.deleteResponse;
+        }
+
         if (result === DialogResponses.deleteResponse) {
             ext.outputChannel.show();
             await deleteDirectoryAndContents(this.fullPath, this.share.name, this.root);
@@ -94,4 +114,8 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             throw new UserCancelledError();
         }
     }
+}
+
+export interface IDirectoryDeleteContext extends IActionContext {
+    suppressMessage?: boolean;
 }
