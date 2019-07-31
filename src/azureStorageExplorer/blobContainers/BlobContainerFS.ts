@@ -102,6 +102,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
 
             let parsedUri = parseUri(uri, this._blobContainerString);
+            // tslint:disable-next-line: no-multiline-string
             if (parsedUri.baseName.includes(`\\`) || parsedUri.baseName === "") {
                 throw new Error('Name must not be empty or contain slashes.');
             }
