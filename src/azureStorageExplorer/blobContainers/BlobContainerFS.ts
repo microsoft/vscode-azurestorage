@@ -265,12 +265,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             } else if (entry instanceof BlobDirectoryTreeItem) {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                    let errors: boolean = await this.deleteFolder(parsedUri, blobService);
-
-                    if (errors) {
-                        vscode.window.showInformationMessage(`Errors occured when deleting ${parsedUri.filePath}. Please look at the output channel for more information.`);
-                        // tslint:disable-next-line: no-multiline-string
-                        ext.outputChannel.appendLine(`Please refresh the viewlet to see the changes made.`);
+                    if (await this.deleteFolder(parsedUri, blobService)) {
+                        vscode.window.showInformationMessage(`Errors occured when deleting ${parsedUri.filePath}. Please refresh the viewlet and refer to the output channel for more information.`);
                     }
                 });
             } else if (entry instanceof BlobContainerTreeItem) {
@@ -286,6 +282,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
         let errors: boolean = false;
 
+        ext.outputChannel.show();
         while (dirPath) {
             let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
             for (const blob of childBlob.entries) {
