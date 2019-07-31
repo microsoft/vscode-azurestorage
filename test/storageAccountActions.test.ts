@@ -7,6 +7,8 @@ import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
+import { BlobService, createBlobService } from 'azure-storage';
+import * as clipboardy from 'clipboardy';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
@@ -60,9 +62,33 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdAccount);
     });
 
+    test("copyConnectionString", async () => {
+        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
+        assert.ok(createdAccount);
+        clipboardy.writeSync('');
+        await testUserInput.runWithInputs([resourceName], async () => {
+            await vscode.commands.executeCommand('azureStorage.copyConnectionString');
+        });
+        const connectionString: string = clipboardy.readSync();
+        const blobService: BlobService = createBlobService(connectionString);
+        assert.ok(blobService);
+    });
+
+    test("copyPrimaryKey", async () => {
+        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
+        assert.ok(createdAccount);
+        clipboardy.writeSync('');
+        await testUserInput.runWithInputs([resourceName], async () => {
+            await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
+        });
+        const primaryKey: string = clipboardy.readSync();
+        const blobService: BlobService = createBlobService(resourceName, primaryKey, `https://${resourceName}.blob.core.windows.net`);
+        assert.ok(blobService);
+    });
+
     test("deleteStorageAccount", async () => {
-        const createdAccount1: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
-        assert.ok(createdAccount1);
+        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
+        assert.ok(createdAccount);
         await testUserInput.runWithInputs([resourceName, DialogResponses.deleteResponse.title], async () => {
             await vscode.commands.executeCommand('azureStorage.deleteStorageAccount');
         });
