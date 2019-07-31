@@ -89,10 +89,10 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
         throw new Error(`Could not find $web blob container for storage account "${destAccountTreeItem.label}"`);
     }
 
-    const hasAsked = <boolean>vscode.workspace.getConfiguration(extensionPrefix).get("requestPredeploy", false);
+    const hasAsked = <boolean>vscode.workspace.getConfiguration(extensionPrefix).get("requestPreDeploy", false);
     if (!hasAsked) {
         await configurePredeployTask(sourcePath);
-        vscode.workspace.getConfiguration(extensionPrefix).update("requestPredeploy", true, vscode.ConfigurationTarget.Workspace);
+        vscode.workspace.getConfiguration(extensionPrefix).update("requestPreDeploy", true, vscode.ConfigurationTarget.Workspace);
     }
 
     await runPreDeployTask(sourcePath, context);
