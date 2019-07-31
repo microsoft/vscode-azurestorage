@@ -25,8 +25,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
-    private _readDirChild: Set<string> = new Set<string>();
-
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
     }
@@ -34,16 +32,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return await callWithTelemetryAndErrorHandling('blob.stat', async (context) => {
             if (uri.path.endsWith('/')) {
-                return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
-            }
-
-            if (this._virtualDirCreatedUri.has(uri.path)) {
-                return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
-            }
-
-            if (this._readDirChild.has(path.posix.join(uri.path, "1"))) {
                 return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
-            } else if (this._readDirChild.has(path.posix.join(uri.path, "2"))) {
+            } else if (this._virtualDirCreatedUri.has(uri.path)) {
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
             }
 
@@ -62,10 +52,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return await callWithTelemetryAndErrorHandling('blob.readDirectory', async (context) => {
-            if (uri.path.endsWith('/')) {
-                uri = vscode.Uri.file(uri.path.substring(0, uri.path.length - 1));
-            }
-
             let parsedUri = parseUri(uri, this._blobContainerString);
 
             let blobContainer: BlobContainerTreeItem = await this.getRoot(uri, context);
@@ -89,18 +75,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             listBlobResult.entries.forEach(value => {
                 let baseName: string = path.basename(value.name);
 
-                directoryChildren.push([baseName, vscode.FileType.File]);
-
-                let childUri: string = path.posix.join(uri.path, baseName, "1");
-                this._readDirChild.add(childUri);
+                directoryChildren.push([`${baseName}/`, vscode.FileType.File]);
             });
             listDirectoryResult.entries.forEach(value => {
                 let baseName: string = path.basename(value.name);
 
-                directoryChildren.push([`${baseName}/`, vscode.FileType.Directory]);
-
-                let childUri: string = path.posix.join(uri.path, baseName, "2");
-                this._readDirChild.add(childUri);
+                directoryChildren.push([`${baseName}`, vscode.FileType.Directory]);
             });
 
             for (let dirCreated of this._virtualDirCreatedUri) {
@@ -120,6 +100,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async createDirectory(uri: vscode.Uri): Promise<void> {
         await callWithTelemetryAndErrorHandling('blob.createDirectory', async (context) => {
             context.errorHandling.rethrow = true;
+
+            let parsedUri = parseUri(uri, this._blobContainerString);
+            if (parsedUri.baseName.includes(`\\`) || parsedUri.baseName === "") {
+                throw new Error('Name must not be empty or contain slashes.');
+            }
 
             if (this._virtualDirCreatedUri.has(uri.path)) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);

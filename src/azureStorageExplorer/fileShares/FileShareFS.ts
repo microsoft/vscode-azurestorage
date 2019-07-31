@@ -24,18 +24,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
-    private _fileStatCache: Set<string> = new Set<string>();
-
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
-            if (this._fileStatCache.has(path.posix.join(uri.path, "1"))) {
+            if (uri.path.endsWith('/')) {
                 return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
-            } else if (this._fileStatCache.has(path.posix.join(uri.path, "2"))) {
-                return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
             }
 
             let treeItem: EntryTreeItem = await this.lookup(uri, context);
@@ -60,34 +56,26 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 children = await entry.loadMoreChildrenImpl(false);
             }
 
-            return this.putChildrenIntoCache(uri, entry, children);
+            return this.putChildrenIntoCache(entry, children);
         });
     }
 
-    putChildrenIntoCache(uri: vscode.Uri, entry: DirectoryTreeItem | FileShareTreeItem, children: AzExtTreeItem[]): [string, vscode.FileType][] {
+    putChildrenIntoCache(entry: DirectoryTreeItem | FileShareTreeItem, children: AzExtTreeItem[]): [string, vscode.FileType][] {
         let result: [string, vscode.FileType][] = [];
         for (const child of children) {
             if (child instanceof FileTreeItem) {
                 let baseName: string = path.basename(child.label);
 
-                result.push([baseName, vscode.FileType.File]);
-
-                let childUri: string = path.posix.join(uri.path, baseName, "1");
-                this._fileStatCache.add(childUri);
+                result.push([`${baseName}/`, vscode.FileType.File]);
             } else if (child instanceof DirectoryTreeItem) {
                 let baseName: string = path.basename(child.label);
 
                 result.push([baseName, vscode.FileType.Directory]);
-
-                let childUri: string = path.posix.join(uri.path, baseName, "2");
-                this._fileStatCache.add(childUri);
             }
         }
 
         if (entry.hasMoreChildrenImpl()) {
             result.push(['Load More...', vscode.FileType.File]);
-            let loadMoreUri: string = path.posix.join(uri.path, 'Load More...', "1");
-            this._fileStatCache.add(loadMoreUri);
         }
 
         return result;
@@ -166,7 +154,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
         let children = await entry.getCachedChildren(context);
 
-        this.putChildrenIntoCache(uri, entry, children);
+        this.putChildrenIntoCache(entry, children);
 
         this._emitter.fire([{ type: vscode.FileChangeType.Changed, uri: uri }]);
     }
