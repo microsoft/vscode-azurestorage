@@ -283,7 +283,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
-        return await callWithTelemetryAndErrorHandling('blob.rename', async () => {
+        return await callWithTelemetryAndErrorHandling('blob.rename', async (context) => {
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
             throw new Error('Renaming/moving folders or files not supported.');
         });
     }

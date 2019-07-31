@@ -196,7 +196,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
-        return await callWithTelemetryAndErrorHandling('fs.rename', async () => {
+        return await callWithTelemetryAndErrorHandling('fs.rename', async (context) => {
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
             throw new Error('Renaming/moving folders or files not supported.');
         });
     }
