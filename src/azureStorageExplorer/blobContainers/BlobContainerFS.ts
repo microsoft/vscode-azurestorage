@@ -199,9 +199,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     }
 
                     let fullPath: string = path.posix.join(parsedUri.rootPath, parentDirPath);
-                    if (this._virtualDirCreatedUri.has(fullPath)) {
-                        this._virtualDirCreatedUri.delete(fullPath);
-                    } else {
+                    if (!this._virtualDirCreatedUri.delete(fullPath)) {
                         return;
                     }
 
@@ -226,23 +224,20 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             try {
                 entry = await this.lookup(uri, context);
             } catch (err) {
-                let foundVirtualDir: boolean = false;
+                if (!this._virtualDirCreatedUri.has(uri.path)) {
+                    throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+                }
+
                 this._virtualDirCreatedUri.forEach(value => {
                     if (value.startsWith(uri.path)) {
-                        foundVirtualDir = true;
                         this._virtualDirCreatedUri.delete(value);
                     }
                 });
 
-                if (foundVirtualDir) {
-                    return;
-                } else {
-                    throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-                }
+                return;
             }
 
             const blobService = entry.root.createBlobService();
-
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                 if (entry instanceof BlobTreeItem) {
                     progress.report({ message: `Deleting blob ${parsedUri.filePath}` });
@@ -261,27 +256,24 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     private async deleteFolder(parsedUri: IParsedUri, blobService: azureStorage.BlobService): Promise<boolean> {
-        let dirPaths: string[] = [];
         let dirPath: string | undefined = parsedUri.dirPath;
-
+        let dirPaths: string[] = [];
         let errors: boolean = false;
 
         ext.outputChannel.show();
         while (dirPath) {
             let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
-            for (const blob of childBlob.entries) {
+            childBlob.entries.forEach(async (blob) => {
                 try {
                     await this.deleteBlob(parsedUri.rootName, blob.name, blobService);
                 } catch (error) {
                     ext.outputChannel.appendLine(`Cannot delete ${blob.name}. ${parseError(error).message}`);
                     errors = true;
                 }
-            }
+            });
 
             let childDir = await this.listAllChildDirectory(blobService, parsedUri.rootName, dirPath);
-            for (const dir of childDir.entries) {
-                dirPaths.push(dir.name);
-            }
+            childDir.entries.forEach(dir => dirPaths.push(dir.name));
 
             dirPath = dirPaths.pop();
         }
