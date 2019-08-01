@@ -200,12 +200,11 @@ export class FileShareFS implements vscode.FileSystemProvider {
             let oldUriParsed = parseUri(oldUri, this._fileShareString);
             let newUriParsed = parseUri(newUri, this._fileShareString);
 
+            context.errorHandling.rethrow = true;
             if (oldUriParsed.baseName === newUriParsed.baseName) {
-                context.errorHandling.rethrow = true;
                 context.errorHandling.suppressDisplay = true;
                 throw new Error('Moving folders or files not supported.');
             } else {
-                context.errorHandling.rethrow = true;
                 throw new Error('Renaming folders or files not supported.');
             }
         });

@@ -287,12 +287,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let oldUriParsed = parseUri(oldUri, this._blobContainerString);
             let newUriParsed = parseUri(newUri, this._blobContainerString);
 
+            context.errorHandling.rethrow = true;
             if (oldUriParsed.baseName === newUriParsed.baseName) {
-                context.errorHandling.rethrow = true;
                 context.errorHandling.suppressDisplay = true;
                 throw new Error('Moving folders or blobs not supported.');
             } else {
-                context.errorHandling.rethrow = true;
                 throw new Error('Renaming folders or blobs not supported.');
             }
         });
