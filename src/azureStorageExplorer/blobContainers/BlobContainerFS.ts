@@ -285,7 +285,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             dirPath = dirPaths.pop();
         }
-
         return errors;
     }
 
@@ -299,7 +298,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 }
             });
         });
-
     }
 
     async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
