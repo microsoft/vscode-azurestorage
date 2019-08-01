@@ -38,7 +38,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             let entry: EntryTreeItem = await this.lookup(uri, context);
-
             if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
@@ -74,18 +73,15 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let directoryChildren: [string, vscode.FileType][] = [];
             listBlobResult.entries.forEach(value => {
                 let baseName: string = path.basename(value.name);
-
                 directoryChildren.push([`${baseName}/`, vscode.FileType.File]);
             });
             listDirectoryResult.entries.forEach(value => {
                 let baseName: string = path.basename(value.name);
-
                 directoryChildren.push([`${baseName}`, vscode.FileType.Directory]);
             });
 
             for (let dirCreated of this._virtualDirCreatedUri) {
                 let dirCreatedParsedUri = parseUri(dirCreated, this._blobContainerString);
-
                 let parentPath = path.posix.join(dirCreatedParsedUri.rootPath, dirCreatedParsedUri.parentDirPath);
                 if (uri.path === parentPath || `${uri.path}\/` === parentPath) {
                     directoryChildren.push([dirCreatedParsedUri.baseName, vscode.FileType.Directory]);
@@ -102,8 +98,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
 
             let parsedUri = parseUri(uri, this._blobContainerString);
+
             // tslint:disable-next-line: no-multiline-string
-            if (parsedUri.baseName.includes(`\\`) || parsedUri.baseName === "") {
+            if (parsedUri.baseName.includes(`\\`) || parsedUri.baseName.includes(`\/`) || parsedUri.baseName === "") {
                 throw new Error('Name must not be empty or contain slashes.');
             }
 
@@ -229,12 +226,15 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             try {
                 entry = await this.lookup(uri, context);
             } catch (err) {
-                if (this._virtualDirCreatedUri.has(uri.path)) {
-                    this._virtualDirCreatedUri.forEach(value => {
-                        if (value.startsWith(uri.path)) {
-                            this._virtualDirCreatedUri.delete(value);
-                        }
-                    });
+                let foundVirtualDir: boolean = false;
+                this._virtualDirCreatedUri.forEach(value => {
+                    if (value.startsWith(uri.path)) {
+                        foundVirtualDir = true;
+                        this._virtualDirCreatedUri.delete(value);
+                    }
+                });
+
+                if (foundVirtualDir) {
                     return;
                 } else {
                     throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
@@ -243,21 +243,19 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             const blobService = entry.root.createBlobService();
 
-            if (entry instanceof BlobTreeItem) {
-                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                if (entry instanceof BlobTreeItem) {
                     progress.report({ message: `Deleting blob ${parsedUri.filePath}` });
                     await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
-                });
-            } else if (entry instanceof BlobDirectoryTreeItem) {
-                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                } else if (entry instanceof BlobDirectoryTreeItem) {
                     progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
                     if (await this.deleteFolder(parsedUri, blobService)) {
                         vscode.window.showInformationMessage(`Errors occured when deleting ${parsedUri.filePath}. Please refresh the viewlet and refer to the output channel for more information.`);
                     }
-                });
-            } else if (entry instanceof BlobContainerTreeItem) {
-                throw new Error('Cannot delete a Blob Container.');
-            }
+                } else if (entry instanceof BlobContainerTreeItem) {
+                    throw new Error('Cannot delete a Blob Container.');
+                }
+            });
 
         });
     }
