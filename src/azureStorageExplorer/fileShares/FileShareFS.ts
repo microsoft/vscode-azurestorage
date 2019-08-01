@@ -30,7 +30,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
-            if (uri.path.endsWith('/')) {
+            if (uri.path.endsWith('/') || uri.path.endsWith('Load More...')) {
                 return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
             }
 
@@ -71,7 +71,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         }
 
         if (entry.hasMoreChildrenImpl()) {
-            result.push(['Load More...', vscode.FileType.File]);
+            result.push(['Load More.../', vscode.FileType.File]);
         }
 
         return result;
