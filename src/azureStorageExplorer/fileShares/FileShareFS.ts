@@ -51,7 +51,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
         return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, context);
             let children: AzExtTreeItem[] = await entry.getCachedChildren(context);
-
             return this.putChildrenIntoCache(entry, children);
         });
     }
@@ -61,11 +60,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         for (const child of children) {
             if (child instanceof FileTreeItem) {
                 let baseName: string = path.basename(child.label);
-
                 result.push([`${baseName}/`, vscode.FileType.File]);
             } else if (child instanceof DirectoryTreeItem) {
                 let baseName: string = path.basename(child.label);
-
                 result.push([baseName, vscode.FileType.Directory]);
             }
         }
@@ -147,9 +144,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         let entry: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(parentUri, context);
 
         await ext.tree.loadMore(entry, context);
-
         let children = await entry.getCachedChildren(context);
-
         this.putChildrenIntoCache(entry, children);
 
         this._emitter.fire([{ type: vscode.FileChangeType.Changed, uri: uri }]);
@@ -229,7 +224,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, this._fileShareString);
-
             let fileFound: EntryTreeItem = await this.lookup(uri, context);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                 if (fileFound instanceof FileTreeItem || fileFound instanceof DirectoryTreeItem) {
@@ -251,8 +245,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     private async lookupAsDirectory(uri: vscode.Uri, context: IActionContext): Promise<DirectoryTreeItem | FileShareTreeItem> {
-        let uriLookup: vscode.Uri = uri.path.endsWith('/') ? vscode.Uri.file(uri.path.substring(0, uri.path.length - 1)) : uri;
-        let entry = await this.lookup(uriLookup, context);
+        let entry = await this.lookup(uri, context);
         if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
             return entry;
         }
@@ -275,10 +268,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let temp: AzExtTreeItem[] = await entry.getCachedChildren(context);
             let childFound: AzExtTreeItem | undefined = temp.find(element => element.label === part);
-
-            if (!childFound) {
-                throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-            }
 
             if (childFound instanceof DirectoryTreeItem || childFound instanceof FileTreeItem) {
                 entry = childFound;
