@@ -158,15 +158,23 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             } else if (blobResultChild.exists && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
             } else {
-                await new Promise<void>((resolve, reject) => {
-                    let contentType: string | null = mime.getType(parsedUri.filePath);
-                    let temp: string | undefined = contentType === null ? undefined : contentType;
-                    blobService.createBlockBlobFromText(parsedUri.rootName, parsedUri.filePath, content.toString(), { contentSettings: { contentType: temp } }, (error?: Error) => {
-                        if (!!error) {
-                            reject(error);
-                        } else {
-                            resolve();
-                        }
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                    if (blobResultChild.exists) {
+                        progress.report({ message: `Saving blob ${parsedUri.filePath}` });
+                    } else {
+                        progress.report({ message: `Creating blob ${parsedUri.filePath}` });
+                    }
+
+                    await new Promise<void>((resolve, reject) => {
+                        let contentType: string | null = mime.getType(parsedUri.filePath);
+                        let temp: string | undefined = contentType === null ? undefined : contentType;
+                        blobService.createBlockBlobFromText(parsedUri.rootName, parsedUri.filePath, content.toString(), { contentSettings: { contentType: temp } }, (error?: Error) => {
+                            if (!!error) {
+                                reject(error);
+                            } else {
+                                resolve();
+                            }
+                        });
                     });
                 });
 
