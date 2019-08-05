@@ -202,17 +202,16 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             try {
                 entry = await this.lookup(uri, context);
             } catch (err) {
-                if (!this._virtualDirCreatedUri.has(uri.path)) {
+                if (this._virtualDirCreatedUri.has(uri.path)) {
+                    this._virtualDirCreatedUri.forEach(value => {
+                        if (value.startsWith(uri.path)) {
+                            this._virtualDirCreatedUri.delete(value);
+                        }
+                    });
+                    return;
+                } else {
                     throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
                 }
-
-                this._virtualDirCreatedUri.forEach(value => {
-                    if (value.startsWith(uri.path)) {
-                        this._virtualDirCreatedUri.delete(value);
-                    }
-                });
-
-                return;
             }
 
             const blobService = entry.root.createBlobService();

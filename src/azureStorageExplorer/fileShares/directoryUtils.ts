@@ -10,21 +10,26 @@ import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from "./directoryNode";
+import { IFileShareCreateChildContext } from "./fileShareNode";
 import { deleteFile } from "./fileUtils";
 import { validateDirectoryName } from "./validateNames";
 
 // Supports both file share and directory parents
-export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, share: azureStorage.FileService.ShareResult, context: ICreateChildImplContext): Promise<DirectoryTreeItem> {
-    const dirName = await window.showInputBox({
-        placeHolder: 'Enter a name for the new directory',
-        validateInput: validateDirectoryName
-    });
+export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, share: azureStorage.FileService.ShareResult, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem> {
+    let dirName: string | undefined = context.childName;
+    if (!dirName) {
+        dirName = await window.showInputBox({
+            placeHolder: 'Enter a name for the new directory',
+            validateInput: validateDirectoryName
+        });
+    }
 
     if (dirName) {
+        let dirNameString: string = <string>dirName;
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-            context.showCreatingTreeItem(dirName);
-            progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
-            let dir = await createDirectory(share, parent.root, parentPath, dirName);
+            context.showCreatingTreeItem(dirNameString);
+            progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirNameString)}'` });
+            let dir = await createDirectory(share, parent.root, parentPath, dirNameString);
 
             // DirectoryResult.name contains the parent path in this call, but doesn't in other places such as listing directories.
             // Remove it here to be consistent.

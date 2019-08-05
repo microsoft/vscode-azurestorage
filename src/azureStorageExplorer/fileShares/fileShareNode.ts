@@ -13,7 +13,7 @@ import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './directoryNode';
-import { askAndCreateChildDirectory, createDirectory } from './directoryUtils';
+import { askAndCreateChildDirectory } from './directoryUtils';
 import { FileTreeItem } from './fileNode';
 import { askAndCreateEmptyTextFile, createFile, getFile } from './fileUtils';
 
@@ -127,15 +127,6 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }
             return askAndCreateEmptyTextFile(this, '', this.share, context);
         } else {
-            if (context.childName) {
-                let dir = await createDirectory(this.share, this.root, '', context.childName);
-
-                // DirectoryResult.name contains the parent path in this call, but doesn't in other places such as listing directories.
-                // Remove it here to be consistent.
-                dir.name = path.basename(dir.name);
-
-                return new DirectoryTreeItem(this, '', dir, this.share);
-            }
             return askAndCreateChildDirectory(this, '', this.share, context);
         }
     }
