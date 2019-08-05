@@ -10,6 +10,7 @@ import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parse
 import { ext } from "../../extensionVariables";
 import { getFileSystemError } from "../getFileSystemError";
 import { parseUri } from "../parseUri";
+import { showRenameError } from "../showRenameError";
 import { DirectoryTreeItem, IDirectoryDeleteContext } from './directoryNode';
 import { FileTreeItem } from "./fileNode";
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./fileShareNode";
@@ -204,11 +205,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
+    async rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
         return await callWithTelemetryAndErrorHandling('fs.rename', async (context) => {
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
-            throw new Error('Renaming/moving folders or files not supported.');
+            showRenameError(oldUri, newUri, this._fileShareString, context);
         });
     }
 

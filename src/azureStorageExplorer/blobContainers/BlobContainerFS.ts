@@ -12,6 +12,7 @@ import { ext } from "../../extensionVariables";
 import { findRoot } from "../findRoot";
 import { getFileSystemError } from "../getFileSystemError";
 import { IParsedUri, parseUri } from "../parseUri";
+import { showRenameError } from "../showRenameError";
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobTreeItem } from './blobNode';
@@ -172,15 +173,23 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             } else if (blobResultChild.exists && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
             } else {
-                await new Promise<void>((resolve, reject) => {
-                    let contentType: string | null = mime.getType(parsedUri.filePath);
-                    let temp: string | undefined = contentType === null ? undefined : contentType;
-                    blobService.createBlockBlobFromText(parsedUri.rootName, parsedUri.filePath, content.toString(), { contentSettings: { contentType: temp } }, (error?: Error) => {
-                        if (!!error) {
-                            reject(error);
-                        } else {
-                            resolve();
-                        }
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                    if (blobResultChild.exists) {
+                        progress.report({ message: `Saving blob ${parsedUri.filePath}` });
+                    } else {
+                        progress.report({ message: `Creating blob ${parsedUri.filePath}` });
+                    }
+
+                    await new Promise<void>((resolve, reject) => {
+                        let contentType: string | null = mime.getType(parsedUri.filePath);
+                        let temp: string | undefined = contentType === null ? undefined : contentType;
+                        blobService.createBlockBlobFromText(parsedUri.rootName, parsedUri.filePath, content.toString(), { contentSettings: { contentType: temp } }, (error?: Error) => {
+                            if (!!error) {
+                                reject(error);
+                            } else {
+                                resolve();
+                            }
+                        });
                     });
                 });
             }
@@ -269,11 +278,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
     }
 
-    async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
+    async rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
         return await callWithTelemetryAndErrorHandling('blob.rename', async (context) => {
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
-            throw new Error('Renaming/moving folders or files not supported.');
+            showRenameError(oldUri, newUri, this._blobContainerString, context);
         });
     }
 
