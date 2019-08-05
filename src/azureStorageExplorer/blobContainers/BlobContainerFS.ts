@@ -100,7 +100,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let parsedUri = parseUri(uri, this._blobContainerString);
 
             // tslint:disable-next-line: no-multiline-string
-            if (parsedUri.baseName.includes(`\\`) || parsedUri.baseName.includes(`\/`) || parsedUri.baseName === "") {
+            if (parsedUri.baseName.includes(`\\`) || parsedUri.baseName === "") {
                 throw new Error('Name must not be empty or contain slashes.');
             }
 
@@ -183,20 +183,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                         }
                     });
                 });
-
-                let parentDirPath = parsedUri.parentDirPath;
-                while (parentDirPath) {
-                    if (parentDirPath.endsWith("/")) {
-                        parentDirPath = parentDirPath.substring(0, parentDirPath.length - 1);
-                    }
-
-                    let fullPath: string = path.posix.join(parsedUri.rootPath, parentDirPath);
-                    if (!this._virtualDirCreatedUri.delete(fullPath)) {
-                        return;
-                    }
-
-                    parentDirPath = parentDirPath.substring(0, parentDirPath.lastIndexOf('/'));
-                }
             }
         });
     }
