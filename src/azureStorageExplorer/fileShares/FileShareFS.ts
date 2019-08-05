@@ -7,7 +7,6 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
-import { ext } from "../../extensionVariables";
 import { findRoot } from "../findRoot";
 import { getFileSystemError } from "../getFileSystemError";
 import { parseUri } from "../parseUri";
@@ -30,8 +29,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
-            if (uri.path.endsWith('/') || uri.path.endsWith('Load More...')) {
-                return { type: vscode.FileType.File, ctime: 0, mtime: 0, size: 0 };
+            if (uri.path.endsWith('/')) {
+                return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
             }
 
             let treeItem: EntryTreeItem = await this.lookup(uri, context);
@@ -51,27 +50,19 @@ export class FileShareFS implements vscode.FileSystemProvider {
         return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, context);
             let children: AzExtTreeItem[] = await entry.getCachedChildren(context);
-            return this.putChildrenIntoCache(entry, children);
-        });
-    }
 
-    putChildrenIntoCache(entry: DirectoryTreeItem | FileShareTreeItem, children: AzExtTreeItem[]): [string, vscode.FileType][] {
-        let result: [string, vscode.FileType][] = [];
-        for (const child of children) {
-            if (child instanceof FileTreeItem) {
-                let baseName: string = path.basename(child.label);
-                result.push([`${baseName}/`, vscode.FileType.File]);
-            } else if (child instanceof DirectoryTreeItem) {
-                let baseName: string = path.basename(child.label);
-                result.push([baseName, vscode.FileType.Directory]);
+            let result: [string, vscode.FileType][] = [];
+            for (const child of children) {
+                if (child instanceof FileTreeItem) {
+                    let baseName: string = path.basename(child.label);
+                    result.push([baseName, vscode.FileType.File]);
+                } else if (child instanceof DirectoryTreeItem) {
+                    let baseName: string = path.basename(child.label);
+                    result.push([`${baseName}/`, vscode.FileType.Directory]);
+                }
             }
-        }
-
-        if (entry.hasMoreChildrenImpl()) {
-            result.push(['Load More.../', vscode.FileType.File]);
-        }
-
-        return result;
+            return result;
+        });
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
@@ -108,11 +99,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let parsedUri = parseUri(uri, this._fileShareString);
 
-            if (parsedUri.baseName === 'Load More...') {
-                await this.loadMore(uri, context);
-                return Buffer.from(''); // to do: fix so that it doesn't show an empty file for Load More...
-            }
-
             let treeItem: FileShareTreeItem = await this.getRoot(uri, context);
             let fileService = treeItem.root.createFileService();
 
@@ -135,19 +121,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
             return Buffer.from(result || '');
             // tslint:disable-next-line: strict-boolean-expressions
         }) || Buffer.from('');
-    }
-
-    async loadMore(uri: vscode.Uri, context: IActionContext): Promise<void> {
-        let parsedUri = parseUri(uri, this._fileShareString);
-        let parentUri = vscode.Uri.file(path.posix.join(parsedUri.rootPath, parsedUri.parentDirPath));
-
-        let entry: FileShareTreeItem | DirectoryTreeItem = await this.lookupAsDirectory(parentUri, context);
-
-        await ext.tree.loadMore(entry, context);
-        let children = await entry.getCachedChildren(context);
-        this.putChildrenIntoCache(entry, children);
-
-        this._emitter.fire([{ type: vscode.FileChangeType.Changed, uri: uri }]);
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
