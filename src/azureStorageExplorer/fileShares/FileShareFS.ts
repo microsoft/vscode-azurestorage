@@ -213,7 +213,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     private async lookupAsRoot(uri: vscode.Uri, context: IActionContext): Promise<FileShareTreeItem> {
-        let entry = await this.lookup(uri, context);
+        let parsedUri = parseUri(uri, this._fileShareString);
+        let entry = await this.lookup(parsedUri.rootPath, context);
         if (entry instanceof FileShareTreeItem) {
             return entry;
         }
@@ -228,8 +229,9 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new RangeError(`Unexpected entry ${entry.constructor.name}.`);
     }
 
-    private async lookup(uri: vscode.Uri, context: IActionContext): Promise<EntryTreeItem> {
-        let ti = await ext.tree.findTreeItem(uri.path, context);
+    private async lookup(uri: vscode.Uri | string, context: IActionContext): Promise<EntryTreeItem> {
+        let uriString = uri instanceof vscode.Uri ? uri.path : uri;
+        let ti = await ext.tree.findTreeItem(uriString, context);
         if (ti instanceof FileShareTreeItem || ti instanceof FileTreeItem || ti instanceof DirectoryTreeItem) {
             return ti;
         } else {
