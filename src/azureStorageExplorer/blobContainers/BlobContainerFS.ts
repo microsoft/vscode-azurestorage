@@ -12,6 +12,7 @@ import { ext } from "../../extensionVariables";
 import { findRoot } from "../findRoot";
 import { getFileSystemError } from "../getFileSystemError";
 import { IParsedUri, parseUri } from "../parseUri";
+import { showRenameError } from "../showRenameError";
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobTreeItem } from './blobNode';
@@ -282,11 +283,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     }
 
-    async rename(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
+    async rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
         return await callWithTelemetryAndErrorHandling('blob.rename', async (context) => {
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
-            throw new Error('Renaming/moving folders or files not supported.');
+            showRenameError(oldUri, newUri, this._blobContainerString, context);
         });
     }
 
