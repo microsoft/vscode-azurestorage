@@ -4,12 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { AzExtTreeItem, IActionContext } from 'vscode-azureextensionui';
-import { ext } from '../extensionVariables';
-import { getFileSystemError } from './getFileSystemError';
+import { IActionContext } from 'vscode-azureextensionui';
 import { parseUri } from './parseUri';
-
-const rootMap: Map<string, AzExtTreeItem> = new Map<string, AzExtTreeItem>();
 
 export function showRenameError(oldUri: vscode.Uri, newUri: vscode.Uri, fileType: string, context: IActionContext): void {
     let oldUriParsed = parseUri(oldUri, fileType);
