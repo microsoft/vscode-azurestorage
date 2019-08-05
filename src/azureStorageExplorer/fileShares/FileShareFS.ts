@@ -29,10 +29,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
-            if (uri.path.endsWith('/')) {
-                return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
-            }
-
             let treeItem: EntryTreeItem = await this.lookup(uri, context);
 
             if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
@@ -58,7 +54,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                     result.push([baseName, vscode.FileType.File]);
                 } else if (child instanceof DirectoryTreeItem) {
                     let baseName: string = path.basename(child.label);
-                    result.push([`${baseName}/`, vscode.FileType.Directory]);
+                    result.push([baseName, vscode.FileType.Directory]);
                 }
             }
             return result;
