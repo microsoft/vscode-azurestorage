@@ -724,7 +724,7 @@
 		"typescript": "^3.5.1",
 		"vsce": "^1.51.1",
 		"vscode": "^1.1.5",
-		"vscode-azureextensiondev": "0.1.11",
+		"vscode-azureextensiondev": "0.2.0",
 		"webpack": "4.28.1",
 		"webpack-cli": "^3.1.2"
 	},
@@ -743,7 +743,7 @@
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
 		"opn": "^5.3.0",
-		"vscode-azureextensionui": "^0.26.1",
+		"vscode-azureextensionui": "^0.26.3",
 		"winreg": "^1.2.3"
 	}
 }
