@@ -95,7 +95,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let parsedUri = parseUri(uri, this._fileShareString);
 
-            let treeItem: FileShareTreeItem = await this.lookupAsRoot(uri, context);
+            let treeItem: FileShareTreeItem = await this.lookupRoot(uri, context);
             let fileService = treeItem.root.createFileService();
 
             let result: string | undefined;
@@ -128,7 +128,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, this._fileShareString);
-            let fileShare: FileShareTreeItem = await this.lookupAsRoot(uri, context);
+            let fileShare: FileShareTreeItem = await this.lookupRoot(uri, context);
 
             const fileService = fileShare.root.createFileService();
             let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
@@ -211,7 +211,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
-    private async lookupAsRoot(uri: vscode.Uri, context: IActionContext): Promise<FileShareTreeItem> {
+    private async lookupRoot(uri: vscode.Uri, context: IActionContext): Promise<FileShareTreeItem> {
         let parsedUri = parseUri(uri, this._fileShareString);
         let entry = await this.lookup(parsedUri.rootPath, context);
         if (entry instanceof FileShareTreeItem) {
