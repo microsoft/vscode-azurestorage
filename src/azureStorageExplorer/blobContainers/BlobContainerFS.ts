@@ -230,7 +230,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             if (entry instanceof BlobTreeItem) {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     progress.report({ message: `Deleting blob ${parsedUri.filePath}` });
-                    await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
+                    try {
+                        await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
+                    } catch (error) {
+                        ext.outputChannel.appendLine(`Cannot delete ${parsedUri.baseName}. ${parseError(error).message}`);
+                        throw error;
+                    }
                 });
             } else if (entry instanceof BlobDirectoryTreeItem) {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
@@ -238,9 +243,17 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     let errors: boolean = await this.deleteFolder(parsedUri, blobService);
 
                     if (errors) {
-                        vscode.window.showInformationMessage(`Errors occured when deleting ${parsedUri.filePath}. Please look at the output channel for more information.`);
                         // tslint:disable-next-line: no-multiline-string
                         ext.outputChannel.appendLine(`Please refresh the viewlet to see the changes made.`);
+
+                        const viewOutput: vscode.MessageItem = { title: 'View output' };
+                        const errorMessage: string = `Errors occured when deleting ${parsedUri.filePath}. Please look at the output channel for more information.`;
+                        vscode.window.showInformationMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
+                            if (result === viewOutput) {
+                                ext.outputChannel.show();
+                            }
+                        });
+
                     }
                 });
             } else if (entry instanceof BlobContainerTreeItem) {
