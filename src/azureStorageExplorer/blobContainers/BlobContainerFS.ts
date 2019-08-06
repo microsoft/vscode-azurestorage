@@ -241,9 +241,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                         // tslint:disable-next-line: no-multiline-string
                         ext.outputChannel.appendLine(`Please refresh the viewlet to see the changes made.`);
 
-                        const viewOutput: vscode.MessageItem = { title: 'View Output' };
-                        const errorMessage: string = `Errors occured when deleting ${parsedUri.filePath}. Please look at the output channel for more information.`;
-                        vscode.window.showInformationMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
+                        const viewOutput: vscode.MessageItem = { title: 'View Errors' };
+                        const errorMessage: string = `Errors occured when deleting "${parsedUri.filePath}".`;
+                        vscode.window.showWarningMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
                             if (result === viewOutput) {
                                 ext.outputChannel.show();
                             }
