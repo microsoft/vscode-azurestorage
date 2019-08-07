@@ -158,7 +158,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext>): Promise<BlobTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
         if (context.blobPath && context.filePath) {
             context.showCreatingTreeItem(context.blobPath);
             await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
@@ -504,26 +504,30 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     // Currently only supports creating block blobs
-    private async createChildAsNewBlockBlob(context: ICreateChildImplContext): Promise<BlobTreeItem> {
-        const blobName = await vscode.window.showInputBox({
-            placeHolder: 'Enter a name for the new block blob',
-            validateInput: async (name: string) => {
-                let nameError = BlobContainerTreeItem.validateBlobName(name);
-                if (nameError) {
-                    return nameError;
-                } else if (await this.doesBlobExist(name)) {
-                    return "A blob with this path and name already exists";
-                }
+    private async createChildAsNewBlockBlob(context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
+        let blobName: string | undefined = context.childName;
+        if (!blobName) {
+            blobName = await vscode.window.showInputBox({
+                placeHolder: 'Enter a name for the new block blob',
+                validateInput: async (name: string) => {
+                    let nameError = BlobContainerTreeItem.validateBlobName(name);
+                    if (nameError) {
+                        return nameError;
+                    } else if (await this.doesBlobExist(name)) {
+                        return "A blob with this path and name already exists";
+                    }
 
-                return undefined;
-            }
-        });
+                    return undefined;
+                }
+            });
+        }
 
         if (blobName) {
+            let blobNameString: string = <string>blobName;
             return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-                context.showCreatingTreeItem(blobName);
-                progress.report({ message: `Azure Storage: Creating block blob '${blobName}'` });
-                const blob = await this.createTextBlockBlob(blobName);
+                context.showCreatingTreeItem(blobNameString);
+                progress.report({ message: `Azure Storage: Creating block blob '${blobNameString}'` });
+                const blob = await this.createTextBlockBlob(blobNameString);
                 const actualBlob = await this.getBlob(blob.name);
                 return new BlobTreeItem(this, actualBlob, this.container);
             });
@@ -601,4 +605,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
+}
+
+export interface IBlobContainerCreateChildContext extends IActionContext {
+    childName?: string;
 }
