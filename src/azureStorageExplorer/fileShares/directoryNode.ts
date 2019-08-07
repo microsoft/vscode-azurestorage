@@ -12,10 +12,10 @@ import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
-import { askAndCreateChildDirectory, createDirectory, deleteDirectoryAndContents, listFilesInDirectory } from './directoryUtils';
+import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from './directoryUtils';
 import { FileTreeItem } from './fileNode';
 import { IFileShareCreateChildContext } from "./fileShareNode";
-import { askAndCreateEmptyTextFile, createFile, getFile } from './fileUtils';
+import { askAndCreateEmptyTextFile } from './fileUtils';
 
 export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     constructor(
@@ -77,23 +77,11 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem | DirectoryTreeItem> {
         if (context.childType === FileTreeItem.contextValue) {
-            if (context.childName) {
-                const file = await createFile(this.fullPath, context.childName, this.share, this.root);
-                const actualFile = await getFile(this.fullPath, file.name, this.share, this.root);
-                return new FileTreeItem(this, actualFile, this.fullPath, this.share);
-            }
             return askAndCreateEmptyTextFile(this, this.fullPath, this.share, context);
-        } else {
-            if (context.childName) {
-                let dir = await createDirectory(this.share, this.root, this.fullPath, context.childName);
-
-                // DirectoryResult.name contains the parent path in this call, but doesn't in other places such as listing directories.
-                // Remove it here to be consistent.
-                dir.name = path.basename(dir.name);
-
-                return new DirectoryTreeItem(this, this.fullPath, dir, this.share);
-            }
+        } else if (context.childType === DirectoryTreeItem.contextValue) {
             return askAndCreateChildDirectory(this, this.fullPath, this.share, context);
+        } else {
+            throw new RangeError(`Unexpected entry ${context.childType}.`);
         }
     }
 

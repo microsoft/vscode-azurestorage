@@ -44,7 +44,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        return <[string, vscode.FileType][]>await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
+        return await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, context);
             let children: AzExtTreeItem[] = await entry.getCachedChildren(context);
 
@@ -58,7 +58,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 }
             }
             return result;
-        });
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || [];
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
@@ -121,8 +122,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
         await callWithTelemetryAndErrorHandling('fs.writeFile', async (context) => {
-            context.errorHandling.rethrow = true;
-
             if (!options.create && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
             }
@@ -142,9 +141,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
             });
 
             let createNewFile: boolean = !fileResultChild.exists;
-            if (fileResultChild.exists && content.length === 0) {
-                throw new Error(`A file or folder ${parsedUri.baseName} already exists at this location. Please choose a different name`);
-            } else if (createNewFile && !options.create) {
+            if (createNewFile && !options.create) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
             } else if (fileResultChild.exists && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
@@ -230,11 +227,17 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     private async lookup(uri: vscode.Uri | string, context: IActionContext): Promise<EntryTreeItem> {
         let uriString = uri instanceof vscode.Uri ? uri.path : uri;
+        if (uriString.endsWith('/')) {
+            uriString = uriString.substr(0, uriString.length - 1);
+        }
+
         let ti = await ext.tree.findTreeItem(uriString, context);
-        if (ti instanceof FileShareTreeItem || ti instanceof FileTreeItem || ti instanceof DirectoryTreeItem) {
+        if (!ti) {
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+        } else if (ti instanceof FileShareTreeItem || ti instanceof FileTreeItem || ti instanceof DirectoryTreeItem) {
             return ti;
         } else {
-            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+            throw new RangeError(`Unexpected entry ${ti.constructor.name}.`);
         }
     }
 }

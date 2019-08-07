@@ -10,28 +10,33 @@ import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { FileTreeItem } from "./fileNode";
+import { IFileShareCreateChildContext } from "./fileShareNode";
 import { validateFileName } from "./validateNames";
 
 // Currently only supports creating block blobs
-export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult, context: ICreateChildImplContext): Promise<FileTreeItem> {
-    const fileName = await ext.ui.showInputBox({
-        placeHolder: 'Enter a name for the new file',
-        validateInput: async (name: string) => {
-            let nameError = validateFileName(name);
-            if (nameError) {
-                return nameError;
-            } else if (await doesFileExist(name, parent, directoryPath, share)) {
-                return "A file with this path and name already exists";
+export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem> {
+    let fileName: string | undefined = context.childName;
+    if (!fileName) {
+        fileName = await ext.ui.showInputBox({
+            placeHolder: 'Enter a name for the new file',
+            validateInput: async (name: string) => {
+                let nameError = validateFileName(name);
+                if (nameError) {
+                    return nameError;
+                } else if (await doesFileExist(name, parent, directoryPath, share)) {
+                    return "A file with this path and name already exists";
+                }
+                return undefined;
             }
-            return undefined;
-        }
-    });
+        });
+    }
 
     if (fileName) {
+        let fileNameString: string = <string>fileName;
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-            context.showCreatingTreeItem(fileName);
-            progress.report({ message: `Azure Storage: Creating file '${fileName}'` });
-            const file = await createFile(directoryPath, fileName, share, parent.root);
+            context.showCreatingTreeItem(fileNameString);
+            progress.report({ message: `Azure Storage: Creating file '${fileNameString}'` });
+            const file = await createFile(directoryPath, fileNameString, share, parent.root);
             const actualFile = await getFile(directoryPath, file.name, share, parent.root);
             return new FileTreeItem(parent, actualFile, directoryPath, share);
         });
