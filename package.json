@@ -61,8 +61,8 @@
 		"onCommand:azureStorage.createDirectory",
 		"onCommand:azureStorage.deleteDirectory",
 		"onCommand:azureStorage.createTextFile",
+		"onCommand:azureStorage.advancedCreateGpv2Account",
 		"onCommand:azureStorage.createGpv2Account",
-		"onCommand:azureStorage.basicCreateGpv2Account",
 		"onCommand:azureStorage.deleteFile",
 		"onCommand:azureStorage.createDirectory",
 		"onCommand:azureStorage.createSubdirectory",
@@ -256,13 +256,13 @@
 				"category": "Azure Storage"
 			},
 			{
-				"command": "azureStorage.createGpv2Account",
-				"title": "Create Storage Account",
+				"command": "azureStorage.advancedCreateGpv2Account",
+				"title": "Advanced Create Storage Account",
 				"category": "Azure Storage"
 			},
 			{
-				"command": "azureStorage.basicCreateGpv2Account",
-				"title": "Quick Create Storage Account",
+				"command": "azureStorage.createGpv2Account",
+				"title": "Create Storage Account",
 				"category": "Azure Storage"
 			},
 			{
@@ -469,12 +469,12 @@
 					"group": "2_create@1"
 				},
 				{
-					"command": "azureStorage.createGpv2Account",
+					"command": "azureStorage.advancedCreateGpv2Account",
 					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
 					"group": "2_create@3"
 				},
 				{
-					"command": "azureStorage.basicCreateGpv2Account",
+					"command": "azureStorage.createGpv2Account",
 					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
 					"group": "2_create@4"
 				},
@@ -643,11 +643,11 @@
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.createGpv2Account",
+					"command": "azureStorage.advancedCreateGpv2Account",
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.basicCreateGpv2Account",
+					"command": "azureStorage.createGpv2Account",
 					"when": "never"
 				},
 				{

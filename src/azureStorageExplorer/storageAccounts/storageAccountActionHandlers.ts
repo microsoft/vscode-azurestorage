@@ -23,12 +23,12 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.copyConnectionString", copyConnectionString);
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
     registerCommand("azureStorage.deleteStorageAccount", async (context: IActionContext, treeItem?: StorageAccountTreeItem) => await deleteNode(context, StorageAccountTreeItem.contextValue, treeItem));
-    registerCommand("azureStorage.createGpv2Account", async (actionContext: ICreationContext, treeItem?: SubscriptionTreeItem) => {
+    registerCommand("azureStorage.advancedCreateGpv2Account", async (actionContext: ICreationContext, treeItem?: SubscriptionTreeItem) => {
         let node = treeItem ? <SubscriptionTreeItem>treeItem : <SubscriptionTreeItem>await ext.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue, actionContext);
         actionContext.basicCreate = false;
         await node.createChild(actionContext);
     });
-    registerCommand("azureStorage.basicCreateGpv2Account", async (actionContext: ICreationContext, treeItem?: SubscriptionTreeItem) => {
+    registerCommand("azureStorage.createGpv2Account", async (actionContext: ICreationContext, treeItem?: SubscriptionTreeItem) => {
         let node = treeItem ? <SubscriptionTreeItem>treeItem : <SubscriptionTreeItem>await ext.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue, actionContext);
         actionContext.basicCreate = true;
         await node.createChild(actionContext);
