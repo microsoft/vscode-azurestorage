@@ -6,9 +6,9 @@
 import * as azureStorage from "azure-storage";
 import * as clipboardy from 'clipboardy';
 import * as path from 'path';
-import { Uri, window, workspace } from 'vscode';
+import { Uri, window } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
+import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -45,16 +45,15 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         if (clearCache) {
             this._continuationToken = undefined;
             // tslint:disable-next-line: strict-boolean-expressions
-            if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
-                const ti = new GenericTreeItem(this, {
-                    label: this._openInFileExplorerString,
-                    commandId: 'azureStorage.openFileShareInFileExplorer',
-                    contextValue: 'openFileShareInFileExplorer'
-                });
+            const ti = new GenericTreeItem(this, {
+                label: this._openInFileExplorerString,
+                commandId: 'azureStorage.openFileShareInFileExplorer',
+                contextValue: 'openFileShareInFileExplorer'
+            });
 
-                ti.commandArgs = [this];
-                result.push(ti);
-            }
+            ti.commandArgs = [this];
+            result.push(ti);
+
         }
 
         // currentToken argument typed incorrectly in SDK

@@ -12,7 +12,7 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { awaitWithProgress } from '../../components/progress';
-import { configurationSettingsKeys, extensionPrefix, getResourcesPath, staticWebsiteContainerName } from "../../constants";
+import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -73,16 +73,15 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const result: AzExtTreeItem[] = [];
         if (clearCache) {
             this._continuationToken = undefined;
-            if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
-                const ti = new GenericTreeItem(this, {
-                    label: this._openInFileExplorerString,
-                    commandId: 'azureStorage.openBlobContainerInFileExplorer',
-                    contextValue: 'openBlobContainerInFileExplorer'
-                });
+            const ti = new GenericTreeItem(this, {
+                label: this._openInFileExplorerString,
+                commandId: 'azureStorage.openBlobContainerInFileExplorer',
+                contextValue: 'openBlobContainerInFileExplorer'
+            });
 
-                ti.commandArgs = [this];
-                result.push(ti);
-            }
+            ti.commandArgs = [this];
+            result.push(ti);
+
         }
 
         // currentToken argument typed incorrectly in SDK

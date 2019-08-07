@@ -29,7 +29,6 @@ import { StorageAccountTreeItem } from './azureStorageExplorer/storageAccounts/s
 import { SubscriptionTreeItem } from './azureStorageExplorer/SubscriptionTreeItem';
 import { registerTableActionHandlers } from './azureStorageExplorer/tables/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/tableGroupActionHandlers';
-import { configurationSettingsKeys, extensionPrefix } from './constants';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
@@ -67,11 +66,9 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerTableActionHandlers();
         registerTableGroupActionHandlers();
 
-        // tslint:disable-next-line: strict-boolean-expressions
-        if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
-            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestoragefile', new FileShareFS(), { isCaseSensitive: true }));
-            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorageblob', new BlobContainerFS(), { isCaseSensitive: true }));
-        }
+        context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestoragefile', new FileShareFS(), { isCaseSensitive: true }));
+        context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorageblob', new BlobContainerFS(), { isCaseSensitive: true }));
+
         registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
             await callWithTelemetryAndErrorHandling('fs.openInFileExplorer', async () => {
                 // tslint:disable-next-line: prefer-template
