@@ -50,11 +50,10 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let result: [string, vscode.FileType][] = [];
             for (const child of children) {
-                let baseName: string = path.basename(child.label);
                 if (child instanceof FileTreeItem) {
-                    result.push([baseName, vscode.FileType.File]);
+                    result.push([child.file.name, vscode.FileType.File]);
                 } else if (child instanceof DirectoryTreeItem) {
-                    result.push([baseName, vscode.FileType.Directory]);
+                    result.push([child.directory.name, vscode.FileType.Directory]);
                 }
             }
             return result;
@@ -80,8 +79,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFileShareDirectory', childName: parsedUri.baseName });
             } catch (error) {
                 let pe = parseError(error);
-                if (pe.errorType === "ResourceAlreadyExists" || pe.errorType === 'ResourceTypeMismatch') {
-                    throw new Error(`A file or folder ${parsedUri.baseName} already exists at this location. Please choose a different name`);
+                if (pe.errorType === "ResourceAlreadyExists") {
+                    throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
                 } else {
                     throw error;
                 }
@@ -120,7 +119,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         }) || Buffer.from('');
     }
 
-    async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
+    async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; accessConditions: boolean }): Promise<void> {
         await callWithTelemetryAndErrorHandling('fs.writeFile', async (context) => {
             if (!options.create && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
@@ -165,14 +164,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
                         let parentUri: vscode.Uri = vscode.Uri.file(path.posix.join(parsedUri.rootPath, parsedUri.parentDirPath));
                         let parent = await this.lookupAsDirectory(parentUri, context);
 
-                        try {
-                            await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFile', childName: parsedUri.baseName });
-                        } catch (error) {
-                            let pe = parseError(error);
-                            if (pe.errorType === 'ResourceTypeMismatch') {
-                                throw new Error(`A file or folder ${parsedUri.baseName} already exists at this location. Please choose a different name`);
-                            }
-                        }
+                        await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFile', childName: parsedUri.baseName });
                     }
                 });
             }

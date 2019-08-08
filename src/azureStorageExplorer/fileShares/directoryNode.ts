@@ -78,10 +78,8 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem | DirectoryTreeItem> {
         if (context.childType === FileTreeItem.contextValue) {
             return askAndCreateEmptyTextFile(this, this.fullPath, this.share, context);
-        } else if (context.childType === DirectoryTreeItem.contextValue) {
-            return askAndCreateChildDirectory(this, this.fullPath, this.share, context);
         } else {
-            throw new RangeError(`Unexpected entry ${context.childType}.`);
+            return askAndCreateChildDirectory(this, this.fullPath, this.share, context);
         }
     }
 

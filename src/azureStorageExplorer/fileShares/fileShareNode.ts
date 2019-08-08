@@ -15,7 +15,7 @@ import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './directoryNode';
 import { askAndCreateChildDirectory } from './directoryUtils';
 import { FileTreeItem } from './fileNode';
-import { askAndCreateEmptyTextFile, createFile, getFile } from './fileUtils';
+import { askAndCreateEmptyTextFile } from './fileUtils';
 
 export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
@@ -91,7 +91,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return new Promise((resolve, reject) => {
             let fileService = this.root.createFileService();
-            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
+            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: 2 }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -120,11 +120,6 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem | FileTreeItem> {
         if (context.childType === FileTreeItem.contextValue) {
-            if (context.childName) {
-                const file = await createFile('', context.childName, this.share, this.root);
-                const actualFile = await getFile('', file.name, this.share, this.root);
-                return new FileTreeItem(this, actualFile, '', this.share);
-            }
             return askAndCreateEmptyTextFile(this, '', this.share, context);
         } else {
             return askAndCreateChildDirectory(this, '', this.share, context);
