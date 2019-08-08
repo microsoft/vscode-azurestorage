@@ -18,6 +18,7 @@ import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../storageAccounts/storageAccountNode";
 import { BlobContainerGroupTreeItem } from "./blobContainerGroupNode";
+import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
 
@@ -34,7 +35,8 @@ export interface IExistingBlobContext extends IActionContext {
 }
 
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
-    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
+    private _continuationTokenBlob: azureStorage.common.ContinuationToken | undefined;
+    private _continuationTokenDirectory: azureStorage.common.ContinuationToken | undefined;
     private _websiteHostingEnabled: boolean;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
 
@@ -66,13 +68,14 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     public contextValue: string = BlobContainerTreeItem.contextValue;
 
     public hasMoreChildrenImpl(): boolean {
-        return !!this._continuationToken;
+        return !!this._continuationTokenBlob || !!this._continuationTokenDirectory;
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         const result: AzExtTreeItem[] = [];
         if (clearCache) {
-            this._continuationToken = undefined;
+            this._continuationTokenBlob = undefined;
+            this._continuationTokenDirectory = undefined;
             if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
                 const ti = new GenericTreeItem(this, {
                     label: this._openInFileExplorerString,
@@ -86,10 +89,14 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
 
         // currentToken argument typed incorrectly in SDK
-        let blobs = await this.listBlobs(<azureStorage.common.ContinuationToken>this._continuationToken);
-        let { entries, continuationToken } = blobs;
-        this._continuationToken = continuationToken;
-        return result.concat(entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, blob, this.container)));
+        let blobs = await this.listBlobs(<azureStorage.common.ContinuationToken>this._continuationTokenBlob);
+        let directories = await this.listDirectories(<azureStorage.common.ContinuationToken>this._continuationTokenDirectory);
+        this._continuationTokenBlob = blobs.continuationToken;
+        this._continuationTokenDirectory = directories.continuationToken;
+
+        let blobChildren = blobs.entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, blob, this.container));
+        let directoryChildren = directories.entries.map((directory: azureStorage.BlobService.BlobDirectoryResult) => new BlobDirectoryTreeItem(this, directory.name, this.container));
+        return result.concat(blobChildren).concat(directoryChildren);
     }
 
     public compareChildrenImpl(ti1: BlobContainerTreeItem, ti2: BlobContainerTreeItem): number {
@@ -107,8 +114,43 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const hostingStatus = await (<StorageAccountTreeItem>this!.parent!.parent).getActualWebsiteHostingStatus();
         this._websiteHostingEnabled = hostingStatus.enabled;
     }
+
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
+        return new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
+            console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobsSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: ""`);
+            let blobService = this.root.createBlobService();
+            // Intentionally passing undefined for token - only supports listing first batch of files for now
+            // tslint:disable-next-line: no-non-null-assertion
+            blobService.listBlobsSegmentedWithPrefix(this.container.name, "", currentToken, { delimiter: '/', maxResults: maxResults }, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
+    listDirectories(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobDirectoriesResult> {
+        return new Promise<azureStorage.BlobService.ListBlobDirectoriesResult>((resolve, reject) => {
+            console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobDirectoriesSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: ""`);
+            let blobService = this.root.createBlobService();
+            // Intentionally passing undefined for token - only supports listing first batch of files for now
+            // tslint:disable-next-line: no-non-null-assertion
+            blobService.listBlobDirectoriesSegmentedWithPrefix(this.container.name, "", currentToken, { delimiter: '/', maxResults: maxResults }, (error?: Error, result?: azureStorage.BlobService.ListBlobDirectoriesResult) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
+    listBlobs2(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
             blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults }, (err?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
