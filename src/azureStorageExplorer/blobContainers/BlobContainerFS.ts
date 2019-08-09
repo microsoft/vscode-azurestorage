@@ -186,7 +186,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             let ti = await this.lookup(uri, context);
-            await ti.deleteTreeItem(context);
+            try {
+                await ti.deleteTreeItem(context);
+            } catch (error) {
+                let pe = parseError(error);
+                console.log(pe.message);
+            }
         });
     }
 

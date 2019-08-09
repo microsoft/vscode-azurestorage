@@ -10,7 +10,7 @@ import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplCon
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem, IBlobContainerCreateChildContext, IExistingBlobContext } from "./blobContainerNode";
-import { BlobTreeItem } from "./blobNode";
+import { BlobTreeItem, ISuppressMessageContext } from "./blobNode";
 // tslint:disable-next-line: ordered-imports tslint:disable-next-line: no-require-imports
 import mime = require("mime");
 
@@ -172,6 +172,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
                     }
                 });
 
+                throw new Error(`Errors occured when deleting "${this.directory.name}".`);
             }
         });
     }
@@ -189,9 +190,9 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
             for (const child of children) {
                 if (child instanceof BlobTreeItem) {
                     try {
-                        await child.deleteTreeItemImpl();
+                        await child.deleteTreeItemImpl(<ISuppressMessageContext>{ ...context, suppressMessage: true });
                     } catch (error) {
-                        ext.outputChannel.appendLine(`Cannot delete ${child.label}. ${parseError(error).message}`);
+                        ext.outputChannel.appendLine(`Cannot delete ${child.fullPath}. ${parseError(error).message}`);
                         errors = true;
                     }
                 } else if (child instanceof BlobDirectoryTreeItem) {
