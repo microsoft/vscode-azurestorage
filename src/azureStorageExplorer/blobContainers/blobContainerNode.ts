@@ -200,14 +200,16 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<BlobTreeItem | BlobDirectoryTreeItem> {
         if (context.blobPath && context.filePath) {
             context.showCreatingTreeItem(context.blobPath);
             await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
             const actualBlob = await this.getBlob(context.blobPath);
             return new BlobTreeItem(this, actualBlob, this.container);
-        } else {
+        } else if (context.childType === BlobTreeItem.contextValue) {
             return this.createChildAsNewBlockBlob(context);
+        } else {
+            return new BlobDirectoryTreeItem(this, context.childName, this.container);
         }
     }
 
@@ -611,7 +613,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
-    private static validateBlobName(name: string): string | undefined | null {
+    public static validateBlobName(name: string): string | undefined | null {
         if (!name) {
             return "Blob name cannot be empty";
         }
@@ -650,5 +652,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 }
 
 export interface IBlobContainerCreateChildContext extends IActionContext {
-    childName?: string;
+    childType: string;
+    childName: string;
 }

@@ -5,10 +5,14 @@
 
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { AzExtTreeItem, AzureParentTreeItem } from "vscode-azureextensionui";
+import * as vscode from 'vscode';
+import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
+import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
-import { BlobContainerTreeItem } from "./blobContainerNode";
+import { BlobContainerTreeItem, IBlobContainerCreateChildContext, IExistingBlobContext } from "./blobContainerNode";
 import { BlobTreeItem } from "./blobNode";
+// tslint:disable-next-line: no-require-imports
+import mime = require("mime");
 
 export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationTokenBlob: azureStorage.common.ContinuationToken | undefined;
@@ -16,6 +20,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public basename: string = path.basename(this.name);
     public label: string = this.basename;
+    public static contextValue: string = 'azureBlobDirectory';
     public contextValue: string = 'azureBlobDirectory';
 
     constructor(
@@ -73,5 +78,123 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public hasMoreChildrenImpl(): boolean {
         return !!this._continuationTokenBlob || !!this._continuationTokenDir;
+    }
+
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<BlobTreeItem | BlobDirectoryTreeItem> {
+        if (context.childType === BlobTreeItem.contextValue) {
+            return await this.createChildAsNewBlockBlob(context);
+        } else {
+            return new BlobDirectoryTreeItem(this, path.basename(context.childName), this.container);
+        }
+    }
+
+    // Currently only supports creating block blobs
+    private async createChildAsNewBlockBlob(context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
+        let blobName: string = context.childName;
+        if (await this.doesBlobExist(blobName)) {
+            throw new Error("A blob with this path and name already exists");
+        }
+
+        return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
+            context.showCreatingTreeItem(blobName);
+            progress.report({ message: `Azure Storage: Creating block blob '${blobName}'` });
+            const blob = await this.createTextBlockBlob(blobName);
+            const actualBlob = await this.getBlob(blob.name);
+            actualBlob.name = path.basename(blobName);
+            return new BlobTreeItem(this, actualBlob, this.container);
+        });
+    }
+
+    private async doesBlobExist(blobPath: string): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            const blobService = this.root.createBlobService();
+            blobService.doesBlobExist(this.container.name, blobPath, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result && result.exists === true);
+                }
+            });
+        });
+    }
+
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
+    private createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+        return new Promise((resolve, reject) => {
+            let blobService = this.root.createBlobService();
+
+            let contentType: string | null = mime.getType(name);
+            let temp: string | undefined = contentType === null ? undefined : contentType;
+
+            blobService.createBlockBlobFromText(this.container.name, name, '', { contentSettings: { contentType: temp } }, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
+    private getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+        const blobService = this.root.createBlobService();
+        return new Promise((resolve, reject) => {
+            blobService.getBlobProperties(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
+        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+            progress.report({ message: `Deleting directory ${this.name}` });
+            let errors: boolean = await this.deleteFolder(context);
+
+            if (errors) {
+                // tslint:disable-next-line: no-multiline-string
+                ext.outputChannel.appendLine(`Please refresh the viewlet to see the changes made.`);
+
+                const viewOutput: vscode.MessageItem = { title: 'View Errors' };
+                const errorMessage: string = `Errors occured when deleting "${this.name}".`;
+                vscode.window.showWarningMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
+                    if (result === viewOutput) {
+                        ext.outputChannel.show();
+                    }
+                });
+
+            }
+        });
+    }
+
+    private async deleteFolder(context: IActionContext): Promise<boolean> {
+        let dirPaths: string[] = [];
+        let dirPath: string | undefined = this.name;
+
+        let errors: boolean = false;
+
+        while (dirPath) {
+            let children = await this.getCachedChildren(context);
+            for (const child of children) {
+                if (child instanceof BlobTreeItem) {
+                    try {
+                        await child.deleteTreeItemImpl();
+                    } catch (error) {
+                        ext.outputChannel.appendLine(`Cannot delete ${child.label}. ${parseError(error).message}`);
+                        errors = true;
+                    }
+                } else if (child instanceof BlobDirectoryTreeItem) {
+                    dirPaths.push(child.basename);
+                }
+            }
+
+            dirPath = dirPaths.pop();
+        }
+
+        return errors;
     }
 }

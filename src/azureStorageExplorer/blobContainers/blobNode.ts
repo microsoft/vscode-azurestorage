@@ -24,6 +24,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
 
   public label: string = this.blob.name;
   public contextValue: string = 'azureBlob';
+  public static contextValue: string = 'azureBlob';
   public iconPath: { light: string | Uri; dark: string | Uri } = {
     light: path.join(getResourcesPath(), 'light', 'document.svg'),
     dark: path.join(getResourcesPath(), 'dark', 'document.svg')
