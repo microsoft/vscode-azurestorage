@@ -6,8 +6,8 @@
 import * as azureStorage from "azure-storage";
 import * as clipboardy from 'clipboardy';
 import * as path from 'path';
-import { Uri, window } from 'vscode';
-import { AzureParentTreeItem, DialogResponses, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { MessageItem, Uri, window } from 'vscode';
+import { AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
@@ -83,10 +83,16 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         }
     }
 
-    public async deleteTreeItemImpl(): Promise<void> {
-        // Note: Azure will fail the directory delete if it's not empty, so no need to ask about deleting contents
-        const message: string = `Are you sure you want to delete the directory '${this.label}' and all of its files and subdirectories?`;
-        const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+    public async deleteTreeItemImpl(context: IActionContext & IDirectoryDeleteContext): Promise<void> {
+        let result: MessageItem | undefined;
+        if (!context.suppressMessage) {
+            // Note: Azure will fail the directory delete if it's not empty, so no need to ask about deleting contents
+            const message: string = `Are you sure you want to delete the directory '${this.label}' and all of its files and subdirectories?`;
+            result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        } else {
+            result = DialogResponses.deleteResponse;
+        }
+
         if (result === DialogResponses.deleteResponse) {
             ext.outputChannel.show();
             await deleteDirectoryAndContents(this.fullPath, this.share.name, this.root);
@@ -94,4 +100,8 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             throw new UserCancelledError();
         }
     }
+}
+
+export interface IDirectoryDeleteContext extends IActionContext {
+    suppressMessage?: boolean;
 }
