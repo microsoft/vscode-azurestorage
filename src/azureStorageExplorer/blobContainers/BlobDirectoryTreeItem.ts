@@ -18,14 +18,17 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationTokenBlob: azureStorage.common.ContinuationToken | undefined;
     private _continuationTokenDir: azureStorage.common.ContinuationToken | undefined;
 
-    public basename: string = path.basename(this.name);
-    public label: string = this.basename;
     public static contextValue: string = 'azureBlobDirectory';
     public contextValue: string = 'azureBlobDirectory';
 
+    public fullPath: string = path.posix.join(this.parentPath, this.directory.name);
+    public dirPath: string = `${this.fullPath}/`;
+    public label: string = this.directory.name;
+
     constructor(
         parent: BlobContainerTreeItem | BlobDirectoryTreeItem,
-        public name: string,
+        public readonly parentPath: string,
+        public readonly directory: azureStorage.BlobService.BlobDirectoryResult, // directory.name should not include parent path
         public container: azureStorage.BlobService.ContainerResult) {
         super(parent);
     }
@@ -38,10 +41,10 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
         let blobService = this.root.createBlobService();
         let blobRes = await new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
-            console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobsSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: "${this.name}"`);
+            console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobsSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: "${this.directory.name}"`);
             // Intentionally passing undefined for token - only supports listing first batch of files for now
             // tslint:disable-next-line: no-non-null-assertion
-            blobService.listBlobsSegmentedWithPrefix(this.container.name, this.name, <azureStorage.common.ContinuationToken>undefined!, { delimiter: '/' }, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
+            blobService.listBlobsSegmentedWithPrefix(this.container.name, this.dirPath, <azureStorage.common.ContinuationToken>this._continuationTokenBlob, { delimiter: '/' }, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
                 if (!!error) {
                     reject(error);
                 } else {
@@ -50,10 +53,10 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
             });
         });
         let dirRes = await new Promise<azureStorage.BlobService.ListBlobDirectoriesResult>((resolve, reject) => {
-            console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobDirectoriesSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: "${this.name}"`);
+            console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobDirectoriesSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: "${this.directory.name}"`);
             // Intentionally passing undefined for token - only supports listing first batch of files for now
             // tslint:disable-next-line: no-non-null-assertion
-            blobService.listBlobDirectoriesSegmentedWithPrefix(this.container.name, this.name, <azureStorage.common.ContinuationToken>undefined!, (error?: Error, result?: azureStorage.BlobService.ListBlobDirectoriesResult) => {
+            blobService.listBlobDirectoriesSegmentedWithPrefix(this.container.name, this.dirPath, <azureStorage.common.ContinuationToken>this._continuationTokenDir, (error?: Error, result?: azureStorage.BlobService.ListBlobDirectoriesResult) => {
                 if (!!error) {
                     reject(error);
                 } else {
@@ -67,10 +70,12 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
         let children: AzExtTreeItem[] = [];
         for (const blob of blobRes.entries) {
-            children.push(new BlobTreeItem(this, blob, this.container));
+            blob.name = path.basename(blob.name);
+            children.push(new BlobTreeItem(this, this.dirPath, blob, this.container));
         }
-        for (const dir of dirRes.entries) {
-            children.push(new BlobDirectoryTreeItem(this, dir.name, this.container));
+        for (const directory of dirRes.entries) {
+            directory.name = path.basename(directory.name.substring(0, directory.name.length - 1));
+            children.push(new BlobDirectoryTreeItem(this, this.dirPath, directory, this.container));
         }
 
         return children;
@@ -84,7 +89,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
         if (context.childType === BlobTreeItem.contextValue) {
             return await this.createChildAsNewBlockBlob(context);
         } else {
-            return new BlobDirectoryTreeItem(this, path.basename(context.childName), this.container);
+            return new BlobDirectoryTreeItem(this, this.dirPath, { name: context.childName }, this.container);
         }
     }
 
@@ -101,7 +106,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
             const blob = await this.createTextBlockBlob(blobName);
             const actualBlob = await this.getBlob(blob.name);
             actualBlob.name = path.basename(blobName);
-            return new BlobTreeItem(this, actualBlob, this.container);
+            return new BlobTreeItem(this, this.dirPath, actualBlob, this.container);
         });
     }
 
@@ -152,7 +157,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-            progress.report({ message: `Deleting directory ${this.name}` });
+            progress.report({ message: `Deleting directory ${this.directory.name}` });
             let errors: boolean = await this.deleteFolder(context);
 
             if (errors) {
@@ -160,7 +165,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 ext.outputChannel.appendLine(`Please refresh the viewlet to see the changes made.`);
 
                 const viewOutput: vscode.MessageItem = { title: 'View Errors' };
-                const errorMessage: string = `Errors occured when deleting "${this.name}".`;
+                const errorMessage: string = `Errors occured when deleting "${this.directory.name}".`;
                 vscode.window.showWarningMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
                     if (result === viewOutput) {
                         ext.outputChannel.show();
@@ -172,13 +177,15 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     private async deleteFolder(context: IActionContext): Promise<boolean> {
-        let dirPaths: string[] = [];
-        let dirPath: string | undefined = this.name;
+        let dirPaths: BlobDirectoryTreeItem[] = [];
+        // tslint:disable-next-line: no-var-self
+        let dirPath: BlobDirectoryTreeItem | undefined = this;
 
         let errors: boolean = false;
 
+        // tslint:disable-next-line: strict-boolean-expressions
         while (dirPath) {
-            let children = await this.getCachedChildren(context);
+            let children = await dirPath.getCachedChildren(context);
             for (const child of children) {
                 if (child instanceof BlobTreeItem) {
                     try {
@@ -188,7 +195,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
                         errors = true;
                     }
                 } else if (child instanceof BlobDirectoryTreeItem) {
-                    dirPaths.push(child.basename);
+                    dirPaths.push(child);
                 }
             }
 

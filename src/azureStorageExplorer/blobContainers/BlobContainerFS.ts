@@ -18,13 +18,6 @@ import { BlobTreeItem } from './blobNode';
 
 export type EntryTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
-export class TreeNode {
-    constructor(
-        public name: string,
-        public children: [string, vscode.FileType]
-    ) { }
-}
-
 export class BlobContainerFS implements vscode.FileSystemProvider {
     private _blobContainerString: string = 'Blob Containers';
 

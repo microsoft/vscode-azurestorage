@@ -94,8 +94,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         this._continuationTokenBlob = blobs.continuationToken;
         this._continuationTokenDirectory = directories.continuationToken;
 
-        let blobChildren = blobs.entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, blob, this.container));
-        let directoryChildren = directories.entries.map((directory: azureStorage.BlobService.BlobDirectoryResult) => new BlobDirectoryTreeItem(this, directory.name, this.container));
+        let blobChildren = blobs.entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, "", blob, this.container));
+        let directoryChildren = directories.entries.map((directory: azureStorage.BlobService.BlobDirectoryResult) => new BlobDirectoryTreeItem(this, "", { name: directory.name.substring(0, directory.name.length - 1) }, this.container));
         return result.concat(blobChildren).concat(directoryChildren);
     }
 
@@ -205,11 +205,11 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             context.showCreatingTreeItem(context.blobPath);
             await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
             const actualBlob = await this.getBlob(context.blobPath);
-            return new BlobTreeItem(this, actualBlob, this.container);
+            return new BlobTreeItem(this, "", actualBlob, this.container);
         } else if (context.childType === BlobTreeItem.contextValue) {
             return this.createChildAsNewBlockBlob(context);
         } else {
-            return new BlobDirectoryTreeItem(this, context.childName, this.container);
+            return new BlobDirectoryTreeItem(this, "", { name: context.childName }, this.container);
         }
     }
 
@@ -573,7 +573,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 progress.report({ message: `Azure Storage: Creating block blob '${blobNameString}'` });
                 const blob = await this.createTextBlockBlob(blobNameString);
                 const actualBlob = await this.getBlob(blob.name);
-                return new BlobTreeItem(this, actualBlob, this.container);
+                return new BlobTreeItem(this, "", actualBlob, this.container);
             });
         }
 
