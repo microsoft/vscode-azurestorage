@@ -7,10 +7,10 @@ import * as azureStorage from "azure-storage";
 import { IStorageRoot } from "../IStorageRoot";
 
 export class BlobDirectoryTreeItem {
-  constructor(
-    public root: IStorageRoot,
-    public directory: string,
-    public prefix: string,
-    public readonly container: azureStorage.BlobService.ContainerResult) {
-  }
+    constructor(
+        public root: IStorageRoot,
+        public directory: string,
+        public prefix: string,
+        public readonly container: azureStorage.BlobService.ContainerResult) {
+    }
 }

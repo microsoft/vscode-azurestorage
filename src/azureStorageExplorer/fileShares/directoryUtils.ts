@@ -10,12 +10,13 @@ import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from "./directoryNode";
+import { IFileShareCreateChildContext } from "./fileShareNode";
 import { deleteFile } from "./fileUtils";
 import { validateDirectoryName } from "./validateNames";
 
 // Supports both file share and directory parents
-export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, share: azureStorage.FileService.ShareResult, context: ICreateChildImplContext): Promise<DirectoryTreeItem> {
-    const dirName = await window.showInputBox({
+export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, share: azureStorage.FileService.ShareResult, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem> {
+    const dirName = context.childName || await window.showInputBox({
         placeHolder: 'Enter a name for the new directory',
         validateInput: validateDirectoryName
     });
@@ -38,10 +39,10 @@ export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<ISt
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-export function createDirectory(share: azureStorage.FileService.ShareResult, root: IStorageRoot, parentPath: string, name: string): Promise<azureStorage.BlobService.BlobResult> {
+export function createDirectory(share: azureStorage.FileService.ShareResult, root: IStorageRoot, parentPath: string, name: string): Promise<azureStorage.FileService.DirectoryResult> {
     return new Promise((resolve, reject) => {
         const fileService = root.createFileService();
-        fileService.createDirectory(share.name, path.posix.join(parentPath, name), (err: Error, result: azureStorage.BlobService.BlobResult) => {
+        fileService.createDirectory(share.name, path.posix.join(parentPath, name), (err: Error, result: azureStorage.FileService.DirectoryResult) => {
             // tslint:disable-next-line:strict-boolean-expressions // SDK is not strict-null-checking enabled, can't type err as optional
             if (err) {
                 reject(err);
