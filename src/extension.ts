@@ -21,6 +21,7 @@ import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShar
 import { FileShareFS } from './azureStorageExplorer/fileShares/FileShareFS';
 import { registerFileShareGroupActionHandlers } from './azureStorageExplorer/fileShares/fileShareGroupActionHandlers';
 import { FileShareTreeItem } from './azureStorageExplorer/fileShares/fileShareNode';
+import { parseIncomingTreeItemUri } from './azureStorageExplorer/parseUri';
 import { registerQueueActionHandlers } from './azureStorageExplorer/queues/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './azureStorageExplorer/queues/queueGroupActionHandlers';
 import { selectStorageAccountTreeItemForCommand } from './azureStorageExplorer/selectStorageAccountNodeForCommand';
@@ -82,6 +83,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem: BlobContainerTreeItem) => {
             await callWithTelemetryAndErrorHandling('blob.openInFileExplorer', async () => {
                 // tslint:disable-next-line: prefer-template
+                let s = parseIncomingTreeItemUri(treeItem.fullId, BlobContainerFS._blobContainerString);
                 await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorage://' + treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });

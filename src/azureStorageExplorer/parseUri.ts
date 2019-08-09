@@ -62,3 +62,18 @@ export function parseUri(uri: vscode.Uri | string, fileType: string): IParsedUri
         };
     }
 }
+
+export function parseIncomingTreeItemUri(uri: vscode.Uri | string, fileType: string): string {
+    let path: string = uri instanceof vscode.Uri ? uri.path : uri;
+    const matches: RegExpMatchArray | null = path.match(`^\/subscriptions\/([^\/]+)\/resourceGroups\/([^\/]+)\/providers\/Microsoft\.Storage\/storageAccounts\/([^\/]+)\/${fileType}\/([^\/]+)\/?(.*?)$`);
+    if (!matches) {
+        throw new RangeError(`Invalid ${fileType} uri. `);
+    } else {
+        let subscriptionName = matches[1];
+        let resourceGroupName = matches[2];
+        let storageAccountName = matches[3];
+        let groupNodeName = matches[4];
+        let filePath = matches[5];
+        return `/${filePath}?resourceId=/subscriptions/${subscriptionName}/resourceGroups/${resourceGroupName}/providers/Microsoft.Storage/storageAccoutns/${storageAccountName}/${fileType}/${groupNodeName}`;
+    }
+}
