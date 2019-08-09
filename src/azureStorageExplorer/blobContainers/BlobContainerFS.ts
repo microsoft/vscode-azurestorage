@@ -8,10 +8,9 @@ import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
-import { ext } from "../../extensionVariables";
 import { findRoot } from "../findRoot";
 import { getFileSystemError } from "../getFileSystemError";
-import { IParsedUri, parseUri } from "../parseUri";
+import { parseUri } from "../parseUri";
 import { showRenameError } from "../showRenameError";
 import { BlobContainerTreeItem, IBlobContainerCreateChildContext } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
@@ -195,83 +194,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             let ti = await this.lookup(uri, context);
             await ti.deleteTreeItem(context);
-
-            //     let parsedUri = parseUri(uri, this._blobContainerString);
-            //     let entry: EntryTreeItem;
-            //     try {
-            //         entry = await this.lookup(uri, context);
-            //     } catch (err) {
-            //         throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-            //     }
-
-            //     const blobService = entry.root.createBlobService();
-
-            //     if (entry instanceof BlobTreeItem) {
-            //         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-            //             progress.report({ message: `Deleting blob ${parsedUri.filePath}` });
-            //             await this.deleteBlob(parsedUri.rootName, parsedUri.filePath, blobService);
-            //         });
-            //     } else if (entry instanceof BlobDirectoryTreeItem) {
-            //         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-            //             progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-            //             let errors: boolean = await this.deleteFolder(<BlobDirectoryTreeItem>entry, parsedUri, blobService, context);
-
-            //             if (errors) {
-            //                 // tslint:disable-next-line: no-multiline-string
-            //                 ext.outputChannel.appendLine(`Please refresh the viewlet to see the changes made.`);
-
-            //                 const viewOutput: vscode.MessageItem = { title: 'View Errors' };
-            //                 const errorMessage: string = `Errors occured when deleting "${parsedUri.filePath}".`;
-            //                 vscode.window.showWarningMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
-            //                     if (result === viewOutput) {
-            //                         ext.outputChannel.show();
-            //                     }
-            //                 });
-
-            //             }
-            //         });
-            //     } else if (entry instanceof BlobContainerTreeItem) {
-            //         throw new Error('Cannot delete a Blob Container.');
-            //     }
-        });
-    }
-
-    private async deleteFolder(directory: BlobDirectoryTreeItem, parsedUri: IParsedUri, blobService: azureStorage.BlobService, context: IActionContext): Promise<boolean> {
-        let dirPaths: string[] = [];
-        let dirPath: string | undefined = parsedUri.dirPath;
-
-        let errors: boolean = false;
-
-        while (dirPath) {
-            let children = await directory.getCachedChildren(context);
-            for (const child of children) {
-                if (child instanceof BlobTreeItem) {
-                    try {
-                        await this.deleteBlob(parsedUri.rootName, child.fullId, blobService);
-                    } catch (error) {
-                        ext.outputChannel.appendLine(`Cannot delete ${child.fullId}. ${parseError(error).message}`);
-                        errors = true;
-                    }
-                } else if (child instanceof BlobDirectoryTreeItem) {
-                    dirPaths.push(child.basename);
-                }
-            }
-
-            dirPath = dirPaths.pop();
-        }
-
-        return errors;
-    }
-
-    private async deleteBlob(containerName: string, prefix: string, blobService: azureStorage.BlobService): Promise<void> {
-        await new Promise<void>((resolve, reject) => {
-            blobService.deleteBlob(containerName, prefix, (error?: Error) => {
-                if (!!error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
         });
     }
 
