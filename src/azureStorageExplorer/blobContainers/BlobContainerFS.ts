@@ -94,18 +94,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         await callWithTelemetryAndErrorHandling('blob.createDirectory', async (context) => {
             context.errorHandling.rethrow = true;
 
-            let parsedUri = parseUri(uri, this._blobContainerString);
-
-            // tslint:disable-next-line: no-multiline-string
-            if (parsedUri.baseName.includes(`\\`) || parsedUri.baseName === "") {
-                throw new Error('Name must not be empty or contain slashes.');
-            }
-
             if (this._virtualDirCreatedUri.has(uri.path)) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
             }
 
             this._virtualDirCreatedUri.add(uri.path);
+            console.log('test');
         });
     }
 
@@ -255,7 +249,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         let dirPaths: string[] = [];
         let errors: boolean = false;
 
-        ext.outputChannel.show();
         while (dirPath) {
             let childBlob = await this.listAllChildBlob(blobService, parsedUri.rootName, dirPath);
             for (const blob of childBlob.entries) {

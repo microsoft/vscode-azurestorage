@@ -119,7 +119,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         }) || Buffer.from('');
     }
 
-    async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; accessConditions: boolean }): Promise<void> {
+    async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): Promise<void> {
         await callWithTelemetryAndErrorHandling('fs.writeFile', async (context) => {
             if (!options.create && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
