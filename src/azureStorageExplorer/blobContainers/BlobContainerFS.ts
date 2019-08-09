@@ -99,7 +99,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             this._virtualDirCreatedUri.add(uri.path);
-            console.log('test');
         });
     }
 
