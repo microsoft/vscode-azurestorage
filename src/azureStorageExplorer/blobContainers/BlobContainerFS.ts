@@ -8,7 +8,7 @@ import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
-import { findRoot } from "../findRoot";
+import { ext } from "../../extensionVariables";
 import { getFileSystemError } from "../getFileSystemError";
 import { parseUri } from "../parseUri";
 import { showRenameError } from "../showRenameError";
@@ -248,9 +248,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         return ti;
     }
 
-    private async getRoot(uri: vscode.Uri | string, context: IActionContext): Promise<BlobContainerTreeItem> {
-        let root = await findRoot(uri, this._blobContainerString, context);
-        if (root instanceof BlobContainerTreeItem) {
+    private async getRoot(uri: vscode.Uri, context: IActionContext): Promise<BlobContainerTreeItem> {
+        let rootPath = parseUri(uri, this._blobContainerString).rootPath;
+        let root = await ext.tree.findTreeItem(rootPath, context);
+        if (!root) {
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+        } else if (root instanceof BlobContainerTreeItem) {
             return root;
         } else {
             throw new RangeError(`Unexpected entry ${root.constructor.name}.`);

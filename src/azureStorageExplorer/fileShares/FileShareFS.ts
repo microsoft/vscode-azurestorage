@@ -6,16 +6,14 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
-import { findRoot } from "../findRoot";
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
+import { ext } from "../../extensionVariables";
 import { getFileSystemError } from "../getFileSystemError";
 import { parseUri } from "../parseUri";
 import { showRenameError } from "../showRenameError";
-import { DirectoryTreeItem } from './directoryNode';
-import { createDirectory, deleteDirectoryAndContents } from "./directoryUtils";
+import { DirectoryTreeItem, IDirectoryDeleteContext } from './directoryNode';
 import { FileTreeItem } from "./fileNode";
-import { FileShareTreeItem } from "./fileShareNode";
-import { deleteFile } from "./fileUtils";
+import { FileShareTreeItem, IFileShareCreateChildContext } from "./fileShareNode";
 import { validateDirectoryName } from "./validateNames";
 
 export type EntryTreeItem = FileShareTreeItem | FileTreeItem | DirectoryTreeItem;
@@ -48,20 +46,16 @@ export class FileShareFS implements vscode.FileSystemProvider {
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, context);
-
-            // Intentionally passing undefined for token - only supports listing first batch of files for now
-            // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-            let listFilesandDirectoryResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
-            let entries = listFilesandDirectoryResult.entries;
+            let children: AzExtTreeItem[] = await entry.getCachedChildren(context);
 
             let result: [string, vscode.FileType][] = [];
-            for (const dir of entries.directories) {
-                result.push([dir.name, vscode.FileType.Directory]);
+            for (const child of children) {
+                if (child instanceof FileTreeItem) {
+                    result.push([child.file.name, vscode.FileType.File]);
+                } else if (child instanceof DirectoryTreeItem) {
+                    result.push([child.directory.name, vscode.FileType.Directory]);
+                }
             }
-            for (const file of entries.files) {
-                result.push([file.name, vscode.FileType.File]);
-            }
-
             return result;
             // tslint:disable-next-line: strict-boolean-expressions
         }) || [];
@@ -72,7 +66,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
 
             let parsedUri = parseUri(uri, this._fileShareString);
-            let fileShare: FileShareTreeItem = await this.getRoot(uri, context);
 
             let response: string | undefined | null = validateDirectoryName(parsedUri.baseName);
             if (response) {
@@ -80,7 +73,10 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             try {
-                await createDirectory(fileShare.share, fileShare.root, parsedUri.parentDirPath, parsedUri.baseName);
+                let parentUri: vscode.Uri = vscode.Uri.file(path.posix.join(parsedUri.rootPath, parsedUri.parentDirPath));
+                let parent = await this.lookupAsDirectory(parentUri, context);
+
+                await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFileShareDirectory', childName: parsedUri.baseName });
             } catch (error) {
                 let pe = parseError(error);
                 if (pe.errorType === "ResourceAlreadyExists") {
@@ -99,7 +95,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
             let parsedUri = parseUri(uri, this._fileShareString);
 
-            let treeItem: FileShareTreeItem = await this.getRoot(uri, context);
+            let treeItem: FileShareTreeItem = await this.lookupRoot(uri, context);
             let fileService = treeItem.root.createFileService();
 
             let result: string | undefined;
@@ -123,14 +119,14 @@ export class FileShareFS implements vscode.FileSystemProvider {
         }) || Buffer.from('');
     }
 
-    async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
+    async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): Promise<void> {
         await callWithTelemetryAndErrorHandling('fs.writeFile', async (context) => {
             if (!options.create && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
             }
 
             let parsedUri = parseUri(uri, this._fileShareString);
-            let fileShare: FileShareTreeItem = await this.getRoot(uri, context);
+            let fileShare: FileShareTreeItem = await this.lookupRoot(uri, context);
 
             const fileService = fileShare.root.createFileService();
             let fileResultChild = await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
@@ -143,7 +139,8 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 });
             });
 
-            if (!fileResultChild.exists && !options.create) {
+            let createNewFile: boolean = !fileResultChild.exists;
+            if (createNewFile && !options.create) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
             } else if (fileResultChild.exists && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
@@ -151,19 +148,24 @@ export class FileShareFS implements vscode.FileSystemProvider {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                     if (fileResultChild.exists) {
                         progress.report({ message: `Saving file ${parsedUri.filePath}` });
+
+                        await new Promise<azureStorage.FileService.FileResult>((resolve, reject) => {
+                            fileService.createFileFromText(parsedUri.rootName, parsedUri.parentDirPath, parsedUri.baseName, content.toString(), (error?: Error, result?: azureStorage.FileService.FileResult) => {
+                                if (!!error) {
+                                    reject(error);
+                                } else {
+                                    resolve(result);
+                                }
+                            });
+                        });
                     } else {
                         progress.report({ message: `Creating file ${parsedUri.filePath}` });
-                    }
 
-                    await new Promise<void>((resolve, reject) => {
-                        fileService.createFileFromText(parsedUri.rootName, parsedUri.parentDirPath, parsedUri.baseName, content.toString(), (error?: Error) => {
-                            if (!!error) {
-                                reject(error);
-                            } else {
-                                resolve();
-                            }
-                        });
-                    });
+                        let parentUri: vscode.Uri = vscode.Uri.file(path.posix.join(parsedUri.rootPath, parsedUri.parentDirPath));
+                        let parent = await this.lookupAsDirectory(parentUri, context);
+
+                        await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFile', childName: parsedUri.baseName });
+                    }
                 });
             }
         });
@@ -180,15 +182,11 @@ export class FileShareFS implements vscode.FileSystemProvider {
             }
 
             let parsedUri = parseUri(uri, this._fileShareString);
-
             let fileFound: EntryTreeItem = await this.lookup(uri, context);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-                if (fileFound instanceof FileTreeItem) {
-                    progress.report({ message: `Deleting file ${parsedUri.filePath}` });
-                    await deleteFile(fileFound.directoryPath, fileFound.file.name, fileFound.share.name, fileFound.root);
-                } else if (fileFound instanceof DirectoryTreeItem) {
-                    progress.report({ message: `Deleting directory ${parsedUri.filePath}` });
-                    await deleteDirectoryAndContents(parsedUri.filePath, fileFound.share.name, fileFound.root);
+                if (fileFound instanceof FileTreeItem || fileFound instanceof DirectoryTreeItem) {
+                    progress.report({ message: `Deleting ${parsedUri.filePath}` });
+                    await fileFound.deleteTreeItem(<IDirectoryDeleteContext>{ ...context, suppressMessage: true });
                 } else {
                     throw new RangeError(`Unexpected entry ${fileFound.constructor.name}.`);
                 }
@@ -202,6 +200,15 @@ export class FileShareFS implements vscode.FileSystemProvider {
         });
     }
 
+    private async lookupRoot(uri: vscode.Uri, context: IActionContext): Promise<FileShareTreeItem> {
+        let parsedUri = parseUri(uri, this._fileShareString);
+        let entry = await this.lookup(parsedUri.rootPath, context);
+        if (entry instanceof FileShareTreeItem) {
+            return entry;
+        }
+        throw new RangeError(`Unexpected entry ${entry.constructor.name}.`);
+    }
+
     private async lookupAsDirectory(uri: vscode.Uri, context: IActionContext): Promise<DirectoryTreeItem | FileShareTreeItem> {
         let entry = await this.lookup(uri, context);
         if (entry instanceof DirectoryTreeItem || entry instanceof FileShareTreeItem) {
@@ -210,48 +217,19 @@ export class FileShareFS implements vscode.FileSystemProvider {
         throw new RangeError(`Unexpected entry ${entry.constructor.name}.`);
     }
 
-    private async lookup(uri: vscode.Uri, context: IActionContext): Promise<EntryTreeItem> {
-        let parsedUri = parseUri(uri, this._fileShareString);
-
-        let entry: EntryTreeItem = await this.getRoot(uri, context);
-        if (parsedUri.filePath === '') {
-            return entry;
+    private async lookup(uri: vscode.Uri | string, context: IActionContext): Promise<EntryTreeItem> {
+        let uriString = uri instanceof vscode.Uri ? uri.path : uri;
+        if (uriString.endsWith('/')) {
+            uriString = uriString.substr(0, uriString.length - 1);
         }
 
-        let parentPath = '';
-        let parts = parsedUri.filePath.split('/');
-        for (let part of parts) {
-            if (entry instanceof FileTreeItem) {
-                throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-            }
-            // Intentionally passing undefined for token - only supports listing first batch of files for now
-            // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-            let listFilesAndDirectoriesResult: azureStorage.FileService.ListFilesAndDirectoriesResult = await entry.listFiles(<azureStorage.common.ContinuationToken>undefined!);
-            let entries = listFilesAndDirectoriesResult.entries;
-
-            let directoryResultChild = entries.directories.find(element => element.name === part);
-            if (!!directoryResultChild) {
-                entry = new DirectoryTreeItem(entry, parentPath, directoryResultChild, <azureStorage.FileService.ShareResult>entry.share);
-                parentPath = path.posix.join(parentPath, part);
-            } else {
-                let fileResultChild = entries.files.find(element => element.name === part);
-                if (!!fileResultChild) {
-                    entry = new FileTreeItem(entry, fileResultChild, parentPath, <azureStorage.FileService.ShareResult>entry.share);
-                } else {
-                    throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-                }
-            }
-        }
-
-        return entry;
-    }
-
-    private async getRoot(uri: vscode.Uri, context: IActionContext): Promise<FileShareTreeItem> {
-        let root = await findRoot(uri, this._fileShareString, context);
-        if (root instanceof FileShareTreeItem) {
-            return root;
+        let ti = await ext.tree.findTreeItem(uriString, context);
+        if (!ti) {
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+        } else if (ti instanceof FileShareTreeItem || ti instanceof FileTreeItem || ti instanceof DirectoryTreeItem) {
+            return ti;
         } else {
-            throw new RangeError(`Unexpected entry ${root.constructor.name}.`);
+            throw new RangeError(`Unexpected entry ${ti.constructor.name}.`);
         }
     }
 }

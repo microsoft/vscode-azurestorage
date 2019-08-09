@@ -129,4 +129,5 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
 export interface IFileShareCreateChildContext extends IActionContext {
     childType: string;
+    childName?: string;
 }

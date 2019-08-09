@@ -10,11 +10,12 @@ import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { FileTreeItem } from "./fileNode";
+import { IFileShareCreateChildContext } from "./fileShareNode";
 import { validateFileName } from "./validateNames";
 
 // Currently only supports creating block blobs
-export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult, context: ICreateChildImplContext): Promise<FileTreeItem> {
-    const fileName = await ext.ui.showInputBox({
+export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem> {
+    let fileName = context.childName || await ext.ui.showInputBox({
         placeHolder: 'Enter a name for the new file',
         validateInput: async (name: string) => {
             let nameError = validateFileName(name);
@@ -55,7 +56,7 @@ async function doesFileExist(fileName: string, parent: AzureParentTreeItem<IStor
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-function getFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
+export function getFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
     const fileService = root.createFileService();
     return new Promise((resolve, reject) => {
         fileService.getFileProperties(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
