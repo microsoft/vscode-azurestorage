@@ -67,6 +67,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
         await callWithTelemetryAndErrorHandling('blob.createDirectory', async (context) => {
+            context.errorHandling.rethrow = true;
             let ti = await this.lookup(uri, context, true);
 
             if (ti instanceof BlobTreeItem) {
