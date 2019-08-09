@@ -77,7 +77,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let parsedUri = parseUri(uri, this._blobContainerString);
             let tiParsedUri = parseUri(ti.fullId, this._blobContainerString);
 
-            let matches = parsedUri.filePath.match(`^${this.regexEscape(tiParsedUri.filePath)}\/?([^\/]+)\/?(.*?)`);
+            let matches = parsedUri.filePath.match(`^${this.regexEscape(tiParsedUri.filePath)}\/?([^\/^]+)\/?(.*?)$`);
             while (!!matches) {
                 ti = <BlobDirectoryTreeItem>await ti.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlobDirectory', childName: matches[1] });
                 // tslint:disable-next-line: no-multiline-string
@@ -248,7 +248,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         return ti;
     }
 
-    private async getRoot(uri: vscode.Uri, context: IActionContext): Promise<BlobContainerTreeItem> {
+    private async getRoot(uri: vscode.Uri | string, context: IActionContext): Promise<BlobContainerTreeItem> {
         let rootPath = parseUri(uri, this._blobContainerString).rootPath;
         let root = await ext.tree.findTreeItem(rootPath, context);
         if (!root) {
