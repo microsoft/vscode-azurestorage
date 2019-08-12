@@ -61,10 +61,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         }) || [];
     }
 
-    private regexEscape(s: string): string {
-        return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    }
-
     async createDirectory(uri: vscode.Uri): Promise<void> {
         await callWithTelemetryAndErrorHandling('blob.createDirectory', async (context) => {
             context.errorHandling.rethrow = true;
@@ -85,6 +81,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
             return ti;
         });
+    }
+
+    private regexEscape(s: string): string {
+        return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
@@ -209,7 +209,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         }
     }
 
-    private async lookup(uri: vscode.Uri | string, context: IActionContext, halfSearch?: boolean): Promise<EntryTreeItem> {
+    private async lookup(uri: vscode.Uri | string, context: IActionContext, endSearchEarly?: boolean): Promise<EntryTreeItem> {
         let parsedUri = parseUri(uri, this._blobContainerString);
 
         let ti: EntryTreeItem = await this.getRoot(uri, context);
@@ -220,7 +220,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         let pathToLook = parsedUri.filePath.split('/');
         for (const childName of pathToLook) {
             if (ti instanceof BlobTreeItem) {
-                if (halfSearch) {
+                if (endSearchEarly) {
                     return ti;
                 }
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
@@ -229,7 +229,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let children: AzExtTreeItem[] = await ti.getCachedChildren(context);
             let child = children.find(element => path.basename(element.label) === childName);
             if (!child) {
-                if (halfSearch) {
+                if (endSearchEarly) {
                     return ti;
                 }
                 throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
