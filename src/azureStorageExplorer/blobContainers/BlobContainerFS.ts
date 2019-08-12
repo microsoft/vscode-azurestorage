@@ -179,7 +179,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         return await callWithTelemetryAndErrorHandling('blob.delete', async (context) => {
-            context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
             if (!options.recursive) {
@@ -187,12 +186,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             let ti = await this.lookup(uri, context);
-            try {
-                await ti.deleteTreeItem(context);
-            } catch (error) {
-                let pe = parseError(error);
-                console.log(pe.message);
+            if (ti instanceof BlobTreeItem) {
+                context.errorHandling.rethrow = true;
             }
+            await ti.deleteTreeItem(context);
         });
     }
 
