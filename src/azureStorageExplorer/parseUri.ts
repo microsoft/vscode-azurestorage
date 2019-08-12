@@ -17,6 +17,11 @@ export interface IParsedUri {
     rootPath: string;
 
     /**
+     * Either File Shares or Blob Containers
+     */
+    fileType: string;
+
+    /**
      * Name of container or file share
      * e.g. container1
      */
@@ -48,19 +53,21 @@ export interface IParsedUri {
 }
 
 // ^\?resourceId=\/(subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/${fileType}\/([^\/]+))$
-export function parseUri(uri: vscode.Uri | string, fileType: string): IParsedUri {
+export function parseUri(uri: vscode.Uri | string): IParsedUri {
     uri = uri instanceof vscode.Uri ? uri : vscode.Uri.file(uri);
     let query: string = uri.query;
-    const queryMatches: RegExpMatchArray | null = query.match(`^resourceId=(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/${fileType}\/([^\/]+))$`);
+    // tslint:disable-next-line: no-multiline-string
+    const queryMatches: RegExpMatchArray | null = query.match(`^resourceId=(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/([^\/]+)\/([^\/]+))$`);
     let uriPath: string = uri.path;
     // tslint:disable-next-line: no-multiline-string
     const pathMatches: RegExpMatchArray | null = uriPath.match(`^\/([^\/]+)\/?((.*?\/?)([^\/]*))$`);
     if (!pathMatches || !queryMatches) {
-        throw new Error(`Invalid ${fileType} uri. Cannot view or modify ${uri}.`);
+        throw new Error(`Invalid uri. Cannot view or modify ${uri}.`);
     } else {
         return {
             rootPath: queryMatches[1],
-            rootName: queryMatches[2],
+            fileType: queryMatches[2],
+            rootName: queryMatches[3],
             filePath: pathMatches[2],
             dirPath: pathMatches[2] ? `${pathMatches[2]}/` : '',
             parentDirPath: pathMatches[3],
@@ -69,17 +76,19 @@ export function parseUri(uri: vscode.Uri | string, fileType: string): IParsedUri
     }
 }
 
-export function parseIncomingTreeItemUri(uri: vscode.Uri | string, fileType: string): string {
+export function parseIncomingTreeItemUri(uri: vscode.Uri | string): string {
     let uriPath: string = uri instanceof vscode.Uri ? uri.path : uri;
-    const matches: RegExpMatchArray | null = uriPath.match(`^\/subscriptions\/([^\/]+)\/resourceGroups\/([^\/]+)\/providers\/Microsoft\.Storage\/storageAccounts\/([^\/]+)\/${fileType}\/([^\/]+)\/?(.*?)$`);
+    // tslint:disable-next-line: no-multiline-string
+    const matches: RegExpMatchArray | null = uriPath.match(`^\/subscriptions\/([^\/]+)\/resourceGroups\/([^\/]+)\/providers\/Microsoft\.Storage\/storageAccounts\/([^\/]+)\/([^\/]+)\/([^\/]+)\/?(.*?)$`);
     if (!matches) {
-        throw new RangeError(`Invalid ${fileType} uri.`);
+        throw new RangeError(`Invalid uri. Cannot view or modify ${uri}.`);
     } else {
         let subscriptionName = matches[1];
         let resourceGroupName = matches[2];
         let storageAccountName = matches[3];
-        let groupNodeName = matches[4];
-        let filePath = matches[5];
+        let fileType = matches[4];
+        let groupNodeName = matches[5];
+        let filePath = matches[6];
         let totalFilePath = path.posix.join(groupNodeName, filePath);
         return `/${totalFilePath}?resourceId=/subscriptions/${subscriptionName}/resourceGroups/${resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${storageAccountName}/${fileType}/${groupNodeName}`;
     }
