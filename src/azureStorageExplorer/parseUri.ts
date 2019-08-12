@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as path from 'path';
 import * as vscode from 'vscode';
 
 /**
@@ -46,34 +47,40 @@ export interface IParsedUri {
     baseName: string;
 }
 
+// ^\?resourceId=\/(subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/${fileType}\/([^\/]+))$
 export function parseUri(uri: vscode.Uri | string, fileType: string): IParsedUri {
-    let path: string = uri instanceof vscode.Uri ? uri.path : uri;
-    const matches: RegExpMatchArray | null = path.match(`^(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/${fileType}\/([^\/]+))\/?((.*?\/?)([^\/]*))$`);
-    if (!matches) {
+    uri = uri instanceof vscode.Uri ? uri : vscode.Uri.file(uri);
+    let query: string = uri.query;
+    const queryMatches: RegExpMatchArray | null = query.match(`^resourceId=(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/${fileType}\/([^\/]+))$`);
+    let uriPath: string = uri.path;
+    // tslint:disable-next-line: no-multiline-string
+    const pathMatches: RegExpMatchArray | null = uriPath.match(`^\/([^\/]+)\/?((.*?\/?)([^\/]*))$`);
+    if (!pathMatches || !queryMatches) {
         throw new Error(`Invalid ${fileType} uri. Cannot view or modify ${uri}.`);
     } else {
         return {
-            rootPath: matches[1],
-            rootName: matches[2],
-            filePath: matches[3],
-            dirPath: matches[3] ? `${matches[3]}/` : '',
-            parentDirPath: matches[4],
-            baseName: matches[5]
+            rootPath: queryMatches[1],
+            rootName: queryMatches[2],
+            filePath: pathMatches[2],
+            dirPath: pathMatches[2] ? `${pathMatches[2]}/` : '',
+            parentDirPath: pathMatches[3],
+            baseName: pathMatches[4]
         };
     }
 }
 
 export function parseIncomingTreeItemUri(uri: vscode.Uri | string, fileType: string): string {
-    let path: string = uri instanceof vscode.Uri ? uri.path : uri;
-    const matches: RegExpMatchArray | null = path.match(`^\/subscriptions\/([^\/]+)\/resourceGroups\/([^\/]+)\/providers\/Microsoft\.Storage\/storageAccounts\/([^\/]+)\/${fileType}\/([^\/]+)\/?(.*?)$`);
+    let uriPath: string = uri instanceof vscode.Uri ? uri.path : uri;
+    const matches: RegExpMatchArray | null = uriPath.match(`^\/subscriptions\/([^\/]+)\/resourceGroups\/([^\/]+)\/providers\/Microsoft\.Storage\/storageAccounts\/([^\/]+)\/${fileType}\/([^\/]+)\/?(.*?)$`);
     if (!matches) {
-        throw new RangeError(`Invalid ${fileType} uri. `);
+        throw new RangeError(`Invalid ${fileType} uri.`);
     } else {
         let subscriptionName = matches[1];
         let resourceGroupName = matches[2];
         let storageAccountName = matches[3];
         let groupNodeName = matches[4];
         let filePath = matches[5];
-        return `/${filePath}?resourceId=/subscriptions/${subscriptionName}/resourceGroups/${resourceGroupName}/providers/Microsoft.Storage/storageAccoutns/${storageAccountName}/${fileType}/${groupNodeName}`;
+        let totalFilePath = path.posix.join(groupNodeName, filePath);
+        return `/${totalFilePath}?resourceId=/subscriptions/${subscriptionName}/resourceGroups/${resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${storageAccountName}/${fileType}/${groupNodeName}`;
     }
 }

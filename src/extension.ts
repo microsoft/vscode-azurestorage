@@ -76,15 +76,16 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
             await callWithTelemetryAndErrorHandling('fs.openInFileExplorer', async () => {
                 // tslint:disable-next-line: prefer-template
-                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorage://' + treeItem.fullId));
+                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestoragefile://' + treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });
         });
         registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem: BlobContainerTreeItem) => {
             await callWithTelemetryAndErrorHandling('blob.openInFileExplorer', async () => {
                 // tslint:disable-next-line: prefer-template
-                let s = parseIncomingTreeItemUri(treeItem.fullId, BlobContainerFS._blobContainerString);
-                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorage://' + treeItem.fullId));
+                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorageblob://' + parseIncomingTreeItemUri(treeItem.fullId, BlobContainerFS._blobContainerString)));
+                // tslint:disable-next-line: prefer-template
+                // await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorageblob://' + treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });
         });
