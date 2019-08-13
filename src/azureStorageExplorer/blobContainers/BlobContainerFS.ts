@@ -31,12 +31,13 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return await callWithTelemetryAndErrorHandling('blob.stat', async (context) => {
-            context.telemetry.suppressAll = true;
+            context.telemetry.suppressIfSuccessful = true;
             if (this._virtualDirCreatedUri.has(uri.path)) {
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
             }
 
             let entry: EntryTreeItem = await this.lookup(uri, context);
+
             if (entry instanceof BlobDirectoryTreeItem || entry instanceof BlobContainerTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
                 return { type: vscode.FileType.Directory, ctime: 0, mtime: 0, size: 0 };
@@ -310,6 +311,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             if (!!blobResultChild) {
                 return new BlobTreeItem(entry, blobResultChild, entry.container);
             }
+            context.telemetry.suppressAll = true;
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
         }
     }
