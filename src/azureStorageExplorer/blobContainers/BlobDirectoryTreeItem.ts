@@ -87,9 +87,8 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
         });
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
-        return new Promise((resolve, reject) => {
+    private async createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+        return await new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
 
             let contentType: string | null = mime.getType(name);
@@ -184,7 +183,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listDirectories(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobDirectoriesResult> {
+    private listDirectories(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobDirectoriesResult> {
         return new Promise<azureStorage.BlobService.ListBlobDirectoriesResult>((resolve, reject) => {
             console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobDirectoriesSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: "${this.directory.name}"`);
             let blobService = this.root.createBlobService();
@@ -201,7 +200,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
+    private listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
         return new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
             console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobsSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: "${this.directory.name}"`);
             let blobService = this.root.createBlobService();

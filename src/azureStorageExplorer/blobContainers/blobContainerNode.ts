@@ -120,7 +120,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         return new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
             console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobsSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: ""`);
             let blobService = this.root.createBlobService();
-            // Intentionally passing undefined for token - only supports listing first batch of files for now
             // tslint:disable-next-line: no-non-null-assertion
             blobService.listBlobsSegmentedWithPrefix(this.container.name, "", currentToken, { delimiter: '/', maxResults: maxResults }, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
                 if (!!error) {
@@ -137,7 +136,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         return new Promise<azureStorage.BlobService.ListBlobDirectoriesResult>((resolve, reject) => {
             console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobDirectoriesSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: ""`);
             let blobService = this.root.createBlobService();
-            // Intentionally passing undefined for token - only supports listing first batch of files for now
             // tslint:disable-next-line: no-non-null-assertion
             blobService.listBlobDirectoriesSegmentedWithPrefix(this.container.name, "", currentToken, { delimiter: '/', maxResults: maxResults }, (error?: Error, result?: azureStorage.BlobService.ListBlobDirectoriesResult) => {
                 if (!!error) {
