@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, callWithTelemetryAndErrorHandling, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
+import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem, IBlobContainerCreateChildContext, IExistingBlobContext } from "./blobContainerNode";
@@ -181,21 +181,6 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
 
         return errors;
-    }
-
-    public async refreshImpl(): Promise<void> {
-        return await callWithTelemetryAndErrorHandling('', async (context) => {
-            let children = await this.getCachedChildren(context);
-
-            for (const child of children) {
-                if (child instanceof BlobDirectoryTreeItem) {
-                    await child.refreshImpl();
-                }
-            }
-
-            this._continuationTokenBlob = undefined;
-            this._continuationTokenDirectory = undefined;
-        });
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
