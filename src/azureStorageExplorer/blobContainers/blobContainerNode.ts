@@ -10,7 +10,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, callWithTelemetryAndErrorHandling, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { awaitWithProgress } from '../../components/progress';
 import { configurationSettingsKeys, extensionPrefix, getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
@@ -113,6 +113,19 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         //tslint:disable-next-line:no-non-null-assertion
         const hostingStatus = await (<StorageAccountTreeItem>this!.parent!.parent).getActualWebsiteHostingStatus();
         this._websiteHostingEnabled = hostingStatus.enabled;
+
+        return await callWithTelemetryAndErrorHandling('', async (context) => {
+            let children = await this.getCachedChildren(context);
+
+            for (const child of children) {
+                if (child instanceof BlobDirectoryTreeItem) {
+                    await child.refreshImpl();
+                }
+            }
+
+            this._continuationTokenBlob = undefined;
+            this._continuationTokenDirectory = undefined;
+        });
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
@@ -142,20 +155,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             blobService.listBlobDirectoriesSegmentedWithPrefix(this.container.name, "", currentToken, { delimiter: '/', maxResults: maxResults }, (error?: Error, result?: azureStorage.BlobService.ListBlobDirectoriesResult) => {
                 if (!!error) {
                     reject(error);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-    }
-
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listBlobs2(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
-        return new Promise((resolve, reject) => {
-            let blobService = this.root.createBlobService();
-            blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults }, (err?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
-                if (err) {
-                    reject(err);
                 } else {
                     resolve(result);
                 }

@@ -76,8 +76,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             let matches = parsedUri.filePath.match(`^${this.regexEscape(tiParsedUri.filePath)}\/?([^\/^]+)\/?(.*?)$`);
             while (!!matches) {
                 ti = <BlobDirectoryTreeItem>await ti.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlobDirectory', childName: matches[1] });
-                // tslint:disable-next-line: no-multiline-string
-                matches = matches[2].match(`^([^\/]+)\/?(.*?)$`);
+                matches = matches[2].match("^([^\/]+)\/?(.*?)$");
             }
             return ti;
         });
