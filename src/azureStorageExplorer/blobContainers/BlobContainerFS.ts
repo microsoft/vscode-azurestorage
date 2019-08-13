@@ -45,6 +45,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return await callWithTelemetryAndErrorHandling('blob.readDirectory', async (context) => {
             let ti = await this.lookupAsDirectory(uri, context);
+            await ti.refresh();
             let children: AzExtTreeItem[] = await ti.getCachedChildren(context);
 
             let result: [string, vscode.FileType][] = [];
