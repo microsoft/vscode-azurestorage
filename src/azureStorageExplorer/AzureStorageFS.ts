@@ -462,11 +462,14 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
 
     private async lookupRootFileShare(uri: vscode.Uri, context: IActionContext): Promise<FileShareTreeItem> {
         let parsedUri: IParsedUri = parseUri(uri);
-        let entry = await this.lookupFileShare(parsedUri.rootPath, context);
-        if (entry instanceof FileShareTreeItem) {
-            return entry;
+        let ti = await ext.tree.findTreeItem(parsedUri.rootPath, context);
+        if (!ti) {
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+        } else if (ti instanceof FileShareTreeItem) {
+            return ti;
+        } else {
+            throw new RangeError(`Unexpected entry ${ti.constructor.name}.`);
         }
-        throw new RangeError(`Unexpected entry ${entry.constructor.name}.`);
     }
 
     private async lookupAsDirectoryFileShare(uri: vscode.Uri, context: IActionContext): Promise<DirectoryTreeItem | FileShareTreeItem> {

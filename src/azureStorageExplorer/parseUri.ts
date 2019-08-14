@@ -52,9 +52,8 @@ export interface IParsedUri {
     baseName: string;
 }
 
-// ^\?resourceId=\/(subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/${fileType}\/([^\/]+))$
 export function parseUri(uri: vscode.Uri | string): IParsedUri {
-    uri = uri instanceof vscode.Uri ? uri : vscode.Uri.file(uri);
+    uri = uri instanceof vscode.Uri ? uri : vscode.Uri.parse(parseIncomingTreeItemUri(uri));
     let query: string = uri.query;
     // tslint:disable-next-line: no-multiline-string
     const queryMatches: RegExpMatchArray | null = query.match(`^resourceId=(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/([^\/]+)\/([^\/]+))$`);
