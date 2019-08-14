@@ -18,6 +18,7 @@ import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../storageAccounts/storageAccountNode";
 import { BlobContainerGroupTreeItem } from "./blobContainerGroupNode";
+import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
 
@@ -34,7 +35,8 @@ export interface IExistingBlobContext extends IActionContext {
 }
 
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
-    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
+    private _continuationTokenBlob: azureStorage.common.ContinuationToken | undefined;
+    private _continuationTokenDirectory: azureStorage.common.ContinuationToken | undefined;
     private _websiteHostingEnabled: boolean;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
 
@@ -66,13 +68,14 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     public contextValue: string = BlobContainerTreeItem.contextValue;
 
     public hasMoreChildrenImpl(): boolean {
-        return !!this._continuationToken;
+        return !!this._continuationTokenBlob || !!this._continuationTokenDirectory;
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         const result: AzExtTreeItem[] = [];
         if (clearCache) {
-            this._continuationToken = undefined;
+            this._continuationTokenBlob = undefined;
+            this._continuationTokenDirectory = undefined;
             if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
                 const ti = new GenericTreeItem(this, {
                     label: this._openInFileExplorerString,
@@ -86,10 +89,14 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
 
         // currentToken argument typed incorrectly in SDK
-        let blobs = await this.listBlobs(<azureStorage.common.ContinuationToken>this._continuationToken);
-        let { entries, continuationToken } = blobs;
-        this._continuationToken = continuationToken;
-        return result.concat(entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, blob, this.container)));
+        let blobs = await this.listBlobs(<azureStorage.common.ContinuationToken>this._continuationTokenBlob);
+        let directories = await this.listDirectories(<azureStorage.common.ContinuationToken>this._continuationTokenDirectory);
+        this._continuationTokenBlob = blobs.continuationToken;
+        this._continuationTokenDirectory = directories.continuationToken;
+
+        let blobChildren = blobs.entries.map((blob: azureStorage.BlobService.BlobResult) => new BlobTreeItem(this, "", blob, this.container));
+        let directoryChildren = directories.entries.map((directory: azureStorage.BlobService.BlobDirectoryResult) => new BlobDirectoryTreeItem(this, "", { name: directory.name.substring(0, directory.name.length - 1) }, this.container));
+        return result.concat(blobChildren).concat(directoryChildren);
     }
 
     public compareChildrenImpl(ti1: BlobContainerTreeItem, ti2: BlobContainerTreeItem): number {
@@ -107,13 +114,32 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const hostingStatus = await (<StorageAccountTreeItem>this!.parent!.parent).getActualWebsiteHostingStatus();
         this._websiteHostingEnabled = hostingStatus.enabled;
     }
+
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     listBlobs(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobsResult> {
-        return new Promise((resolve, reject) => {
+        return new Promise<azureStorage.BlobService.ListBlobsResult>((resolve, reject) => {
+            console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobsSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: ""`);
             let blobService = this.root.createBlobService();
-            blobService.listBlobsSegmented(this.container.name, currentToken, { maxResults }, (err?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
-                if (err) {
-                    reject(err);
+            // tslint:disable-next-line: no-non-null-assertion
+            blobService.listBlobsSegmentedWithPrefix(this.container.name, "", currentToken, { delimiter: '/', maxResults: maxResults }, (error?: Error, result?: azureStorage.BlobService.ListBlobsResult) => {
+                if (!!error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    // tslint:disable-next-line:promise-function-async // Grandfathered in
+    listDirectories(currentToken: azureStorage.common.ContinuationToken, maxResults: number = 50): Promise<azureStorage.BlobService.ListBlobDirectoriesResult> {
+        return new Promise<azureStorage.BlobService.ListBlobDirectoriesResult>((resolve, reject) => {
+            console.log(`${new Date().toLocaleTimeString()}: Querying Azure... Method: listBlobDirectoriesSegmentedWithPrefix blobContainerName: "${this.container.name}" prefix: ""`);
+            let blobService = this.root.createBlobService();
+            // tslint:disable-next-line: no-non-null-assertion
+            blobService.listBlobDirectoriesSegmentedWithPrefix(this.container.name, "", currentToken, { delimiter: '/', maxResults: maxResults }, (error?: Error, result?: azureStorage.BlobService.ListBlobDirectoriesResult) => {
+                if (!!error) {
+                    reject(error);
                 } else {
                     resolve(result);
                 }
@@ -158,14 +184,16 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext>): Promise<BlobTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<BlobTreeItem | BlobDirectoryTreeItem> {
         if (context.blobPath && context.filePath) {
             context.showCreatingTreeItem(context.blobPath);
             await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
             const actualBlob = await this.getBlob(context.blobPath);
-            return new BlobTreeItem(this, actualBlob, this.container);
-        } else {
+            return new BlobTreeItem(this, "", actualBlob, this.container);
+        } else if (context.childType === BlobTreeItem.contextValue) {
             return this.createChildAsNewBlockBlob(context);
+        } else {
+            return new BlobDirectoryTreeItem(this, "", { name: context.childName }, this.container);
         }
     }
 
@@ -504,28 +532,32 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     // Currently only supports creating block blobs
-    private async createChildAsNewBlockBlob(context: ICreateChildImplContext): Promise<BlobTreeItem> {
-        const blobName = await vscode.window.showInputBox({
-            placeHolder: 'Enter a name for the new block blob',
-            validateInput: async (name: string) => {
-                let nameError = BlobContainerTreeItem.validateBlobName(name);
-                if (nameError) {
-                    return nameError;
-                } else if (await this.doesBlobExist(name)) {
-                    return "A blob with this path and name already exists";
-                }
+    private async createChildAsNewBlockBlob(context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
+        let blobName: string | undefined = context.childName;
+        if (!blobName) {
+            blobName = await vscode.window.showInputBox({
+                placeHolder: 'Enter a name for the new block blob',
+                validateInput: async (name: string) => {
+                    let nameError = BlobContainerTreeItem.validateBlobName(name);
+                    if (nameError) {
+                        return nameError;
+                    } else if (await this.doesBlobExist(name)) {
+                        return "A blob with this path and name already exists";
+                    }
 
-                return undefined;
-            }
-        });
+                    return undefined;
+                }
+            });
+        }
 
         if (blobName) {
+            let blobNameString: string = <string>blobName;
             return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-                context.showCreatingTreeItem(blobName);
-                progress.report({ message: `Azure Storage: Creating block blob '${blobName}'` });
-                const blob = await this.createTextBlockBlob(blobName);
+                context.showCreatingTreeItem(blobNameString);
+                progress.report({ message: `Azure Storage: Creating block blob '${blobNameString}'` });
+                const blob = await this.createTextBlockBlob(blobNameString);
                 const actualBlob = await this.getBlob(blob.name);
-                return new BlobTreeItem(this, actualBlob, this.container);
+                return new BlobTreeItem(this, "", actualBlob, this.container);
             });
         }
 
@@ -565,7 +597,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
-    private static validateBlobName(name: string): string | undefined | null {
+    public static validateBlobName(name: string): string | undefined | null {
         if (!name) {
             return "Blob name cannot be empty";
         }
@@ -601,4 +633,9 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
+}
+
+export interface IBlobContainerCreateChildContext extends IActionContext {
+    childType: string;
+    childName: string;
 }
