@@ -51,7 +51,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return await callWithTelemetryAndErrorHandling('blob.readDirectory', async (context) => {
-            context.telemetry.suppressAll = true;
+            context.telemetry.suppressIfSuccessful = true;
             let parsedUri = parseUri(uri, this._blobContainerString);
 
             let blobContainer: BlobContainerTreeItem = await this.getRoot(uri, context);
@@ -107,7 +107,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
-            context.telemetry.suppressAll = true;
+            context.telemetry.suppressIfSuccessful = true;
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 

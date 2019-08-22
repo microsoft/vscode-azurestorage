@@ -46,7 +46,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
-            context.telemetry.suppressAll = true;
+            context.telemetry.suppressIfSuccessful = true;
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, context);
             let children: AzExtTreeItem[] = await entry.getCachedChildren(context);
 
@@ -92,7 +92,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
-            context.telemetry.suppressAll = true;
+            context.telemetry.suppressIfSuccessful = true;
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
