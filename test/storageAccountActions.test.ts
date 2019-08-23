@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
-import { StorageAccount } from 'azure-arm-storage/lib/models';
+import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
 import { BlobService, createBlobService } from 'azure-storage';
 import * as clipboardy from 'clipboardy';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
@@ -15,6 +15,7 @@ import { TestAzureAccount } from 'vscode-azureextensiondev';
 import { AzExtTreeDataProvider, AzureAccountTreeItem, createAzureClient, DialogResponses, ext, getRandomHexString } from '../extension.bundle';
 import { longRunningTestsEnabled, testUserInput } from './global.test';
 
+// tslint:disable-next-line: max-func-body-length
 suite('Storage Account Actions', async function (this: ISuiteCallbackContext): Promise<void> {
     this.timeout(1200 * 1000);
     const resourceGroupsToDelete: string[] = [];
@@ -71,7 +72,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const connectionString: string = clipboardy.readSync();
         const blobService: BlobService = createBlobService(connectionString);
-        assert.ok(blobService);
+        await validateBlobContainer(blobService);
     });
 
     test("copyPrimaryKey", async () => {
@@ -82,8 +83,8 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
             await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
         });
         const primaryKey: string = clipboardy.readSync();
-        const blobService: BlobService = createBlobService(resourceName, primaryKey, `https://${resourceName}.blob.core.windows.net`);
-        assert.ok(blobService);
+        const blobService: BlobService = createBlobService(resourceName, primaryKey, `https://${resourceName}.blob.core.windows.net`); assert.ok(blobService);
+        await validateBlobContainer(blobService);
     });
 
     test("deleteStorageAccount", async () => {
@@ -94,6 +95,18 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         await assertThrowsAsync(async () => await client.storageAccounts.getProperties(resourceName, resourceName), /Error/);
     });
+
+    async function validateBlobContainer(blobService: BlobService): Promise<void> {
+        const containerName: string = getRandomHexString().toLowerCase();
+        await new Promise((resolve, reject): void => {
+            blobService.createContainerIfNotExists(containerName, (err: Error | undefined) => {
+                // tslint:disable-next-line: no-void-expression
+                err ? reject(err) : resolve();
+            });
+        });
+        const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName);
+        assert.ok(createdContainer);
+    }
 });
 
 async function assertThrowsAsync(fn: { (): Promise<StorageAccount>; (): void; }, regExp: RegExp): Promise<void> {
