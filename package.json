@@ -2,7 +2,7 @@
 	"name": "vscode-azurestorage",
 	"displayName": "Azure Storage",
 	"description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
-	"version": "0.7.1-alpha",
+	"version": "0.7.2-alpha",
 	"publisher": "ms-azuretools",
 	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 	"engines": {
@@ -713,8 +713,6 @@
 		"@types/opn": "5.1.0",
 		"@types/winreg": "1.2.30",
 		"gulp": "^4.0.0",
-		"gulp-decompress": "^2.0.2",
-		"gulp-download": "^0.0.1",
 		"mocha": "^5.2.0",
 		"mocha-junit-reporter": "^1.18.0",
 		"mocha-multi-reporters": "^1.1.7",
@@ -724,7 +722,7 @@
 		"typescript": "^3.5.1",
 		"vsce": "^1.51.1",
 		"vscode": "^1.1.5",
-		"vscode-azureextensiondev": "0.1.11",
+		"vscode-azureextensiondev": "^0.2.1",
 		"webpack": "4.28.1",
 		"webpack-cli": "^3.1.2"
 	},
@@ -743,7 +741,7 @@
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
 		"opn": "^5.3.0",
-		"vscode-azureextensionui": "^0.26.1",
+		"vscode-azureextensionui": "^0.26.3",
 		"winreg": "^1.2.3"
 	}
 }
