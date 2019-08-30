@@ -285,13 +285,14 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         );
 
         let browseWebsite: vscode.MessageItem = { title: "Browse to website" };
-        let result = await vscode.window.showInformationMessage(
+        vscode.window.showInformationMessage(
             `Deployment complete. The primary web endpoint is ${webEndpoint}`,
             browseWebsite
-        );
-        if (result === browseWebsite) {
-            await vscode.commands.executeCommand('azureStorage.browseStaticWebsite', this);
-        }
+        ).then(async (result) => {
+            if (result === browseWebsite) {
+                await vscode.commands.executeCommand('azureStorage.browseStaticWebsite', this);
+            }
+        });
     }
 
     private get friendlyContainerName(): string {
