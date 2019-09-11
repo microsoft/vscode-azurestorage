@@ -72,7 +72,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const connectionString: string = clipboardy.readSync();
         const blobService: BlobService = createBlobService(connectionString);
-        await validateBlobContainer(blobService);
+        await validateBlobService(blobService);
     });
 
     test("copyPrimaryKey", async () => {
@@ -83,8 +83,8 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
             await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
         });
         const primaryKey: string = clipboardy.readSync();
-        const blobService: BlobService = createBlobService(resourceName, primaryKey, `https://${resourceName}.blob.core.windows.net`); assert.ok(blobService);
-        await validateBlobContainer(blobService);
+        const blobService: BlobService = createBlobService(resourceName, primaryKey, `https://${resourceName}.blob.core.windows.net`);
+        await validateBlobService(blobService);
     });
 
     test("deleteStorageAccount", async () => {
@@ -96,7 +96,8 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         await assertThrowsAsync(async () => await client.storageAccounts.getProperties(resourceName, resourceName), /Error/);
     });
 
-    async function validateBlobContainer(blobService: BlobService): Promise<void> {
+    // validate the blob service by verifying whether or not it creates a blob container
+    async function validateBlobService(blobService: BlobService): Promise<void> {
         const containerName: string = getRandomHexString().toLowerCase();
         await new Promise((resolve, reject): void => {
             blobService.createContainerIfNotExists(containerName, (err: Error | undefined) => {
