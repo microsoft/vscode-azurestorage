@@ -30,6 +30,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
+            context.telemetry.suppressIfSuccessful = true;
             let treeItem: EntryTreeItem = await this.lookup(uri, context);
 
             if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
@@ -45,6 +46,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         return await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
+            context.telemetry.suppressIfSuccessful = true;
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, context);
             let children: AzExtTreeItem[] = await entry.getCachedChildren(context);
 
@@ -90,6 +92,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         return await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
+            context.telemetry.suppressIfSuccessful = true;
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
@@ -219,10 +222,6 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     private async lookup(uri: vscode.Uri | string, context: IActionContext): Promise<EntryTreeItem> {
         let uriString = uri instanceof vscode.Uri ? uri.path : uri;
-        if (uriString.endsWith('/')) {
-            uriString = uriString.substr(0, uriString.length - 1);
-        }
-
         let ti = await ext.tree.findTreeItem(uriString, context);
         if (!ti) {
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
