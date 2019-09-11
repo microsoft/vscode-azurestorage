@@ -98,6 +98,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     // validate the blob service by verifying whether or not it creates a blob container
     async function validateBlobService(blobService: BlobService): Promise<void> {
+        // Blob contaienr must have lower case name
         const containerName: string = getRandomHexString().toLowerCase();
         await new Promise((resolve, reject): void => {
             blobService.createContainerIfNotExists(containerName, (err: Error | undefined) => {
