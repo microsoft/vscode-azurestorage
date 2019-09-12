@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as clipboardy from 'clipboardy';
 import * as vscode from "vscode";
 import { IActionContext, registerCommand } from 'vscode-azureextensionui';
 import { isPathEqual, isSubpath } from '../../components/fs';
@@ -39,7 +38,7 @@ async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccount
         treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
 
-    await clipboardy.write(treeItem.key.value);
+    await vscode.env.clipboard.writeText(treeItem.key.value);
 }
 
 async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
@@ -48,7 +47,7 @@ async function copyConnectionString(context: IActionContext, treeItem?: StorageA
     }
 
     let connectionString = await treeItem.getConnectionString();
-    await clipboardy.write(connectionString);
+    await vscode.env.clipboard.writeText(connectionString);
 }
 
 async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {
