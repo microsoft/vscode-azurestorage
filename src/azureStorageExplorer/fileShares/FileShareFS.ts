@@ -23,6 +23,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
 
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+    private _syncRequired: Map<vscode.Uri, boolean> = new Map<vscode.Uri, boolean>();
 
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
@@ -32,6 +33,7 @@ export class FileShareFS implements vscode.FileSystemProvider {
         return await callWithTelemetryAndErrorHandling('fs.stat', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
             let treeItem: EntryTreeItem = await this.lookup(uri, context);
+            this._syncRequired.set(uri, true);
 
             if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
                 // creation and modification times as well as size of tree item are intentionally set to 0 for now
@@ -48,7 +50,13 @@ export class FileShareFS implements vscode.FileSystemProvider {
         return await callWithTelemetryAndErrorHandling('fs.readDirectory', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectory(uri, context);
-            let children: AzExtTreeItem[] = await entry.getCachedChildren(context);
+            const shouldRefresh: boolean = this._syncRequired.get(uri) || true;
+            let children: AzExtTreeItem[];
+            if (shouldRefresh) {
+                await entry.refresh();
+            }
+            children = await entry.getCachedChildren(context);
+            this._syncRequired.set(uri, false);
 
             let result: [string, vscode.FileType][] = [];
             for (const child of children) {
