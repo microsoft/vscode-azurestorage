@@ -64,8 +64,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     });
 
     test("copyConnectionString", async () => {
-        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
-        assert.ok(createdAccount);
+        await validateAccountExists(resourceName, resourceName);
         clipboardy.writeSync('');
         await testUserInput.runWithInputs([resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.copyConnectionString');
@@ -76,8 +75,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     });
 
     test("copyPrimaryKey", async () => {
-        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
-        assert.ok(createdAccount);
+        await validateAccountExists(resourceName, resourceName);
         clipboardy.writeSync('');
         await testUserInput.runWithInputs([resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
@@ -87,14 +85,28 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         await validateBlobService(blobService);
     });
 
+    test("createBlobContainer", async () => {
+        await validateAccountExists(resourceName, resourceName);
+        await testUserInput.runWithInputs([resourceName, resourceName], async () => {
+            await vscode.commands.executeCommand('azureStorage.createBlobContainer');
+        });
+        const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, resourceName);
+        assert.ok(createdContainer);
+    });
+
     test("deleteStorageAccount", async () => {
-        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
-        assert.ok(createdAccount);
+        await validateAccountExists(resourceName, resourceName);
         await testUserInput.runWithInputs([resourceName, DialogResponses.deleteResponse.title], async () => {
             await vscode.commands.executeCommand('azureStorage.deleteStorageAccount');
         });
         await assertThrowsAsync(async () => await client.storageAccounts.getProperties(resourceName, resourceName), /Error/);
     });
+
+    // Validate the storage account exists or not based on its resource group name and account name
+    async function validateAccountExists(resourceGroupName: string, accountName: string): Promise<void> {
+        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceGroupName, accountName);
+        assert.ok(createdAccount);
+    }
 
     // validate the blob service by verifying whether or not it creates a blob container
     async function validateBlobService(blobService: BlobService): Promise<void> {
