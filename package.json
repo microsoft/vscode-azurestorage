@@ -734,7 +734,6 @@
 		"azure-arm-resource": "^3.1.1-preview",
 		"azure-arm-storage": "^5.1.1-preview",
 		"azure-storage": "^2.10.0",
-		"clipboardy": "^1.2.3",
 		"fs-extra": "^4.0.2",
 		"glob": "^7.1.2",
 		"mime": "^2.4.4",
