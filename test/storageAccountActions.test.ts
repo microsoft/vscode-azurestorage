@@ -8,7 +8,6 @@ import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
 import { BlobService, createBlobService } from 'azure-storage';
-import * as clipboardy from 'clipboardy';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
@@ -66,11 +65,11 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     test("copyConnectionString", async () => {
         const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
         assert.ok(createdAccount);
-        clipboardy.writeSync('');
+        await vscode.env.clipboard.writeText('');
         await testUserInput.runWithInputs([resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.copyConnectionString');
         });
-        const connectionString: string = clipboardy.readSync();
+        const connectionString: string = await vscode.env.clipboard.readText();
         const blobService: BlobService = createBlobService(connectionString);
         await validateBlobService(blobService);
     });
@@ -78,11 +77,11 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     test("copyPrimaryKey", async () => {
         const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
         assert.ok(createdAccount);
-        clipboardy.writeSync('');
+        await vscode.env.clipboard.writeText('');
         await testUserInput.runWithInputs([resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
         });
-        const primaryKey: string = clipboardy.readSync();
+        const primaryKey: string = await vscode.env.clipboard.readText();
         const blobService: BlobService = createBlobService(resourceName, primaryKey, `https://${resourceName}.blob.core.windows.net`);
         await validateBlobService(blobService);
     });

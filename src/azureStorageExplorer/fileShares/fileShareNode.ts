@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
-import * as clipboardy from 'clipboardy';
 import * as path from 'path';
 import { Uri, window, workspace } from 'vscode';
+import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
@@ -82,7 +82,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     public async copyUrl(): Promise<void> {
         let fileService = this.root.createFileService();
         let url = fileService.getUrl(this.share.name, "");
-        await clipboardy.write(url);
+        await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Share URL copied to clipboard: ${url}`);
     }

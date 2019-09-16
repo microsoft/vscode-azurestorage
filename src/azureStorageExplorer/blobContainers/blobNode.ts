@@ -4,8 +4,8 @@
   **/
 
 import * as azureStorage from "azure-storage";
-import * as clipboardy from 'clipboardy';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { MessageItem, SaveDialogOptions, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
@@ -39,7 +39,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     public async copyUrl(): Promise<void> {
         let blobService = this.root.createBlobService();
         let url = blobService.getUrl(this.container.name, this.blob.name);
-        await clipboardy.write(url);
+        await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
     }
