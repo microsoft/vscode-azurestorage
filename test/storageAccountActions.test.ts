@@ -87,7 +87,9 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("createBlobContainer", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([resourceName, resourceName], async () => {
+        // Blob contaienr must have lower case name
+        const containerName = getRandomHexString().toLowerCase();
+        await testUserInput.runWithInputs([resourceName, containerName], async () => {
             await vscode.commands.executeCommand('azureStorage.createBlobContainer');
         });
         const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, resourceName);
