@@ -62,13 +62,6 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdAccount);
     });
 
-    test("copyConnectionString", async () => {
-        await validateAccountExists(resourceName, resourceName);
-        const connectionString: string = await getConnectionString(resourceName);
-        const blobService: BlobService = createBlobService(connectionString);
-        await validateBlobService(blobService);
-    });
-
     test("copyPrimaryKey", async () => {
         await validateAccountExists(resourceName, resourceName);
         await vscode.env.clipboard.writeText('');
@@ -91,7 +84,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdContainer);
     });
 
-    test("createFileShare", async () => {
+    test("copyConnectionString and createFileShare", async () => {
         await validateAccountExists(resourceName, resourceName);
         // file share must have lower case name
         const shareName = getRandomHexString().toLowerCase();
@@ -100,16 +93,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const connectionString: string = await getConnectionString(resourceName);
         const fileService: FileService = createFileService(connectionString);
-        const createdShare = await new Promise((resolve, reject) => {
-            // tslint:disable-next-line: no-void-expression
-            return fileService.doesShareExist(shareName, (err: Error | undefined, result: FileService.FileResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result.exists);
-                }
-            });
-        });
+        const createdShare: boolean | undefined = await doesShareExist(shareName, fileService);
         assert.ok(createdShare);
     });
 
@@ -125,6 +109,20 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     async function validateAccountExists(resourceGroupName: string, accountName: string): Promise<void> {
         const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceGroupName, accountName);
         assert.ok(createdAccount);
+    }
+
+    // validate the file share exists or not by its name and file service
+    async function doesShareExist(shareName: string, fileService: FileService): Promise<boolean | undefined> {
+        // tslint:disable-next-line: no-shadowed-variable
+        return new Promise((resolve, reject) => {
+            fileService.doesShareExist(shareName, (err: Error | undefined, result: FileService.FileResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result.exists);
+                }
+            });
+        });
     }
 
     // validate the blob service by verifying whether or not it creates a blob container
