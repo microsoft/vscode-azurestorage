@@ -9,6 +9,7 @@ import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
+import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { FileShareTreeItem } from './fileShareNode';
 
@@ -63,13 +64,13 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<FileShareTreeItem> {
-        const shareName = await window.showInputBox({
+        const shareName = await ext.ui.showInputBox({
             placeHolder: 'Enter a name for the new file share',
             validateInput: FileShareGroupTreeItem.validateFileShareName
         });
 
         if (shareName) {
-            const quotaGB = await window.showInputBox({
+            const quotaGB = await ext.ui.showInputBox({
                 prompt: `Specify quota (in GB, between ${minQuotaGB} and ${maxQuotaGB}), to limit total storage size`,
                 value: maxQuotaGB.toString(),
                 validateInput: FileShareGroupTreeItem.validateQuota

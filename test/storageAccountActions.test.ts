@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
-import { BlobService, createBlobService } from 'azure-storage';
+import { BlobService, createBlobService, createFileService, FileService } from 'azure-storage';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
@@ -62,17 +62,6 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdAccount);
     });
 
-    test("copyConnectionString", async () => {
-        await validateAccountExists(resourceName, resourceName);
-        await vscode.env.clipboard.writeText('');
-        await testUserInput.runWithInputs([resourceName], async () => {
-            await vscode.commands.executeCommand('azureStorage.copyConnectionString');
-        });
-        const connectionString: string = await vscode.env.clipboard.readText();
-        const blobService: BlobService = createBlobService(connectionString);
-        await validateBlobService(blobService);
-    });
-
     test("copyPrimaryKey", async () => {
         await validateAccountExists(resourceName, resourceName);
         await vscode.env.clipboard.writeText('');
@@ -95,6 +84,19 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdContainer);
     });
 
+    test("copyConnectionString and createFileShare", async () => {
+        await validateAccountExists(resourceName, resourceName);
+        // file share must have lower case name
+        const shareName = getRandomHexString().toLowerCase();
+        await testUserInput.runWithInputs([resourceName, shareName, '5120'], async () => {
+            await vscode.commands.executeCommand('azureStorage.createFileShare');
+        });
+        const connectionString: string = await getConnectionString(resourceName);
+        const fileService: FileService = createFileService(connectionString);
+        const createdShare: boolean | undefined = await doesShareExist(shareName, fileService);
+        assert.ok(createdShare);
+    });
+
     test("deleteStorageAccount", async () => {
         await validateAccountExists(resourceName, resourceName);
         await testUserInput.runWithInputs([resourceName, DialogResponses.deleteResponse.title], async () => {
@@ -109,6 +111,20 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdAccount);
     }
 
+    // validate the file share exists or not by its name and file service
+    async function doesShareExist(shareName: string, fileService: FileService): Promise<boolean | undefined> {
+        // tslint:disable-next-line: no-shadowed-variable
+        return new Promise((resolve, reject) => {
+            fileService.doesShareExist(shareName, (err: Error | undefined, result: FileService.FileResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result.exists);
+                }
+            });
+        });
+    }
+
     // validate the blob service by verifying whether or not it creates a blob container
     async function validateBlobService(blobService: BlobService): Promise<void> {
         // Blob contaienr must have lower case name
@@ -121,6 +137,15 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName);
         assert.ok(createdContainer);
+    }
+
+    // get the connection string of a storage account by the command azureStorage.copyConnectionString
+    async function getConnectionString(storageAccountName: string): Promise<string> {
+        vscode.env.clipboard.writeText('');
+        await testUserInput.runWithInputs([storageAccountName], async () => {
+            await vscode.commands.executeCommand('azureStorage.copyConnectionString');
+        });
+        return vscode.env.clipboard.readText();
     }
 });
 
