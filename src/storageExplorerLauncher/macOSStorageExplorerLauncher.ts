@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
 import { Launcher } from "../components/launcher/launcher";
-import { getSingleRootWorkspace } from "../utils/workspaceUtils"
+import { getSingleRootWorkspace } from "../utils/workspaceUtils";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
