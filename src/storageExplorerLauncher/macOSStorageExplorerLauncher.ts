@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { UserCancelledError } from "vscode-azureextensionui";
 import { Launcher } from "../components/launcher/launcher";
+import { getSingleRootWorkspace } from "../utils/workspaceUtils"
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
@@ -81,7 +82,8 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     }
 
     private static async showOpenDialog(): Promise<string> {
-        const defaultUri: vscode.Uri | undefined = vscode.workspace.rootPath ? vscode.Uri.file(vscode.workspace.rootPath) : undefined;
+        const defaultWorkspace: vscode.WorkspaceFolder | undefined = getSingleRootWorkspace();
+        const defaultUri: vscode.Uri | undefined = defaultWorkspace ? defaultWorkspace.uri : undefined;
         const options: vscode.OpenDialogOptions = {
             defaultUri: defaultUri,
             canSelectFiles: true,
