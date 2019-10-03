@@ -189,10 +189,10 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
             const actualBlob = await this.getBlob(context.blobPath);
             return new BlobTreeItem(this, "", actualBlob, this.container);
-        } else if (context.childType === BlobTreeItem.contextValue) {
-            return this.createChildAsNewBlockBlob(context);
-        } else {
+        } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
             return new BlobDirectoryTreeItem(this, "", { name: context.childName }, this.container);
+        } else {
+            return this.createChildAsNewBlockBlob(context);
         }
     }
 
