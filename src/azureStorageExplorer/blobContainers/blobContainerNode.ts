@@ -303,7 +303,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
      *
      * @returns The primary web endpoint
      */
-    // tslint:disable-next-line: max-func-body-length
     private async deployStaticWebsiteCore(
         context: IActionContext,
         sourceFolderPath: string,
