@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
-import * as clipboardy from 'clipboardy';
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
@@ -153,7 +152,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     public async copyUrl(): Promise<void> {
         let blobService = this.root.createBlobService();
         let url = blobService.getUrl(this.container.name);
-        await clipboardy.write(url);
+        await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Container URL copied to clipboard: ${url}`);
     }
