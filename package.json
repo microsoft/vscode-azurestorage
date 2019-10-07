@@ -257,8 +257,12 @@
 			},
 			{
 				"command": "azureStorage.createGpv2Account",
-				"title": "Create Storage Account",
-				"category": "Azure Storage"
+				"title": "Create Storage Account...",
+				"category": "Azure Storage",
+				"icon": {
+					"light": "resources/light/createStorageAccount.svg",
+					"dark": "resources/dark/createStorageAccount.svg"
+				}
 			},
 			{
 				"command": "azureStorage.deleteFile",
@@ -288,6 +292,11 @@
 		],
 		"menus": {
 			"view/title": [
+				{
+					"command": "azureStorage.createGpv2Account",
+					"when": "view == azureStorage",
+					"group": "navigation@1"
+				},
 				{
 					"command": "azureStorage.deployStaticWebsite",
 					"when": "view == azureStorage",
