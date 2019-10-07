@@ -348,7 +348,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                     glob(
                         path.join(sourceFolderPath, '{**,.!(git|vscode)/**}'),
                         {
-                            mark: true, // Add '/' to folders
+                            mark: true // Add '/' to folders
                         },
                         (err, matches) => {
                             if (err) {
