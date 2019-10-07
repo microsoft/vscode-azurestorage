@@ -347,10 +347,9 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             let filePathsWithAzureSeparator = await new Promise<string[]>(
                 (resolve, reject) => {
                     glob(
-                        path.join(sourceFolderPath, '**', '!(.git|.vscode)'),
+                        path.join(sourceFolderPath, '{**,.!(git|vscode)/**}'),
                         {
                             mark: true, // Add '/' to folders
-                            dot: true // Treat '.' as a normal character
                         },
                         (err, matches) => {
                             if (err) {
