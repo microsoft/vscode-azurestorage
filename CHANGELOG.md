@@ -3,9 +3,8 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 
 ## 0.7.2 - 2019-10-09
 ### Fixed
-- Update deprecated VS Code API calls [#453](https://github.com/Microsoft/vscode-azurestorage/issues/453)
 - Deploying folders beginning with `.` to static websites is allowed [#457](https://github.com/Microsoft/vscode-azurestorage/issues/457)
-- Copying connection strings works properly [#459](https://github.com/Microsoft/vscode-azurestorage/issues/459)
+- Copying connection strings works properly for VS Code remote [#459](https://github.com/Microsoft/vscode-azurestorage/issues/459)
 
 ## 0.7.1 - 2019-07-01
 ### Fixed
