@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
-import * as clipboardy from 'clipboardy';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, UserCancelledError } from 'vscode-azureextensionui';
 import { resourcesPath } from "../../constants";
@@ -36,7 +36,7 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     public async copyUrl(): Promise<void> {
         let fileService = this.root.createFileService();
         let url = fileService.getUrl(this.share.name, this.directoryPath, this.file.name);
-        await clipboardy.write(url);
+        await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`File URL copied to clipboard: ${url}`);
     }

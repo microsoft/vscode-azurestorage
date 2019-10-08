@@ -6,7 +6,7 @@
 	"publisher": "ms-azuretools",
 	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 	"engines": {
-		"vscode": "^1.24.0"
+		"vscode": "^1.31.0"
 	},
 	"repository": {
 		"type": "git",
@@ -685,7 +685,6 @@
 		"webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats"
 	},
 	"devDependencies": {
-		"@types/clipboardy": "^1.1.0",
 		"@types/fs-extra": "=5.0.2",
 		"@types/glob": "^5.0.35",
 		"@types/mocha": "^5.2.5",
@@ -715,7 +714,6 @@
 		"azure-arm-resource": "^3.1.1-preview",
 		"azure-arm-storage": "^5.1.1-preview",
 		"azure-storage": "^2.10.0",
-		"clipboardy": "^1.2.3",
 		"fs-extra": "^4.0.2",
 		"glob": "^7.1.2",
 		"ms-rest": "^2.2.2",
