@@ -256,6 +256,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
      *
      * @returns The primary web endpoint
      */
+    // tslint:disable-next-line: max-func-body-length
     private async deployStaticWebsiteCore(
         _actionContext: IActionContext,
         sourceFolderPath: string,
@@ -301,7 +302,9 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                     glob(
                         path.join(sourceFolderPath, '**'),
                         {
-                            mark: true // Add '/' to folders
+                            mark: true, // Add '/' to folders
+                            dot: true, // Treat '.' as a normal character
+                            ignore: path.join(sourceFolderPath, '.{git,vscode}/**')
                         },
                         (err, matches) => {
                             if (err) {
