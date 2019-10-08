@@ -1,10 +1,15 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.7.2 - 2019-10-11
+### Fixed
+- Deploying folders beginning with `.` to static websites is allowed [#457](https://github.com/Microsoft/vscode-azurestorage/issues/457)
+- Copying connection strings works properly for VS Code remote [#459](https://github.com/Microsoft/vscode-azurestorage/issues/459)
+
 ## 0.7.1 - 2019-07-01
 ### Fixed
 - Deployment of large static websites lead to timeout errors
-[#352](https://github.com/Microsoft/vscode-azurestorage/issues/352), [#345](https://github.com/Microsoft/vscode-azurestorage/issues/345), [#370](https://github.com/Microsoft/vscode-azurestorage/issues/370), , [#334](https://github.com/Microsoft/vscode-azurestorage/issues/334), [#340](https://github.com/Microsoft/vscode-azurestorage/issues/340), [#338](https://github.com/Microsoft/vscode-azurestorage/issues/338), [#339](https://github.com/Microsoft/vscode-azurestorage/issues/339), [#342](https://github.com/Microsoft/vscode-azurestorage/issues/342), [#317](https://github.com/Microsoft/vscode-azurestorage/issues/317), [#362](https://github.com/Microsoft/vscode-azurestorage/issues/362)
+[#352](https://github.com/Microsoft/vscode-azurestorage/issues/352), [#345](https://github.com/Microsoft/vscode-azurestorage/issues/345), [#370](https://github.com/Microsoft/vscode-azurestorage/issues/370), [#334](https://github.com/Microsoft/vscode-azurestorage/issues/334), [#340](https://github.com/Microsoft/vscode-azurestorage/issues/340), [#338](https://github.com/Microsoft/vscode-azurestorage/issues/338), [#339](https://github.com/Microsoft/vscode-azurestorage/issues/339), [#342](https://github.com/Microsoft/vscode-azurestorage/issues/342), [#317](https://github.com/Microsoft/vscode-azurestorage/issues/317), [#362](https://github.com/Microsoft/vscode-azurestorage/issues/362)
 
 ## 0.7.0 - 2019-02-19
 ### Fixed
