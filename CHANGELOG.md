@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
-## 0.7.2 - 2019-10-21
+## 0.7.2 - 2019-10-11
 ### Fixed
 - Deploying folders beginning with `.` to static websites is allowed [#457](https://github.com/Microsoft/vscode-azurestorage/issues/457)
 - Copying connection strings works properly for VS Code remote [#459](https://github.com/Microsoft/vscode-azurestorage/issues/459)
