@@ -93,8 +93,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const connectionString: string = await getConnectionString(resourceName);
         const fileService: FileService = createFileService(connectionString);
-        // tslint:disable-next-line: no-unsafe-any
-        const createdShare: FileService.FileResult = await doesResourceExist<FileService.FileResult>(fileService, FileService.prototype.doesShareExist, shareName);
+        const createdShare: FileService.FileResult = await doesResourceExist<FileService.FileResult>(fileService, fileService.doesShareExist, shareName);
         assert.ok(createdShare.exists);
     });
 
@@ -107,8 +106,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const connectionString: string = await getConnectionString(resourceName);
         const tableService: TableService = createTableService(connectionString);
-        // tslint:disable-next-line: no-unsafe-any
-        const createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, TableService.prototype.doesTableExist, tableName);
+        const createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, tableService.doesTableExist, tableName);
         assert.ok(createdTable.exists);
     });
 
