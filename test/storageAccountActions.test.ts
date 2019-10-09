@@ -93,21 +93,23 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const connectionString: string = await getConnectionString(resourceName);
         const fileService: FileService = createFileService(connectionString);
-        const createdShare: boolean | undefined = await doesShareExist(shareName, fileService);
-        assert.ok(createdShare);
+        // tslint:disable-next-line: no-unsafe-any
+        const createdShare: FileService.FileResult = await doesResourceExist<FileService.FileResult>(fileService, FileService.prototype.doesShareExist, shareName);
+        assert.ok(createdShare.exists);
     });
 
     test("createTable", async () => {
         await validateAccountExists(resourceName, resourceName);
         // Table name cannot begin with a digit
-        const tableName = `t${getRandomHexString()}`;
+        const tableName = 'f' + `${getRandomHexString()}`;
         await testUserInput.runWithInputs([resourceName, tableName], async () => {
             await vscode.commands.executeCommand('azureStorage.createTable');
         });
         const connectionString: string = await getConnectionString(resourceName);
         const tableService: TableService = createTableService(connectionString);
-        const createdTable: boolean | undefined = await doesTableExist(tableName, tableService);
-        assert.ok(createdTable);
+        // tslint:disable-next-line: no-unsafe-any
+        const createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, TableService.prototype.doesTableExist, tableName);
+        assert.ok(createdTable.exists);
     });
 
     test("deleteStorageAccount", async () => {
@@ -124,30 +126,15 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdAccount);
     }
 
-    // validate the file share exists or not by its name and file service
-    async function doesShareExist(shareName: string, fileService: FileService): Promise<boolean | undefined> {
-        return new Promise((resolve, reject) => {
-            fileService.doesShareExist(shareName, (err: Error | undefined, result: FileService.FileResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result.exists);
-                }
-            });
-        });
-    }
-
-    // validate the table exists or not by its name and table service
-    async function doesTableExist(tableName: string, tableService: TableService): Promise<boolean | undefined> {
-        return new Promise((resolve, reject) => {
-            tableService.doesTableExist(tableName, (err: Error | undefined, result: TableService.TableResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result.exists);
-                }
-            });
-        });
+    // validate the resource exists or not
+    async function doesResourceExist<T>(service: FileService | TableService, fn: { call(arg0: FileService | TableService, arg1: string, arg2: (err: Error | undefined, res: T) => void): void; }, name: string): Promise<T> {
+        return new Promise((resolve, reject) => fn.call(service, name, (err: Error | undefined, res: T) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(res);
+            }
+        }));
     }
 
     // validate the blob service by verifying whether or not it creates a blob container
