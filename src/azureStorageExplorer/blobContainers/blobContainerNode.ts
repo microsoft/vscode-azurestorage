@@ -351,6 +351,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                         {
                             mark: true, // Add '/' to folders
                             dot: true, // Treat '.' as a normal character
+                            nodir: true, // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
+                            follow: true, // Follow symlinks to get all sub folders https://github.com/microsoft/vscode-azurefunctions/issues/1289
                             ignore: path.join(sourceFolderPath, '.{git,vscode}/**')
                         },
                         (err, matches) => {
