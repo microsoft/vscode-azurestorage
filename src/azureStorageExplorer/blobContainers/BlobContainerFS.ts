@@ -168,10 +168,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     } else {
                         progress.report({ message: `Creating blob ${parsedUri.filePath}` });
                         let parent = parsedUri.parentDirPath;
-                        if (parent.endsWith('/')) {
-                            parent = parent.substring(0, parent.length - 1);
-                        }
-
                         let dir = await this.lookupAsDirectory(path.posix.join(parsedUri.rootPath, parent), context);
                         await dir.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlob', childName: parsedUri.filePath });
                     }
