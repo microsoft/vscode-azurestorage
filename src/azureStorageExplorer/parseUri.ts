@@ -35,7 +35,7 @@ export interface IParsedUri {
 
     /**
      * Path of parent directory within container or file share
-     * e.g. parentdir1/
+     * e.g. parentdir1
      */
     parentDirPath: string;
 
