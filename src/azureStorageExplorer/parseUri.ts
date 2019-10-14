@@ -35,7 +35,7 @@ export interface IParsedUri {
 
     /**
      * Path of parent directory within container or file share
-     * e.g. parentdir1/
+     * e.g. parentdir1
      */
     parentDirPath: string;
 
@@ -48,7 +48,7 @@ export interface IParsedUri {
 
 export function parseUri(uri: vscode.Uri | string, fileType: string): IParsedUri {
     let path: string = uri instanceof vscode.Uri ? uri.path : uri;
-    const matches: RegExpMatchArray | null = path.match(`^(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/${fileType}\/([^\/]+))\/?((.*?\/?)([^\/]*))$`);
+    const matches: RegExpMatchArray | null = path.match(`^(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/${fileType}\/([^\/]+))\/?((.*?)\/?([^\/]*))$`);
     if (!matches) {
         throw new Error(`Invalid ${fileType} uri. Cannot view or modify ${uri}.`);
     } else {
