@@ -72,17 +72,23 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestoragefile', new FileShareFS(), { isCaseSensitive: true }));
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorageblob', new BlobContainerFS(), { isCaseSensitive: true }));
         }
-        registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
+        registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem?: FileShareTreeItem) => {
             await callWithTelemetryAndErrorHandling('fs.openInFileExplorer', async () => {
-                // tslint:disable-next-line: prefer-template
-                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestoragefile://' + treeItem.fullId));
+                if (!treeItem) {
+                    treeItem = <FileShareTreeItem>await ext.tree.showTreeItemPicker(FileShareTreeItem.contextValue, _actionContext);
+                }
+
+                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse(`azurestoragefile://${treeItem.fullId}`));
                 await commands.executeCommand('workbench.view.explorer');
             });
         });
-        registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem: BlobContainerTreeItem) => {
+        registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem?: BlobContainerTreeItem) => {
             await callWithTelemetryAndErrorHandling('blob.openInFileExplorer', async () => {
-                // tslint:disable-next-line: prefer-template
-                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorageblob://' + treeItem.fullId));
+                if (!treeItem) {
+                    treeItem = <BlobContainerTreeItem>await ext.tree.showTreeItemPicker(BlobContainerTreeItem.contextValue, _actionContext);
+                }
+
+                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse(`azurestorageblob://${treeItem.fullId}`));
                 await commands.executeCommand('workbench.view.explorer');
             });
         });

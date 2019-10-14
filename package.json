@@ -95,12 +95,12 @@
 		"commands": [
 			{
 				"command": "azureStorage.openFileShareInFileExplorer",
-				"title": "File Share",
+				"title": "Open File Share in File Explorer...",
 				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.openBlobContainerInFileExplorer",
-				"title": "Blob Container",
+				"title": "Open Blob Container in File Explorer...",
 				"category": "Azure Storage"
 			},
 			{
