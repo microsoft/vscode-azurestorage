@@ -19,7 +19,7 @@ import { askAndCreateEmptyTextFile } from './fileUtils';
 
 export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
-    private _openInFileExplorerString: string = 'Open in File Explorer...';
+    private _openInFileExplorerString: string = 'Open in File Explorer';
 
     constructor(
         parent: AzureParentTreeItem,

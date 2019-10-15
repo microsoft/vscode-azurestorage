@@ -95,12 +95,17 @@
 		"commands": [
 			{
 				"command": "azureStorage.openFileShareInFileExplorer",
-				"title": "Open File Share in File Explorer...",
+				"title": "Open in File Explorer",
 				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.openBlobContainerInFileExplorer",
-				"title": "Open Blob Container in File Explorer...",
+				"title": "Open in File Explorer",
+				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.openGenericInFileExplorer",
+				"title": "Open in File Explorer...",
 				"category": "Azure Storage"
 			},
 			{
@@ -337,6 +342,16 @@
 					"command": "azureStorage.openInPortal",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "navigation@2"
+				},
+				{
+					"command": "azureStorage.openFileShareInFileExplorer",
+					"when": "view == azureStorage && viewItem == azureFileShare",
+					"group": "navigation@3"
+				},
+				{
+					"command": "azureStorage.openBlobContainerInFileExplorer",
+					"when": "view == azureStorage && viewItem == azureBlobContainer",
+					"group": "navigation@4"
 				},
 				{
 					"command": "azureStorage.copyConnectionString",
@@ -585,6 +600,14 @@
 				}
 			],
 			"commandPalette": [
+				{
+					"command": "azureStorage.openFileShareInFileExplorer",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.openBlobContainerInFileExplorer",
+					"when": "never"
+				},
 				{
 					"command": "azureStorage.selectSubscriptions",
 					"when": "never"

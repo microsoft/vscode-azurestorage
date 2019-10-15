@@ -37,7 +37,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private _continuationTokenBlob: azureStorage.common.ContinuationToken | undefined;
     private _continuationTokenDirectory: azureStorage.common.ContinuationToken | undefined;
     private _websiteHostingEnabled: boolean;
-    private _openInFileExplorerString: string = 'Open in File Explorer...';
+    private _openInFileExplorerString: string = 'Open in File Explorer';
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
