@@ -56,7 +56,7 @@ export interface IParsedUri {
 
 export function parseUri(uri: vscode.Uri): IParsedUri {
     const queryMatches: RegExpMatchArray | null = uri.query.match('^resourceId=(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/([^\/]+)\/([^\/]+))$');
-    const pathMatches: RegExpMatchArray | null = uri.path.match('^\/([^\/]+[^\/]+)\/?((.*?)\/?([^\/]*))$');
+    const pathMatches: RegExpMatchArray | null = uri.path.match('^\/[^\/]+[^\/]+\/?((.*?)\/?([^\/]*))$');
     if (!pathMatches || !queryMatches) {
         throw new Error(`Invalid uri. Cannot view or modify ${uri}.`);
     } else {
@@ -64,10 +64,10 @@ export function parseUri(uri: vscode.Uri): IParsedUri {
             rootPath: queryMatches[1],
             resourceType: queryMatches[2],
             rootName: queryMatches[3],
-            filePath: pathMatches[2],
-            dirPath: pathMatches[2] ? `${pathMatches[2]}/` : '',
-            parentDirPath: pathMatches[3],
-            baseName: pathMatches[4]
+            filePath: pathMatches[1],
+            dirPath: pathMatches[1] ? `${pathMatches[1]}/` : '',
+            parentDirPath: pathMatches[2],
+            baseName: pathMatches[3]
         };
     }
 }
