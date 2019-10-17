@@ -33,7 +33,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        return await callWithTelemetryAndErrorHandling('azureStorage.fileExplorer.stat', async (context) => {
+        return await callWithTelemetryAndErrorHandling('stat', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
             let treeItem: EntryTreeItem = await this.lookup(uri, context);
             let fileType: vscode.FileType = treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem ? vscode.FileType.Directory : vscode.FileType.File;
@@ -50,7 +50,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async readDirectoryFileShare(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        return await callWithTelemetryAndErrorHandling('azureStorage.fileShare.readDirectory', async (context) => {
+        return await callWithTelemetryAndErrorHandling('readDirectoryFileShare', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
             let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectoryFileShare(uri, context);
             let children: AzExtTreeItem[] = await entry.getCachedChildren(context);
@@ -70,7 +70,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async readDirectoryBlobContainer(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        return await callWithTelemetryAndErrorHandling('azureStorage.blobContainer.readDirectory', async (context) => {
+        return await callWithTelemetryAndErrorHandling('readDirectoryBlobContainer', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
             let ti = await this.lookupAsDirectoryBlobContainer(uri, context);
             await ti.refresh();
@@ -96,7 +96,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async createDirectoryFileShare(uri: vscode.Uri): Promise<void> {
-        await callWithTelemetryAndErrorHandling('azureStorage.fileShare.createDirectory', async (context) => {
+        await callWithTelemetryAndErrorHandling('createDirectoryFileShare', async (context) => {
             context.errorHandling.rethrow = true;
             let parsedUri = parseUri(uri);
 
@@ -122,7 +122,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async createDirectoryBlobContainer(uri: vscode.Uri): Promise<void> {
-        await callWithTelemetryAndErrorHandling('azureStorage.blobContainer.createDirectory', async (context) => {
+        await callWithTelemetryAndErrorHandling('createDirectoryBlobContainer', async (context) => {
             context.errorHandling.rethrow = true;
             let ti = await this.lookupBlobContainer(uri, context, true);
             if (ti instanceof BlobTreeItem) {
@@ -146,7 +146,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async readFileFileShare(uri: vscode.Uri): Promise<Uint8Array> {
-        return await callWithTelemetryAndErrorHandling('fs.readFile', async (context) => {
+        return await callWithTelemetryAndErrorHandling('readFileFileShare', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
@@ -177,7 +177,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async readFileBlobContainer(uri: vscode.Uri): Promise<Uint8Array> {
-        return await callWithTelemetryAndErrorHandling('blob.readFile', async (context) => {
+        return await callWithTelemetryAndErrorHandling('readFileBlobContainer', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
@@ -217,7 +217,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async writeFileFileShare(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean }): Promise<void> {
-        await callWithTelemetryAndErrorHandling('fs.writeFile', async (context) => {
+        await callWithTelemetryAndErrorHandling('writeFileFileShare', async (context) => {
             if (!options.create && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
             }
@@ -269,7 +269,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async writeFileBlobContainer(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
-        return await callWithTelemetryAndErrorHandling('blob.writeFile', async (context) => {
+        return await callWithTelemetryAndErrorHandling('writeFileBlobContainer', async (context) => {
             if (!options.create && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
             }
@@ -325,7 +325,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async deleteFileShare(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
-        await callWithTelemetryAndErrorHandling('fs.delete', async (context) => {
+        await callWithTelemetryAndErrorHandling('deleteFileShare', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
@@ -347,7 +347,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async deleteBlobContainer(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
-        return await callWithTelemetryAndErrorHandling('blob.delete', async (context) => {
+        return await callWithTelemetryAndErrorHandling('deleteBlobContainer', async (context) => {
             context.errorHandling.suppressDisplay = true;
 
             if (!options.recursive) {
@@ -363,7 +363,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
-        return await callWithTelemetryAndErrorHandling('fileExplorer.rename', async (context) => {
+        return await callWithTelemetryAndErrorHandling('rename', async (context) => {
             showRenameError(oldUri, newUri, context);
         });
     }

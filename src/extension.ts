@@ -44,7 +44,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     context.subscriptions.push(ext.outputChannel);
     registerUIExtensionVariables(ext);
 
-    await callWithTelemetryAndErrorHandling('azureStorage.activate', async (activateContext: IActionContext) => {
+    await callWithTelemetryAndErrorHandling('activate', async (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
         activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
@@ -72,13 +72,13 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', new AzureStorageFS(), { isCaseSensitive: true }));
         }
         registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
-            await callWithTelemetryAndErrorHandling('azureStorage.fileShare.openInFileExplorer', async () => {
+            await callWithTelemetryAndErrorHandling('azureStorage.openFileShareInFileExplorer', async () => {
                 await commands.executeCommand('vscode.openFolder', idToUri(treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });
         });
         registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem: BlobContainerTreeItem) => {
-            await callWithTelemetryAndErrorHandling('azureStorage.blobContainer.openInFileExplorer', async () => {
+            await callWithTelemetryAndErrorHandling('azureStorage.openBlobContainerInFileExplorer', async () => {
                 await commands.executeCommand('vscode.openFolder', idToUri(treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });
