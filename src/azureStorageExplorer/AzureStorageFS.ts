@@ -46,39 +46,25 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        return this.isFileShareUri(uri) ? await this.readDirectoryFileShare(uri) : await this.readDirectoryBlobContainer(uri);
-    }
-
-    async readDirectoryFileShare(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        return await callWithTelemetryAndErrorHandling('readDirectoryFileShare', async (context) => {
+        return await callWithTelemetryAndErrorHandling('readDirectory', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
-            let entry: DirectoryTreeItem | FileShareTreeItem = await this.lookupAsDirectoryFileShare(uri, context);
-            let children: AzExtTreeItem[] = await entry.getCachedChildren(context);
+            let ti: DirectoryTreeItem | FileShareTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
+            if (this.isFileShareUri(uri)) {
+                ti = await this.lookupAsDirectoryFileShare(uri, context);
+            } else {
+                ti = await this.lookupAsDirectoryBlobContainer(uri, context);
+                await ti.refresh();
+            }
+
+            let children: AzExtTreeItem[] = await ti.getCachedChildren(context);
             let result: [string, vscode.FileType][] = [];
             for (const child of children) {
                 if (child instanceof FileTreeItem) {
                     result.push([child.file.name, vscode.FileType.File]);
                 } else if (child instanceof DirectoryTreeItem) {
                     result.push([child.directory.name, vscode.FileType.Directory]);
-                }
-            }
-
-            return result;
-            // tslint:disable-next-line: strict-boolean-expressions
-        }) || [];
-    }
-
-    async readDirectoryBlobContainer(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        return await callWithTelemetryAndErrorHandling('readDirectoryBlobContainer', async (context) => {
-            context.telemetry.suppressIfSuccessful = true;
-            let ti = await this.lookupAsDirectoryBlobContainer(uri, context);
-            await ti.refresh();
-            let children: AzExtTreeItem[] = await ti.getCachedChildren(context);
-
-            let result: [string, vscode.FileType][] = [];
-            for (const child of children) {
-                if (child instanceof BlobTreeItem) {
+                } else if (child instanceof BlobTreeItem) {
                     result.push([path.basename(child.label), vscode.FileType.File]);
                 } else if (child instanceof BlobDirectoryTreeItem) {
                     result.push([child.label, vscode.FileType.Directory]);
