@@ -59,7 +59,7 @@ async function doesFileExist(fileName: string, parent: AzureParentTreeItem<IStor
 export function getFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
     const fileService = root.createFileService();
     return new Promise((resolve, reject) => {
-        fileService.getFileProperties(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
+        fileService.doesFileExist(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
             if (err) {
                 reject(err);
             } else {

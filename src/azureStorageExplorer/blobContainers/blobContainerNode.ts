@@ -570,10 +570,10 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+    public getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         const blobService = this.root.createBlobService();
         return new Promise((resolve, reject) => {
-            blobService.getBlobProperties(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+            blobService.doesBlobExist(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -584,7 +584,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+    public createTextBlockBlob(name: string, text?: string | Buffer): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
             const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
@@ -592,7 +592,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                     contentType: 'text/plain'
                 }
             };
-            blobService.createBlockBlobFromText(this.container.name, name, '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+            blobService.createBlockBlobFromText(this.container.name, name, text ? text : '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {

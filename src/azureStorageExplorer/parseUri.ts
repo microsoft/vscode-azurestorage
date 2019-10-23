@@ -17,13 +17,6 @@ export interface IParsedUri {
     rootPath: string;
 
     /**
-     * Type of resource
-     * e.g. Blob Containers
-     * e.g. File Shares
-     */
-    resourceType: string;
-
-    /**
      * Name of container or file share
      * e.g. container1
      */
@@ -55,15 +48,14 @@ export interface IParsedUri {
 }
 
 export function parseUri(uri: vscode.Uri): IParsedUri {
-    const queryMatches: RegExpMatchArray | null = uri.query.match('^resourceId=(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/([^\/]+)\/([^\/]+))$');
+    const queryMatches: RegExpMatchArray | null = uri.query.match('^resourceId=(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/([^\/]+))$');
     const pathMatches: RegExpMatchArray | null = uri.path.match('^\/[^\/]+[^\/]+\/?((.*?)\/?([^\/]*))$');
     if (!pathMatches || !queryMatches) {
         throw new Error(`Invalid uri. Cannot view or modify ${uri}.`);
     } else {
         return {
             rootPath: queryMatches[1],
-            resourceType: queryMatches[2],
-            rootName: queryMatches[3],
+            rootName: queryMatches[2],
             filePath: pathMatches[1],
             dirPath: pathMatches[1] ? `${pathMatches[1]}/` : '',
             parentDirPath: pathMatches[2],
@@ -72,17 +64,7 @@ export function parseUri(uri: vscode.Uri): IParsedUri {
     }
 }
 
-export function idToUri(id: string): vscode.Uri {
-    const matches: RegExpMatchArray | null = id.match('^\/subscriptions\/([^\/]+)\/resourceGroups\/([^\/]+)\/providers\/Microsoft\.Storage\/storageAccounts\/([^\/]+)\/([^\/]+)\/([^\/]+)\/?(.*?)\/*$');
-    if (!matches) {
-        throw new RangeError(`Invalid id. Cannot view or modify ${id}.`);
-    } else {
-        const subscriptionName = matches[1];
-        const resourceGroupName = matches[2];
-        const storageAccountName = matches[3];
-        const resourceType = matches[4];
-        const groupNodeName = matches[5];
-        const filePath = matches[6];
-        return vscode.Uri.parse(`azurestorage:///${path.posix.join(groupNodeName, filePath)}?resourceId=/subscriptions/${subscriptionName}/resourceGroups/${resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${storageAccountName}/${resourceType}/${groupNodeName}`);
-    }
+export function idToUri(rootPath: string, filePath?: string): vscode.Uri {
+    const rootName = rootPath.split(path.sep).pop();
+    return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath ? filePath : '')}?resourceId=${rootPath}`);
 }
