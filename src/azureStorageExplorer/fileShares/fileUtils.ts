@@ -41,7 +41,7 @@ export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<ISto
     throw new UserCancelledError();
 }
 
-async function doesFileExist(fileName: string, parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult): Promise<boolean> {
+export async function doesFileExist(fileName: string, parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
         const fileService = parent.root.createFileService();
         fileService.doesFileExist(share.name, directoryPath, fileName, (err?: Error, result?: FileService.FileResult) => {
@@ -59,7 +59,7 @@ async function doesFileExist(fileName: string, parent: AzureParentTreeItem<IStor
 export function getFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
     const fileService = root.createFileService();
     return new Promise((resolve, reject) => {
-        fileService.doesFileExist(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
+        fileService.getFileProperties(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
             if (err) {
                 reject(err);
             } else {
@@ -74,6 +74,20 @@ export function createFile(directoryPath: string, name: string, share: FileServi
     return new Promise((resolve, reject) => {
         const fileService = root.createFileService();
         fileService.createFile(share.name, directoryPath, name, 0, (err?: Error, result?: azureStorage.FileService.FileResult) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
+// tslint:disable-next-line:promise-function-async // Grandfathered in
+export function createFileFromText(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, text: string | Buffer): Promise<azureStorage.FileService.FileResult> {
+    return new Promise((resolve, reject) => {
+        const fileService = root.createFileService();
+        fileService.createFileFromText(share.name, directoryPath, name, text, (err?: Error, result?: azureStorage.FileService.FileResult) => {
             if (err) {
                 reject(err);
             } else {

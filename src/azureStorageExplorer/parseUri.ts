@@ -65,6 +65,6 @@ export function parseUri(uri: vscode.Uri): IParsedUri {
 }
 
 export function idToUri(rootPath: string, filePath?: string): vscode.Uri {
-    const rootName = rootPath.split(path.sep).pop();
+    const rootName = path.basename(rootPath);
     return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath ? filePath : '')}?resourceId=${rootPath}`);
 }
