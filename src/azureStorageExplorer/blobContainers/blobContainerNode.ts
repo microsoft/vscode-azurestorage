@@ -6,6 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
+import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
@@ -602,11 +603,16 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    public createBlockBlob(name: string, text?: string | Buffer): Promise<azureStorage.BlobService.BlobResult> {
+    public async createBlockBlob(name: string, text?: string | Buffer): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
-            blobService.createBlockBlobFromText(this.container.name, name, text ? text : '', (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+            let contentType: string | null = mime.getType(name);
+            const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
+                contentSettings: {
+                    contentType: contentType ? contentType : undefined
+                }
+            };
+            blobService.createBlockBlobFromText(this.container.name, name, text ? text : '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {

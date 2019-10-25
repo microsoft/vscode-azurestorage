@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from "path";
+import * as querystring from 'querystring';
 import * as vscode from 'vscode';
 
 /**
@@ -11,28 +12,16 @@ import * as vscode from 'vscode';
  */
 export interface IParsedUri {
     /**
-     * Path to container or file share
+     * ID of container or file share
      * e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup1/providers/Microsoft.Storage/storageAccounts/storageaccount1/Blob Containers/container1
      */
-    rootPath: string;
-
-    /**
-     * Name of container or file share
-     * e.g. container1
-     */
-    rootName: string;
+    resourceId: string;
 
     /**
      * Full path within container or file share
      * e.g. parentdir/subdir/blob
      */
     filePath: string;
-
-    /**
-     * Same as `filePath`, just with a delimiter at the end in case this is a directory
-     * e.g. parentdir/subdir/blob/
-     */
-    dirPath: string;
 
     /**
      * Path of parent directory within container or file share
@@ -48,23 +37,27 @@ export interface IParsedUri {
 }
 
 export function parseUri(uri: vscode.Uri): IParsedUri {
-    const queryMatches: RegExpMatchArray | null = uri.query.match('^resourceId=(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft\.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/([^\/]+))$');
-    const pathMatches: RegExpMatchArray | null = uri.path.match('^\/[^\/]+[^\/]+\/?((.*?)\/?([^\/]*))$');
-    if (!pathMatches || !queryMatches) {
+    const parsedQuery: { [key: string]: string | undefined } = querystring.parse<{}>(uri.query);
+    const resourceId = parsedQuery.resourceId;
+
+    const filePath: string = uri.path.replace(/^\/[^\/]*\/?/, ''); // Remove rootName
+    let parentDirPath = path.dirname(filePath);
+    parentDirPath = parentDirPath === '.' ? '' : parentDirPath;
+    const baseName = path.basename(filePath);
+
+    if (!resourceId || !uri.path) {
         throw new Error(`Invalid uri. Cannot view or modify ${uri}.`);
     } else {
         return {
-            rootPath: queryMatches[1],
-            rootName: queryMatches[2],
-            filePath: pathMatches[1],
-            dirPath: pathMatches[1] ? `${pathMatches[1]}/` : '',
-            parentDirPath: pathMatches[2],
-            baseName: pathMatches[3]
+            resourceId,
+            filePath,
+            parentDirPath,
+            baseName
         };
     }
 }
 
-export function idToUri(rootPath: string, filePath?: string): vscode.Uri {
-    const rootName = path.basename(rootPath);
-    return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath ? filePath : '')}?resourceId=${rootPath}`);
+export function idToUri(resourceId: string, filePath?: string): vscode.Uri {
+    const rootName = path.basename(resourceId);
+    return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath ? filePath : '')}?resourceId=${resourceId}`);
 }
