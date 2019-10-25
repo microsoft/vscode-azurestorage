@@ -7,9 +7,9 @@ import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { parseUri } from './parseUri';
 
-export function showRenameError(oldUri: vscode.Uri, newUri: vscode.Uri, fileType: string, context: IActionContext): void {
-    let oldUriParsed = parseUri(oldUri, fileType);
-    let newUriParsed = parseUri(newUri, fileType);
+export function showRenameError(oldUri: vscode.Uri, newUri: vscode.Uri, context: IActionContext): void {
+    let oldUriParsed = parseUri(oldUri);
+    let newUriParsed = parseUri(newUri);
 
     context.errorHandling.rethrow = true;
     if (oldUriParsed.baseName === newUriParsed.baseName) {

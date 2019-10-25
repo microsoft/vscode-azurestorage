@@ -31,10 +31,9 @@
 	"preview": true,
 	"activationEvents": [
 		"onView:azureStorage",
+		"onFileSystem:azurestorage",
 		"onCommand:azureStorage.openFileShareInFileExplorer",
 		"onCommand:azureStorage.openBlobContainerInFileExplorer",
-		"onFileSystem:azurestoragefile",
-		"onFileSystem:azurestorageblob",
 		"onCommand:azureStorage.deployStaticWebsite",
 		"onCommand:azureStorage.configureStaticWebsite",
 		"onCommand:azureStorage.disableStaticWebsite",

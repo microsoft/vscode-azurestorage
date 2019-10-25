@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorage from "azure-storage";
+import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
@@ -11,8 +12,6 @@ import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem, IBlobContainerCreateChildContext, IExistingBlobContext } from "./blobContainerNode";
 import { BlobTreeItem, ISuppressMessageContext } from "./blobNode";
-// tslint:disable-next-line: ordered-imports tslint:disable-next-line: no-require-imports
-import mime = require("mime");
 
 export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationTokenBlob: azureStorage.common.ContinuationToken | undefined;

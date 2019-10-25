@@ -10,17 +10,17 @@ import { commands } from 'vscode';
 import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createTelemetryReporter, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureAccountTreeItem } from './azureStorageExplorer/AzureAccountTreeItem';
+import { AzureStorageFS } from './azureStorageExplorer/AzureStorageFS';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
-import { BlobContainerFS } from './azureStorageExplorer/blobContainers/BlobContainerFS';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
 import { BlobContainerTreeItem } from './azureStorageExplorer/blobContainers/blobContainerNode';
 import { registerDirectoryActionHandlers } from './azureStorageExplorer/fileShares/directoryActionHandlers';
 import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fileActionHandlers';
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
-import { FileShareFS } from './azureStorageExplorer/fileShares/FileShareFS';
 import { registerFileShareGroupActionHandlers } from './azureStorageExplorer/fileShares/fileShareGroupActionHandlers';
 import { FileShareTreeItem } from './azureStorageExplorer/fileShares/fileShareNode';
+import { idToUri } from './azureStorageExplorer/parseUri';
 import { registerQueueActionHandlers } from './azureStorageExplorer/queues/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './azureStorageExplorer/queues/queueGroupActionHandlers';
 import { selectStorageAccountTreeItemForCommand } from './azureStorageExplorer/selectStorageAccountNodeForCommand';
@@ -44,7 +44,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     context.subscriptions.push(ext.outputChannel);
     registerUIExtensionVariables(ext);
 
-    await callWithTelemetryAndErrorHandling('azureStorage.activate', async (activateContext: IActionContext) => {
+    await callWithTelemetryAndErrorHandling('activate', async (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
         activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
@@ -69,20 +69,17 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         // tslint:disable-next-line: strict-boolean-expressions
         if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
-            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestoragefile', new FileShareFS(), { isCaseSensitive: true }));
-            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorageblob', new BlobContainerFS(), { isCaseSensitive: true }));
+            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', new AzureStorageFS(), { isCaseSensitive: true }));
         }
         registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
-            await callWithTelemetryAndErrorHandling('fs.openInFileExplorer', async () => {
-                // tslint:disable-next-line: prefer-template
-                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestoragefile://' + treeItem.fullId));
+            await callWithTelemetryAndErrorHandling('azureStorage.openFileShareInFileExplorer', async () => {
+                await commands.executeCommand('vscode.openFolder', idToUri(treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });
         });
         registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem: BlobContainerTreeItem) => {
-            await callWithTelemetryAndErrorHandling('blob.openInFileExplorer', async () => {
-                // tslint:disable-next-line: prefer-template
-                await commands.executeCommand('vscode.openFolder', vscode.Uri.parse('azurestorageblob://' + treeItem.fullId));
+            await callWithTelemetryAndErrorHandling('azureStorage.openBlobContainerInFileExplorer', async () => {
+                await commands.executeCommand('vscode.openFolder', idToUri(treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });
         });
