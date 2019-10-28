@@ -77,13 +77,19 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         throw new UserCancelledError();
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
+    private async createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
         return new Promise((resolve, reject) => {
             let queueService = this.root.createQueueService();
-            queueService.createQueue(name, (err?: Error, result?: azureStorage.QueueService.QueueResult) => {
+            queueService.createQueue(name, (err?: Error, result?: azureStorage.QueueService.QueueResult, response?: azureStorage.ServiceResponse) => {
                 if (err) {
                     reject(err);
+                } else if (response && response.statusCode === 204) {
+                    // When a queue with the specified name already exists, the Queue service checks
+                    // the metadata associated with the existing queue. If the existing metadata is
+                    // identical to the metadata specified on the Create Queue request, status code
+                    // 204 (No Content) is returned.
+                    // Source: https://msdn.microsoft.com/en-us/library/azure/dd179342.aspx
+                    reject(new Error('The queue specified already exists.'));
                 } else {
                     resolve(result);
                 }
