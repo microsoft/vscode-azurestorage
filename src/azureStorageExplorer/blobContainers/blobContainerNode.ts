@@ -38,7 +38,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private _continuationTokenBlob: azureStorage.common.ContinuationToken | undefined;
     private _continuationTokenDirectory: azureStorage.common.ContinuationToken | undefined;
     private _websiteHostingEnabled: boolean;
-    private _openInFileExplorerString: string = 'Open in File Explorer...';
+    private _openInFileExplorerString: string = 'Open in File Explorer';
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
@@ -79,8 +79,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
                 const ti = new GenericTreeItem(this, {
                     label: this._openInFileExplorerString,
-                    commandId: 'azureStorage.openBlobContainerInFileExplorer',
-                    contextValue: 'openBlobContainerInFileExplorer'
+                    commandId: 'azureStorage.openInFileExplorer',
+                    contextValue: 'openInFileExplorer'
                 });
 
                 ti.commandArgs = [this];
