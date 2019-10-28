@@ -20,7 +20,6 @@ import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fi
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
 import { registerFileShareGroupActionHandlers } from './azureStorageExplorer/fileShares/fileShareGroupActionHandlers';
 import { FileShareTreeItem } from './azureStorageExplorer/fileShares/fileShareNode';
-import { idToUri } from './azureStorageExplorer/parseUri';
 import { registerQueueActionHandlers } from './azureStorageExplorer/queues/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './azureStorageExplorer/queues/queueGroupActionHandlers';
 import { selectStorageAccountTreeItemForCommand } from './azureStorageExplorer/selectStorageAccountNodeForCommand';
@@ -32,6 +31,7 @@ import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/
 import { configurationSettingsKeys, extensionPrefix } from './constants';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
+import { idToUri } from './utils/uriUtils';
 
 // tslint:disable-next-line: max-func-body-length
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }): Promise<AzureExtensionApiProvider> {

@@ -5,9 +5,11 @@
 
 import * as azureStorage from "azure-storage";
 import * as path from "path";
+import * as querystring from "querystring";
 import * as vscode from "vscode";
 import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
+import { idToUri } from "../utils/uriUtils";
 import { BlobContainerTreeItem, IBlobContainerCreateChildContext } from "./blobContainers/blobContainerNode";
 import { BlobDirectoryTreeItem } from "./blobContainers/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "./blobContainers/blobNode";
@@ -17,8 +19,7 @@ import { FileShareTreeItem, IFileShareCreateChildContext } from "./fileShares/fi
 import { createFileFromText, doesFileExist } from "./fileShares/fileUtils";
 import { validateDirectoryName } from "./fileShares/validateNames";
 import { getFileSystemError } from "./getFileSystemError";
-import { idToUri, parseUri } from "./parseUri";
-import { showRenameError } from "./showRenameError";
+import { IParsedUri } from "./IParsedUri";
 
 type AzureStorageFileTreeItem = FileTreeItem | DirectoryTreeItem | FileShareTreeItem;
 type AzureStorageBlobTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
@@ -27,6 +28,7 @@ type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | Blo
 
 export class AzureStorageFS implements vscode.FileSystemProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+    private _queryCache: string;
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
@@ -90,7 +92,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async createDirectoryFileShare(uri: vscode.Uri, context: IActionContext): Promise<void> {
-        let parsedUri = parseUri(uri);
+        let parsedUri = this.parseUri(uri);
         let response: string | undefined | null = validateDirectoryName(parsedUri.baseName);
         if (response) {
             throw new Error(response);
@@ -102,13 +104,13 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     async createDirectoryBlobContainer(uri: vscode.Uri, context: IActionContext): Promise<void> {
-        let parsedUri = parseUri(uri);
+        let parsedUri = this.parseUri(uri);
         let treeItem: AzureStorageBlobTreeItem = await this.lookupBlobContainer(uri, context, parsedUri.resourceId, parsedUri.filePath, true);
         if (treeItem instanceof BlobTreeItem) {
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotADirectory);
         }
 
-        let tiParsedUri = parseUri(idToUri(parsedUri.resourceId, path.dirname(parsedUri.filePath)));
+        let tiParsedUri = this.parseUri(idToUri(parsedUri.resourceId, path.dirname(parsedUri.filePath)));
         let matches = parsedUri.filePath.match(`^${this.regexEscape(tiParsedUri.filePath)}\/?([^\/^]+)\/?(.*?)$`);
         while (!!matches) {
             treeItem = <BlobDirectoryTreeItem>await treeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlobDirectory', childName: matches[1] });
@@ -127,7 +129,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             context.errorHandling.suppressDisplay = true;
 
             let result: string | undefined;
-            let parsedUri = parseUri(uri);
+            let parsedUri = this.parseUri(uri);
             let treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
 
             try {
@@ -177,7 +179,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             }
 
             const writeToFileShare: boolean = this.isFileShareUri(uri);
-            let parsedUri = parseUri(uri);
+            let parsedUri = this.parseUri(uri);
             let treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
 
             let childExists: boolean;
@@ -215,6 +217,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                 });
             }
         });
+
+        // Nested files/blobs created by choosing "Create File" via the "Unable to open <file>" notification don't appear in the explorer without a refresh
+        vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
     }
 
     // tslint:disable-next-line: no-reserved-keywords
@@ -227,7 +232,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                 throw new Error("Azure storage does not support nonrecursive deletion of folders.");
             }
 
-            let parsedUri = parseUri(uri);
+            let parsedUri = this.parseUri(uri);
             let treeItem: AzureStorageTreeItem = await this.lookup(uri, context, parsedUri.resourceId, parsedUri.filePath);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                 if (treeItem instanceof FileTreeItem || treeItem instanceof DirectoryTreeItem || treeItem instanceof BlobTreeItem || treeItem instanceof BlobDirectoryTreeItem) {
@@ -246,13 +251,24 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
 
     async rename(oldUri: vscode.Uri, newUri: vscode.Uri, _options: { overwrite: boolean; }): Promise<void> {
         return await callWithTelemetryAndErrorHandling('rename', async (context) => {
-            showRenameError(oldUri, newUri, context);
+            let oldUriParsed = this.parseUri(oldUri);
+            let newUriParsed = this.parseUri(newUri);
+
+            context.errorHandling.rethrow = true;
+            if (oldUriParsed.baseName === newUriParsed.baseName) {
+                // Set suppressDisplay true when trying to move the files because VS code will hanlde the error.
+                context.errorHandling.suppressDisplay = true;
+                throw new Error('Moving folders or files not supported.');
+            } else {
+                // When renaming a file, VS code will not handle the error so the message must be displayed here.
+                throw new Error('Renaming folders or files not supported.');
+            }
         });
     }
 
     async lookup(uri: vscode.Uri, context: IActionContext, resourceId?: string, filePath?: string): Promise<AzureStorageTreeItem> {
         if (!resourceId || !filePath) {
-            let parsedUri = parseUri(uri);
+            let parsedUri = this.parseUri(uri);
             resourceId = parsedUri.resourceId;
             filePath = parsedUri.filePath;
         }
@@ -329,7 +345,36 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         }
     }
 
+    private verifyUri(uri: vscode.Uri): vscode.Uri {
+        // Fallback to the cached query if this uri doesn't have a query defined
+        this._queryCache = uri.query || this._queryCache;
+        return uri.query ? uri : vscode.Uri.parse(`azurestorage://${uri.path}?${this._queryCache}`);
+    }
+
+    private parseUri(uri: vscode.Uri): IParsedUri {
+        uri = this.verifyUri(uri);
+
+        const parsedQuery: { [key: string]: string | undefined } = querystring.parse<{}>(uri.query);
+        const resourceId = parsedQuery.resourceId;
+
+        const filePath: string = uri.path.replace(/^\/[^\/]*\/?/, ''); // Remove rootName
+        let parentDirPath = path.dirname(filePath);
+        parentDirPath = parentDirPath === '.' ? '' : parentDirPath;
+        const baseName = path.basename(filePath);
+
+        if (!resourceId || !uri.path) {
+            throw new Error(`Invalid uri. Cannot view or modify ${uri}.`);
+        } else {
+            return {
+                resourceId,
+                filePath,
+                parentDirPath,
+                baseName
+            };
+        }
+    }
+
     private isFileShareUri(uri: vscode.Uri): boolean {
-        return uri.query.indexOf('File Shares') > 0;
+        return this.verifyUri(uri).query.indexOf('File Shares') > 0;
     }
 }
