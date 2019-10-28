@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { nonNull } from "../../components/storageWrappers";
 import { getResourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
@@ -81,9 +81,9 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private async createTable(name: string): Promise<azureStorage.TableService.TableResult> {
         return new Promise((resolve, reject) => {
             let tableService = this.root.createTableService();
-            tableService.createTable(name, (err?: Error | azureStorage.StorageError, result?: azureStorage.TableService.TableResult) => {
+            tableService.createTable(name, (err?: Error, result?: azureStorage.TableService.TableResult) => {
                 if (err) {
-                    if ('code' in err && err.code === "TableAlreadyExists") {
+                    if (parseError(err).errorType === "TableAlreadyExists") {
                         reject(new Error('The table specified already exists.'));
                     } else {
                         reject(err);
