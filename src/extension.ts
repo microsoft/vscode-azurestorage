@@ -33,6 +33,7 @@ import { configurationSettingsKeys, extensionPrefix } from './constants';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
+// tslint:disable-next-line:max-func-body-length
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }): Promise<AzureExtensionApiProvider> {
     console.log('Extension "Azure Storage Tools" is now active.');
 
@@ -43,7 +44,6 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     context.subscriptions.push(ext.outputChannel);
     registerUIExtensionVariables(ext);
 
-    // tslint:disable-next-line:max-func-body-length
     await callWithTelemetryAndErrorHandling('activate', async (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
         activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
