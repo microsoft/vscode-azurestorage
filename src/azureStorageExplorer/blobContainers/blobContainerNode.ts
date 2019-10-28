@@ -6,6 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
+import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
@@ -78,8 +79,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
                 const ti = new GenericTreeItem(this, {
                     label: this._openInFileExplorerString,
-                    commandId: 'azureStorage.openBlobContainerInFileExplorer',
-                    contextValue: 'openBlobContainerInFileExplorer'
+                    commandId: 'azureStorage.openInFileExplorer',
+                    contextValue: 'openInFileExplorer'
                 });
 
                 ti.commandArgs = [this];
@@ -584,7 +585,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+    public createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
             const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
@@ -593,6 +594,25 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 }
             };
             blobService.createBlockBlobFromText(this.container.name, name, '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    public async createBlockBlob(name: string, text?: string | Buffer): Promise<azureStorage.BlobService.BlobResult> {
+        return new Promise((resolve, reject) => {
+            let blobService = this.root.createBlobService();
+            let contentType: string | null = mime.getType(name);
+            const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
+                contentSettings: {
+                    contentType: contentType ? contentType : undefined
+                }
+            };
+            blobService.createBlockBlobFromText(this.container.name, name, text ? text : '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -616,7 +636,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         return undefined;
     }
 
-    private async doesBlobExist(blobPath: string): Promise<boolean> {
+    public async doesBlobExist(blobPath: string): Promise<boolean> {
         return new Promise<boolean>((resolve, reject) => {
             const blobService = this.root.createBlobService();
             blobService.doesBlobExist(this.container.name, blobPath, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {

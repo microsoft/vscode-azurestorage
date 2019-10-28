@@ -2,7 +2,7 @@
 	"name": "vscode-azurestorage",
 	"displayName": "Azure Storage",
 	"description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
-	"version": "0.7.2-alpha",
+	"version": "0.7.3-alpha",
 	"publisher": "ms-azuretools",
 	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 	"engines": {
@@ -31,10 +31,8 @@
 	"preview": true,
 	"activationEvents": [
 		"onView:azureStorage",
-		"onCommand:azureStorage.openFileShareInFileExplorer",
-		"onCommand:azureStorage.openBlobContainerInFileExplorer",
-		"onFileSystem:azurestoragefile",
-		"onFileSystem:azurestorageblob",
+		"onFileSystem:azurestorage",
+		"onCommand:azureStorage.openInFileExplorer",
 		"onCommand:azureStorage.deployStaticWebsite",
 		"onCommand:azureStorage.configureStaticWebsite",
 		"onCommand:azureStorage.disableStaticWebsite",
@@ -94,17 +92,7 @@
 		},
 		"commands": [
 			{
-				"command": "azureStorage.openFileShareInFileExplorer",
-				"title": "Open in File Explorer",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openBlobContainerInFileExplorer",
-				"title": "Open in File Explorer",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openGenericInFileExplorer",
+				"command": "azureStorage.openInFileExplorer",
 				"title": "Open in File Explorer...",
 				"category": "Azure Storage"
 			},
@@ -344,14 +332,9 @@
 					"group": "navigation@2"
 				},
 				{
-					"command": "azureStorage.openFileShareInFileExplorer",
-					"when": "view == azureStorage && viewItem == azureFileShare",
+					"command": "azureStorage.openInFileExplorer",
+					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureBlobContainer",
 					"group": "navigation@3"
-				},
-				{
-					"command": "azureStorage.openBlobContainerInFileExplorer",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "navigation@4"
 				},
 				{
 					"command": "azureStorage.copyConnectionString",
@@ -600,14 +583,6 @@
 				}
 			],
 			"commandPalette": [
-				{
-					"command": "azureStorage.openFileShareInFileExplorer",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.openBlobContainerInFileExplorer",
-					"when": "never"
-				},
 				{
 					"command": "azureStorage.selectSubscriptions",
 					"when": "never"
