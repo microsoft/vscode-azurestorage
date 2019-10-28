@@ -78,13 +78,16 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         throw new UserCancelledError();
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private createTable(name: string): Promise<azureStorage.TableService.TableResult> {
+    private async createTable(name: string): Promise<azureStorage.TableService.TableResult> {
         return new Promise((resolve, reject) => {
             let tableService = this.root.createTableService();
-            tableService.createTable(name, (err?: Error, result?: azureStorage.TableService.TableResult) => {
+            tableService.createTable(name, (err?: Error | azureStorage.StorageError, result?: azureStorage.TableService.TableResult) => {
                 if (err) {
-                    reject(err);
+                    if ('code' in err && err.code === "TableAlreadyExists") {
+                        reject(new Error('The table specified already exists.'));
+                    } else {
+                        reject(err);
+                    }
                 } else {
                     resolve(result);
                 }
