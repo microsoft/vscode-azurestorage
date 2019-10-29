@@ -9,7 +9,6 @@ import * as querystring from "querystring";
 import * as vscode from "vscode";
 import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
-import { idToUri } from "../utils/uriUtils";
 import { BlobContainerTreeItem, IBlobContainerCreateChildContext } from "./blobContainers/blobContainerNode";
 import { BlobDirectoryTreeItem } from "./blobContainers/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "./blobContainers/blobNode";
@@ -19,17 +18,50 @@ import { FileShareTreeItem, IFileShareCreateChildContext } from "./fileShares/fi
 import { createFileFromText, doesFileExist } from "./fileShares/fileUtils";
 import { validateDirectoryName } from "./fileShares/validateNames";
 import { getFileSystemError } from "./getFileSystemError";
-import { IParsedUri } from "./IParsedUri";
 
 type AzureStorageFileTreeItem = FileTreeItem | DirectoryTreeItem | FileShareTreeItem;
 type AzureStorageBlobTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 type AzureStorageTreeItem = AzureStorageFileTreeItem | AzureStorageBlobTreeItem;
 type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
+/**
+ * Example uri: azurestorage:///container1/parentdir/subdir/blob?resourceId=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup1/providers/Microsoft.Storage/storageAccounts/storageaccount1/Blob Containers/container1
+ */
+interface IParsedUri {
+    /**
+     * ID of container or file share
+     * e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup1/providers/Microsoft.Storage/storageAccounts/storageaccount1/Blob Containers/container1
+     */
+    resourceId: string;
+
+    /**
+     * Full path within container or file share
+     * e.g. parentdir/subdir/blob
+     */
+    filePath: string;
+
+    /**
+     * Path of parent directory within container or file share
+     * e.g. parentdir/subdir
+     */
+    parentDirPath: string;
+
+    /**
+     * Name of file or directory
+     * e.g. blob
+     */
+    baseName: string;
+}
+
 export class AzureStorageFS implements vscode.FileSystemProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
-    private _queryCache: string;
+    private _queryCache: { [rootName: string]: { query: string, invalid?: boolean } } = {};
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+
+    static idToUri(resourceId: string, filePath?: string): vscode.Uri {
+        const rootName = path.basename(resourceId);
+        return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath ? filePath : '')}?resourceId=${resourceId}`);
+    }
 
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
         throw new Error("Method not implemented.");
@@ -98,7 +130,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             throw new Error(response);
         }
 
-        let parentUri: vscode.Uri = idToUri(parsedUri.resourceId, parsedUri.parentDirPath);
+        let parentUri: vscode.Uri = AzureStorageFS.idToUri(parsedUri.resourceId, parsedUri.parentDirPath);
         let parent = await this.lookupAsDirectory(parentUri, context, parsedUri.resourceId, parsedUri.parentDirPath);
         await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFileShareDirectory', childName: parsedUri.baseName });
     }
@@ -110,7 +142,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotADirectory);
         }
 
-        let tiParsedUri = this.parseUri(idToUri(parsedUri.resourceId, path.dirname(parsedUri.filePath)));
+        let tiParsedUri = this.parseUri(AzureStorageFS.idToUri(parsedUri.resourceId, path.dirname(parsedUri.filePath)));
         let matches = parsedUri.filePath.match(`^${this.regexEscape(tiParsedUri.filePath)}\/?([^\/^]+)\/?(.*?)$`);
         while (!!matches) {
             treeItem = <BlobDirectoryTreeItem>await treeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlobDirectory', childName: matches[1] });
@@ -205,7 +237,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                         }
                     } else {
                         progress.report({ message: `Creating ${writeToFileShare ? 'file' : 'blob'} ${parsedUri.filePath}` });
-                        let parentUri: vscode.Uri = idToUri(parsedUri.resourceId, parsedUri.parentDirPath);
+                        let parentUri: vscode.Uri = AzureStorageFS.idToUri(parsedUri.resourceId, parsedUri.parentDirPath);
                         let parent = await this.lookupAsDirectory(parentUri, context, parsedUri.resourceId, parsedUri.parentDirPath);
 
                         if (writeToFileShare) {
@@ -345,19 +377,49 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         }
     }
 
-    private verifyUri(uri: vscode.Uri): vscode.Uri {
-        // Fallback to the cached query if this uri doesn't have a query defined
-        this._queryCache = uri.query || this._queryCache;
-        return uri.query ? uri : vscode.Uri.parse(`azurestorage://${uri.path}?${this._queryCache}`);
+    private getRootName(uri: vscode.Uri): string {
+        const match: RegExpMatchArray | null = uri.path.match(/^\/[^\/]*\/?/);
+        return match ? match[0] : '';
+    }
+
+    private verifyUri(uri: vscode.Uri, rootName?: string): vscode.Uri {
+        // Remove slashes from rootName for consistency
+        rootName = (rootName || this.getRootName(uri)).replace(/\//g, '');
+
+        if (rootName in this._queryCache) {
+            if (this._queryCache[rootName].invalid) {
+                throw new Error('Invalid URI query cache.');
+            }
+
+            if (uri.query) {
+                if (this._queryCache[rootName].query !== uri.query) {
+                    this._queryCache[rootName].invalid = true;
+                    throw new Error('Invalid URI query cache.');
+                }
+            } else {
+                // Fallback to the cached query because this uri's query doesn't exist
+                return vscode.Uri.parse(`azurestorage://${uri.path}?${this._queryCache[rootName].query}`);
+            }
+        } else {
+            if (uri.query) {
+                // No cache for this rootName yet so cache the query
+                this._queryCache[rootName] = { query: uri.query };
+            } else {
+                throw new Error('No URI query cache available.');
+            }
+        }
+
+        return uri;
     }
 
     private parseUri(uri: vscode.Uri): IParsedUri {
-        uri = this.verifyUri(uri);
+        let rootName = this.getRootName(uri);
+        uri = this.verifyUri(uri, rootName);
 
         const parsedQuery: { [key: string]: string | undefined } = querystring.parse<{}>(uri.query);
         const resourceId = parsedQuery.resourceId;
 
-        const filePath: string = uri.path.replace(/^\/[^\/]*\/?/, ''); // Remove rootName
+        const filePath: string = uri.path.replace(rootName, '');
         let parentDirPath = path.dirname(filePath);
         parentDirPath = parentDirPath === '.' ? '' : parentDirPath;
         const baseName = path.basename(filePath);

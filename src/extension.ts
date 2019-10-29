@@ -31,7 +31,6 @@ import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/
 import { configurationSettingsKeys, extensionPrefix } from './constants';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
-import { idToUri } from './utils/uriUtils';
 
 // tslint:disable-next-line: max-func-body-length
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }): Promise<AzureExtensionApiProvider> {
@@ -73,13 +72,13 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         }
         registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
             await callWithTelemetryAndErrorHandling('azureStorage.openFileShareInFileExplorer', async () => {
-                await commands.executeCommand('vscode.openFolder', idToUri(treeItem.fullId));
+                await commands.executeCommand('vscode.openFolder', AzureStorageFS.idToUri(treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });
         });
         registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem: BlobContainerTreeItem) => {
             await callWithTelemetryAndErrorHandling('azureStorage.openBlobContainerInFileExplorer', async () => {
-                await commands.executeCommand('vscode.openFolder', idToUri(treeItem.fullId));
+                await commands.executeCommand('vscode.openFolder', AzureStorageFS.idToUri(treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });
         });
