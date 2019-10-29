@@ -7,7 +7,7 @@
 
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createTelemetryReporter, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createTelemetryReporter, IActionContext, IAzureQuickPickItem, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureAccountTreeItem } from './azureStorageExplorer/AzureAccountTreeItem';
 import { AzureStorageFS } from './azureStorageExplorer/AzureStorageFS';
@@ -32,7 +32,7 @@ import { configurationSettingsKeys, extensionPrefix } from './constants';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
 
-// tslint:disable-next-line: max-func-body-length
+// tslint:disable-next-line:max-func-body-length
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }): Promise<AzureExtensionApiProvider> {
     console.log('Extension "Azure Storage Tools" is now active.');
 
@@ -70,14 +70,21 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', new AzureStorageFS(), { isCaseSensitive: true }));
         }
-        registerCommand('azureStorage.openFileShareInFileExplorer', async (_actionContext: IActionContext, treeItem: FileShareTreeItem) => {
-            await callWithTelemetryAndErrorHandling('azureStorage.openFileShareInFileExplorer', async () => {
-                await commands.executeCommand('vscode.openFolder', AzureStorageFS.idToUri(treeItem.fullId));
-                await commands.executeCommand('workbench.view.explorer');
-            });
-        });
-        registerCommand('azureStorage.openBlobContainerInFileExplorer', async (_actionContext: IActionContext, treeItem: BlobContainerTreeItem) => {
-            await callWithTelemetryAndErrorHandling('azureStorage.openBlobContainerInFileExplorer', async () => {
+        registerCommand('azureStorage.openInFileExplorer', async (_actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
+            await callWithTelemetryAndErrorHandling('azureStorage.openInFileExplorer', async () => {
+                if (!treeItem) {
+                    let quickPicks: IAzureQuickPickItem<string>[] = [
+                        {
+                            label: "Blob Container",
+                            data: BlobContainerTreeItem.contextValue
+                        },
+                        {
+                            label: "File Share",
+                            data: FileShareTreeItem.contextValue
+                        }];
+                    let contextValue: string = (await ext.ui.showQuickPick(quickPicks, { placeHolder: "Select the resource type to open in File Explorer" })).data;
+                    treeItem = <BlobContainerTreeItem | FileShareTreeItem>await ext.tree.showTreeItemPicker(contextValue, _actionContext);
+                }
                 await commands.executeCommand('vscode.openFolder', AzureStorageFS.idToUri(treeItem.fullId));
                 await commands.executeCommand('workbench.view.explorer');
             });

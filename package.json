@@ -32,8 +32,7 @@
 	"activationEvents": [
 		"onView:azureStorage",
 		"onFileSystem:azurestorage",
-		"onCommand:azureStorage.openFileShareInFileExplorer",
-		"onCommand:azureStorage.openBlobContainerInFileExplorer",
+		"onCommand:azureStorage.openInFileExplorer",
 		"onCommand:azureStorage.deployStaticWebsite",
 		"onCommand:azureStorage.configureStaticWebsite",
 		"onCommand:azureStorage.disableStaticWebsite",
@@ -93,13 +92,8 @@
 		},
 		"commands": [
 			{
-				"command": "azureStorage.openFileShareInFileExplorer",
-				"title": "File Share",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openBlobContainerInFileExplorer",
-				"title": "Blob Container",
+				"command": "azureStorage.openInFileExplorer",
+				"title": "Open in File Explorer...",
 				"category": "Azure Storage"
 			},
 			{
@@ -336,6 +330,11 @@
 					"command": "azureStorage.openInPortal",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "navigation@2"
+				},
+				{
+					"command": "azureStorage.openInFileExplorer",
+					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureBlobContainer",
+					"group": "navigation@3"
 				},
 				{
 					"command": "azureStorage.copyConnectionString",
