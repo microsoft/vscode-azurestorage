@@ -24,38 +24,9 @@ type AzureStorageBlobTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobConta
 type AzureStorageTreeItem = AzureStorageFileTreeItem | AzureStorageBlobTreeItem;
 type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
-/**
- * Example uri: azurestorage:///container1/parentdir/subdir/blob?resourceId=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup1/providers/Microsoft.Storage/storageAccounts/storageaccount1/Blob Containers/container1
- */
-interface IParsedUri {
-    /**
-     * ID of container or file share
-     * e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup1/providers/Microsoft.Storage/storageAccounts/storageaccount1/Blob Containers/container1
-     */
-    resourceId: string;
-
-    /**
-     * Full path within container or file share
-     * e.g. parentdir/subdir/blob
-     */
-    filePath: string;
-
-    /**
-     * Path of parent directory within container or file share
-     * e.g. parentdir/subdir
-     */
-    parentDirPath: string;
-
-    /**
-     * Name of file or directory
-     * e.g. blob
-     */
-    baseName: string;
-}
-
 export class AzureStorageFS implements vscode.FileSystemProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
-    private _queryCache: { [rootName: string]: { query: string, invalid?: boolean } } = {};
+    private _queryCache: Map<string, { query: string, invalid?: boolean }> = new Map(); // Key: rootName
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
     static idToUri(resourceId: string, filePath?: string): vscode.Uri {
@@ -386,24 +357,22 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         // Remove slashes from rootName for consistency
         rootName = (rootName || this.getRootName(uri)).replace(/\//g, '');
 
-        if (rootName in this._queryCache) {
-            if (this._queryCache[rootName].invalid) {
-                throw new Error('Invalid URI query cache.');
-            }
-
+        let cache = this._queryCache.get(rootName);
+        if (cache) {
             if (uri.query) {
-                if (this._queryCache[rootName].query !== uri.query) {
-                    this._queryCache[rootName].invalid = true;
-                    throw new Error('Invalid URI query cache.');
-                }
+                this._queryCache.set(rootName, { query: cache.query, invalid: cache.query !== uri.query });
             } else {
+                if (cache.invalid) {
+                    throw new Error('Cannot auto-detect resource path. Try opening it in a single-root workspace.');
+                }
+
                 // Fallback to the cached query because this uri's query doesn't exist
-                return vscode.Uri.parse(`azurestorage://${uri.path}?${this._queryCache[rootName].query}`);
+                return vscode.Uri.parse(`azurestorage://${uri.path}?${cache.query}`);
             }
         } else {
             if (uri.query) {
                 // No cache for this rootName yet so cache the query
-                this._queryCache[rootName] = { query: uri.query };
+                this._queryCache.set(rootName, { query: uri.query });
             } else {
                 throw new Error('No URI query cache available.');
             }
@@ -439,4 +408,33 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     private isFileShareUri(uri: vscode.Uri): boolean {
         return this.verifyUri(uri).query.indexOf('File Shares') > 0;
     }
+}
+
+/**
+ * Example uri: azurestorage:///container1/parentdir/subdir/blob?resourceId=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup1/providers/Microsoft.Storage/storageAccounts/storageaccount1/Blob Containers/container1
+ */
+interface IParsedUri {
+    /**
+     * ID of container or file share
+     * e.g. /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup1/providers/Microsoft.Storage/storageAccounts/storageaccount1/Blob Containers/container1
+     */
+    resourceId: string;
+
+    /**
+     * Full path within container or file share
+     * e.g. parentdir/subdir/blob
+     */
+    filePath: string;
+
+    /**
+     * Path of parent directory within container or file share
+     * e.g. parentdir/subdir
+     */
+    parentDirPath: string;
+
+    /**
+     * Name of file or directory
+     * e.g. blob
+     */
+    baseName: string;
 }
