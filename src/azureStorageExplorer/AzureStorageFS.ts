@@ -360,10 +360,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         let cache = this._queryCache.get(rootName);
         if (cache) {
             if (uri.query) {
-                this._queryCache.set(rootName, { query: cache.query, invalid: cache.query !== uri.query });
+                this._queryCache.set(rootName, { query: cache.query, invalid: cache.invalid || cache.query !== uri.query });
             } else {
                 if (cache.invalid) {
-                    throw new Error('Cannot auto-detect resource path. Try opening it in a single-root workspace.');
+                    throw new Error('Cannot auto-detect resource path. For this functionality, re-load VS Code and only open one resource per workspace.');
                 }
 
                 // Fallback to the cached query because this uri's query doesn't exist
