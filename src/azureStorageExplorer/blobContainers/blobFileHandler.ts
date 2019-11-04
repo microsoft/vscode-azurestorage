@@ -97,6 +97,10 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
             createOptions.contentSettings.contentMD5 = undefined; // Needs to be filled in by SDK
         }
 
+        if (treeItem.blob.metadata) {
+            createOptions.metadata = treeItem.blob.metadata;
+        }
+
         await new Promise<void>((resolve, reject) => {
             blobService.createBlockBlobFromLocalFile(treeItem.container.name, treeItem.blob.name, filePath, createOptions, (error?: Error, _result?: azureStorage.BlobService.BlobResult, _response?: azureStorage.ServiceResponse) => {
                 if (!!error) {

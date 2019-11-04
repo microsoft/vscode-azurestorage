@@ -8,6 +8,10 @@ import * as path from "path";
 import { TextDocument, window } from 'vscode';
 import * as vscode from "vscode";
 import { DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { BlobContainerTreeItem } from '../../azureStorageExplorer/blobContainers/blobContainerNode';
+import { BlobTreeItem } from '../../azureStorageExplorer/blobContainers/blobNode';
+import { FileTreeItem } from '../../azureStorageExplorer/fileShares/fileNode';
+import { getFile, getFileMetadata } from '../../azureStorageExplorer/fileShares/fileUtils';
 import { TemporaryFile } from '../../components/temporaryFile';
 import { ext } from '../../extensionVariables';
 import { IRemoteFileHandler } from './IRemoteFileHandler';
@@ -28,6 +32,18 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
         if (filePath) {
             actionContext.telemetry.suppressIfSuccessful = false;
             const context: ContextT = this.fileMap[filePath][1];
+
+            if (context instanceof BlobTreeItem) {
+                const container: BlobContainerTreeItem | undefined = <BlobContainerTreeItem | undefined>context.parent;
+                if (container) {
+                    context.blob.contentSettings = (await container.getBlob(context.blob.name)).contentSettings;
+                    context.blob.metadata = (await container.getBlobMetadata(context.blob.name)).metadata;
+                }
+            } else if (context instanceof FileTreeItem) {
+                context.file.contentSettings = (await getFile(context.directoryPath, context.file.name, context.share, context.root)).contentSettings;
+                context.file.metadata = (await getFileMetadata(context.directoryPath, context.file.name, context.share, context.root)).metadata;
+            }
+
             await this.confirmSaveDocument(context);
             await this.saveDocument(context, doc);
         }

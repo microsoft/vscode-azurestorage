@@ -55,11 +55,23 @@ export async function doesFileExist(fileName: string, parent: AzureParentTreeIte
 
 }
 
-// tslint:disable-next-line:promise-function-async // Grandfathered in
-export function getFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
+export async function getFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
     const fileService = root.createFileService();
     return new Promise((resolve, reject) => {
         fileService.getFileProperties(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
+export async function getFileMetadata(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
+    const fileService = root.createFileService();
+    return new Promise((resolve, reject) => {
+        fileService.getFileMetadata(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
             if (err) {
                 reject(err);
             } else {

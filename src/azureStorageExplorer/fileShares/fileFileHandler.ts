@@ -39,6 +39,10 @@ export class FileFileHandler implements IRemoteFileHandler<FileTreeItem> {
             createOptions.contentSettings.contentMD5 = undefined; // Needs to be filled in by SDK
         }
 
+        if (fileProperties.metadata) {
+            createOptions.metadata = fileProperties.metadata;
+        }
+
         await new Promise<void>((resolve, reject) => {
             fileService.createFileFromLocalFile(treeItem.share.name, treeItem.directoryPath, treeItem.file.name, filePath, createOptions, async (error?: Error, _result?: azureStorage.FileService.FileResult, _response?: azureStorage.ServiceResponse) => {
                 if (!!error) {

@@ -570,11 +570,23 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         throw new UserCancelledError();
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+    public async getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         const blobService = this.root.createBlobService();
         return new Promise((resolve, reject) => {
             blobService.getBlobProperties(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    }
+
+    public async getBlobMetadata(name: string): Promise<azureStorage.BlobService.BlobResult> {
+        const blobService = this.root.createBlobService();
+        return new Promise((resolve, reject) => {
+            blobService.getBlobMetadata(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
