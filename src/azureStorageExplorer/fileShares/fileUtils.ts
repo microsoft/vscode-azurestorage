@@ -68,48 +68,54 @@ export async function getFile(directoryPath: string, name: string, share: FileSe
     });
 }
 
-export async function getFileMetadata(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
+export async function createFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, text?: string | Buffer, options?: azureStorage.FileService.CreateFileRequestOptions): Promise<azureStorage.FileService.FileResult> {
+    return new Promise((resolve, reject) => {
+        const fileService = root.createFileService();
+        fileService.createFileFromText(share.name, directoryPath, name, text ? text : '', options ? options : {}, (err?: Error, result?: azureStorage.FileService.FileResult) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
+
+export async function createFileFromLocalFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, filePath: string, options?: azureStorage.FileService.CreateFileRequestOptions): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        const fileService = root.createFileService();
+        fileService.createFileFromLocalFile(share.name, directoryPath, name, filePath, options ? options : {}, async (err?: Error) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
+export async function updateFileFromText(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, text: string | Buffer): Promise<azureStorage.FileService.FileResult> {
+    const options = await getExistingCreateOptions(directoryPath, name, share, root);
+    return await createFile(directoryPath, name, share, root, text, options);
+}
+
+export async function updateFileFromLocalFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, filePath: string): Promise<void> {
+    const options = await getExistingCreateOptions(directoryPath, name, share, root);
+    await createFileFromLocalFile(directoryPath, name, share, root, filePath, options);
+}
+
+export async function deleteFile(directory: string, name: string, share: string, root: IStorageRoot): Promise<void> {
     const fileService = root.createFileService();
-    return new Promise((resolve, reject) => {
-        fileService.getFileMetadata(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
+    await new Promise((resolve, reject) => {
+        // tslint:disable-next-line:no-any
+        fileService.deleteFile(share, directory, name, (err?: any) => {
+            // tslint:disable-next-line:no-void-expression // Grandfathered in
+            err ? reject(err) : resolve();
         });
     });
 }
 
-// tslint:disable-next-line:promise-function-async // Grandfathered in
-export function createFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
-    return new Promise((resolve, reject) => {
-        const fileService = root.createFileService();
-        fileService.createFile(share.name, directoryPath, name, 0, (err?: Error, result?: azureStorage.FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
-}
-
-// tslint:disable-next-line:promise-function-async // Grandfathered in
-export function createFileFromText(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, text: string | Buffer, options?: azureStorage.FileService.CreateFileRequestOptions): Promise<azureStorage.FileService.FileResult> {
-    return new Promise((resolve, reject) => {
-        const fileService = root.createFileService();
-        fileService.createFileFromText(share.name, directoryPath, name, text, options ? options : {}, (err?: Error, result?: azureStorage.FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
-}
-
-export async function updateFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, text: string | Buffer): Promise<azureStorage.FileService.FileResult> {
+async function getExistingCreateOptions(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.CreateFileRequestOptions> {
     const fileService = root.createFileService();
 
     const propertiesResult: azureStorage.FileService.FileResult = await new Promise((resolve, reject) => {
@@ -137,21 +143,8 @@ export async function updateFile(directoryPath: string, name: string, share: Fil
         });
     });
 
-    const options: azureStorage.FileService.CreateFileRequestOptions = {
+    return {
         contentSettings: propertiesResult.contentSettings,
         metadata: metadataResult.metadata
     };
-
-    return await createFileFromText(directoryPath, name, share, root, text, options);
-}
-
-export async function deleteFile(directory: string, name: string, share: string, root: IStorageRoot): Promise<void> {
-    const fileService = root.createFileService();
-    await new Promise((resolve, reject) => {
-        // tslint:disable-next-line:no-any
-        fileService.deleteFile(share, directory, name, (err?: any) => {
-            // tslint:disable-next-line:no-void-expression // Grandfathered in
-            err ? reject(err) : resolve();
-        });
-    });
 }

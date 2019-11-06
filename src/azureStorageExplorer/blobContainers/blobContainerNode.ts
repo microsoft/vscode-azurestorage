@@ -6,7 +6,6 @@
 import * as azureStorage from "azure-storage";
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
-import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
@@ -583,29 +582,16 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
-    public async getBlobMetadata(name: string): Promise<azureStorage.BlobService.BlobResult> {
-        const blobService = this.root.createBlobService();
-        return new Promise((resolve, reject) => {
-            blobService.getBlobMetadata(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-    }
-
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     public createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
-            const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
+            const createOptions = <azureStorage.BlobService.CreateBlobRequestOptions>{
                 contentSettings: {
                     contentType: 'text/plain'
                 }
             };
-            blobService.createBlockBlobFromText(this.container.name, name, '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+            blobService.createBlockBlobFromText(this.container.name, name, '', createOptions, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -615,16 +601,10 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
-    public async createBlockBlob(name: string, text?: string | Buffer, options?: azureStorage.BlobService.CreateBlobRequestOptions): Promise<azureStorage.BlobService.BlobResult> {
+    public async createBlockBlob(name: string, text?: string | Buffer, createOptions?: azureStorage.BlobService.CreateBlobRequestOptions): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
-
-            // tslint:disable: strict-boolean-expressions
-            options = options || {};
-            options.contentSettings = options.contentSettings || {};
-            options.contentSettings.contentType = mime.getType(name) || undefined;
-
-            blobService.createBlockBlobFromText(this.container.name, name, text ? text : '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+            blobService.createBlockBlobFromText(this.container.name, name, text ? text : '', createOptions ? createOptions : {}, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -634,40 +614,27 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
-    public async updateBlockBlob(name: string, text?: string | Buffer): Promise<azureStorage.BlobService.BlobResult> {
-        const blobService = this.root.createBlobService();
-
-        const propertiesResult: azureStorage.BlobService.BlobResult = await new Promise((resolve, reject) => {
-            blobService.getBlobProperties(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+    public async createBlockBlobFromLocalFile(name: string, filePath: string, createOptions?: azureStorage.BlobService.CreateBlobRequestOptions): Promise<void> {
+        await new Promise<void>((resolve, reject) => {
+            let blobService = this.root.createBlobService();
+            blobService.createBlockBlobFromLocalFile(this.container.name, name, filePath, createOptions ? createOptions : {}, (err?: Error) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(result);
+                    resolve();
                 }
             });
         });
+    }
 
-        if (propertiesResult.contentSettings) {
-            // Don't allow the existing MD5 hash to be used for the updated blob
-            propertiesResult.contentSettings.contentMD5 = '';
-        }
+    public async updateBlockBlobFromText(name: string, text: string | Buffer): Promise<azureStorage.BlobService.BlobResult> {
+        const createOptions = await this.getExistingCreateOptions(name);
+        return await this.createBlockBlob(name, text, createOptions);
+    }
 
-        const metadataResult: azureStorage.BlobService.BlobResult = await new Promise((resolve, reject) => {
-            blobService.getBlobMetadata(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-
-        let options: azureStorage.BlobService.CreateBlobRequestOptions = {
-            contentSettings: propertiesResult.contentSettings,
-            metadata: metadataResult.metadata,
-        };
-
-        return this.createBlockBlob(name, text, options);
+    public async updateBlockBlobFromLocalFile(name: string, filePath: string): Promise<void> {
+        const createOptions = await this.getExistingCreateOptions(name);
+        await this.createBlockBlobFromLocalFile(name, filePath, createOptions);
     }
 
     public static validateBlobName(name: string): string | undefined | null {
@@ -706,6 +673,39 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
+    private async getExistingCreateOptions(name: string): Promise<azureStorage.BlobService.CreateBlobRequestOptions> {
+        const blobService = this.root.createBlobService();
+
+        const propertiesResult: azureStorage.BlobService.BlobResult = await new Promise((resolve, reject) => {
+            blobService.getBlobProperties(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        if (propertiesResult.contentSettings) {
+            // Don't allow the existing MD5 hash to be used for the updated blob
+            propertiesResult.contentSettings.contentMD5 = '';
+        }
+
+        const metadataResult: azureStorage.BlobService.BlobResult = await new Promise((resolve, reject) => {
+            blobService.getBlobMetadata(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+
+        return {
+            contentSettings: propertiesResult.contentSettings,
+            metadata: metadataResult.metadata
+        };
+    }
 }
 
 export interface IBlobContainerCreateChildContext extends IActionContext {
