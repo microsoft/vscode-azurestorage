@@ -12,6 +12,7 @@ import { ext } from "../../extensionVariables";
 import { Limits } from '../limits';
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobTreeItem } from './blobNode';
+import { updateBlockBlobFromLocalFile } from './blobUtils';
 
 export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
     async getSaveConfirmationText(treeItem: BlobTreeItem): Promise<string> {
@@ -88,12 +89,6 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
 
     async uploadFile(treeItem: BlobTreeItem, filePath: string): Promise<void> {
         await this.checkCanUpload(treeItem, filePath);
-
-        let container: BlobContainerTreeItem | undefined = <BlobContainerTreeItem | undefined>treeItem.parent;
-        if (!container) {
-            throw new Error('Cannot upload blob. Blob container not found.');
-        }
-
-        await container.updateBlockBlobFromLocalFile(treeItem.blob.name, filePath);
+        await updateBlockBlobFromLocalFile(treeItem.blob.name, treeItem.container.name, treeItem.root, filePath);
     }
 }

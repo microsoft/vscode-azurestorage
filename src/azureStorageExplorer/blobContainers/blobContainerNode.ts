@@ -20,6 +20,7 @@ import { BlobContainerGroupTreeItem } from "./blobContainerGroupNode";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
+import { getExistingCreateOptions } from './blobUtils';
 
 let lastUploadFolder: Uri;
 
@@ -614,27 +615,9 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
-    public async createBlockBlobFromLocalFile(name: string, filePath: string, createOptions?: azureStorage.BlobService.CreateBlobRequestOptions): Promise<void> {
-        await new Promise<void>((resolve, reject) => {
-            let blobService = this.root.createBlobService();
-            blobService.createBlockBlobFromLocalFile(this.container.name, name, filePath, createOptions ? createOptions : {}, (err?: Error) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
-
     public async updateBlockBlobFromText(name: string, text: string | Buffer): Promise<azureStorage.BlobService.BlobResult> {
-        const createOptions = await this.getExistingCreateOptions(name);
+        const createOptions = await getExistingCreateOptions(name, this.container.name, this.root);
         return await this.createBlockBlob(name, text, createOptions);
-    }
-
-    public async updateBlockBlobFromLocalFile(name: string, filePath: string): Promise<void> {
-        const createOptions = await this.getExistingCreateOptions(name);
-        await this.createBlockBlobFromLocalFile(name, filePath, createOptions);
     }
 
     public static validateBlobName(name: string): string | undefined | null {
@@ -671,40 +654,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             }
             throw new UserCancelledError();
         }
-    }
-
-    private async getExistingCreateOptions(name: string): Promise<azureStorage.BlobService.CreateBlobRequestOptions> {
-        const blobService = this.root.createBlobService();
-
-        const propertiesResult: azureStorage.BlobService.BlobResult = await new Promise((resolve, reject) => {
-            blobService.getBlobProperties(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-
-        if (propertiesResult.contentSettings) {
-            // Don't allow the existing MD5 hash to be used for the updated blob
-            propertiesResult.contentSettings.contentMD5 = '';
-        }
-
-        const metadataResult: azureStorage.BlobService.BlobResult = await new Promise((resolve, reject) => {
-            blobService.getBlobMetadata(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-
-        return {
-            contentSettings: propertiesResult.contentSettings,
-            metadata: metadataResult.metadata
-        };
     }
 }
 
