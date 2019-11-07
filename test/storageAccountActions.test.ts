@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
-import { BlobService, createBlobService, createFileService, createTableService, FileService, TableService } from 'azure-storage';
+import { BlobService, createBlobService, createFileService, createTableService, FileService, StorageServiceClient, TableService } from 'azure-storage';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
@@ -93,7 +93,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const connectionString: string = await getConnectionString(resourceName);
         const fileService: FileService = createFileService(connectionString);
-        const createdShare: FileService.FileResult = await doesResourceExist<FileService.FileResult>(fileService, fileService.doesShareExist, shareName);
+        const createdShare: FileService.ShareResult = await doesResourceExist<FileService.ShareResult>(fileService, 'doesShareExist', shareName);
         assert.ok(createdShare.exists);
     });
 
@@ -106,7 +106,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const connectionString: string = await getConnectionString(resourceName);
         const tableService: TableService = createTableService(connectionString);
-        const createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, tableService.doesTableExist, tableName);
+        const createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
         assert.ok(createdTable.exists);
     });
 
@@ -125,8 +125,9 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     }
 
     // validate the resource exists or not
-    async function doesResourceExist<T>(service: FileService | TableService, fn: { call(arg0: FileService | TableService, arg1: string, arg2: (err: Error | undefined, res: T) => void): void; }, name: string): Promise<T> {
-        return new Promise((resolve, reject) => fn.call(service, name, (err: Error | undefined, res: T) => {
+    async function doesResourceExist<T>(service: StorageServiceClient, fn: string, name: string): Promise<T> {
+        // tslint:disable-next-line: no-unsafe-any
+        return new Promise((resolve, reject) => service[fn](name, (err: Error | undefined, res: T) => {
             if (err) {
                 reject(err);
             } else {
