@@ -6,6 +6,8 @@ Azure Storage is a Microsoft-managed service providing cloud storage that is hig
 
 **Visit the [wiki](https://github.com/Microsoft/vscode-azurestorage/wiki) for additional information about the extension.**
 
+> Sign up today for your free Azure account and receive 12 months of free popular services, $200 free credit and 25+ always free services 👉 [Start Free](https://azure.microsoft.com/free/open-source).
+
 ## Features
 
 * Explore/Create/Delete Blob Containers, File Shares, Queues, Tables and Storage Accounts

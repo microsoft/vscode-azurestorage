@@ -2,7 +2,7 @@
 	"name": "vscode-azurestorage",
 	"displayName": "Azure Storage",
 	"description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
-	"version": "0.7.2-alpha",
+	"version": "0.7.3-alpha",
 	"publisher": "ms-azuretools",
 	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 	"engines": {
@@ -31,10 +31,8 @@
 	"preview": true,
 	"activationEvents": [
 		"onView:azureStorage",
-		"onCommand:azureStorage.openFileShareInFileExplorer",
-		"onCommand:azureStorage.openBlobContainerInFileExplorer",
-		"onFileSystem:azurestoragefile",
-		"onFileSystem:azurestorageblob",
+		"onFileSystem:azurestorage",
+		"onCommand:azureStorage.openInFileExplorer",
 		"onCommand:azureStorage.deployStaticWebsite",
 		"onCommand:azureStorage.configureStaticWebsite",
 		"onCommand:azureStorage.disableStaticWebsite",
@@ -94,13 +92,8 @@
 		},
 		"commands": [
 			{
-				"command": "azureStorage.openFileShareInFileExplorer",
-				"title": "File Share",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openBlobContainerInFileExplorer",
-				"title": "Blob Container",
+				"command": "azureStorage.openInFileExplorer",
+				"title": "Open in File Explorer...",
 				"category": "Azure Storage"
 			},
 			{
@@ -257,8 +250,12 @@
 			},
 			{
 				"command": "azureStorage.createGpv2Account",
-				"title": "Create Storage Account",
-				"category": "Azure Storage"
+				"title": "Create Storage Account...",
+				"category": "Azure Storage",
+				"icon": {
+					"light": "resources/light/createStorageAccount.svg",
+					"dark": "resources/dark/createStorageAccount.svg"
+				}
 			},
 			{
 				"command": "azureStorage.deleteFile",
@@ -288,6 +285,11 @@
 		],
 		"menus": {
 			"view/title": [
+				{
+					"command": "azureStorage.createGpv2Account",
+					"when": "view == azureStorage",
+					"group": "navigation@1"
+				},
 				{
 					"command": "azureStorage.deployStaticWebsite",
 					"when": "view == azureStorage",
@@ -328,6 +330,11 @@
 					"command": "azureStorage.openInPortal",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "navigation@2"
+				},
+				{
+					"command": "azureStorage.openInFileExplorer",
+					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureBlobContainer",
+					"group": "navigation@3"
 				},
 				{
 					"command": "azureStorage.copyConnectionString",
@@ -739,7 +746,7 @@
 		"ms-rest": "^2.2.2",
 		"ms-rest-azure": "^2.3.1",
 		"opn": "^5.3.0",
-		"vscode-azureextensionui": "^0.26.4",
+		"vscode-azureextensionui": "^0.28.3",
 		"winreg": "^1.2.3"
 	}
 }

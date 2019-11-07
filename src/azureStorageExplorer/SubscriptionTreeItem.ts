@@ -7,7 +7,7 @@
 import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureTreeItem, AzureWizard, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
 import { nonNull, StorageAccountWrapper } from '../components/storageWrappers';
 import { StorageAccountTreeItem } from './storageAccounts/storageAccountNode';
 import { StorageAccountCreateStep } from './wizard/storageAccountCreateStep';
@@ -32,10 +32,13 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
         let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
+        const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep(), new ResourceGroupListStep()];
+
+        LocationListStep.addStep(wizardContext, promptSteps);
 
         const wizard = new AzureWizard(wizardContext, {
             title: "Create storage account",
-            promptSteps: [new StorageAccountNameStep(), new ResourceGroupListStep(), new LocationListStep()],
+            promptSteps,
             executeSteps: [new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS })],
         });
 
