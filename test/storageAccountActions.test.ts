@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
-import { BlobService, createBlobService, createFileService, FileService } from 'azure-storage';
+import { BlobService, createBlobService, createFileService, createTableService, FileService, StorageServiceClient, TableService } from 'azure-storage';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
@@ -93,8 +93,21 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         });
         const connectionString: string = await getConnectionString(resourceName);
         const fileService: FileService = createFileService(connectionString);
-        const createdShare: boolean | undefined = await doesShareExist(shareName, fileService);
-        assert.ok(createdShare);
+        const createdShare: FileService.ShareResult = await doesResourceExist<FileService.ShareResult>(fileService, 'doesShareExist', shareName);
+        assert.ok(createdShare.exists);
+    });
+
+    test("createTable", async () => {
+        await validateAccountExists(resourceName, resourceName);
+        // Table name cannot begin with a digit
+        const tableName = 'f' + `${getRandomHexString()}`;
+        await testUserInput.runWithInputs([resourceName, tableName], async () => {
+            await vscode.commands.executeCommand('azureStorage.createTable');
+        });
+        const connectionString: string = await getConnectionString(resourceName);
+        const tableService: TableService = createTableService(connectionString);
+        const createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
+        assert.ok(createdTable.exists);
     });
 
     test("deleteStorageAccount", async () => {
@@ -111,18 +124,16 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdAccount);
     }
 
-    // validate the file share exists or not by its name and file service
-    async function doesShareExist(shareName: string, fileService: FileService): Promise<boolean | undefined> {
-        // tslint:disable-next-line: no-shadowed-variable
-        return new Promise((resolve, reject) => {
-            fileService.doesShareExist(shareName, (err: Error | undefined, result: FileService.FileResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result.exists);
-                }
-            });
-        });
+    // validate the resource exists or not
+    async function doesResourceExist<T>(service: StorageServiceClient, fn: string, name: string): Promise<T> {
+        // tslint:disable-next-line: no-unsafe-any
+        return new Promise((resolve, reject) => service[fn](name, (err: Error | undefined, res: T) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(res);
+            }
+        }));
     }
 
     // validate the blob service by verifying whether or not it creates a blob container
