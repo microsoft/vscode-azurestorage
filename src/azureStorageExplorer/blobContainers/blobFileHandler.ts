@@ -12,6 +12,7 @@ import { ext } from "../../extensionVariables";
 import { Limits } from '../limits';
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobTreeItem } from './blobNode';
+import { updateBlockBlobFromLocalFile } from './blobUtils';
 
 export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
     async getSaveConfirmationText(treeItem: BlobTreeItem): Promise<string> {
@@ -88,36 +89,6 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
 
     async uploadFile(treeItem: BlobTreeItem, filePath: string): Promise<void> {
         await this.checkCanUpload(treeItem, filePath);
-
-        let blobService = treeItem.root.createBlobService();
-        let createOptions: azureStorage.BlobService.CreateBlockBlobRequestOptions = {};
-
-        if (treeItem.blob.contentSettings) {
-            createOptions.contentSettings = treeItem.blob.contentSettings;
-            createOptions.contentSettings.contentMD5 = undefined; // Needs to be filled in by SDK
-        }
-
-        await new Promise<void>((resolve, reject) => {
-            blobService.createBlockBlobFromLocalFile(treeItem.container.name, treeItem.blob.name, filePath, createOptions, (error?: Error, _result?: azureStorage.BlobService.BlobResult, _response?: azureStorage.ServiceResponse) => {
-                if (!!error) {
-                    let errorAny = <{ code?: string }>error;
-                    if (!!errorAny.code) {
-                        let humanReadableMessage = `Unable to save '${treeItem.blob.name}', blob service returned error code "${errorAny.code}"`;
-                        switch (errorAny.code) {
-                            case "ENOTFOUND":
-                                humanReadableMessage += " - Please check connection.";
-                                break;
-                            default:
-                                break;
-                        }
-                        reject(humanReadableMessage);
-                    } else {
-                        reject(error);
-                    }
-                } else {
-                    resolve();
-                }
-            });
-        });
+        await updateBlockBlobFromLocalFile(treeItem.blob.name, treeItem.container.name, treeItem.root, filePath);
     }
 }

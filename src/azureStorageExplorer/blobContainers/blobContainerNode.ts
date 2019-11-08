@@ -6,7 +6,6 @@
 import * as azureStorage from "azure-storage";
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
-import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
@@ -21,6 +20,7 @@ import { BlobContainerGroupTreeItem } from "./blobContainerGroupNode";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
+import { getExistingCreateOptions } from './blobUtils';
 
 let lastUploadFolder: Uri;
 
@@ -570,8 +570,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         throw new UserCancelledError();
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
+    public async getBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         const blobService = this.root.createBlobService();
         return new Promise((resolve, reject) => {
             blobService.getBlobProperties(this.container.name, name, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
@@ -588,12 +587,12 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     public createTextBlockBlob(name: string): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
-            const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
+            const createOptions = <azureStorage.BlobService.CreateBlobRequestOptions>{
                 contentSettings: {
                     contentType: 'text/plain'
                 }
             };
-            blobService.createBlockBlobFromText(this.container.name, name, '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+            blobService.createBlockBlobFromText(this.container.name, name, '', createOptions, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -603,16 +602,10 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         });
     }
 
-    public async createBlockBlob(name: string, text?: string | Buffer): Promise<azureStorage.BlobService.BlobResult> {
+    public async createBlockBlob(name: string, text?: string | Buffer, createOptions?: azureStorage.BlobService.CreateBlobRequestOptions): Promise<azureStorage.BlobService.BlobResult> {
         return new Promise((resolve, reject) => {
             let blobService = this.root.createBlobService();
-            let contentType: string | null = mime.getType(name);
-            const options = <azureStorage.BlobService.CreateBlobRequestOptions>{
-                contentSettings: {
-                    contentType: contentType ? contentType : undefined
-                }
-            };
-            blobService.createBlockBlobFromText(this.container.name, name, text ? text : '', options, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
+            blobService.createBlockBlobFromText(this.container.name, name, text ? text : '', createOptions ? createOptions : {}, (err?: Error, result?: azureStorage.BlobService.BlobResult) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -620,6 +613,11 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 }
             });
         });
+    }
+
+    public async updateBlockBlobFromText(name: string, text: string | Buffer): Promise<azureStorage.BlobService.BlobResult> {
+        const createOptions = await getExistingCreateOptions(name, this.container.name, this.root);
+        return await this.createBlockBlob(name, text, createOptions);
     }
 
     public static validateBlobName(name: string): string | undefined | null {
@@ -657,7 +655,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             throw new UserCancelledError();
         }
     }
-
 }
 
 export interface IBlobContainerCreateChildContext extends IActionContext {
