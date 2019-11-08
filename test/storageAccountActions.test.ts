@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
-import { BlobService, createBlobService, createFileService, createTableService, FileService, StorageServiceClient, TableService } from 'azure-storage';
+import { BlobService, createBlobService, createFileService, createQueueService, createTableService, FileService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
@@ -95,6 +95,19 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         const fileService: FileService = createFileService(connectionString);
         const createdShare: FileService.ShareResult = await doesResourceExist<FileService.ShareResult>(fileService, 'doesShareExist', shareName);
         assert.ok(createdShare.exists);
+    });
+
+    test("createQueue", async () => {
+        await validateAccountExists(resourceName, resourceName);
+        // queue must have lower case name
+        const queueName = getRandomHexString().toLowerCase();
+        await testUserInput.runWithInputs([resourceName, queueName], async () => {
+            await vscode.commands.executeCommand('azureStorage.createQueue');
+        });
+        const connectionString: string = await getConnectionString(resourceName);
+        const queueService: QueueService = createQueueService(connectionString);
+        const createdQueue: QueueService.QueueResult = await doesResourceExist<QueueService.QueueResult>(queueService, 'doesQueueExist', queueName);
+        assert.ok(createdQueue.exists);
     });
 
     test("createTable", async () => {

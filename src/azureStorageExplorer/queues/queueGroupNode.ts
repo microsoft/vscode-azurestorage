@@ -8,6 +8,7 @@ import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
+import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { QueueTreeItem } from './queueNode';
 
@@ -60,7 +61,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<QueueTreeItem> {
-        const queueName = await window.showInputBox({
+        const queueName = await ext.ui.showInputBox({
             placeHolder: 'Enter a name for the new queue',
             validateInput: QueueGroupTreeItem.validateQueueName
         });
