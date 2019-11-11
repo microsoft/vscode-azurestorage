@@ -169,7 +169,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public async deleteTreeItemImpl(): Promise<void> {
         const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
-        const result = await vscode.window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const blobService = this.root.createBlobService();
             await new Promise((resolve, reject) => {

@@ -21,6 +21,12 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     const testAccount: TestAzureAccount = new TestAzureAccount(vscode);
     let client: StorageManagementClient;
     const resourceName: string = getRandomHexString().toLowerCase();
+    // Blob container, file share and queue must have lower case name
+    const containerName: string = getRandomHexString().toLowerCase();
+    const shareName: string = getRandomHexString().toLowerCase();
+    const queueName: string = getRandomHexString().toLowerCase();
+    // Table name cannot begin with a digit
+    const tableName: string = 'f' + `${getRandomHexString()}`;
 
     suiteSetup(async function (this: IHookCallbackContext): Promise<void> {
         if (!longRunningTestsEnabled) {
@@ -75,8 +81,6 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("createBlobContainer", async () => {
         await validateAccountExists(resourceName, resourceName);
-        // Blob contaienr must have lower case name
-        const containerName = getRandomHexString().toLowerCase();
         await testUserInput.runWithInputs([resourceName, containerName], async () => {
             await vscode.commands.executeCommand('azureStorage.createBlobContainer');
         });
@@ -84,10 +88,19 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdContainer);
     });
 
+    test("deleteBlobContainer", async () => {
+        await validateAccountExists(resourceName, resourceName);
+        await testUserInput.runWithInputs([resourceName, containerName, DialogResponses.deleteResponse.title], async () => {
+            await vscode.commands.executeCommand('azureStorage.deleteBlobContainer');
+        });
+        const connectionString: string = await getConnectionString(resourceName);
+        const blobService: BlobService = createBlobService(connectionString);
+        const createdContainer: BlobService.ContainerResult = await doesResourceExist<BlobService.ContainerResult>(blobService, 'doesContainerExist', containerName);
+        assert.ok(!createdContainer.exists);
+    });
+
     test("copyConnectionString and createFileShare", async () => {
         await validateAccountExists(resourceName, resourceName);
-        // file share must have lower case name
-        const shareName = getRandomHexString().toLowerCase();
         await testUserInput.runWithInputs([resourceName, shareName, '5120'], async () => {
             await vscode.commands.executeCommand('azureStorage.createFileShare');
         });
@@ -99,8 +112,6 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("createQueue", async () => {
         await validateAccountExists(resourceName, resourceName);
-        // queue must have lower case name
-        const queueName = getRandomHexString().toLowerCase();
         await testUserInput.runWithInputs([resourceName, queueName], async () => {
             await vscode.commands.executeCommand('azureStorage.createQueue');
         });
@@ -112,8 +123,6 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("createTable", async () => {
         await validateAccountExists(resourceName, resourceName);
-        // Table name cannot begin with a digit
-        const tableName = 'f' + `${getRandomHexString()}`;
         await testUserInput.runWithInputs([resourceName, tableName], async () => {
             await vscode.commands.executeCommand('azureStorage.createTable');
         });
@@ -152,14 +161,14 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     // validate the blob service by verifying whether or not it creates a blob container
     async function validateBlobService(blobService: BlobService): Promise<void> {
         // Blob contaienr must have lower case name
-        const containerName: string = getRandomHexString().toLowerCase();
+        const containerName1: string = getRandomHexString().toLowerCase();
         await new Promise((resolve, reject): void => {
-            blobService.createContainerIfNotExists(containerName, (err: Error | undefined) => {
+            blobService.createContainerIfNotExists(containerName1, (err: Error | undefined) => {
                 // tslint:disable-next-line: no-void-expression
                 err ? reject(err) : resolve();
             });
         });
-        const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName);
+        const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName1);
         assert.ok(createdContainer);
     }
 
