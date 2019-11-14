@@ -110,6 +110,17 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdShare.exists);
     });
 
+    test("deleteFileShare", async () => {
+        await validateAccountExists(resourceName, resourceName);
+        await testUserInput.runWithInputs([resourceName, shareName, DialogResponses.deleteResponse.title], async () => {
+            await vscode.commands.executeCommand('azureStorage.deleteFileShare');
+        });
+        const connectionString: string = await getConnectionString(resourceName);
+        const fileService: FileService = createFileService(connectionString);
+        const createdShare: FileService.ShareResult = await doesResourceExist<FileService.ShareResult>(fileService, 'doesShareExist', shareName);
+        assert.ok(!createdShare.exists);
+    });
+
     test("createQueue", async () => {
         await validateAccountExists(resourceName, resourceName);
         await testUserInput.runWithInputs([resourceName, queueName], async () => {

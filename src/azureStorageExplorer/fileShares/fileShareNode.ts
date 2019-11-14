@@ -5,7 +5,7 @@
 
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { Uri, window, workspace } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
@@ -103,7 +103,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public async deleteTreeItemImpl(): Promise<void> {
         const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
-        const result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const fileService = this.root.createFileService();
             await new Promise((resolve, reject) => {
