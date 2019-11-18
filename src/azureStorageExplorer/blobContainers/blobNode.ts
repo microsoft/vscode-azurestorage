@@ -3,7 +3,7 @@
   *  Licensed under the MIT License. See License.md in the project root for license information.
   **/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, SaveDialogOptions, Uri, window } from 'vscode';
@@ -26,8 +26,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     constructor(
         parent: AzureParentTreeItem,
         public readonly directoryPath: string,
-        public readonly blob: azureStorage.BlobService.BlobResult,
-        public readonly container: azureStorage.BlobService.ContainerResult) {
+        public readonly blob: azureStorageBlob.BlobItem,
+        public readonly container: azureStorageBlob.ContainerItem) {
         super(parent);
     }
 
@@ -37,8 +37,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     };
 
     public async copyUrl(): Promise<void> {
-        let blobService = this.root.createBlobService();
-        let url = blobService.getUrl(this.container.name, this.blob.name);
+        const containerClient = this.root.createBlobContainerClient(this.container.name);
+        let url = containerClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
@@ -51,14 +51,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
             result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         }
         if (result === DialogResponses.deleteResponse || context.suppressMessage) {
-            let blobService = this.root.createBlobService();
-            await new Promise((resolve, reject) => {
-                // tslint:disable-next-line:no-any
-                blobService.deleteBlob(this.container.name, this.fullPath, (err?: any) => {
-                    // tslint:disable-next-line:no-void-expression // Grandfathered in
-                    err ? reject(err) : resolve();
-                });
-            });
+            let blobClient = this.root.createBlobClient(this.container.name, this.fullPath);
+            await blobClient.delete();
         } else {
             throw new UserCancelledError();
         }

@@ -4,7 +4,9 @@
         "target": "es6",
         "outDir": "out",
         "lib": [
-            "es6"
+            "dom",
+            "es6",
+            "esnext.asynciterable"
         ],
         "sourceMap": true,
         "rootDir": ".",
