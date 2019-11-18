@@ -16,7 +16,7 @@ import { createBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./fileShares/directoryNode";
 import { FileTreeItem } from "./fileShares/fileNode";
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./fileShares/fileShareNode";
-import { createFileFromText, doesFileExist } from "./fileShares/fileUtils";
+import { doesFileExist, updateFileFromText } from "./fileShares/fileUtils";
 import { validateDirectoryName } from "./fileShares/validateNames";
 import { getFileSystemError } from "./getFileSystemError";
 
@@ -195,9 +195,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                         progress.report({ message: `Saving ${writeToFileShare ? 'file' : 'blob'} ${parsedUri.filePath}` });
 
                         if (treeItem instanceof FileShareTreeItem) {
-                            await createFileFromText(parsedUri.parentDirPath, parsedUri.baseName, treeItem.share, treeItem.root, content.toString());
+                            await updateFileFromText(parsedUri.parentDirPath, parsedUri.baseName, treeItem.share, treeItem.root, content.toString());
                         } else {
                             await createBlockBlob(treeItem, parsedUri.filePath, content.toString());
+
                         }
                     } else {
                         progress.report({ message: `Creating ${writeToFileShare ? 'file' : 'blob'} ${parsedUri.filePath}` });
