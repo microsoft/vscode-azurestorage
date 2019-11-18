@@ -64,6 +64,5 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
         await this.checkCanUpload(treeItem, filePath);
         const blockBlobClient = treeItem.root.createBlockBlobClient(treeItem.container.name, treeItem.fullPath);
         await blockBlobClient.uploadFile(filePath, await getExistingProperties(treeItem, treeItem.fullPath));
-        2;
     }
 }
