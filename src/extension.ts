@@ -20,7 +20,7 @@ import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fi
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
 import { registerFileShareGroupActionHandlers } from './azureStorageExplorer/fileShares/fileShareGroupActionHandlers';
 import { FileShareTreeItem } from './azureStorageExplorer/fileShares/fileShareNode';
-import { IOpenInFileExplorerWizardContext } from './azureStorageExplorer/OpenInFileExplorer/IOpenInFileExplorerWizardContext';
+import { IOpenInFileExplorerWizardContext } from './azureStorageExplorer/openInFileExplorer/IOpenInFileExplorerWizardContext';
 import { OpenBehaviorStep } from './azureStorageExplorer/openInFileExplorer/OpenBehaviorStep';
 import { OpenTreeItemStep } from './azureStorageExplorer/openInFileExplorer/OpenTreeItemStep';
 import { TreeItemStep } from './azureStorageExplorer/openInFileExplorer/TreeItemStep';
