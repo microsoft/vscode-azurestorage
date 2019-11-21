@@ -5,6 +5,7 @@
 
 import { commands, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
+import { nonNullProp } from "../../utils/nonNull";
 import { AzureStorageFS } from '../AzureStorageFS';
 import { IOpenInFileExplorerWizardContext } from './IOpenInFileExplorerWizardContext';
 
@@ -20,11 +21,7 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
             context.openBehavior = 'OpenInCurrentWindow';
         }
 
-        if (!context.treeItem) {
-            throw new Error('Could not locate resource to open.');
-        }
-
-        const uri: Uri = AzureStorageFS.idToUri(context.treeItem.fullId);
+        const uri: Uri = AzureStorageFS.idToUri(nonNullProp(context, 'treeItem').fullId);
         if (context.openBehavior === 'AddToWorkspace') {
             workspace.updateWorkspaceFolders(openFolders.length, 0, { uri: uri });
             await commands.executeCommand('workbench.view.explorer');
