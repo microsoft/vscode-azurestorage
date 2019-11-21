@@ -195,7 +195,7 @@
 			},
 			{
 				"command": "azureStorage.createBlockTextBlob",
-				"title": "Create Empty Blob...",
+				"title": "Create Empty Text Blob...",
 				"category": "Azure Storage"
 			},
 			{
