@@ -172,9 +172,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 const blobContainerClient = this.createBlobContainerClient(containerName);
                 return blobContainerClient.getBlockBlobClient(blobName);
             },
-            createBlobService: () => {
-                return azureStorage.createBlobService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.blob).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
-            },
             createFileService: () => {
                 return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             },

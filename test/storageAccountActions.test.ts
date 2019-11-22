@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { BlobServiceClient, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
-import { BlobService, createBlobService, createFileService, createQueueService, createTableService, FileService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
+import { createFileService, createQueueService, createTableService, FileService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
@@ -21,6 +22,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     const testAccount: TestAzureAccount = new TestAzureAccount(vscode);
     let client: StorageManagementClient;
     const resourceName: string = getRandomHexString().toLowerCase();
+    const url = `https://${resourceName}.blob.core.windows.net`;
     // Blob container, file share and queue must have lower case name
     const containerName: string = getRandomHexString().toLowerCase();
     const shareName: string = getRandomHexString().toLowerCase();
@@ -69,14 +71,10 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     });
 
     test("copyPrimaryKey", async () => {
-        await validateAccountExists(resourceName, resourceName);
-        await vscode.env.clipboard.writeText('');
-        await testUserInput.runWithInputs([resourceName], async () => {
-            await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
-        });
-        const primaryKey: string = await vscode.env.clipboard.readText();
-        const blobService: BlobService = createBlobService(resourceName, primaryKey, `https://${resourceName}.blob.core.windows.net`);
-        await validateBlobService(blobService);
+        const primaryKey = await getPrimaryKey();
+        const credential = new StorageSharedKeyCredential(resourceName, primaryKey);
+        const blobServiceClient = new BlobServiceClient(url, credential);
+        await validateBlobService(blobServiceClient);
     });
 
     test("createBlobContainer", async () => {
@@ -93,10 +91,11 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         await testUserInput.runWithInputs([resourceName, containerName, DialogResponses.deleteResponse.title], async () => {
             await vscode.commands.executeCommand('azureStorage.deleteBlobContainer');
         });
-        const connectionString: string = await getConnectionString(resourceName);
-        const blobService: BlobService = createBlobService(connectionString);
-        const createdContainer: BlobService.ContainerResult = await doesResourceExist<BlobService.ContainerResult>(blobService, 'doesContainerExist', containerName);
-        assert.ok(!createdContainer.exists);
+        const primaryKey: string = await getPrimaryKey();
+        const credential = new StorageSharedKeyCredential(resourceName, primaryKey);
+        const blobServiceClient = new BlobServiceClient(url, credential);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        assert.ok(!(await containerClient.exists()));
     });
 
     test("copyConnectionString and createFileShare", async () => {
@@ -170,15 +169,13 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     }
 
     // validate the blob service by verifying whether or not it creates a blob container
-    async function validateBlobService(blobService: BlobService): Promise<void> {
-        // Blob contaienr must have lower case name
+    async function validateBlobService(blobServiceClient: BlobServiceClient): Promise<void> {
+        // Blob container must have lower case name
         const containerName1: string = getRandomHexString().toLowerCase();
-        await new Promise((resolve, reject): void => {
-            blobService.createContainerIfNotExists(containerName1, (err: Error | undefined) => {
-                // tslint:disable-next-line: no-void-expression
-                err ? reject(err) : resolve();
-            });
-        });
+        const containerClient = blobServiceClient.getContainerClient(containerName1);
+        if (!(await containerClient.exists())) {
+            await containerClient.create();
+        }
         const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName1);
         assert.ok(createdContainer);
     }
@@ -190,6 +187,15 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
             await vscode.commands.executeCommand('azureStorage.copyConnectionString');
         });
         return vscode.env.clipboard.readText();
+    }
+
+    async function getPrimaryKey(): Promise<string> {
+        await validateAccountExists(resourceName, resourceName);
+        await vscode.env.clipboard.writeText('');
+        await testUserInput.runWithInputs([resourceName], async () => {
+            await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
+        });
+        return await vscode.env.clipboard.readText();
     }
 });
 
