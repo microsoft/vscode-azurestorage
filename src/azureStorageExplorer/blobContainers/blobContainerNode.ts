@@ -3,13 +3,14 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TransferProgressEvent } from '@azure/core-http';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as fse from 'fs-extra';
 import * as glob from 'glob';
 import * as mime from 'mime';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ProgressLocation, Uri } from 'vscode';
+import { ProgressLocation, Uri, window } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { configurationSettingsKeys, extensionPrefix, getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
@@ -452,19 +453,41 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
-        let blobFriendlyPath = `${this.friendlyContainerName}/${blobPath}`;
+        const blobFriendlyPath = `${this.friendlyContainerName}/${blobPath}`;
+        const blockBlobClient = this.root.createBlockBlobClient(this.container.name, blobPath);
+        const updateTimerMs: number = 200;
+        let percent: number = 0;
+        let lastPercentage: number = 0;
+        let message: string = '';
+        let lastUpdated: number = Date.now();
+
+        // tslint:disable-next-line: strict-boolean-expressions
+        const totalBytes = (await blockBlobClient.getProperties()).contentLength || 1;
+
         if (!suppressLogs) {
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
-        let blockBlobClient = this.root.createBlockBlobClient(this.container.name, blobPath);
-        let options = {
-            blobHTTPHeaders: {
-                // tslint:disable-next-line: strict-boolean-expressions
-                blobContentType: mime.getType(blobPath) || undefined
-            }
-        };
-        await blockBlobClient.uploadFile(filePath, options);
+        await window.withProgress({ title: `Uploading ${filePath} as ${blobFriendlyPath}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
+            const options = {
+                blobHTTPHeaders: {
+                    // tslint:disable-next-line: strict-boolean-expressions
+                    blobContentType: mime.getType(blobPath) || undefined
+                },
+                onProgress: (progress: TransferProgressEvent) => {
+                    if (lastUpdated + updateTimerMs < Date.now()) {
+                        percent = Math.trunc((progress.loadedBytes / totalBytes) * 100);
+                        message = `${blobPath}: ${progress.loadedBytes}/${totalBytes} (${percent}%)`;
+
+                        notificationProgress.report({ message, increment: percent - lastPercentage });
+
+                        lastPercentage = percent;
+                        lastUpdated = Date.now();
+                    }
+                }
+            };
+            await blockBlobClient.uploadFile(filePath, options);
+        });
 
         if (!suppressLogs) {
             ext.outputChannel.appendLine(`Successfully uploaded ${blobFriendlyPath}.`);

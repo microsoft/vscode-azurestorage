@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fse from 'fs-extra';
-import { Uri } from 'vscode';
+import { ProgressLocation, Uri, window } from 'vscode';
 import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
 import { ext } from "../../extensionVariables";
 import { Limits } from '../limits';
@@ -56,7 +56,34 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
         await this.checkCanDownload(treeItem);
         const linkablePath = Uri.file(filePath); // Allows CTRL+Click in Output panel
         const blockBlobClient = treeItem.root.createBlockBlobClient(treeItem.container.name, treeItem.fullPath);
-        await blockBlobClient.downloadToFile(filePath);
+        const updateTimerMs: number = 200;
+        let percent: number = 0;
+        let lastPercentage: number = 0;
+        let message: string = '';
+        let lastUpdated: number = Date.now();
+
+        // tslint:disable-next-line: strict-boolean-expressions
+        const totalBytes = (await blockBlobClient.getProperties()).contentLength || 1;
+
+        ext.outputChannel.show();
+        ext.outputChannel.appendLine(`Downloading ${treeItem.blob.name} to ${filePath}...`);
+
+        await window.withProgress({ title: `Downloading ${treeItem.blob.name}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
+            await blockBlobClient.downloadToFile(filePath, undefined, undefined, {
+                onProgress: (progress) => {
+                    if (lastUpdated + updateTimerMs < Date.now()) {
+                        percent = Math.trunc((progress.loadedBytes / totalBytes) * 100);
+                        message = `${treeItem.blob.name}: ${progress.loadedBytes}/${totalBytes} (${percent}%)`;
+
+                        notificationProgress.report({ message, increment: percent - lastPercentage });
+
+                        lastPercentage = percent;
+                        lastUpdated = Date.now();
+                    }
+                }
+            });
+        });
+
         ext.outputChannel.appendLine(`Successfully downloaded ${linkablePath}.`);
     }
 
