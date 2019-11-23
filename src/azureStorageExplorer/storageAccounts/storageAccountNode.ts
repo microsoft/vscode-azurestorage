@@ -400,7 +400,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     private createBlobServiceClient(): azureStorageBlob.BlobServiceClient {
         const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
-        return new azureStorageBlob.BlobServiceClient(`https://${this.storageAccount.name}.blob.core.windows.net`, credential);
+        return new azureStorageBlob.BlobServiceClient(this.storageAccount.primaryEndpoints.blob || `https://${this.storageAccount.name}.blob.core.windows.net`, credential);
     }
 
     private createBlobContainerClient(containerName: string): azureStorageBlob.ContainerClient {
