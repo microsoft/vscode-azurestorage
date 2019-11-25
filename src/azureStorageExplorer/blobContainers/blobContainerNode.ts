@@ -21,7 +21,7 @@ import { BlobContainerGroupTreeItem } from "./blobContainerGroupNode";
 import { BlobDirectoryTreeItem } from "./blobDirectoryNode";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
-import { createChildAsNewBlockBlob, doesBlobExist, getBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from './blobUtils';
+import { createChildAsNewBlockBlob, doesBlobExist, getBlob, handleTransferProgress, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgressState } from './blobUtils';
 
 let lastUploadFolder: Uri;
 
@@ -455,36 +455,23 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
         const blobFriendlyPath = `${this.friendlyContainerName}/${blobPath}`;
         const blockBlobClient = this.root.createBlockBlobClient(this.container.name, blobPath);
-        const updateTimerMs: number = 200;
-        let percent: number = 0;
-        let lastPercentage: number = 0;
-        let message: string = '';
-        let lastUpdated: number = Date.now();
+        let state: TransferProgressState;
 
         // tslint:disable-next-line: strict-boolean-expressions
-        const totalBytes = (await blockBlobClient.getProperties()).contentLength || 1;
+        const totalBytes: number = (await blockBlobClient.getProperties()).contentLength || 1;
 
         if (!suppressLogs) {
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
         await window.withProgress({ title: `Uploading ${filePath} as ${blobFriendlyPath}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
+            state = new TransferProgressState();
             const options = {
                 blobHTTPHeaders: {
                     // tslint:disable-next-line: strict-boolean-expressions
                     blobContentType: mime.getType(blobPath) || undefined
                 },
-                onProgress: (progress: TransferProgressEvent) => {
-                    if (lastUpdated + updateTimerMs < Date.now()) {
-                        percent = Math.trunc((progress.loadedBytes / totalBytes) * 100);
-                        message = `${blobPath}: ${progress.loadedBytes}/${totalBytes} (${percent}%)`;
-
-                        notificationProgress.report({ message, increment: percent - lastPercentage });
-
-                        lastPercentage = percent;
-                        lastUpdated = Date.now();
-                    }
-                }
+                onProgress: (transferProgress: TransferProgressEvent) => handleTransferProgress(state, blobPath, totalBytes, transferProgress, notificationProgress)
             };
             await blockBlobClient.uploadFile(filePath, options);
         });

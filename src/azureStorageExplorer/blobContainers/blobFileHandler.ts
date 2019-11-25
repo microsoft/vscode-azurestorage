@@ -10,7 +10,7 @@ import { ext } from "../../extensionVariables";
 import { Limits } from '../limits';
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobTreeItem } from './blobNode';
-import { getExistingProperties } from "./blobUtils";
+import { getExistingProperties, handleTransferProgress, TransferProgressState } from "./blobUtils";
 
 export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
     async getSaveConfirmationText(treeItem: BlobTreeItem): Promise<string> {
@@ -56,31 +56,18 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
         await this.checkCanDownload(treeItem);
         const linkablePath = Uri.file(filePath); // Allows CTRL+Click in Output panel
         const blockBlobClient = treeItem.root.createBlockBlobClient(treeItem.container.name, treeItem.fullPath);
-        const updateTimerMs: number = 200;
-        let percent: number = 0;
-        let lastPercentage: number = 0;
-        let message: string = '';
-        let lastUpdated: number = Date.now();
+        let state: TransferProgressState;
 
         // tslint:disable-next-line: strict-boolean-expressions
-        const totalBytes = (await blockBlobClient.getProperties()).contentLength || 1;
+        const totalBytes: number = (await blockBlobClient.getProperties()).contentLength || 1;
 
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Downloading ${treeItem.blob.name} to ${filePath}...`);
 
         await window.withProgress({ title: `Downloading ${treeItem.blob.name}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
+            state = new TransferProgressState();
             await blockBlobClient.downloadToFile(filePath, undefined, undefined, {
-                onProgress: (progress) => {
-                    if (lastUpdated + updateTimerMs < Date.now()) {
-                        percent = Math.trunc((progress.loadedBytes / totalBytes) * 100);
-                        message = `${treeItem.blob.name}: ${progress.loadedBytes}/${totalBytes} (${percent}%)`;
-
-                        notificationProgress.report({ message, increment: percent - lastPercentage });
-
-                        lastPercentage = percent;
-                        lastUpdated = Date.now();
-                    }
-                }
+                onProgress: (transferProgress) => handleTransferProgress(state, treeItem.blob.name, totalBytes, transferProgress, notificationProgress)
             });
         });
 
