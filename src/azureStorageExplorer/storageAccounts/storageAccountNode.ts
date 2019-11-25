@@ -159,18 +159,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return Object.assign({}, subRoot, {
             storageAccount: this.storageAccount,
             createBlobServiceClient: () => {
-                return this.createBlobServiceClient();
-            },
-            createBlobContainerClient: (containerName: string) => {
-                return this.createBlobContainerClient(containerName);
-            },
-            createBlobClient: (containerName: string, blobName: string) => {
-                const blobContainerClient = this.createBlobContainerClient(containerName);
-                return blobContainerClient.getBlobClient(blobName);
-            },
-            createBlockBlobClient: (containerName: string, blobName: string) => {
-                const blobContainerClient = this.createBlobContainerClient(containerName);
-                return blobContainerClient.getBlockBlobClient(blobName);
+                const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
+                return new azureStorageBlob.BlobServiceClient(this.storageAccount.primaryEndpoints.blob || `https://${this.storageAccount.name}.blob.core.windows.net`, credential);
             },
             createFileService: () => {
                 return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
@@ -396,15 +386,5 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
             throw new Error("This storage account does not support static website hosting.");
         }
-    }
-
-    private createBlobServiceClient(): azureStorageBlob.BlobServiceClient {
-        const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
-        return new azureStorageBlob.BlobServiceClient(this.storageAccount.primaryEndpoints.blob || `https://${this.storageAccount.name}.blob.core.windows.net`, credential);
-    }
-
-    private createBlobContainerClient(containerName: string): azureStorageBlob.ContainerClient {
-        const blobServiceClient = this.createBlobServiceClient();
-        return blobServiceClient.getContainerClient(containerName);
     }
 }

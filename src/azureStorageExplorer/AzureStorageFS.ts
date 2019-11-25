@@ -12,7 +12,7 @@ import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "./blobContainers/blobContainerNode";
 import { BlobDirectoryTreeItem } from "./blobContainers/blobDirectoryNode";
 import { BlobTreeItem } from "./blobContainers/blobNode";
-import { createBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './blobContainers/blobUtils';
+import { createBlobClient, createBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './blobContainers/blobUtils';
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./fileShares/directoryNode";
 import { FileTreeItem } from "./fileShares/fileNode";
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./fileShares/fileShareNode";
@@ -150,7 +150,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                         });
                     });
                 } else {
-                    const blobClient = treeItem.root.createBlobClient(treeItem.container.name, parsedUri.filePath);
+                    const blobClient = createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
                     let downloaded = await blobClient.download();
                     result = await this.streamToString(downloaded.readableStreamBody);
                 }

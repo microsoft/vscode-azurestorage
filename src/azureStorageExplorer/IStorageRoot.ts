@@ -11,9 +11,6 @@ import { StorageAccountWrapper } from "../components/storageWrappers";
 export interface IStorageRoot extends ISubscriptionContext {
     storageAccount: StorageAccountWrapper;
     createBlobServiceClient(): azureStorageBlob.BlobServiceClient;
-    createBlobContainerClient(containerName: string): azureStorageBlob.ContainerClient;
-    createBlobClient(containerName: string, blobName: string): azureStorageBlob.BlobClient;
-    createBlockBlobClient(containerName: string, blobName: string): azureStorageBlob.BlockBlobClient;
     createFileService(): azureStorage.FileService;
     createQueueService(): azureStorage.QueueService;
     createTableService(): azureStorage.TableService;

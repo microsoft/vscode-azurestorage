@@ -10,7 +10,7 @@ import { ext } from "../../extensionVariables";
 import { Limits } from '../limits';
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobTreeItem } from './blobNode';
-import { getExistingProperties, handleTransferProgress, TransferProgressState } from "./blobUtils";
+import { createBlockBlobClient, getExistingProperties, handleTransferProgress, TransferProgressState } from "./blobUtils";
 
 export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
     async getSaveConfirmationText(treeItem: BlobTreeItem): Promise<string> {
@@ -55,7 +55,7 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
     public async downloadFile(treeItem: BlobTreeItem, filePath: string): Promise<void> {
         await this.checkCanDownload(treeItem);
         const linkablePath = Uri.file(filePath); // Allows CTRL+Click in Output panel
-        const blockBlobClient = treeItem.root.createBlockBlobClient(treeItem.container.name, treeItem.fullPath);
+        const blockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.fullPath);
         let state: TransferProgressState;
 
         // tslint:disable-next-line: strict-boolean-expressions
@@ -76,7 +76,7 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
 
     async uploadFile(treeItem: BlobTreeItem, filePath: string): Promise<void> {
         await this.checkCanUpload(treeItem, filePath);
-        const blockBlobClient = treeItem.root.createBlockBlobClient(treeItem.container.name, treeItem.fullPath);
+        const blockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.fullPath);
         await blockBlobClient.uploadFile(filePath, await getExistingProperties(treeItem, treeItem.fullPath));
     }
 }

@@ -12,6 +12,7 @@ import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./blobContainerNode";
+import { createBlobContainerClient } from './blobUtils';
 
 export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: string | undefined;
@@ -70,7 +71,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     }
 
     private async createBlobContainer(name: string): Promise<azureStorageBlob.ContainerItem> {
-        const containerClient = this.root.createBlobContainerClient(name);
+        const containerClient = createBlobContainerClient(this.root, name);
         await containerClient.create();
 
         let containersResponse = await this.listContainers();

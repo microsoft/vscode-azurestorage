@@ -8,15 +8,31 @@ import * as azureStorageBlob from '@azure/storage-blob';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobDirectoryTreeItem } from './blobDirectoryNode';
 import { BlobTreeItem } from './blobNode';
+
+export function createBlobContainerClient(root: IStorageRoot, containerName: string): azureStorageBlob.ContainerClient {
+    const blobServiceClient = root.createBlobServiceClient();
+    return blobServiceClient.getContainerClient(containerName);
+}
+
+export function createBlobClient(root: IStorageRoot, containerName: string, blobName: string): azureStorageBlob.BlobClient {
+    const blobContainerClient = createBlobContainerClient(root, containerName);
+    return blobContainerClient.getBlobClient(blobName);
+}
+
+export function createBlockBlobClient(root: IStorageRoot, containerName: string, blobName: string): azureStorageBlob.BlockBlobClient {
+    const blobContainerClient = createBlobContainerClient(root, containerName);
+    return blobContainerClient.getBlockBlobClient(blobName);
+}
 
 export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, continuationToken?: string): Promise<{ children: AzExtTreeItem[], continuationToken?: string }> {
     const dirPath = parent instanceof BlobDirectoryTreeItem ? parent.dirPath : '';
     // tslint:disable-next-line: strict-boolean-expressions
     const listOptions = { prefix: dirPath || undefined };
-    const containerClient = parent.root.createBlobContainerClient(parent.container.name);
+    const containerClient = createBlobContainerClient(parent.root, parent.container.name);
     let response = containerClient.listBlobsByHierarchy('/', listOptions).byPage({ continuationToken, maxPageSize: 50 });
 
     // tslint:disable-next-line: no-unsafe-any
@@ -74,7 +90,7 @@ export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | 
 export async function createBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, name: string, text?: string | Buffer): Promise<azureStorageBlob.BlobItem> {
     text = text ? text : '';
     const contentLength = text instanceof Buffer ? text.byteLength : text.length;
-    const containerClient = parent.root.createBlobContainerClient(parent.container.name);
+    const containerClient = createBlobContainerClient(parent.root, parent.container.name);
 
     let properties = await getExistingProperties(parent, name);
     // tslint:disable: strict-boolean-expressions
@@ -88,12 +104,12 @@ export async function createBlockBlob(parent: BlobContainerTreeItem | BlobDirect
 }
 
 export async function doesBlobExist(treeItem: BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<boolean> {
-    const blobClient = treeItem.root.createBlobClient(treeItem.container.name, blobPath);
+    const blobClient = createBlobClient(treeItem.root, treeItem.container.name, blobPath);
     return blobClient.exists();
 }
 
 export async function getBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, name: string): Promise<azureStorageBlob.BlobItem> {
-    const containerClient = parent.root.createBlobContainerClient(parent.container.name);
+    const containerClient = createBlobContainerClient(parent.root, parent.container.name);
     let response = containerClient.listBlobsFlat().byPage();
 
     // tslint:disable-next-line: no-unsafe-any
@@ -108,7 +124,7 @@ export async function getBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeI
 }
 
 export async function getExistingProperties(parent: BlobTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<azureStorageBlob.BlockBlobUploadOptions | undefined> {
-    const blockBlobClient = parent.root.createBlockBlobClient(parent.container.name, blobPath);
+    const blockBlobClient = createBlockBlobClient(parent.root, parent.container.name, blobPath);
     if (await blockBlobClient.exists()) {
         let existingProperties: azureStorageBlob.BlobGetPropertiesResponse = await blockBlobClient.getProperties();
         return {
