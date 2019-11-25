@@ -13,7 +13,8 @@ import { BlobTreeItem } from './blobNode';
 
 export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, continuationToken?: string): Promise<{ children: AzExtTreeItem[], continuationToken?: string }> {
     const dirPath = parent instanceof BlobDirectoryTreeItem ? parent.dirPath : '';
-    const listOptions = dirPath ? { prefix: dirPath } : undefined;
+    // tslint:disable-next-line: strict-boolean-expressions
+    const listOptions = { prefix: dirPath || undefined };
     const containerClient = parent.root.createBlobContainerClient(parent.container.name);
     let response = containerClient.listBlobsByHierarchy('/', listOptions).byPage({ continuationToken, maxPageSize: 50 });
 

@@ -20,7 +20,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public contextValue: string = 'azureBlobDirectory';
 
     public fullPath: string = path.posix.join(this.parentPath, this.directory.name);
-    public dirPath: string = `${this.fullPath}/`;
+    public dirPath: string = `${this.fullPath}${path.sep}`;
     public label: string = this.directory.name;
 
     constructor(
