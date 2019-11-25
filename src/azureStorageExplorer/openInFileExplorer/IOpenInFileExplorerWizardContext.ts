@@ -8,7 +8,7 @@ import { BlobContainerTreeItem } from '../blobContainers/blobContainerNode';
 import { FileShareTreeItem } from '../fileShares/fileShareNode';
 
 export interface IOpenInFileExplorerWizardContext extends IActionContext {
-    treeItem?: BlobContainerTreeItem | FileShareTreeItem;
+    treeItem: BlobContainerTreeItem | FileShareTreeItem;
     openBehavior?: OpenBehavior;
 }
 

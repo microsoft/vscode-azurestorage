@@ -74,7 +74,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', new AzureStorageFS(), { isCaseSensitive: true }));
         }
-        registerCommand('azureStorage.openInFileExplorer', async (_actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
+        registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
             await callWithTelemetryAndErrorHandling('azureStorage.openInFileExplorer', async () => {
                 if (!treeItem) {
                     const placeHolder: string = localize('selectResourceTypeToOpenInFileExplorer', 'Select the resource type to open in File Explorer');
@@ -88,10 +88,10 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                             data: FileShareTreeItem.contextValue
                         }];
                     let contextValue: string = (await ext.ui.showQuickPick(quickPicks, { placeHolder })).data;
-                    treeItem = <BlobContainerTreeItem | FileShareTreeItem>await ext.tree.showTreeItemPicker(contextValue, _actionContext);
+                    treeItem = <BlobContainerTreeItem | FileShareTreeItem>await ext.tree.showTreeItemPicker(contextValue, actionContext);
                 }
 
-                const wizardContext: Partial<IOpenInFileExplorerWizardContext> & IActionContext = Object.assign(_actionContext, { treeItem });
+                const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });
                 const wizard: AzureWizard<IOpenInFileExplorerWizardContext> = new AzureWizard(wizardContext, {
                     promptSteps: [new OpenBehaviorStep()],
                     executeSteps: [new OpenTreeItemStep()]
