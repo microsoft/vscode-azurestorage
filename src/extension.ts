@@ -7,7 +7,7 @@
 
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, createTelemetryReporter, IActionContext, IAzureQuickPickItem, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, createTelemetryReporter, IActionContext, IAzureQuickPickItem, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureAccountTreeItem } from './azureStorageExplorer/AzureAccountTreeItem';
 import { AzureStorageFS } from './azureStorageExplorer/AzureStorageFS';
@@ -20,6 +20,9 @@ import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fi
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
 import { registerFileShareGroupActionHandlers } from './azureStorageExplorer/fileShares/fileShareGroupActionHandlers';
 import { FileShareTreeItem } from './azureStorageExplorer/fileShares/fileShareNode';
+import { IOpenInFileExplorerWizardContext } from './azureStorageExplorer/openInFileExplorer/IOpenInFileExplorerWizardContext';
+import { OpenBehaviorStep } from './azureStorageExplorer/openInFileExplorer/OpenBehaviorStep';
+import { OpenTreeItemStep } from './azureStorageExplorer/openInFileExplorer/OpenTreeItemStep';
 import { registerQueueActionHandlers } from './azureStorageExplorer/queues/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './azureStorageExplorer/queues/queueGroupActionHandlers';
 import { selectStorageAccountTreeItemForCommand } from './azureStorageExplorer/selectStorageAccountNodeForCommand';
@@ -31,6 +34,7 @@ import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/
 import { configurationSettingsKeys, extensionPrefix } from './constants';
 import { ext } from './extensionVariables';
 import { ICopyUrl } from './ICopyUrl';
+import { localize } from './localize';
 
 // tslint:disable-next-line:max-func-body-length
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }): Promise<AzureExtensionApiProvider> {
@@ -70,9 +74,10 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         if (vscode.workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', new AzureStorageFS(), { isCaseSensitive: true }));
         }
-        registerCommand('azureStorage.openInFileExplorer', async (_actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
+        registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
             await callWithTelemetryAndErrorHandling('azureStorage.openInFileExplorer', async () => {
                 if (!treeItem) {
+                    const placeHolder: string = localize('selectResourceTypeToOpenInFileExplorer', 'Select the resource type to open in File Explorer');
                     let quickPicks: IAzureQuickPickItem<string>[] = [
                         {
                             label: "Blob Container",
@@ -82,11 +87,17 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                             label: "File Share",
                             data: FileShareTreeItem.contextValue
                         }];
-                    let contextValue: string = (await ext.ui.showQuickPick(quickPicks, { placeHolder: "Select the resource type to open in File Explorer" })).data;
-                    treeItem = <BlobContainerTreeItem | FileShareTreeItem>await ext.tree.showTreeItemPicker(contextValue, _actionContext);
+                    let contextValue: string = (await ext.ui.showQuickPick(quickPicks, { placeHolder })).data;
+                    treeItem = <BlobContainerTreeItem | FileShareTreeItem>await ext.tree.showTreeItemPicker(contextValue, actionContext);
                 }
-                await commands.executeCommand('vscode.openFolder', AzureStorageFS.idToUri(treeItem.fullId));
-                await commands.executeCommand('workbench.view.explorer');
+
+                const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });
+                const wizard: AzureWizard<IOpenInFileExplorerWizardContext> = new AzureWizard(wizardContext, {
+                    promptSteps: [new OpenBehaviorStep()],
+                    executeSteps: [new OpenTreeItemStep()]
+                });
+                await wizard.prompt();
+                await wizard.execute();
             });
         });
         registerCommand('azureStorage.refresh', async (_actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(treeItem));
