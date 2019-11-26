@@ -233,11 +233,11 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
         // Does NOT update treeItem's _webHostingEnabled.
-        let serviceClient = this.root.createBlobServiceClient();
-        let properties = await serviceClient.getProperties();
+        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        let properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
         let staticWebsite: azureStorageBlob.StaticWebsite | undefined = properties.staticWebsite;
 
-        return <WebsiteHostingStatus>{
+        return {
             capable: !!staticWebsite,
             enabled: !!staticWebsite && staticWebsite.enabled,
             indexDocument: staticWebsite && staticWebsite.indexDocument,
@@ -246,13 +246,13 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async setWebsiteHostingProperties(properties: azureStorageBlob.BlobServiceProperties): Promise<void> {
-        let serviceClient = this.root.createBlobServiceClient();
+        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
         await serviceClient.setProperties(properties);
     }
 
     private async getAccountType(): Promise<StorageTypes> {
-        let serviceClient = this.root.createBlobServiceClient();
-        let accountType = (await serviceClient.getAccountInfo()).accountKind;
+        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        let accountType: azureStorageBlob.AccountKind | undefined = (await serviceClient.getAccountInfo()).accountKind;
 
         if (!accountType) {
             throw new Error("Could not determine storage account type.");

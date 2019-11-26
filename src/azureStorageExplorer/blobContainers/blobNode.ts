@@ -38,8 +38,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     };
 
     public async copyUrl(): Promise<void> {
-        const containerClient = createBlobContainerClient(this.root, this.container.name);
-        let url = containerClient.url;
+        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
+        let url: string = containerClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
@@ -52,7 +52,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
             result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         }
         if (result === DialogResponses.deleteResponse || context.suppressMessage) {
-            let blobClient = createBlobClient(this.root, this.container.name, this.fullPath);
+            let blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.fullPath);
             await blobClient.delete();
         } else {
             throw new UserCancelledError();

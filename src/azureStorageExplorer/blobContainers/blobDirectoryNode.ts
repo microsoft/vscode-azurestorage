@@ -82,7 +82,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
         // tslint:disable-next-line: strict-boolean-expressions
         while (dirPath) {
-            let children = await dirPath.getCachedChildren(context);
+            let children: AzExtTreeItem[] = await dirPath.getCachedChildren(context);
             for (const child of children) {
                 if (child instanceof BlobTreeItem) {
                     try {

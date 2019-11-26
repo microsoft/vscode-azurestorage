@@ -117,8 +117,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         while (true) {
             this.throwIfCanceled(cancellationToken, properties, "listAllBlobs");
 
-            const containerClient = createBlobContainerClient(this.root, this.container.name);
-            let response = containerClient.listBlobsFlat().byPage({ continuationToken: currentToken, maxPageSize: 5000 });
+            const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
+            let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobFlatSegmentResponse> = containerClient.listBlobsFlat().byPage({ continuationToken: currentToken, maxPageSize: 5000 });
 
             // tslint:disable-next-line: no-unsafe-any
             let responseValue: azureStorageBlob.ListBlobsFlatSegmentResponse = (await response.next()).value;
@@ -137,7 +137,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const containerClient = createBlobContainerClient(this.root, this.container.name);
+            const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
             await containerClient.delete();
         } else {
             throw new UserCancelledError();
@@ -158,8 +158,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     public async copyUrl(): Promise<void> {
-        const containerClient = createBlobContainerClient(this.root, this.container.name);
-        let url = containerClient.url;
+        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
+        let url: string = containerClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Container URL copied to clipboard: ${url}`);
@@ -430,7 +430,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         cancellationToken: vscode.CancellationToken,
         properties: TelemetryProperties,
     ): Promise<void> {
-        const containerClient = createBlobContainerClient(this.root, this.container.name);
+        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
         for (let blob of blobsToDelete) {
             try {
                 let response: azureStorageBlob.BlobDeleteResponse = await containerClient.deleteBlob(blob.name);
@@ -453,8 +453,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
-        const blobFriendlyPath = `${this.friendlyContainerName}/${blobPath}`;
-        const blockBlobClient = createBlockBlobClient(this.root, this.container.name, blobPath);
+        const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
+        const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(this.root, this.container.name, blobPath);
         let state: TransferProgressState;
 
         // tslint:disable-next-line: strict-boolean-expressions
@@ -466,7 +466,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
         await window.withProgress({ title: `Uploading ${filePath} as ${blobFriendlyPath}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
             state = new TransferProgressState();
-            const options = {
+            const options: azureStorageBlob.BlockBlobParallelUploadOptions = {
                 blobHTTPHeaders: {
                     // tslint:disable-next-line: strict-boolean-expressions
                     blobContentType: mime.getType(blobPath) || undefined

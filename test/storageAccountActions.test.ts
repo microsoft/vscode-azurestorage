@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BlobServiceClient, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { BlobServiceClient, ContainerClient, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
@@ -22,7 +22,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     const testAccount: TestAzureAccount = new TestAzureAccount(vscode);
     let client: StorageManagementClient;
     const resourceName: string = getRandomHexString().toLowerCase();
-    const url = `https://${resourceName}.blob.core.windows.net`;
+    const url: string = `https://${resourceName}.blob.core.windows.net`;
     // Blob container, file share and queue must have lower case name
     const containerName: string = getRandomHexString().toLowerCase();
     const shareName: string = getRandomHexString().toLowerCase();
@@ -71,7 +71,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     });
 
     test("copyPrimaryKey", async () => {
-        const primaryKey = await getPrimaryKey();
+        const primaryKey: string = await getPrimaryKey();
         const credential = new StorageSharedKeyCredential(resourceName, primaryKey);
         const blobServiceClient = new BlobServiceClient(url, credential);
         await validateBlobService(blobServiceClient);
@@ -94,7 +94,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         const primaryKey: string = await getPrimaryKey();
         const credential = new StorageSharedKeyCredential(resourceName, primaryKey);
         const blobServiceClient = new BlobServiceClient(url, credential);
-        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const containerClient: ContainerClient = blobServiceClient.getContainerClient(containerName);
         assert.ok(!(await containerClient.exists()));
     });
 
@@ -172,7 +172,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     async function validateBlobService(blobServiceClient: BlobServiceClient): Promise<void> {
         // Blob container must have lower case name
         const containerName1: string = getRandomHexString().toLowerCase();
-        const containerClient = blobServiceClient.getContainerClient(containerName1);
+        const containerClient: ContainerClient = blobServiceClient.getContainerClient(containerName1);
         if (!(await containerClient.exists())) {
             await containerClient.create();
         }

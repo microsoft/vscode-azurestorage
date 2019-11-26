@@ -31,7 +31,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
             this._continuationToken = undefined;
         }
 
-        let containersResponse = await this.listContainers(this._continuationToken);
+        let containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers(this._continuationToken);
         this._continuationToken = containersResponse.continuationToken;
 
         const result: AzExtTreeItem[] = await Promise.all(containersResponse.containerItems.map(async (container: azureStorageBlob.ContainerItem) => {
@@ -46,8 +46,8 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     }
 
     async listContainers(continuationToken?: string, maxPageSize: number = 50): Promise<azureStorageBlob.ListContainersSegmentResponse> {
-        const blobServiceClient = this.root.createBlobServiceClient();
-        let response = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize });
+        const blobServiceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        let response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize });
 
         // tslint:disable-next-line: no-unsafe-any
         return (await response.next()).value;
@@ -71,10 +71,10 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     }
 
     private async createBlobContainer(name: string): Promise<azureStorageBlob.ContainerItem> {
-        const containerClient = createBlobContainerClient(this.root, name);
+        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, name);
         await containerClient.create();
 
-        let containersResponse = await this.listContainers();
+        let containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers();
         let createdContainer: azureStorageBlob.ContainerItem | undefined;
         for (let container of containersResponse.containerItems) {
             if (container.name === name) {

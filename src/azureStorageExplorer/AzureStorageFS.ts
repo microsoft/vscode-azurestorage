@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { BlobClient, BlobDownloadResponseModel } from "@azure/storage-blob";
 import * as azureStorage from "azure-storage";
 import * as path from "path";
 import * as querystring from "querystring";
@@ -150,8 +151,8 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                         });
                     });
                 } else {
-                    const blobClient = createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
-                    let downloaded = await blobClient.download();
+                    const blobClient: BlobClient = createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
+                    let downloaded: BlobDownloadResponseModel = await blobClient.download();
                     result = await this.streamToString(downloaded.readableStreamBody);
                 }
             } catch (error) {
