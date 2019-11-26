@@ -84,7 +84,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         }
 
         if (!createdContainer) {
-            throw new Error(`Could not find container ${name}`);
+            throw new Error(`Could not create container ${name}`);
         }
 
         return createdContainer;
