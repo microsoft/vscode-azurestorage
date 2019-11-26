@@ -111,17 +111,18 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private async listAllBlobs(cancellationToken?: vscode.CancellationToken, properties?: TelemetryProperties): Promise<azureStorageBlob.BlobItem[]> {
         // tslint:disable-next-line:no-any
         let currentToken: string | undefined;
-        let blobs: azureStorageBlob.BlobItem[] = [];
+        let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobFlatSegmentResponse>;
+        let responseValue: azureStorageBlob.ListBlobsFlatSegmentResponse;
+        const blobs: azureStorageBlob.BlobItem[] = [];
+        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
 
         // tslint:disable-next-line:no-constant-condition
         while (true) {
             this.throwIfCanceled(cancellationToken, properties, "listAllBlobs");
-
-            const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
-            let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobFlatSegmentResponse> = containerClient.listBlobsFlat().byPage({ continuationToken: currentToken, maxPageSize: 5000 });
+            response = containerClient.listBlobsFlat().byPage({ continuationToken: currentToken, maxPageSize: 5000 });
 
             // tslint:disable-next-line: no-unsafe-any
-            let responseValue: azureStorageBlob.ListBlobsFlatSegmentResponse = (await response.next()).value;
+            responseValue = (await response.next()).value;
 
             blobs.push(...responseValue.segment.blobItems);
             currentToken = responseValue.continuationToken;
