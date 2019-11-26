@@ -72,7 +72,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
-        let result: AzExtTreeItem[] = [];
+        const result: AzExtTreeItem[] = [];
         if (clearCache) {
             this._continuationToken = undefined;
             if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
