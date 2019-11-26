@@ -140,8 +140,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         if (result === DialogResponses.deleteResponse) {
             const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
             await containerClient.delete();
-        } else {
-            throw new UserCancelledError();
         }
     }
 
