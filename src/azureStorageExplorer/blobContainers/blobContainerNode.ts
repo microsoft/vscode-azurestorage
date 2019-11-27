@@ -116,6 +116,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const blobs: azureStorageBlob.BlobItem[] = [];
         const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
 
+        ext.outputChannel.appendLog(`Querying Azure... Method: listBlobsFlat blobContainerName: "${this.container.name}" prefix: ""`);
+
         // tslint:disable-next-line:no-constant-condition
         while (true) {
             this.throwIfCanceled(cancellationToken, properties, "listAllBlobs");
@@ -457,7 +459,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let state: TransferProgressState;
 
         // tslint:disable-next-line: strict-boolean-expressions
-        const totalBytes: number = (await blockBlobClient.getProperties()).contentLength || 1;
+        const totalBytes: number = (await fse.stat(filePath)).size || 1;
 
         if (!suppressLogs) {
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
