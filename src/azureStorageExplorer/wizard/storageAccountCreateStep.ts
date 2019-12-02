@@ -35,7 +35,8 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
             {
                 sku: { name: newSkuName },
                 kind: this._defaults.kind,
-                location: newLocation
+                location: newLocation,
+                enableHttpsTrafficOnly: true
             }
         );
         const createdStorageAccount: string = `Successfully created storage account "${newName}".`;
