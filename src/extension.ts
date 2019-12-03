@@ -15,6 +15,7 @@ import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainer
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
 import { BlobContainerTreeItem } from './azureStorageExplorer/blobContainers/blobContainerNode';
+import { createStorageAccount, createStorageAccountAdvanced } from './azureStorageExplorer/createStorageAccount';
 import { registerDirectoryActionHandlers } from './azureStorageExplorer/fileShares/directoryActionHandlers';
 import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fileActionHandlers';
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';
@@ -28,7 +29,6 @@ import { registerQueueGroupActionHandlers } from './azureStorageExplorer/queues/
 import { selectStorageAccountTreeItemForCommand } from './azureStorageExplorer/selectStorageAccountNodeForCommand';
 import { registerStorageAccountActionHandlers } from './azureStorageExplorer/storageAccounts/storageAccountActionHandlers';
 import { StorageAccountTreeItem } from './azureStorageExplorer/storageAccounts/storageAccountNode';
-import { SubscriptionTreeItem } from './azureStorageExplorer/SubscriptionTreeItem';
 import { registerTableActionHandlers } from './azureStorageExplorer/tables/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './azureStorageExplorer/tables/tableGroupActionHandlers';
 import { configurationSettingsKeys, extensionPrefix } from './constants';
@@ -131,11 +131,8 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 });
             await accountTreeItem.disableStaticWebsite();
         });
-        registerCommand("azureStorage.createGpv2Account", async (actionContext: IActionContext, treeItem?: SubscriptionTreeItem) => {
-            let node = treeItem ? <SubscriptionTreeItem>treeItem : <SubscriptionTreeItem>await ext.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue, actionContext);
-
-            await node.createChild(actionContext);
-        });
+        registerCommand("azureStorage.createGpv2Account", createStorageAccount);
+        registerCommand("azureStorage.createGpv2AccountAdvanced", createStorageAccountAdvanced);
         registerCommand('azureStorage.browseStaticWebsite', async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
