@@ -17,7 +17,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: string | undefined;
 
     public static contextValue: string = 'azureBlobDirectory';
-    public contextValue: string = 'azureBlobDirectory';
+    public contextValue: string = BlobDirectoryTreeItem.contextValue;
 
     public fullPath: string = path.posix.join(this.parentPath, this.directory.name);
     public dirPath: string = `${this.fullPath}${path.sep}`;
