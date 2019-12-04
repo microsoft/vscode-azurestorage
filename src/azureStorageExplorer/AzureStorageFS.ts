@@ -3,15 +3,17 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { BlobClient, BlobDownloadResponseModel } from "@azure/storage-blob";
 import * as azureStorage from "azure-storage";
 import * as path from "path";
 import * as querystring from "querystring";
 import * as vscode from "vscode";
 import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
-import { BlobContainerTreeItem, IBlobContainerCreateChildContext } from "./blobContainers/blobContainerNode";
-import { BlobDirectoryTreeItem } from "./blobContainers/BlobDirectoryTreeItem";
+import { BlobContainerTreeItem } from "./blobContainers/blobContainerNode";
+import { BlobDirectoryTreeItem } from "./blobContainers/blobDirectoryNode";
 import { BlobTreeItem } from "./blobContainers/blobNode";
+import { createBlobClient, createBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './blobContainers/blobUtils';
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./fileShares/directoryNode";
 import { FileTreeItem } from "./fileShares/fileNode";
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./fileShares/fileShareNode";
@@ -149,17 +151,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                         });
                     });
                 } else {
-                    let service: azureStorage.BlobService = treeItem.root.createBlobService();
-                    let containerName: string = treeItem.container.name;
-                    result = await new Promise<string | undefined>((resolve, reject) => {
-                        service.getBlobToText(containerName, parsedUri.filePath, (error?: Error, text?: string) => {
-                            if (!!error) {
-                                reject(error);
-                            } else {
-                                resolve(text);
-                            }
-                        });
-                    });
+                    const blobClient: BlobClient = createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
+                    let downloaded: BlobDownloadResponseModel = await blobClient.download();
+                    result = await this.streamToString(downloaded.readableStreamBody);
                 }
             } catch (error) {
                 let pe = parseError(error);
@@ -189,7 +183,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             if (treeItem instanceof FileShareTreeItem) {
                 childExists = await doesFileExist(parsedUri.baseName, treeItem, parsedUri.parentDirPath, treeItem.share);
             } else {
-                childExists = await treeItem.doesBlobExist(parsedUri.filePath);
+                childExists = await doesBlobExist(treeItem, parsedUri.filePath);
             }
 
             if (!childExists && !options.create) {
@@ -204,7 +198,8 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                         if (treeItem instanceof FileShareTreeItem) {
                             await updateFileFromText(parsedUri.parentDirPath, parsedUri.baseName, treeItem.share, treeItem.root, content.toString());
                         } else {
-                            await treeItem.updateBlockBlobFromText(parsedUri.filePath, content.toString());
+                            await createBlockBlob(treeItem, parsedUri.filePath, content.toString());
+
                         }
                     } else {
                         progress.report({ message: `Creating ${writeToFileShare ? 'file' : 'blob'} ${parsedUri.filePath}` });
@@ -240,7 +235,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
                 if (treeItem instanceof FileTreeItem || treeItem instanceof DirectoryTreeItem || treeItem instanceof BlobTreeItem || treeItem instanceof BlobDirectoryTreeItem) {
                     if (!(treeItem instanceof BlobDirectoryTreeItem)) {
-                        // The deletion message from deleteTreeItem is not supressed for BlobDirectoryTreeItems so avoid duplicate notifications
+                        // The deletion message from deleteTreeItem is not suppressed for BlobDirectoryTreeItems so avoid duplicate notifications
                         progress.report({ message: `Deleting ${parsedUri.filePath}` });
                     }
 
@@ -259,7 +254,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
 
             context.errorHandling.rethrow = true;
             if (oldUriParsed.baseName === newUriParsed.baseName) {
-                // Set suppressDisplay true when trying to move the files because VS code will hanlde the error.
+                // Set suppressDisplay true when trying to move the files because VS code will handle the error.
                 context.errorHandling.suppressDisplay = true;
                 throw new Error('Moving folders or files not supported.');
             } else {
@@ -407,6 +402,23 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
 
     private isFileShareUri(uri: vscode.Uri): boolean {
         return this.verifyUri(uri).query.indexOf('File Shares') > 0;
+    }
+
+    private async streamToString(readableStream: NodeJS.ReadableStream | undefined): Promise<string | undefined> {
+        if (!readableStream) {
+            return undefined;
+        }
+        return new Promise((resolve, reject) => {
+            const chunks: string[] = [];
+            readableStream.on("data", (data) => {
+                // tslint:disable-next-line: no-unsafe-any
+                chunks.push(data.toString());
+            });
+            readableStream.on("end", () => {
+                resolve(chunks.join(""));
+            });
+            readableStream.on("error", reject);
+        });
     }
 }
 
