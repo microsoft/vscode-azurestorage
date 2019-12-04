@@ -11,7 +11,7 @@ import { ext } from "../../extensionVariables";
 import { Limits } from '../limits';
 import { BlobContainerTreeItem } from './blobContainerNode';
 import { BlobTreeItem } from './blobNode';
-import { createBlockBlobClient, getExistingProperties, handleTransferProgress, TransferProgressState } from "./blobUtils";
+import { createBlockBlobClient, getExistingProperties, TransferProgress } from "./blobUtils";
 
 export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
     async getSaveConfirmationText(treeItem: BlobTreeItem): Promise<string> {
@@ -57,7 +57,6 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
         await this.checkCanDownload(treeItem);
         const linkablePath: Uri = Uri.file(filePath); // Allows CTRL+Click in Output panel
         const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.fullPath);
-        let state: TransferProgressState;
 
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await blockBlobClient.getProperties()).contentLength || 1;
@@ -66,9 +65,9 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
         ext.outputChannel.appendLine(`Downloading ${treeItem.blob.name} to ${filePath}...`);
 
         await window.withProgress({ title: `Downloading ${treeItem.blob.name}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
-            state = new TransferProgressState();
+            const transferProgress: TransferProgress = new TransferProgress();
             await blockBlobClient.downloadToFile(filePath, undefined, undefined, {
-                onProgress: (transferProgress) => handleTransferProgress(state, treeItem.blob.name, totalBytes, transferProgress, notificationProgress)
+                onProgress: (transferProgressEvent) => transferProgress.report(treeItem.blob.name, transferProgressEvent.loadedBytes, totalBytes, notificationProgress)
             });
         });
 

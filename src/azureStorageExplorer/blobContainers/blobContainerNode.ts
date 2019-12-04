@@ -21,7 +21,7 @@ import { BlobContainerGroupTreeItem } from "./blobContainerGroupNode";
 import { BlobDirectoryTreeItem } from "./blobDirectoryNode";
 import { BlobFileHandler } from './blobFileHandler';
 import { BlobTreeItem } from './blobNode';
-import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, getBlob, handleTransferProgress, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgressState } from './blobUtils';
+import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, getBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgress } from './blobUtils';
 
 let lastUploadFolder: Uri;
 
@@ -456,7 +456,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(this.root, this.container.name, blobPath);
-        let state: TransferProgressState;
 
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
@@ -466,13 +465,13 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
 
         await window.withProgress({ title: `Uploading ${filePath} as ${blobFriendlyPath}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
-            state = new TransferProgressState();
+            const transferProgress: TransferProgress = new TransferProgress();
             const options: azureStorageBlob.BlockBlobParallelUploadOptions = {
                 blobHTTPHeaders: {
                     // tslint:disable-next-line: strict-boolean-expressions
                     blobContentType: mime.getType(blobPath) || undefined
                 },
-                onProgress: (transferProgress: TransferProgressEvent) => handleTransferProgress(state, blobPath, totalBytes, transferProgress, notificationProgress)
+                onProgress: (transferProgressEvent: TransferProgressEvent) => transferProgress.report(blobPath, transferProgressEvent.loadedBytes, totalBytes, notificationProgress)
             };
             await blockBlobClient.uploadFile(filePath, options);
         });

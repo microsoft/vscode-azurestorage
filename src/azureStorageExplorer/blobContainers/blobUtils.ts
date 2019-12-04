@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TransferProgressEvent } from '@azure/core-http';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -143,33 +142,33 @@ export async function getExistingProperties(parent: BlobTreeItem | BlobContainer
     return undefined;
 }
 
-// Implements the `onProgress` callback used by @azure/storage-blob for blob uploads/downloads
-export function handleTransferProgress(state: TransferProgressState, blobPath: string, totalBytes: number, transferProgress: TransferProgressEvent, notificationProgress: vscode.Progress<{
-    message?: string | undefined;
-    increment?: number | undefined;
-}>): void {
-    // This function is called very frequently and calls made to notificationProgress.report too rapidly result in incremental
-    // progress not displaying in the notification window. So debounce calls to notificationProgress.report
-    if (state.lastUpdated + state.updateTimerMs < Date.now()) {
-        state.percentage = Math.trunc((transferProgress.loadedBytes / totalBytes) * 100);
-        state.message = `${blobPath}: ${transferProgress.loadedBytes}/${totalBytes} (${state.percentage}%)`;
-
-        notificationProgress.report({ message: state.message, increment: state.percentage - state.lastPercentage });
-
-        state.lastPercentage = state.percentage;
-        state.lastUpdated = Date.now();
-    }
-}
-
-export class TransferProgressState {
-    public readonly updateTimerMs: number = 200;
+export class TransferProgress {
+    private message: string = '';
+    private percentage: number = 0;
+    private lastPercentage: number = 0;
+    private lastUpdated: number = Date.now();
 
     constructor(
-        public percentage: number = 0,
-        public lastPercentage: number = 0,
-        public message: string = '',
-        public lastUpdated: number = Date.now()
+        private readonly updateTimerMs: number = 200
     ) { }
+
+    // Implements the `onProgress` callback used by @azure/storage-blob for blob uploads/downloads
+    public report(blobPath: string, loadedBytes: number, totalBytes: number, notificationProgress: vscode.Progress<{
+        message?: string | undefined;
+        increment?: number | undefined;
+    }>): void {
+        // This function is called very frequently and calls made to notificationProgress.report too rapidly result in incremental
+        // progress not displaying in the notification window. So debounce calls to notificationProgress.report
+        if (this.lastUpdated + this.updateTimerMs < Date.now()) {
+            this.percentage = Math.trunc((loadedBytes / totalBytes) * 100);
+            this.message = `${blobPath}: ${loadedBytes}/${totalBytes} (${this.percentage}%)`;
+
+            notificationProgress.report({ message: this.message, increment: this.percentage - this.lastPercentage });
+
+            this.lastPercentage = this.percentage;
+            this.lastUpdated = Date.now();
+        }
+    }
 }
 
 export interface IBlobContainerCreateChildContext extends IActionContext {
