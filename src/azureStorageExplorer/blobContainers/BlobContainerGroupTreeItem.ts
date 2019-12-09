@@ -11,7 +11,7 @@ import { AzExtTreeItem, AzureParentTreeItem, ICreateChildImplContext, UserCancel
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
-import { BlobContainerTreeItem } from "./blobContainerNode";
+import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { createBlobContainerClient } from './blobUtils';
 
 export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {

@@ -17,10 +17,10 @@ import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../storageAccounts/storageAccountNode";
-import { BlobContainerGroupTreeItem } from "./blobContainerGroupNode";
-import { BlobDirectoryTreeItem } from "./blobDirectoryNode";
-import { BlobFileHandler } from './blobFileHandler';
-import { BlobTreeItem } from './blobNode';
+import { BlobContainerGroupTreeItem } from "./BlobContainerGroupTreeItem";
+import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
+import { BlobFileHandler } from './BlobFileHandler';
+import { BlobTreeItem } from './BlobTreeItem';
 import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, getBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgress } from './blobUtils';
 
 let lastUploadFolder: Uri;

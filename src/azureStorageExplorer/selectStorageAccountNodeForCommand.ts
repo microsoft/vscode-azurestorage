@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { AzureTreeItem, IActionContext } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
-import { BlobContainerTreeItem } from "./blobContainers/blobContainerNode";
+import { BlobContainerTreeItem } from "./blobContainers/BlobContainerTreeItem";
 import { StorageAccountTreeItem } from "./storageAccounts/storageAccountNode";
 
 /**

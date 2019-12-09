@@ -15,8 +15,8 @@ import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/m
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
 import { getResourcesPath, staticWebsiteContainerName } from '../../constants';
 import { ext } from "../../extensionVariables";
-import { BlobContainerGroupTreeItem } from '../blobContainers/blobContainerGroupNode';
-import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
+import { BlobContainerGroupTreeItem } from '../blobContainers/BlobContainerGroupTreeItem';
+import { BlobContainerTreeItem } from "../blobContainers/BlobContainerTreeItem";
 import { DirectoryTreeItem } from '../fileShares/directoryNode';
 import { FileTreeItem } from '../fileShares/fileNode';
 import { FileShareGroupTreeItem } from '../fileShares/fileShareGroupNode';

@@ -14,7 +14,7 @@ import { AzureStorageFS } from './azureStorageExplorer/AzureStorageFS';
 import { registerBlobActionHandlers } from './azureStorageExplorer/blobContainers/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './azureStorageExplorer/blobContainers/blobContainerGroupActionHandlers';
-import { BlobContainerTreeItem } from './azureStorageExplorer/blobContainers/blobContainerNode';
+import { BlobContainerTreeItem } from './azureStorageExplorer/blobContainers/BlobContainerTreeItem';
 import { registerDirectoryActionHandlers } from './azureStorageExplorer/fileShares/directoryActionHandlers';
 import { registerFileActionHandlers } from './azureStorageExplorer/fileShares/fileActionHandlers';
 import { registerFileShareActionHandlers } from './azureStorageExplorer/fileShares/fileShareActionHandlers';

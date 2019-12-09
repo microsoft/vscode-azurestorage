@@ -9,9 +9,9 @@ import { RemoteFileEditor } from '../../azureServiceExplorer/editors/RemoteFileE
 import { ext } from '../../extensionVariables';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { deleteNode } from '../commonTreeCommands';
-import { BlobContainerTreeItem } from './blobContainerNode';
-import { BlobFileHandler } from './blobFileHandler';
-import { BlobTreeItem } from './blobNode';
+import { BlobContainerTreeItem } from './BlobContainerTreeItem';
+import { BlobFileHandler } from './BlobFileHandler';
+import { BlobTreeItem } from './BlobTreeItem';
 
 export function registerBlobContainerActionHandlers(): void {
     const _editor: RemoteFileEditor<BlobTreeItem> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt");
