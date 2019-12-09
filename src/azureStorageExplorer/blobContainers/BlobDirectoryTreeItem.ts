@@ -9,8 +9,8 @@ import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
-import { BlobContainerTreeItem, IExistingBlobContext } from "./blobContainerNode";
-import { BlobTreeItem, ISuppressMessageContext } from "./blobNode";
+import { BlobContainerTreeItem, IExistingBlobContext } from "./BlobContainerTreeItem";
+import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 import { createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from './blobUtils';
 
 export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {

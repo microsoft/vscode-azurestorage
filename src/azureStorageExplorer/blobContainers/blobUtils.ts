@@ -8,9 +8,9 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { IStorageRoot } from "../IStorageRoot";
-import { BlobContainerTreeItem } from './blobContainerNode';
-import { BlobDirectoryTreeItem } from './blobDirectoryNode';
-import { BlobTreeItem } from './blobNode';
+import { BlobContainerTreeItem } from './BlobContainerTreeItem';
+import { BlobDirectoryTreeItem } from './BlobDirectoryTreeItem';
+import { BlobTreeItem } from './BlobTreeItem';
 
 export function createBlobContainerClient(root: IStorageRoot, containerName: string): azureStorageBlob.ContainerClient {
     const blobServiceClient: azureStorageBlob.BlobServiceClient = root.createBlobServiceClient();

@@ -12,7 +12,7 @@ import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
-import { BlobFileHandler } from './blobFileHandler';
+import { BlobFileHandler } from './BlobFileHandler';
 import { createBlobClient, createBlobContainerClient } from './blobUtils';
 
 export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {

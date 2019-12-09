@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext } from "vscode-azureextensionui";
-import { BlobContainerTreeItem } from '../blobContainers/blobContainerNode';
+import { BlobContainerTreeItem } from '../blobContainers/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../fileShares/fileShareNode';
 
 export interface IOpenInFileExplorerWizardContext extends IActionContext {

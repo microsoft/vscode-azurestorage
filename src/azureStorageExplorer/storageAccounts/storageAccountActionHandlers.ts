@@ -9,7 +9,7 @@ import { isPathEqual, isSubpath } from '../../components/fs';
 import { configurationSettingsKeys, extensionPrefix } from '../../constants';
 import { ext } from '../../extensionVariables';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
-import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
+import { BlobContainerTreeItem } from "../blobContainers/BlobContainerTreeItem";
 import { showWorkspaceFoldersQuickPick } from "../blobContainers/quickPickUtils";
 import { deleteNode } from '../commonTreeCommands';
 import { selectStorageAccountTreeItemForCommand } from '../selectStorageAccountNodeForCommand';
