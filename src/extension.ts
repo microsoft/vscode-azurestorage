@@ -75,30 +75,28 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', new AzureStorageFS(), { isCaseSensitive: true }));
         }
         registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
-            await callWithTelemetryAndErrorHandling('azureStorage.openInFileExplorer', async () => {
-                if (!treeItem) {
-                    const placeHolder: string = localize('selectResourceTypeToOpenInFileExplorer', 'Select the resource type to open in File Explorer');
-                    let quickPicks: IAzureQuickPickItem<string>[] = [
-                        {
-                            label: "Blob Container",
-                            data: BlobContainerTreeItem.contextValue
-                        },
-                        {
-                            label: "File Share",
-                            data: FileShareTreeItem.contextValue
-                        }];
-                    let contextValue: string = (await ext.ui.showQuickPick(quickPicks, { placeHolder })).data;
-                    treeItem = <BlobContainerTreeItem | FileShareTreeItem>await ext.tree.showTreeItemPicker(contextValue, actionContext);
-                }
+            if (!treeItem) {
+                const placeHolder: string = localize('selectResourceTypeToOpenInFileExplorer', 'Select the resource type to open in File Explorer');
+                let quickPicks: IAzureQuickPickItem<string>[] = [
+                    {
+                        label: "Blob Container",
+                        data: BlobContainerTreeItem.contextValue
+                    },
+                    {
+                        label: "File Share",
+                        data: FileShareTreeItem.contextValue
+                    }];
+                let contextValue: string = (await ext.ui.showQuickPick(quickPicks, { placeHolder })).data;
+                treeItem = <BlobContainerTreeItem | FileShareTreeItem>await ext.tree.showTreeItemPicker(contextValue, actionContext);
+            }
 
-                const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });
-                const wizard: AzureWizard<IOpenInFileExplorerWizardContext> = new AzureWizard(wizardContext, {
-                    promptSteps: [new OpenBehaviorStep()],
-                    executeSteps: [new OpenTreeItemStep()]
-                });
-                await wizard.prompt();
-                await wizard.execute();
+            const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });
+            const wizard: AzureWizard<IOpenInFileExplorerWizardContext> = new AzureWizard(wizardContext, {
+                promptSteps: [new OpenBehaviorStep()],
+                executeSteps: [new OpenTreeItemStep()]
             });
+            await wizard.prompt();
+            await wizard.execute();
         });
         registerCommand('azureStorage.refresh', async (_actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(treeItem));
         registerCommand('azureStorage.loadMore', async (actionContext: IActionContext, treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem, actionContext));
