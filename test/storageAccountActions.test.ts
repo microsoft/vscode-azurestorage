@@ -153,6 +153,19 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdTable.exists);
     });
 
+    test("deleteTable", async () => {
+        await validateAccountExists(resourceName, resourceName);
+        const connectionString: string = await getConnectionString(resourceName);
+        const tableService: TableService = createTableService(connectionString);
+        let createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
+        assert.ok(createdTable.exists);
+        await testUserInput.runWithInputs([resourceName, tableName, DialogResponses.deleteResponse.title], async () => {
+            await vscode.commands.executeCommand('azureStorage.deleteTable');
+        });
+        createdTable = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
+        assert.ok(!createdTable.exists);
+    });
+
     test("deleteStorageAccount", async () => {
         await validateAccountExists(resourceName, resourceName);
         await testUserInput.runWithInputs([resourceName, DialogResponses.deleteResponse.title], async () => {
