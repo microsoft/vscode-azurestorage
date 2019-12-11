@@ -5,10 +5,10 @@
 
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { Uri, workspace } from 'vscode';
 import * as vscode from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
+import { configurationSettingsKeys, extensionPrefix, getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -91,7 +91,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
         return new Promise((resolve, reject) => {
             let fileService = this.root.createFileService();
-            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
+            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
                 if (err) {
                     reject(err);
                 } else {

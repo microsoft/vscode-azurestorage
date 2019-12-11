@@ -7,6 +7,7 @@ import * as azureStorageBlob from '@azure/storage-blob';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { maxPageSize } from '../../constants';
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from './BlobContainerTreeItem';
 import { BlobDirectoryTreeItem } from './BlobDirectoryTreeItem';
@@ -32,7 +33,7 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
     // tslint:disable-next-line: strict-boolean-expressions
     const listOptions: azureStorageBlob.ContainerListBlobsOptions = { prefix: dirPath || undefined };
     const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
-    let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy('/', listOptions).byPage({ continuationToken, maxPageSize: 50 });
+    let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy('/', listOptions).byPage({ continuationToken, maxPageSize: maxPageSize });
 
     // tslint:disable-next-line: no-unsafe-any
     let responseValue: azureStorageBlob.ListBlobsHierarchySegmentResponse = (await response.next()).value;
