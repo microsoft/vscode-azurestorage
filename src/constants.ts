@@ -7,6 +7,8 @@ import { ext } from './extensionVariables';
 
 export const staticWebsiteContainerName = '$web';
 
+export const maxPageSize = 50;
+
 export enum configurationSettingsKeys {
     deployPath = 'deployPath',
     preDeployTask = 'preDeployTask',

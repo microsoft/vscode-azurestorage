@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { getResourcesPath } from "../../constants";
+import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
@@ -45,9 +45,9 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         return !!this._continuationToken;
     }
 
-    async listContainers(continuationToken?: string, maxPageSize: number = 50): Promise<azureStorageBlob.ListContainersSegmentResponse> {
+    async listContainers(continuationToken?: string): Promise<azureStorageBlob.ListContainersSegmentResponse> {
         const blobServiceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        let response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize });
+        let response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
 
         // tslint:disable-next-line: no-unsafe-any
         return (await response.next()).value;

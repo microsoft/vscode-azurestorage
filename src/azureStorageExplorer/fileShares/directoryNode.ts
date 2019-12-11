@@ -5,8 +5,8 @@
 
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { MessageItem, Uri, window } from 'vscode';
 import * as vscode from 'vscode';
+import { MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
@@ -72,7 +72,7 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
     listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
-        return listFilesInDirectory(this.fullPath, this.share.name, this.root, 50, currentToken);
+        return listFilesInDirectory(this.fullPath, this.share.name, this.root, currentToken);
     }
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem | DirectoryTreeItem> {

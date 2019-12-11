@@ -7,7 +7,7 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { getResourcesPath } from "../../constants";
+import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { QueueTreeItem } from './queueNode';
@@ -50,7 +50,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise((resolve, reject) => {
             let queueService = this.root.createQueueService();
-            queueService.listQueuesSegmented(currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.QueueService.ListQueueResult) => {
+            queueService.listQueuesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.QueueService.ListQueueResult) => {
                 if (err) {
                     reject(err);
                 } else {
