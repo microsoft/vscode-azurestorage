@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import * as fs from "fs";
 import * as vscode from 'vscode';
-import { UserCancelledError } from "vscode-azureextensionui";
+import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
 import { Launcher } from "../components/launcher/launcher";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
@@ -37,13 +37,14 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async getStorageExplorerExecutable(): Promise<string> {
-        let regVal: string | undefined;
-        try {
-            regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(regKey.hive, regKey.key);
-        } catch (err) {
-            // ignore and prompt to download.
-            console.error(err);
-        } finally {
+        return await callWithTelemetryAndErrorHandling('getStorageExplorerExecutableWindows', async context => {
+            let regVal: string | undefined;
+            try {
+                regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(regKey.hive, regKey.key);
+            } catch (err) {
+                context.telemetry.properties.storageExplorerNotFound = 'true';
+            }
+
             let exePath: string | undefined;
             if (regVal) {
                 // Parse from e.g.: "C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe" -- "%1"
@@ -55,13 +56,15 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
             } else {
                 let selected: "Download" = <"Download">await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
                 if (selected === "Download") {
+                    context.telemetry.properties.downloadStorageExplorer = 'true';
                     await WindowsStorageExplorerLauncher.downloadStorageExplorer();
                 }
 
                 // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
                 throw new UserCancelledError();
             }
-        }
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || '';
     }
 
     private static async fileExists(path: string): Promise<boolean> {
@@ -87,7 +90,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async downloadStorageExplorer(): Promise<void> {
-        //I'm not sure why running start directly doesn't work. Opening seperate cmd to run the command works well
+        //I'm not sure why running start directly doesn't work. Opening separate cmd to run the command works well
         await Launcher.launch("cmd", "/c", "start", downloadPageUrl);
     }
 
