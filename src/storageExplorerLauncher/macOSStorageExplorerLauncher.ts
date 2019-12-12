@@ -18,8 +18,8 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
 
     private static async getStorageExplorerExecutable(
         warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer."): Promise<string> {
-        return await callWithTelemetryAndErrorHandling('getStorageExplorerExecutableMac', async context => {
 
+        return await callWithTelemetryAndErrorHandling('getStorageExplorerExecutableMac', async context => {
             let selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
             // tslint:disable-next-line:no-non-null-assertion // storageExplorerLocation has default value, can't be undefined
             let exePath = path.join(selectedLocation!, MacOSStorageExplorerLauncher.subExecutableLocation);
