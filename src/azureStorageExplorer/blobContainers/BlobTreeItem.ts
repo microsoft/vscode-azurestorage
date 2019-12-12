@@ -3,7 +3,7 @@
   *  Licensed under the MIT License. See License.md in the project root for license information.
   **/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, SaveDialogOptions, Uri, window } from 'vscode';
@@ -12,7 +12,8 @@ import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ICopyUrl } from '../../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
-import { BlobFileHandler } from './blobFileHandler';
+import { BlobFileHandler } from './BlobFileHandler';
+import { createBlobClient, createBlobContainerClient } from './blobUtils';
 
 export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
     public contextValue: string = 'azureBlob';
@@ -26,8 +27,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     constructor(
         parent: AzureParentTreeItem,
         public readonly directoryPath: string,
-        public readonly blob: azureStorage.BlobService.BlobResult,
-        public readonly container: azureStorage.BlobService.ContainerResult) {
+        public readonly blob: azureStorageBlob.BlobItem,
+        public readonly container: azureStorageBlob.ContainerItem) {
         super(parent);
     }
 
@@ -37,8 +38,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     };
 
     public async copyUrl(): Promise<void> {
-        let blobService = this.root.createBlobService();
-        let url = blobService.getUrl(this.container.name, this.blob.name);
+        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
+        let url: string = containerClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
@@ -51,14 +52,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
             result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         }
         if (result === DialogResponses.deleteResponse || context.suppressMessage) {
-            let blobService = this.root.createBlobService();
-            await new Promise((resolve, reject) => {
-                // tslint:disable-next-line:no-any
-                blobService.deleteBlob(this.container.name, this.fullPath, (err?: any) => {
-                    // tslint:disable-next-line:no-void-expression // Grandfathered in
-                    err ? reject(err) : resolve();
-                });
-            });
+            let blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.fullPath);
+            await blobClient.delete();
         } else {
             throw new UserCancelledError();
         }

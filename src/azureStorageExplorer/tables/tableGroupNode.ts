@@ -8,7 +8,7 @@ import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { nonNull } from "../../components/storageWrappers";
-import { getResourcesPath } from "../../constants";
+import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { TableTreeItem } from './tableNode';
@@ -51,7 +51,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
             let tableService = this.root.createTableService();
-            tableService.listTablesSegmented(currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {
+            tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {
                 if (err) {
                     reject(err);
                 } else {

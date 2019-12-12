@@ -3,16 +3,15 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import { BlockBlobClient } from '@azure/storage-blob';
 import * as fse from 'fs-extra';
-import { Uri } from 'vscode';
+import { ProgressLocation, Uri, window } from 'vscode';
 import { IRemoteFileHandler } from '../../azureServiceExplorer/editors/IRemoteFileHandler';
-import { awaitWithProgress } from '../../components/progress';
 import { ext } from "../../extensionVariables";
 import { Limits } from '../limits';
-import { BlobContainerTreeItem } from './blobContainerNode';
-import { BlobTreeItem } from './blobNode';
-import { updateBlockBlobFromLocalFile } from './blobUtils';
+import { BlobContainerTreeItem } from './BlobContainerTreeItem';
+import { BlobTreeItem } from './BlobTreeItem';
+import { createBlockBlobClient, getExistingProperties, TransferProgress } from "./blobUtils";
 
 export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
     async getSaveConfirmationText(treeItem: BlobTreeItem): Promise<string> {
@@ -26,10 +25,10 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
     public async checkCanDownload(treeItem: BlobTreeItem): Promise<void> {
         let message: string | undefined;
 
-        if (Number(treeItem.blob.contentLength) > Limits.maxUploadDownloadSizeBytes) {
+        if (Number(treeItem.blob.properties.contentLength) > Limits.maxUploadDownloadSizeBytes) {
             message = `Please use Storage Explorer for blobs larger than ${Limits.maxUploadDownloadSizeMB}MB.`;
-        } else if (!treeItem.blob.blobType.toLocaleLowerCase().startsWith("block")) {
-            message = `Please use Storage Explorer for blobs of type '${treeItem.blob.blobType}'.`;
+        } else if (treeItem.blob.properties.blobType && !treeItem.blob.properties.blobType.toLocaleLowerCase().startsWith("block")) {
+            message = `Please use Storage Explorer for blobs of type '${treeItem.blob.properties.blobType}'.`;
         }
 
         if (message) {
@@ -56,39 +55,28 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
 
     public async downloadFile(treeItem: BlobTreeItem, filePath: string): Promise<void> {
         await this.checkCanDownload(treeItem);
+        const linkablePath: Uri = Uri.file(filePath); // Allows CTRL+Click in Output panel
+        const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.fullPath);
 
-        const blob = treeItem.blob;
-        const linkablePath = Uri.file(filePath); // Allows CTRL+Click in Output panel
-        const blobService = treeItem.root.createBlobService();
+        // tslint:disable-next-line: strict-boolean-expressions
+        const totalBytes: number = (await blockBlobClient.getProperties()).contentLength || 1;
 
         ext.outputChannel.show();
-        ext.outputChannel.appendLine(`Downloading ${blob.name} to ${filePath}...`);
+        ext.outputChannel.appendLine(`Downloading ${treeItem.blob.name} to ${filePath}...`);
 
-        let speedSummary: azureStorage.common.streams.speedsummary.SpeedSummary;
-        const promise = new Promise((resolve, reject): void => {
-            // tslint:disable-next-line:no-function-expression // Grandfathered in
-            speedSummary = blobService.getBlobToLocalFile(treeItem.container.name, blob.name, filePath, function (err?: {}): void {
-                // tslint:disable-next-line:no-void-expression // Grandfathered in
-                err ? reject(err) : resolve();
+        await window.withProgress({ title: `Downloading ${treeItem.blob.name}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
+            const transferProgress: TransferProgress = new TransferProgress();
+            await blockBlobClient.downloadToFile(filePath, undefined, undefined, {
+                onProgress: (transferProgressEvent) => transferProgress.report(treeItem.blob.name, transferProgressEvent.loadedBytes, totalBytes, notificationProgress)
             });
         });
-
-        await awaitWithProgress(
-            `Downloading ${blob.name}`,
-            promise,
-            () => {
-                const completed = <string>speedSummary.getCompleteSize(true);
-                const total = <string>speedSummary.getTotalSize(true);
-                const percent = speedSummary.getCompletePercent(0);
-                const msg = `${blob.name}: ${completed}/${total} (${percent}%)`;
-                return msg;
-            });
 
         ext.outputChannel.appendLine(`Successfully downloaded ${linkablePath}.`);
     }
 
     async uploadFile(treeItem: BlobTreeItem, filePath: string): Promise<void> {
         await this.checkCanUpload(treeItem, filePath);
-        await updateBlockBlobFromLocalFile(treeItem.blob.name, treeItem.container.name, treeItem.root, filePath);
+        const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.fullPath);
+        await blockBlobClient.uploadFile(filePath, await getExistingProperties(treeItem, treeItem.fullPath));
     }
 }

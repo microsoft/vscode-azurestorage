@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as azureStorageBlob from '@azure/storage-blob';
 import { StorageManagementClient } from 'azure-arm-storage';
 import * as azureStorage from "azure-storage";
 // tslint:disable-next-line:no-require-imports
@@ -14,8 +15,8 @@ import { StorageAccountKey } from '../../../node_modules/azure-arm-storage/lib/m
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../../components/storageWrappers';
 import { getResourcesPath, staticWebsiteContainerName } from '../../constants';
 import { ext } from "../../extensionVariables";
-import { BlobContainerGroupTreeItem } from '../blobContainers/blobContainerGroupNode';
-import { BlobContainerTreeItem } from "../blobContainers/blobContainerNode";
+import { BlobContainerGroupTreeItem } from '../blobContainers/BlobContainerGroupTreeItem';
+import { BlobContainerTreeItem } from "../blobContainers/BlobContainerTreeItem";
 import { DirectoryTreeItem } from '../fileShares/directoryNode';
 import { FileTreeItem } from '../fileShares/fileNode';
 import { FileShareGroupTreeItem } from '../fileShares/fileShareGroupNode';
@@ -157,8 +158,9 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private createRoot(subRoot: ISubscriptionContext): IStorageRoot {
         return Object.assign({}, subRoot, {
             storageAccount: this.storageAccount,
-            createBlobService: () => {
-                return azureStorage.createBlobService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.blob).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+            createBlobServiceClient: () => {
+                const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
+                return new azureStorageBlob.BlobServiceClient(this.storageAccount.primaryEndpoints.blob || `https://${this.storageAccount.name}.blob.core.windows.net`, credential);
             },
             createFileService: () => {
                 return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
@@ -231,65 +233,32 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
         // Does NOT update treeItem's _webHostingEnabled.
-        let blobService = this.root.createBlobService();
+        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        let properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
+        let staticWebsite: azureStorageBlob.StaticWebsite | undefined = properties.staticWebsite;
 
-        return await new Promise<WebsiteHostingStatus>((resolve, reject) => {
-            // tslint:disable-next-line:no-any
-            blobService.getServiceProperties((err?: any, result?: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    let staticWebsite: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties | undefined =
-                        result && result.StaticWebsite;
-                    resolve(<WebsiteHostingStatus>{
-                        capable: !!staticWebsite,
-                        enabled: !!staticWebsite && staticWebsite.Enabled,
-                        indexDocument: staticWebsite && staticWebsite.IndexDocument,
-                        errorDocument404Path: staticWebsite && staticWebsite.ErrorDocument404Path
-                    });
-                }
-            });
-        });
-
+        return {
+            capable: !!staticWebsite,
+            enabled: !!staticWebsite && staticWebsite.enabled,
+            indexDocument: staticWebsite && staticWebsite.indexDocument,
+            errorDocument404Path: staticWebsite && staticWebsite.errorDocument404Path
+        };
     }
 
-    public async setWebsiteHostingProperties(staticWebsiteProperties: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties): Promise<void> {
-        let blobService = this.root.createBlobService();
-        await new Promise<void>((resolve, reject) => {
-            blobService.getServiceProperties((err: Error | undefined, props: azureStorage.common.models.ServicePropertiesResult.BlobServiceProperties = {}) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    Object.assign(props.StaticWebsite, {
-                        Enabled: staticWebsiteProperties.Enabled,
-                        IndexDocument: staticWebsiteProperties.IndexDocument ? staticWebsiteProperties.IndexDocument : undefined,
-                        ErrorDocument404Path: staticWebsiteProperties.ErrorDocument404Path ? staticWebsiteProperties.ErrorDocument404Path : undefined
-                    });
-                    blobService.setServiceProperties(props, (err2: Error | undefined, _response?) => {
-                        if (err2) {
-                            reject(err2);
-                        } else {
-                            resolve();
-                        }
-                    });
-                }
-            });
-        });
-        return;
+    public async setWebsiteHostingProperties(properties: azureStorageBlob.BlobServiceProperties): Promise<void> {
+        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        await serviceClient.setProperties(properties);
     }
 
     private async getAccountType(): Promise<StorageTypes> {
-        let blobService = this.root.createBlobService();
-        return await new Promise<StorageTypes>((resolve, reject) => {
-            // tslint:disable-next-line:no-any
-            blobService.getAccountProperties(undefined, undefined, undefined, (err?: any, result?) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(<StorageTypes>result.AccountKind);
-                }
-            });
-        });
+        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        let accountType: azureStorageBlob.AccountKind | undefined = (await serviceClient.getAccountInfo()).accountKind;
+
+        if (!accountType) {
+            throw new Error("Could not determine storage account type.");
+        }
+
+        return accountType;
     }
 
     public async configureStaticWebsite(): Promise<void> {
@@ -302,23 +271,26 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             validateInput: (value: string): string | undefined => this.validateIndexDocumentName(value)
         });
 
-        let errorDocument404Path: string = await ext.ui.showInputBox({
+        let errorDocument404Path: string | undefined = await ext.ui.showInputBox({
             prompt: "Enter the 404 error document path",
             value: oldStatus.errorDocument404Path ? oldStatus.errorDocument404Path : "",
             placeHolder: 'e.g. error/documents/error.html',
             validateInput: (value: string): string | undefined => this.validateErrorDocumentName(value)
-        });
-        let newStatus: azureStorage.common.models.ServicePropertiesResult.StaticWebsiteProperties = {
-            Enabled: true,
-            ErrorDocument404Path: errorDocument404Path,
-            IndexDocument: indexDocument
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || undefined;
+        let newStatus: azureStorageBlob.BlobServiceProperties = {
+            staticWebsite: {
+                enabled: true,
+                errorDocument404Path,
+                indexDocument
+            }
         };
         await this.setWebsiteHostingProperties(newStatus);
         let msg = oldStatus.enabled ?
             'Static website hosting configuration updated.' :
             `The storage account '${this.label}' has been enabled for static website hosting.`;
         window.showInformationMessage(msg);
-        if (oldStatus.enabled !== newStatus.Enabled) {
+        if (newStatus.staticWebsite && oldStatus.enabled !== newStatus.staticWebsite.enabled) {
             await ext.tree.refresh(this);
         }
 
@@ -333,7 +305,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         let disableMessage: MessageItem = { title: "Disable" };
         let confirmDisable: MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, { modal: true }, disableMessage, DialogResponses.cancel);
         if (confirmDisable === disableMessage) {
-            let props = { Enabled: false };
+            let props = { staticWebsite: { enabled: false } };
             await this.setWebsiteHostingProperties(props);
             window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
             await ext.tree.refresh(this);

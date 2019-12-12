@@ -3,18 +3,19 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { getResourcesPath } from "../../constants";
+import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
-import { BlobContainerTreeItem } from "./blobContainerNode";
+import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
+import { createBlobContainerClient } from './blobUtils';
 
 export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
-    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
+    private _continuationToken: string | undefined;
 
     public label: string = "Blob Containers";
     public readonly childTypeLabel: string = "Blob Container";
@@ -30,11 +31,10 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
             this._continuationToken = undefined;
         }
 
-        let containers = await this.listContainers(this._continuationToken);
-        let { entries, continuationToken } = containers;
-        this._continuationToken = continuationToken;
+        let containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers(this._continuationToken);
+        this._continuationToken = containersResponse.continuationToken;
 
-        const result: AzExtTreeItem[] = await Promise.all(entries.map(async (container: azureStorage.BlobService.ContainerResult) => {
+        const result: AzExtTreeItem[] = await Promise.all(containersResponse.containerItems.map(async (container: azureStorageBlob.ContainerItem) => {
             return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
         }));
 
@@ -45,19 +45,12 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         return !!this._continuationToken;
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listContainers(currentToken: azureStorage.common.ContinuationToken | undefined): Promise<azureStorage.BlobService.ListContainerResult> {
-        return new Promise((resolve, reject) => {
-            let blobService = this.root.createBlobService();
-            // currentToken argument typed incorrectly in SDK
-            blobService.listContainersSegmented(<azureStorage.common.ContinuationToken>currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.BlobService.ListContainerResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+    async listContainers(continuationToken?: string): Promise<azureStorageBlob.ListContainersSegmentResponse> {
+        const blobServiceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        let response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
+
+        // tslint:disable-next-line: no-unsafe-any
+        return (await response.next()).value;
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<BlobContainerTreeItem> {
@@ -70,26 +63,31 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
             return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
                 context.showCreatingTreeItem(containerName);
                 progress.report({ message: `Azure Storage: Creating blob container '${containerName}'` });
-                const container = await this.createBlobContainer(containerName);
-                return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
+                return await BlobContainerTreeItem.createBlobContainerTreeItem(this, await this.createBlobContainer(containerName));
             });
         }
 
         throw new UserCancelledError();
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private createBlobContainer(name: string): Promise<azureStorage.BlobService.ContainerResult> {
-        return new Promise((resolve, reject) => {
-            let blobService = this.root.createBlobService();
-            blobService.createContainer(name, (err?: Error, result?: azureStorage.BlobService.ContainerResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+    private async createBlobContainer(name: string): Promise<azureStorageBlob.ContainerItem> {
+        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, name);
+        await containerClient.create();
+
+        let containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers();
+        let createdContainer: azureStorageBlob.ContainerItem | undefined;
+        for (let container of containersResponse.containerItems) {
+            if (container.name === name) {
+                createdContainer = container;
+                break;
+            }
+        }
+
+        if (!createdContainer) {
+            throw new Error(`Could not create container ${name}`);
+        }
+
+        return createdContainer;
     }
 
     private static validateContainerName(name: string): string | undefined | null {

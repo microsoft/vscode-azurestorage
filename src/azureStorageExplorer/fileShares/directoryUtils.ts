@@ -7,6 +7,7 @@ import * as azureStorage from "azure-storage";
 import * as path from "path";
 import { ProgressLocation, window } from "vscode";
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from "vscode-azureextensionui";
+import { maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from "./directoryNode";
@@ -54,11 +55,11 @@ export function createDirectory(share: azureStorage.FileService.ShareResult, roo
 }
 
 // tslint:disable-next-line:promise-function-async // Grandfathered in
-export function listFilesInDirectory(directory: string, share: string, root: IStorageRoot, maxResults: number, currentToken?: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
+export function listFilesInDirectory(directory: string, share: string, root: IStorageRoot, currentToken?: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
     return new Promise((resolve, reject) => {
         const fileService = root.createFileService();
         // currentToken argument typed incorrectly in SDK
-        fileService.listFilesAndDirectoriesSegmented(share, directory, <azureStorage.common.ContinuationToken>currentToken, { maxResults: maxResults }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
+        fileService.listFilesAndDirectoriesSegmented(share, directory, <azureStorage.common.ContinuationToken>currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
             if (err) {
                 reject(err);
             } else {
@@ -70,13 +71,12 @@ export function listFilesInDirectory(directory: string, share: string, root: ISt
 
 export async function deleteDirectoryAndContents(directory: string, share: string, root: IStorageRoot): Promise<void> {
     const parallelOperations = 5;
-    const maxResults = 50;
 
     // tslint:disable-next-line:no-unnecessary-initializer
     let currentToken: azureStorage.common.ContinuationToken | undefined = undefined;
     // tslint:disable-next-line:no-constant-condition
     while (true) {
-        let { entries, continuationToken }: azureStorage.FileService.ListFilesAndDirectoriesResult = await listFilesInDirectory(directory, share, root, maxResults, currentToken);
+        let { entries, continuationToken }: azureStorage.FileService.ListFilesAndDirectoriesResult = await listFilesInDirectory(directory, share, root, currentToken);
         let promises: Promise<void>[] = [];
         for (let file of entries.files) {
             let promise = deleteFile(directory, file.name, share, root);

@@ -8,7 +8,7 @@ import { FileService } from 'azure-storage';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
-import { getResourcesPath } from "../../constants";
+import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
 import { FileShareTreeItem } from './fileShareNode';
@@ -53,7 +53,7 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
         return new Promise((resolve, reject) => {
             let fileService = this.root.createFileService();
-            fileService.listSharesSegmented(currentToken, { maxResults: 50 }, (err?: Error, result?: azureStorage.FileService.ListSharesResult) => {
+            fileService.listSharesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.FileService.ListSharesResult) => {
                 if (err) {
                     reject(err);
                 } else {

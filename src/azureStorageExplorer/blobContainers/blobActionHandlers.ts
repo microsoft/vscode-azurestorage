@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext, registerCommand } from "vscode-azureextensionui";
-import { BlobTreeItem } from "./blobNode";
+import { BlobTreeItem } from "./BlobTreeItem";
 
 export function registerBlobActionHandlers(): void {
     registerCommand("azureStorage.deleteBlob", async (context: IActionContext, treeItem: BlobTreeItem) => await treeItem.deleteTreeItem(context));
