@@ -228,7 +228,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
             await vscode.commands.executeCommand('azureStorage.deleteStorageAccount');
         });
     }
-  
+
     async function getPrimaryKey(): Promise<string> {
         await validateAccountExists(resourceName, resourceName);
         await vscode.env.clipboard.writeText('');
