@@ -22,6 +22,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     const testAccount: TestAzureAccount = new TestAzureAccount(vscode);
     let client: StorageManagementClient;
     const resourceName: string = getRandomHexString().toLowerCase();
+    const resourceNameAdvanced: string = getRandomHexString().toLowerCase(); // Used when testing advanced create
     const url: string = `https://${resourceName}.blob.core.windows.net`;
     // Blob container, file share and queue must have lower case name
     const containerName: string = getRandomHexString().toLowerCase();
@@ -70,14 +71,12 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         assert.ok(createdAccount);
     });
 
-    await deleteStorageAccount(resourceName);
-
     test("createStorageAccountAdvanced", async () => {
-        resourceGroupsToDelete.push(resourceName);
-        await testUserInput.runWithInputs([resourceName, '$(plus) Create new resource group', resourceName, 'East US'], async () => {
+        resourceGroupsToDelete.push(resourceNameAdvanced);
+        await testUserInput.runWithInputs([resourceNameAdvanced, '$(plus) Create new resource group', resourceNameAdvanced, 'East US'], async () => {
             await vscode.commands.executeCommand('azureStorage.createGpv2AccountAdvanced');
         });
-        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
+        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceNameAdvanced, resourceNameAdvanced);
         assert.ok(createdAccount);
     });
 
@@ -179,7 +178,9 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("deleteStorageAccount", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await deleteStorageAccount(resourceName);
+        await testUserInput.runWithInputs([resourceName, DialogResponses.deleteResponse.title], async () => {
+            await vscode.commands.executeCommand('azureStorage.deleteStorageAccount');
+        });
         await assertThrowsAsync(async () => await client.storageAccounts.getProperties(resourceName, resourceName), /Error/);
     });
 
@@ -220,13 +221,6 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
             await vscode.commands.executeCommand('azureStorage.copyConnectionString');
         });
         return vscode.env.clipboard.readText();
-    }
-
-    // delete the given storage account using the command azureStorage.deleteStorageAccount
-    async function deleteStorageAccount(accountName: string): Promise<void> {
-        await testUserInput.runWithInputs([accountName, DialogResponses.deleteResponse.title], async () => {
-            await vscode.commands.executeCommand('azureStorage.deleteStorageAccount');
-        });
     }
 
     async function getPrimaryKey(): Promise<string> {
