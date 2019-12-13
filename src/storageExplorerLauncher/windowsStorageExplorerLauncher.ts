@@ -54,6 +54,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
                 return exePath;
             } else {
+                context.telemetry.properties.storageExplorerNotFound = 'true';
                 let selected: "Download" = <"Download">await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
                 if (selected === "Download") {
                     context.telemetry.properties.downloadStorageExplorer = 'true';
