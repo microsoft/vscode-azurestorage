@@ -651,14 +651,6 @@
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.createGpv2Account",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.createGpv2AccountAdvanced",
-					"when": "never"
-				},
-				{
 					"command": "azureStorage.deleteFile",
 					"when": "never"
 				},
