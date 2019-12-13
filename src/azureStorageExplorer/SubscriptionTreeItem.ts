@@ -52,7 +52,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         await wizard.prompt();
 
         if (!context.advancedCreation) {
-            wizardContext.newResourceGroupName = `storage_${defaultLocation}`;
+            wizardContext.newResourceGroupName = await wizardContext.relatedNameTask;
         }
 
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
