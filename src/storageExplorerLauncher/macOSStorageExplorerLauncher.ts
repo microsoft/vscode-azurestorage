@@ -6,8 +6,8 @@
 import * as fs from "fs";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { UserCancelledError } from "vscode-azureextensionui";
-import { Launcher } from "../components/launcher/launcher";
+import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
+import { Launcher } from "../utils/launcher";
 import { getSingleRootWorkspace } from "../utils/workspaceUtils";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
@@ -19,25 +19,30 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     private static async getStorageExplorerExecutable(
         warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer."): Promise<string> {
 
-        let selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
-        // tslint:disable-next-line:no-non-null-assertion // storageExplorerLocation has default value, can't be undefined
-        let exePath = path.join(selectedLocation!, MacOSStorageExplorerLauncher.subExecutableLocation);
-        if (!(await MacOSStorageExplorerLauncher.fileExists(exePath))) {
-            let selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
+        return await callWithTelemetryAndErrorHandling('getStorageExplorerExecutableMac', async context => {
+            let selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
+            // tslint:disable-next-line:no-non-null-assertion // storageExplorerLocation has default value, can't be undefined
+            let exePath = path.join(selectedLocation!, MacOSStorageExplorerLauncher.subExecutableLocation);
+            if (!(await MacOSStorageExplorerLauncher.fileExists(exePath))) {
+                context.telemetry.properties.storageExplorerNotFound = 'true';
+                let selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
 
-            if (selected === "Browse") {
-                let userSelectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
-                await vscode.workspace.getConfiguration('azureStorage').update('storageExplorerLocation', userSelectedAppLocation, vscode.ConfigurationTarget.Global);
-                return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected app is not a valid Storage Explorer installation. Browse to existing installation location or download and install Storage Explorer.");
-            } else if (selected === "Download") {
-                await MacOSStorageExplorerLauncher.downloadStorageExplorer();
-                throw new UserCancelledError();
-            } else {
-                throw new UserCancelledError();
+                if (selected === "Browse") {
+                    let userSelectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
+                    await vscode.workspace.getConfiguration('azureStorage').update('storageExplorerLocation', userSelectedAppLocation, vscode.ConfigurationTarget.Global);
+                    return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected app is not a valid Storage Explorer installation. Browse to existing installation location or download and install Storage Explorer.");
+                } else if (selected === "Download") {
+                    context.telemetry.properties.downloadStorageExplorer = 'true';
+                    await MacOSStorageExplorerLauncher.downloadStorageExplorer();
+                    throw new UserCancelledError();
+                } else {
+                    throw new UserCancelledError();
+                }
             }
-        }
 
-        return exePath;
+            return exePath;
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || '';
     }
 
     public async openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void> {
