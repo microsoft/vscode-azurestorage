@@ -6,7 +6,7 @@ import * as fs from "fs";
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
-import { Launcher } from "../components/launcher/launcher";
+import { Launcher } from "../utils/launcher";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
