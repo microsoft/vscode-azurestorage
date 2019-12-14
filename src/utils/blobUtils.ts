@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
+import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
@@ -96,7 +97,7 @@ export async function createBlockBlob(parent: BlobContainerTreeItem | BlobDirect
     // tslint:disable: strict-boolean-expressions
     properties = properties || {};
     properties.blobHTTPHeaders = properties.blobHTTPHeaders || {};
-    properties.blobHTTPHeaders.blobContentType = properties.blobHTTPHeaders.blobContentType || 'text/plain';
+    properties.blobHTTPHeaders.blobContentType = properties.blobHTTPHeaders.blobContentType || mime.getType(name) || undefined;
     // tslint:enable: strict-boolean-expressions
 
     await containerClient.uploadBlockBlob(name, text, contentLength, properties);

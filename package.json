@@ -50,7 +50,7 @@
 		"onCommand:azureStorage.copyConnectionString",
 		"onCommand:azureStorage.createBlobContainer",
 		"onCommand:azureStorage.deleteBlobContainer",
-		"onCommand:azureStorage.createBlockTextBlob",
+		"onCommand:azureStorage.createBlockBlob",
 		"onCommand:azureStorage.uploadBlockBlob",
 		"onCommand:azureStorage.deleteBlob",
 		"onCommand:azureStorage.downloadBlob",
@@ -59,7 +59,7 @@
 		"onCommand:azureStorage.deleteStorageAccount",
 		"onCommand:azureStorage.createDirectory",
 		"onCommand:azureStorage.deleteDirectory",
-		"onCommand:azureStorage.createTextFile",
+		"onCommand:azureStorage.createFile",
 		"onCommand:azureStorage.createGpv2Account",
 		"onCommand:azureStorage.deleteFile",
 		"onCommand:azureStorage.createDirectory",
@@ -194,8 +194,8 @@
 				"category": "Azure Storage"
 			},
 			{
-				"command": "azureStorage.createBlockTextBlob",
-				"title": "Create Empty Text Blob...",
+				"command": "azureStorage.createBlockBlob",
+				"title": "Create Empty Blob...",
 				"category": "Azure Storage"
 			},
 			{
@@ -244,8 +244,8 @@
 				"category": "Azure Storage"
 			},
 			{
-				"command": "azureStorage.createTextFile",
-				"title": "Create Empty Text File...",
+				"command": "azureStorage.createFile",
+				"title": "Create Empty File...",
 				"category": "Azure Storage"
 			},
 			{
@@ -389,7 +389,7 @@
 					"group": "navigation@1"
 				},
 				{
-					"command": "azureStorage.createBlockTextBlob",
+					"command": "azureStorage.createBlockBlob",
 					"when": "view == azureStorage && viewItem == azureBlobContainer",
 					"group": "2_create@1"
 				},
@@ -466,7 +466,7 @@
 					"group": "navigation@1"
 				},
 				{
-					"command": "azureStorage.createTextFile",
+					"command": "azureStorage.createFile",
 					"when": "view == azureStorage && viewItem == azureFileShare",
 					"group": "2_create@1"
 				},
@@ -513,7 +513,7 @@
 				},
 				{
 					"$comment": "========= azureFileShareDirectory =========",
-					"command": "azureStorage.createTextFile",
+					"command": "azureStorage.createFile",
 					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
 					"group": "2_create@1"
 				},
@@ -600,7 +600,7 @@
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.createBlockTextBlob",
+					"command": "azureStorage.createBlockBlob",
 					"when": "never"
 				},
 				{
@@ -636,7 +636,7 @@
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.createTextFile",
+					"command": "azureStorage.createFile",
 					"when": "never"
 				},
 				{

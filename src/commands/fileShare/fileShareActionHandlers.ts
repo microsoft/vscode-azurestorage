@@ -22,7 +22,7 @@ export function registerFileShareActionHandlers(): void {
     registerCommand("azureStorage.editFile", async (_context: IActionContext, treeItem: FileTreeItem) => await _editor.showEditor(treeItem));
     registerCommand("azureStorage.deleteFileShare", async (context: IActionContext, treeItem?: FileShareTreeItem) => await deleteNode(context, FileShareTreeItem.contextValue, treeItem));
     registerCommand("azureStorage.createDirectory", async (context: IActionContext, treeItem: FileShareTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.contextValue }));
-    registerCommand("azureStorage.createTextFile", async (context: IActionContext, treeItem: FileShareTreeItem) => {
+    registerCommand("azureStorage.createFile", async (context: IActionContext, treeItem: FileShareTreeItem) => {
         let childTreeItem = await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue });
         await vscode.commands.executeCommand("azureStorage.editFile", childTreeItem);
     });

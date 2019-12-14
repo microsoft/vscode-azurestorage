@@ -5,6 +5,7 @@
 
 import * as azureStorage from "azure-storage";
 import { FileService } from "azure-storage";
+import * as mime from "mime";
 import { ProgressLocation, window } from "vscode";
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
@@ -71,7 +72,14 @@ export async function getFile(directoryPath: string, name: string, share: FileSe
 export async function createFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, text?: string | Buffer, options?: azureStorage.FileService.CreateFileRequestOptions): Promise<azureStorage.FileService.FileResult> {
     return new Promise((resolve, reject) => {
         const fileService = root.createFileService();
-        fileService.createFileFromText(share.name, directoryPath, name, text ? text : '', options ? options : {}, (err?: Error, result?: azureStorage.FileService.FileResult) => {
+
+        // tslint:disable: strict-boolean-expressions
+        options = options || {};
+        options.contentSettings = options.contentSettings || {};
+        options.contentSettings.contentType = options.contentSettings.contentType || mime.getType(name) || undefined;
+        // tslint:enable: strict-boolean-expressions
+
+        fileService.createFileFromText(share.name, directoryPath, name, text ? text : '', options, (err?: Error, result?: azureStorage.FileService.FileResult) => {
             if (err) {
                 reject(err);
             } else {
