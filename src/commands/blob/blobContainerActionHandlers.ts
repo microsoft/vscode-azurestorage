@@ -20,7 +20,7 @@ export function registerBlobContainerActionHandlers(): void {
     registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
     registerCommand("azureStorage.editBlob", async (_context: IActionContext, treeItem: BlobTreeItem) => await _editor.showEditor(treeItem));
     registerCommand("azureStorage.deleteBlobContainer", async (context: IActionContext, treeItem?: BlobContainerTreeItem) => await deleteNode(context, BlobContainerTreeItem.contextValue, treeItem));
-    registerCommand("azureStorage.createBlockTextBlob", async (context: IActionContext, treeItem: BlobContainerTreeItem) => {
+    registerCommand("azureStorage.createBlockBlob", async (context: IActionContext, treeItem: BlobContainerTreeItem) => {
         let childTreeItem = await treeItem.createChild(context);
         await vscode.commands.executeCommand("azureStorage.editBlob", childTreeItem);
     });
