@@ -63,10 +63,21 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("createStorageAccount", async () => {
         resourceGroupsToDelete.push(resourceName);
-        await testUserInput.runWithInputs([resourceName, '$(plus) Create new resource group', resourceName, 'East US'], async () => {
+        await testUserInput.runWithInputs([resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.createGpv2Account');
         });
         const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
+        assert.ok(createdAccount);
+    });
+
+    test("createStorageAccountAdvanced", async () => {
+        const accountNameAdvanced: string = getRandomHexString().toLowerCase();
+        const resourceNameAdvanced: string = getRandomHexString().toLowerCase();
+        resourceGroupsToDelete.push(resourceNameAdvanced);
+        await testUserInput.runWithInputs([accountNameAdvanced, '$(plus) Create new resource group', resourceNameAdvanced, 'East US'], async () => {
+            await vscode.commands.executeCommand('azureStorage.createGpv2AccountAdvanced');
+        });
+        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceNameAdvanced, accountNameAdvanced);
         assert.ok(createdAccount);
     });
 

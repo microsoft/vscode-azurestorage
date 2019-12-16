@@ -14,6 +14,7 @@ import { registerBlobActionHandlers } from './commands/blob/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './commands/blob/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './commands/blob/blobContainerGroupActionHandlers';
 import { configureStaticWebsite, configureStaticWebsiteAdvanced } from './commands/configureStaticWebsite';
+import { createStorageAccount, createStorageAccountAdvanced } from './commands/createStorageAccount';
 import { registerDirectoryActionHandlers } from './commands/fileShare/directoryActionHandlers';
 import { registerFileActionHandlers } from './commands/fileShare/fileActionHandlers';
 import { registerFileShareActionHandlers } from './commands/fileShare/fileShareActionHandlers';
@@ -34,7 +35,6 @@ import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
 import { StorageAccountTreeItem } from './tree/StorageAccountTreeItem';
-import { SubscriptionTreeItem } from './tree/SubscriptionTreeItem';
 import { localize } from './utils/localize';
 
 // tslint:disable-next-line:max-func-body-length
@@ -122,11 +122,8 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 });
             await accountTreeItem.disableStaticWebsite();
         });
-        registerCommand("azureStorage.createGpv2Account", async (actionContext: IActionContext, treeItem?: SubscriptionTreeItem) => {
-            let node = treeItem ? <SubscriptionTreeItem>treeItem : <SubscriptionTreeItem>await ext.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue, actionContext);
-
-            await node.createChild(actionContext);
-        });
+        registerCommand("azureStorage.createGpv2Account", createStorageAccount);
+        registerCommand("azureStorage.createGpv2AccountAdvanced", createStorageAccountAdvanced);
         registerCommand('azureStorage.browseStaticWebsite', async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,

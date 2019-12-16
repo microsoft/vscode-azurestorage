@@ -62,6 +62,7 @@
 		"onCommand:azureStorage.deleteDirectory",
 		"onCommand:azureStorage.createFile",
 		"onCommand:azureStorage.createGpv2Account",
+		"onCommand:azureStorage.createGpv2AccountAdvanced",
 		"onCommand:azureStorage.deleteFile",
 		"onCommand:azureStorage.createDirectory",
 		"onCommand:azureStorage.createSubdirectory",
@@ -262,6 +263,11 @@
 					"light": "resources/light/createStorageAccount.svg",
 					"dark": "resources/dark/createStorageAccount.svg"
 				}
+			},
+			{
+				"command": "azureStorage.createGpv2AccountAdvanced",
+				"title": "Create Storage Account... (Advanced)",
+				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.deleteFile",
@@ -487,14 +493,19 @@
 					"group": "2_create@1"
 				},
 				{
+					"command": "azureStorage.createDirectory",
+					"when": "view == azureStorage && viewItem == azureFileShare",
+					"group": "2_create@2"
+				},
+				{
 					"command": "azureStorage.createGpv2Account",
 					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
 					"group": "2_create@3"
 				},
 				{
-					"command": "azureStorage.createDirectory",
-					"when": "view == azureStorage && viewItem == azureFileShare",
-					"group": "2_create@2"
+					"command": "azureStorage.createGpv2AccountAdvanced",
+					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+					"group": "2_create@4"
 				},
 				{
 					"command": "azureStorage.copyUrl",
@@ -653,10 +664,6 @@
 				},
 				{
 					"command": "azureStorage.createFile",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.createGpv2Account",
 					"when": "never"
 				},
 				{
