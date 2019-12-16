@@ -35,6 +35,7 @@
 		"onCommand:azureStorage.openInFileExplorer",
 		"onCommand:azureStorage.deployStaticWebsite",
 		"onCommand:azureStorage.configureStaticWebsite",
+		"onCommand:azureStorage.configureStaticWebsiteAdvanced",
 		"onCommand:azureStorage.disableStaticWebsite",
 		"onCommand:azureStorage.refresh",
 		"onCommand:azureStorage.browseStaticWebsite",
@@ -113,6 +114,11 @@
 			{
 				"command": "azureStorage.configureStaticWebsite",
 				"title": "Configure Static Website...",
+				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.configureStaticWebsiteAdvanced",
+				"title": "Configure Static Website... (Advanced)",
 				"category": "Azure Storage"
 			},
 			{
@@ -362,6 +368,11 @@
 					"group": "6_staticwebsites@3"
 				},
 				{
+					"command": "azureStorage.configureStaticWebsiteAdvanced",
+					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"group": "6_staticwebsites@4"
+				},
+				{
 					"command": "azureStorage.disableStaticWebsite",
 					"when": "view == azureStorage && viewItem == azureStorageAccount",
 					"group": "6_staticwebsites@4"
@@ -417,6 +428,11 @@
 					"command": "azureStorage.configureStaticWebsite",
 					"when": "view == azureStorage && viewItem == azureBlobContainer",
 					"group": "6_staticwebsites@3"
+				},
+				{
+					"command": "azureStorage.configureStaticWebsiteAdvanced",
+					"when": "view == azureStorage && viewItem == azureBlobContainer",
+					"group": "6_staticwebsites@4"
 				},
 				{
 					"command": "azureStorage.disableStaticWebsite",

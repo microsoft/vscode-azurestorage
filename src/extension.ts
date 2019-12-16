@@ -13,6 +13,7 @@ import { AzureStorageFS } from './AzureStorageFS';
 import { registerBlobActionHandlers } from './commands/blob/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './commands/blob/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './commands/blob/blobContainerGroupActionHandlers';
+import { configureStaticWebsite, configureStaticWebsiteAdvanced } from './commands/configureStaticWebsite';
 import { registerDirectoryActionHandlers } from './commands/fileShare/directoryActionHandlers';
 import { registerFileActionHandlers } from './commands/fileShare/fileActionHandlers';
 import { registerFileShareActionHandlers } from './commands/fileShare/fileShareActionHandlers';
@@ -109,16 +110,8 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
             await treeItem.openInPortal();
         });
-        registerCommand("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
-            let accountTreeItem = await selectStorageAccountTreeItemForCommand(
-                treeItem,
-                actionContext,
-                {
-                    mustBeWebsiteCapable: true,
-                    askToConfigureWebsite: false
-                });
-            await accountTreeItem.configureStaticWebsite();
-        });
+        registerCommand("azureStorage.configureStaticWebsite", configureStaticWebsite);
+        registerCommand("azureStorage.configureStaticWebsiteAdvanced", configureStaticWebsiteAdvanced);
         registerCommand("azureStorage.disableStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
