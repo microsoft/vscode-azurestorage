@@ -22,7 +22,6 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     const testAccount: TestAzureAccount = new TestAzureAccount(vscode);
     let client: StorageManagementClient;
     const resourceName: string = getRandomHexString().toLowerCase();
-    const resourceNameAdvanced: string = getRandomHexString().toLowerCase(); // Used when testing advanced create
     const url: string = `https://${resourceName}.blob.core.windows.net`;
     // Blob container, file share and queue must have lower case name
     const containerName: string = getRandomHexString().toLowerCase();
@@ -72,11 +71,13 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     });
 
     test("createStorageAccountAdvanced", async () => {
+        const accountNameAdvanced: string = getRandomHexString().toLowerCase();
+        const resourceNameAdvanced: string = getRandomHexString().toLowerCase();
         resourceGroupsToDelete.push(resourceNameAdvanced);
-        await testUserInput.runWithInputs([resourceNameAdvanced, '$(plus) Create new resource group', resourceNameAdvanced, 'East US'], async () => {
+        await testUserInput.runWithInputs([accountNameAdvanced, '$(plus) Create new resource group', resourceNameAdvanced, 'East US'], async () => {
             await vscode.commands.executeCommand('azureStorage.createGpv2AccountAdvanced');
         });
-        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceNameAdvanced, resourceNameAdvanced);
+        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceNameAdvanced, accountNameAdvanced);
         assert.ok(createdAccount);
     });
 
