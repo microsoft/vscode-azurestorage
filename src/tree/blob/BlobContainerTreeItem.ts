@@ -10,7 +10,7 @@ import * as glob from 'glob';
 import * as mime from 'mime';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ProgressLocation, Uri, window } from 'vscode';
+import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { configurationSettingsKeys, extensionPrefix, getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { BlobFileHandler } from '../../editors/BlobFileHandler';
@@ -464,17 +464,15 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
-        await window.withProgress({ title: `Uploading ${filePath} as ${blobFriendlyPath}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
-            const transferProgress: TransferProgress = new TransferProgress();
-            const options: azureStorageBlob.BlockBlobParallelUploadOptions = {
-                blobHTTPHeaders: {
-                    // tslint:disable-next-line: strict-boolean-expressions
-                    blobContentType: mime.getType(blobPath) || undefined
-                },
-                onProgress: (transferProgressEvent: TransferProgressEvent) => transferProgress.report(blobPath, transferProgressEvent.loadedBytes, totalBytes, notificationProgress)
-            };
-            await blockBlobClient.uploadFile(filePath, options);
-        });
+        const transferProgress: TransferProgress = new TransferProgress();
+        const options: azureStorageBlob.BlockBlobParallelUploadOptions = {
+            blobHTTPHeaders: {
+                // tslint:disable-next-line: strict-boolean-expressions
+                blobContentType: mime.getType(blobPath) || undefined
+            },
+            onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(blobPath, transferProgressEvent.loadedBytes, totalBytes)
+        };
+        await blockBlobClient.uploadFile(filePath, options);
 
         if (!suppressLogs) {
             ext.outputChannel.appendLine(`Successfully uploaded ${blobFriendlyPath}.`);
