@@ -67,7 +67,7 @@ export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
         await window.withProgress({ title: `Downloading ${treeItem.blob.name}`, location: ProgressLocation.Notification }, async (notificationProgress) => {
             const transferProgress: TransferProgress = new TransferProgress();
             await blockBlobClient.downloadToFile(filePath, undefined, undefined, {
-                onProgress: (transferProgressEvent) => transferProgress.report(treeItem.blob.name, transferProgressEvent.loadedBytes, totalBytes, notificationProgress)
+                onProgress: (transferProgressEvent) => transferProgress.reportToNotification(treeItem.blob.name, transferProgressEvent.loadedBytes, totalBytes, notificationProgress)
             });
         });
 
