@@ -434,6 +434,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
         for (let blob of blobsToDelete) {
             try {
+                ext.outputChannel.appendLine(`Deleting blob "${blob.name}"...`);
                 let response: azureStorageBlob.BlobDeleteResponse = await containerClient.deleteBlob(blob.name);
                 if (cancellationToken.isCancellationRequested) {
                     throw new UserCancelledError();
