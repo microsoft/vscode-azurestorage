@@ -18,6 +18,7 @@ import { FileShareTreeItem, IFileShareCreateChildContext } from "./tree/fileShar
 import { FileTreeItem } from "./tree/fileShare/FileTreeItem";
 import { createBlobClient, createBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
 import { doesFileExist, updateFileFromText } from "./utils/fileUtils";
+import { localize } from "./utils/localize";
 import { validateDirectoryName } from "./utils/validateNames";
 
 type AzureStorageFileTreeItem = FileTreeItem | DirectoryTreeItem | FileShareTreeItem;
@@ -58,7 +59,8 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             let treeItem: AzureStorageDirectoryTreeItem = await this.lookupAsDirectory(uri, context);
             await treeItem.refresh();
 
-            let children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
+            const loadingMessage: string = localize('loadingDir', 'Loading directory "{0}"...', treeItem.label);
+            let children: AzExtTreeItem[] = await treeItem.loadAllChildren({ ...context, loadingMessage });
             let result: [string, vscode.FileType][] = [];
             for (const child of children) {
                 if (child instanceof FileTreeItem) {
@@ -179,10 +181,23 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             let treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
 
             let childExists: boolean;
+            try {
+                await this.lookup(uri, context);
+                childExists = true;
+            } catch {
+                childExists = false;
+            }
+
+            let childExistsRemote: boolean;
             if (treeItem instanceof FileShareTreeItem) {
-                childExists = await doesFileExist(parsedUri.baseName, treeItem, parsedUri.parentDirPath, treeItem.share);
+                childExistsRemote = await doesFileExist(parsedUri.baseName, treeItem, parsedUri.parentDirPath, treeItem.share);
             } else {
-                childExists = await doesBlobExist(treeItem, parsedUri.filePath);
+                childExistsRemote = await doesBlobExist(treeItem, parsedUri.filePath);
+            }
+
+            if (childExists !== childExistsRemote) {
+                // Need to be extra careful here to prevent possible data-loss. Related to https://github.com/microsoft/vscode-azurestorage/issues/436
+                throw new Error(localize('outOfSync', 'Your Azure Storage file system is out of sync and must be refreshed.'));
             }
 
             if (!childExists && !options.create) {
@@ -275,7 +290,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
 
     private async lookupFileShare(uri: vscode.Uri, context: IActionContext, resourceId: string, filePath: string): Promise<AzureStorageFileTreeItem> {
         let uriPath = path.posix.join(resourceId, filePath);
-        let treeItem = await ext.tree.findTreeItem(uriPath, context);
+        let treeItem = await ext.tree.findTreeItem(uriPath, { ...context, loadAll: true });
         if (!treeItem) {
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
         } else if (treeItem instanceof FileShareTreeItem || treeItem instanceof FileTreeItem || treeItem instanceof DirectoryTreeItem) {
@@ -323,7 +338,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     private async lookupRoot(uri: vscode.Uri, context: IActionContext, resourceId: string): Promise<FileShareTreeItem | BlobContainerTreeItem> {
-        let treeItem = await ext.tree.findTreeItem(resourceId, context);
+        let treeItem = await ext.tree.findTreeItem(resourceId, { ...context, loadAll: true });
         if (!treeItem) {
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
         } else if (treeItem instanceof FileShareTreeItem || treeItem instanceof BlobContainerTreeItem) {
