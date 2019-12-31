@@ -14,6 +14,7 @@ import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 
 export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public childTypeLabel: string = "Storage Account";
+    public supportsAdvancedCreation: boolean = true;
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
