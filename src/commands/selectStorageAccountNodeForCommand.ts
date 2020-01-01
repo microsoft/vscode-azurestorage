@@ -19,7 +19,7 @@ import { StorageAccountTreeItem } from "../tree/StorageAccountTreeItem";
 export async function selectStorageAccountTreeItemForCommand(
     treeItem: AzureTreeItem | undefined,
     context: IActionContext,
-    options: { mustBeWebsiteCapable: boolean, askToConfigureWebsite: boolean }
+    options: { mustBeWebsiteCapable: boolean, configureWebsite: boolean }
 ): Promise<StorageAccountTreeItem> {
     // treeItem should be one of:
     //   undefined
@@ -48,20 +48,9 @@ export async function selectStorageAccountTreeItemForCommand(
         let hostingStatus = await accountTreeItem.getActualWebsiteHostingStatus();
         await accountTreeItem.ensureHostingCapable(hostingStatus);
 
-        if (options.askToConfigureWebsite && !hostingStatus.enabled) {
+        if (options.configureWebsite && !hostingStatus.enabled) {
             context.telemetry.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
-            context.telemetry.properties.enableResponse = 'false';
-            let enableWebHostingPrompt = "Enable website hosting";
-            // don't check result since cancel throws UserCancelledError and only other option is 'Enable'
-            await ext.ui.showWarningMessage(
-                `Website hosting is not enabled on storage account "${accountTreeItem.label}".`,
-                { modal: true },
-                { title: enableWebHostingPrompt });
-            let enableResponse = 'true';
-            context.telemetry.properties.enableResponse = String(enableResponse);
-            if (enableResponse) {
-                await accountTreeItem.configureStaticWebsite();
-            }
+            await accountTreeItem.configureStaticWebsite();
         }
     }
 

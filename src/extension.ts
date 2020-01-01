@@ -115,7 +115,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 actionContext,
                 {
                     mustBeWebsiteCapable: true,
-                    askToConfigureWebsite: false
+                    configureWebsite: false
                 });
             await accountTreeItem.configureStaticWebsite();
         });
@@ -125,7 +125,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 actionContext,
                 {
                     mustBeWebsiteCapable: false,
-                    askToConfigureWebsite: false
+                    configureWebsite: false
                 });
             await accountTreeItem.disableStaticWebsite();
         });
@@ -137,7 +137,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 actionContext,
                 {
                     mustBeWebsiteCapable: true,
-                    askToConfigureWebsite: true
+                    configureWebsite: true
                 });
             await accountTreeItem.browseStaticWebsite();
         });
