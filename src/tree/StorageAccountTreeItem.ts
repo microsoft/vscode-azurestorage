@@ -263,7 +263,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async configureStaticWebsite(promptForSettings: boolean = true): Promise<void> {
         const defaultIndexDocument: string = 'index.html';
-        const defaultErrorDocument404Path: undefined = undefined;
+        const defaultErrorDocument404Path: string = defaultIndexDocument;
         let indexDocument: string = defaultIndexDocument;
         let errorDocument404Path: string | undefined = defaultErrorDocument404Path;
         let oldStatus: WebsiteHostingStatus = await this.getActualWebsiteHostingStatus();
@@ -279,7 +279,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             errorDocument404Path = await ext.ui.showInputBox({
                 prompt: "Enter the 404 error document path",
                 value: oldStatus.errorDocument404Path ? oldStatus.errorDocument404Path : defaultErrorDocument404Path,
-                placeHolder: 'e.g. error/documents/error.html',
                 validateInput: (value: string): string | undefined => this.validateErrorDocumentName(value)
                 // tslint:disable-next-line: strict-boolean-expressions
             }) || undefined;
