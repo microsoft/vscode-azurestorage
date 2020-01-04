@@ -137,7 +137,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 actionContext,
                 {
                     mustBeWebsiteCapable: true,
-                    configureWebsite: true
+                    configureWebsite: false
                 });
             await accountTreeItem.browseStaticWebsite();
         });

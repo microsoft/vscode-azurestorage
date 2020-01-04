@@ -26,6 +26,8 @@ export async function selectStorageAccountTreeItemForCommand(
     //   a storage account treeItem
     //   a blob container treeItem
 
+    context.telemetry.properties.showEnableWebsiteHostingPrompt = 'true';
+
     if (!treeItem) {
         treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
@@ -50,6 +52,18 @@ export async function selectStorageAccountTreeItemForCommand(
 
         if (options.configureWebsite && !hostingStatus.enabled) {
             context.telemetry.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
+
+            if (context.telemetry.properties.showEnableWebsiteHostingPrompt === 'true') {
+                context.telemetry.properties.enableResponse = 'false';
+                let enableWebHostingPrompt = "Enable website hosting";
+                // don't check result since cancel throws UserCancelledError and only other option is 'Enable'
+                await ext.ui.showWarningMessage(
+                    `Website hosting is not enabled on storage account "${accountTreeItem.label}".`,
+                    { modal: true },
+                    { title: enableWebHostingPrompt });
+                context.telemetry.properties.enableResponse = 'true';
+            }
+
             await accountTreeItem.configureStaticWebsite();
         }
     }

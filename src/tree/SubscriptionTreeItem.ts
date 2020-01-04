@@ -68,6 +68,9 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             await accountTreeItem.configureStaticWebsite(false);
         }
 
+        // In case this account has been created via a deploy or browse command, the enable website hosting prompt shouldn't be shown
+        context.telemetry.properties.showEnableWebsiteHostingPrompt = 'false';
+
         return accountTreeItem;
     }
 
