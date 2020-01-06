@@ -18,7 +18,7 @@ import { StorageAccountTreeItem } from "../tree/StorageAccountTreeItem";
  */
 export async function selectStorageAccountTreeItemForCommand(
     treeItem: AzureTreeItem | undefined,
-    context: IActionContext,
+    context: ISelectStorageAccountContext,
     options: { mustBeWebsiteCapable: boolean, configureWebsite: boolean }
 ): Promise<StorageAccountTreeItem> {
     // treeItem should be one of:
@@ -26,7 +26,7 @@ export async function selectStorageAccountTreeItemForCommand(
     //   a storage account treeItem
     //   a blob container treeItem
 
-    context.telemetry.properties.showEnableWebsiteHostingPrompt = 'true';
+    context.showEnableWebsiteHostingPrompt = true;
 
     if (!treeItem) {
         treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
@@ -53,7 +53,7 @@ export async function selectStorageAccountTreeItemForCommand(
         if (options.configureWebsite && !hostingStatus.enabled) {
             context.telemetry.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';
 
-            if (context.telemetry.properties.showEnableWebsiteHostingPrompt === 'true') {
+            if (context.showEnableWebsiteHostingPrompt) {
                 context.telemetry.properties.enableResponse = 'false';
                 let enableWebHostingPrompt = "Enable website hosting";
                 // don't check result since cancel throws UserCancelledError and only other option is 'Enable'
@@ -69,4 +69,8 @@ export async function selectStorageAccountTreeItemForCommand(
     }
 
     return accountTreeItem;
+}
+
+export interface ISelectStorageAccountContext extends IActionContext {
+    showEnableWebsiteHostingPrompt?: boolean;
 }

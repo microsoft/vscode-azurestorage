@@ -7,6 +7,7 @@ import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
+import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { StorageAccountCreateStep } from './createWizard/storageAccountCreateStep';
 import { StorageAccountNameStep } from './createWizard/storageAccountNameStep';
@@ -69,7 +70,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         }
 
         // In case this account has been created via a deploy or browse command, the enable website hosting prompt shouldn't be shown
-        context.telemetry.properties.showEnableWebsiteHostingPrompt = 'false';
+        (<ISelectStorageAccountContext>context).showEnableWebsiteHostingPrompt = false;
 
         return accountTreeItem;
     }
