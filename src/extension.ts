@@ -23,7 +23,7 @@ import { OpenBehaviorStep } from './commands/openInFileExplorer/OpenBehaviorStep
 import { OpenTreeItemStep } from './commands/openInFileExplorer/OpenTreeItemStep';
 import { registerQueueActionHandlers } from './commands/queue/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './commands/queue/queueGroupActionHandlers';
-import { ISelectStorageAccountContext, selectStorageAccountTreeItemForCommand } from './commands/selectStorageAccountNodeForCommand';
+import { selectStorageAccountTreeItemForCommand } from './commands/selectStorageAccountNodeForCommand';
 import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
@@ -109,7 +109,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
             await treeItem.openInPortal();
         });
-        registerCommand("azureStorage.configureStaticWebsite", async (actionContext: ISelectStorageAccountContext, treeItem?: AzureTreeItem) => {
+        registerCommand("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
                 actionContext,
@@ -119,7 +119,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 });
             await accountTreeItem.configureStaticWebsite();
         });
-        registerCommand("azureStorage.disableStaticWebsite", async (actionContext: ISelectStorageAccountContext, treeItem?: AzureTreeItem) => {
+        registerCommand("azureStorage.disableStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
                 actionContext,
@@ -131,7 +131,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         });
         registerCommand("azureStorage.createGpv2Account", createStorageAccount);
         registerCommand("azureStorage.createGpv2AccountAdvanced", createStorageAccountAdvanced);
-        registerCommand('azureStorage.browseStaticWebsite', async (actionContext: ISelectStorageAccountContext, treeItem?: AzureTreeItem) => {
+        registerCommand('azureStorage.browseStaticWebsite', async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
                 actionContext,
