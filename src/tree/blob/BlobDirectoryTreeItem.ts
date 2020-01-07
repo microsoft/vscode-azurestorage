@@ -7,6 +7,7 @@ import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
+import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
 import { createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { IStorageRoot } from "../IStorageRoot";
@@ -84,6 +85,8 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 throw new Error(`Errors occurred when deleting "${this.dirName}".`);
             }
         });
+
+        AzureStorageFS.fireDeleteEvent(this);
     }
 
     private async deleteFolder(context: IActionContext): Promise<boolean> {

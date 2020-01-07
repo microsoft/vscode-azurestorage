@@ -6,6 +6,7 @@
 import { ExtensionContext, TreeView } from "vscode";
 import { AzExtTreeDataProvider, AzExtTreeItem, IAzExtOutputChannel, IAzureUserInput, ITelemetryReporter } from "vscode-azureextensionui";
 import { AzureAccountTreeItem } from '../src/tree/AzureAccountTreeItem';
+import { AzureStorageFS } from "./AzureStorageFS";
 
 /**
  * Namespace for common variables used throughout the extension. They must be initialized in the activate() method of extension.ts
@@ -21,5 +22,6 @@ export namespace ext {
     export let tree: AzExtTreeDataProvider;
     export let treeView: TreeView<AzExtTreeItem>;
     export let azureAccountTreeItem: AzureAccountTreeItem;
+    export let azureStorageFS: AzureStorageFS | undefined; // NOTE: We can remove `| undefined` once this is no longer behind a feature flag
     export const prefix: string = 'azureStorage';
 }
