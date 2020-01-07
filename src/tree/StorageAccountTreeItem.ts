@@ -261,23 +261,29 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return accountType;
     }
 
-    public async configureStaticWebsite(): Promise<void> {
-        const defaultIndexDocumentName = 'index.html';
-        let oldStatus = await this.getActualWebsiteHostingStatus();
+    public async configureStaticWebsite(promptForSettings: boolean = true): Promise<void> {
+        const defaultIndexDocument: string = 'index.html';
+        const defaultErrorDocument404Path: string = defaultIndexDocument;
+        let indexDocument: string = defaultIndexDocument;
+        let errorDocument404Path: string | undefined = defaultErrorDocument404Path;
+        let oldStatus: WebsiteHostingStatus = await this.getActualWebsiteHostingStatus();
         await this.ensureHostingCapable(oldStatus);
-        let indexDocument = await ext.ui.showInputBox({
-            prompt: "Enter the index document name",
-            value: oldStatus.indexDocument ? oldStatus.indexDocument : defaultIndexDocumentName,
-            validateInput: (value: string): string | undefined => this.validateIndexDocumentName(value)
-        });
 
-        let errorDocument404Path: string | undefined = await ext.ui.showInputBox({
-            prompt: "Enter the 404 error document path",
-            value: oldStatus.errorDocument404Path ? oldStatus.errorDocument404Path : "",
-            placeHolder: 'e.g. error/documents/error.html',
-            validateInput: (value: string): string | undefined => this.validateErrorDocumentName(value)
-            // tslint:disable-next-line: strict-boolean-expressions
-        }) || undefined;
+        if (promptForSettings) {
+            indexDocument = await ext.ui.showInputBox({
+                prompt: "Enter the index document name",
+                value: oldStatus.indexDocument ? oldStatus.indexDocument : defaultIndexDocument,
+                validateInput: (value: string): string | undefined => this.validateIndexDocumentName(value)
+            });
+
+            errorDocument404Path = await ext.ui.showInputBox({
+                prompt: "Enter the 404 error document path",
+                value: oldStatus.errorDocument404Path ? oldStatus.errorDocument404Path : defaultErrorDocument404Path,
+                validateInput: (value: string): string | undefined => this.validateErrorDocumentName(value)
+                // tslint:disable-next-line: strict-boolean-expressions
+            }) || undefined;
+        }
+
         let newStatus: azureStorageBlob.BlobServiceProperties = {
             staticWebsite: {
                 enabled: true,
@@ -289,11 +295,12 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         let msg = oldStatus.enabled ?
             'Static website hosting configuration updated.' :
             `The storage account '${this.label}' has been enabled for static website hosting.`;
+        // tslint:disable-next-line: strict-boolean-expressions
+        msg += ` Index document: ${indexDocument}, 404 error document: ${errorDocument404Path || 'none'}`;
         window.showInformationMessage(msg);
         if (newStatus.staticWebsite && oldStatus.enabled !== newStatus.staticWebsite.enabled) {
             await ext.tree.refresh(this);
         }
-
     }
 
     public async disableStaticWebsite(): Promise<void> {

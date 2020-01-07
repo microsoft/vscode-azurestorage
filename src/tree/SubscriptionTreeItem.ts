@@ -7,6 +7,7 @@ import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccount } from 'azure-arm-storage/lib/models';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
+import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { StorageAccountCreateStep } from './createWizard/storageAccountCreateStep';
 import { StorageAccountNameStep } from './createWizard/storageAccountNameStep';
@@ -61,7 +62,17 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             progress.report({ message: `Creating storage account '${wizardContext.newStorageAccountName}'` });
             await wizard.execute();
         });
-        return await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(<StorageAccount>nonNull(wizardContext.storageAccount)), storageManagementClient);
+        let accountTreeItem: StorageAccountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(<StorageAccount>nonNull(wizardContext.storageAccount)), storageManagementClient);
+
+        if (!context.advancedCreation) {
+            // Configure static website with default settings
+            await accountTreeItem.configureStaticWebsite(false);
+        }
+
+        // In case this account has been created via a deploy or browse command, the enable website hosting prompt shouldn't be shown
+        (<ISelectStorageAccountContext>context).showEnableWebsiteHostingPrompt = false;
+
+        return accountTreeItem;
     }
 
     public hasMoreChildrenImpl(): boolean {

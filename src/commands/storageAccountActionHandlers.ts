@@ -74,7 +74,7 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
         context,
         {
             mustBeWebsiteCapable: true,
-            askToConfigureWebsite: true
+            configureWebsite: true
         });
 
     //  Ask for source folder if needed
