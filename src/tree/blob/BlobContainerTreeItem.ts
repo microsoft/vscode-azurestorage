@@ -109,7 +109,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     private async listAllBlobs(cancellationToken?: vscode.CancellationToken, properties?: TelemetryProperties): Promise<azureStorageBlob.BlobItem[]> {
-        // tslint:disable-next-line:no-any
         let currentToken: string | undefined;
         let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobFlatSegmentResponse>;
         let responseValue: azureStorageBlob.ListBlobsFlatSegmentResponse;

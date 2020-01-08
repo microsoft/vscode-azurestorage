@@ -33,7 +33,7 @@ async function openFileShareInStorageExplorer(_context: IActionContext, treeItem
     let accountId = treeItem.root.storageAccount.id;
     let subscriptionid = treeItem.root.subscriptionId;
     const resourceType = 'Azure.FileShare';
-    let resourceName = treeItem.share.name;
+    let resourceName = treeItem.shareName;
 
     await storageExplorerLauncher.openResource(accountId, subscriptionid, resourceType, resourceName);
 }

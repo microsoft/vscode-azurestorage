@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
-import { FileService } from "azure-storage";
-import * as mime from "mime";
+import * as azureStorageShare from '@azure/storage-file-share';
+import * as mime from 'mime';
 import { ProgressLocation, window } from "vscode";
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
@@ -14,15 +13,30 @@ import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
 import { IStorageRoot } from "../tree/IStorageRoot";
 import { validateFileName } from "./validateNames";
 
+export function createShareClient(root: IStorageRoot, shareName: string): azureStorageShare.ShareClient {
+    const shareServiceClient: azureStorageShare.ShareServiceClient = root.createShareServiceClient();
+    return shareServiceClient.getShareClient(shareName);
+}
+
+export function createDirectoryClient(root: IStorageRoot, shareName: string, directoryName: string): azureStorageShare.ShareDirectoryClient {
+    const shareClient: azureStorageShare.ShareClient = createShareClient(root, shareName);
+    return shareClient.getDirectoryClient(directoryName);
+}
+
+export function createFileClient(root: IStorageRoot, shareName: string, directoryName: string, fileName: string): azureStorageShare.ShareFileClient {
+    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directoryName);
+    return directoryClient.getFileClient(fileName);
+}
+
 // Currently only supports creating block blobs
-export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem> {
+export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem> {
     let fileName = context.childName || await ext.ui.showInputBox({
         placeHolder: 'Enter a name for the new file',
         validateInput: async (name: string) => {
             let nameError = validateFileName(name);
             if (nameError) {
                 return nameError;
-            } else if (await doesFileExist(name, parent, directoryPath, share)) {
+            } else if (await doesFileExist(name, parent, directoryPath, shareName)) {
                 return "A file with this path and name already exists";
             }
             return undefined;
@@ -33,126 +47,79 @@ export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<ISto
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
             context.showCreatingTreeItem(fileName);
             progress.report({ message: `Azure Storage: Creating file '${fileName}'` });
-            const file = await createFile(directoryPath, fileName, share, parent.root);
-            const actualFile = await getFile(directoryPath, file.name, share, parent.root);
-            return new FileTreeItem(parent, actualFile, directoryPath, share);
+            const fileResponse: azureStorageShare.FileCreateResponse = await createFile(directoryPath, fileName, shareName, parent.root);
+            if (fileResponse.errorCode) {
+                throw new Error(`Could not create file ${fileName}. ${fileResponse.errorCode}`);
+            }
+            return new FileTreeItem(parent, fileName, directoryPath, shareName);
         });
     }
 
     throw new UserCancelledError();
 }
 
-export async function doesFileExist(fileName: string, parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, share: FileService.ShareResult): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-        const fileService = parent.root.createFileService();
-        fileService.doesFileExist(share.name, directoryPath, fileName, (err?: Error, result?: FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result && result.exists === true);
-            }
-        });
-    });
-
+export async function doesFileExist(fileName: string, parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string): Promise<boolean> {
+    const fileService: azureStorageShare.ShareFileClient = createFileClient(parent.root, shareName, directoryPath, fileName);
+    try {
+        await fileService.getProperties();
+        return true;
+    } catch {
+        return false;
+    }
 }
 
-export async function getFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.FileResult> {
-    const fileService = root.createFileService();
-    return new Promise((resolve, reject) => {
-        fileService.getFileProperties(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
+export async function createFile(directoryPath: string, name: string, shareName: string, root: IStorageRoot, options?: azureStorageShare.FileCreateOptions): Promise<azureStorageShare.FileCreateResponse> {
+    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
+
+    // tslint:disable: strict-boolean-expressions
+    options = options || {};
+    options.fileHttpHeaders = options.fileHttpHeaders || {};
+    options.fileHttpHeaders.fileContentType = options.fileHttpHeaders.fileContentType || mime.getType(name) || undefined;
+    // tslint:enable: strict-boolean-expressions
+
+    return await fileClient.create(0, options);
 }
 
-export async function createFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, text?: string | Buffer, options?: azureStorage.FileService.CreateFileRequestOptions): Promise<azureStorage.FileService.FileResult> {
-    return new Promise((resolve, reject) => {
-        const fileService = root.createFileService();
+export async function updateFileFromText(directoryPath: string, name: string, shareName: string, root: IStorageRoot, text: string | Buffer): Promise<void> {
+    const options: azureStorageShare.FileCreateOptions = await getExistingCreateOptions(directoryPath, name, shareName, root);
+    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
 
-        // tslint:disable: strict-boolean-expressions
-        options = options || {};
-        options.contentSettings = options.contentSettings || {};
-        options.contentSettings.contentType = options.contentSettings.contentType || mime.getType(name) || undefined;
-        // tslint:enable: strict-boolean-expressions
-
-        fileService.createFileFromText(share.name, directoryPath, name, text ? text : '', options, (err?: Error, result?: azureStorage.FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
+    // uploadData hangs indefinitely if the text length is zero
+    if (text.length === 0) {
+        // There is no SDK function to clear the contents of a file (clearRange doesn't update contentLength)
+        // So delete & re-create
+        await fileClient.delete();
+        await fileClient.create(0, options);
+    } else {
+        if (!(text instanceof Buffer)) {
+            text = new Buffer(text);
+        }
+        await fileClient.uploadData(text, options);
+    }
 }
 
-export async function createFileFromLocalFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, filePath: string, options?: azureStorage.FileService.CreateFileRequestOptions): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        const fileService = root.createFileService();
-        fileService.createFileFromLocalFile(share.name, directoryPath, name, filePath, options ? options : {}, async (err?: Error) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-
-export async function updateFileFromText(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, text: string | Buffer): Promise<azureStorage.FileService.FileResult> {
-    const options = await getExistingCreateOptions(directoryPath, name, share, root);
-    return await createFile(directoryPath, name, share, root, text, options);
-}
-
-export async function updateFileFromLocalFile(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot, filePath: string): Promise<void> {
-    const options = await getExistingCreateOptions(directoryPath, name, share, root);
-    await createFileFromLocalFile(directoryPath, name, share, root, filePath, options);
+export async function updateFileFromLocalFile(directoryPath: string, name: string, shareName: string, root: IStorageRoot, filePath: string): Promise<void> {
+    const options: azureStorageShare.FileCreateOptions = await getExistingCreateOptions(directoryPath, name, shareName, root);
+    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
+    await fileClient.uploadFile(filePath, options);
 }
 
 export async function deleteFile(directory: string, name: string, share: string, root: IStorageRoot): Promise<void> {
-    const fileService = root.createFileService();
-    await new Promise((resolve, reject) => {
-        // tslint:disable-next-line:no-any
-        fileService.deleteFile(share, directory, name, (err?: any) => {
-            // tslint:disable-next-line:no-void-expression // Grandfathered in
-            err ? reject(err) : resolve();
-        });
-    });
+    const fileClient = createFileClient(root, share, directory, name);
+    await fileClient.delete();
 }
 
-async function getExistingCreateOptions(directoryPath: string, name: string, share: FileService.ShareResult, root: IStorageRoot): Promise<azureStorage.FileService.CreateFileRequestOptions> {
-    const fileService = root.createFileService();
-
-    const propertiesResult: azureStorage.FileService.FileResult = await new Promise((resolve, reject) => {
-        fileService.getFileProperties(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
-
-    if (propertiesResult.contentSettings) {
-        // Don't allow the existing MD5 hash to be used for the updated file
-        propertiesResult.contentSettings.contentMD5 = '';
-    }
-
-    const metadataResult: azureStorage.FileService.FileResult = await new Promise((resolve, reject) => {
-        fileService.getFileMetadata(share.name, directoryPath, name, (err?: Error, result?: azureStorage.FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
-
-    return {
-        contentSettings: propertiesResult.contentSettings,
-        metadata: metadataResult.metadata
-    };
+async function getExistingCreateOptions(directoryPath: string, name: string, shareName: string, root: IStorageRoot): Promise<azureStorageShare.FileCreateOptions> {
+    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
+    let propertiesResult: azureStorageShare.FileGetPropertiesResponse = await fileClient.getProperties();
+    let options: azureStorageShare.FileCreateOptions = {};
+    options.fileHttpHeaders = {};
+    options.fileHttpHeaders.fileCacheControl = propertiesResult.cacheControl;
+    options.fileHttpHeaders.fileContentDisposition = propertiesResult.contentDisposition;
+    options.fileHttpHeaders.fileContentEncoding = propertiesResult.contentEncoding;
+    options.fileHttpHeaders.fileContentLanguage = propertiesResult.contentLanguage;
+    options.fileHttpHeaders.fileContentMD5 = undefined; // Don't allow the existing MD5 hash to be used for the updated file
+    options.fileHttpHeaders.fileContentType = propertiesResult.contentType;
+    options.metadata = propertiesResult.metadata;
+    return options;
 }

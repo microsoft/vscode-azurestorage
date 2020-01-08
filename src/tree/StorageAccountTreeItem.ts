@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
+import * as azureStorageShare from '@azure/storage-file-share';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccountKey } from 'azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
@@ -162,8 +163,9 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
                 return new azureStorageBlob.BlobServiceClient(this.storageAccount.primaryEndpoints.blob || `https://${this.storageAccount.name}.blob.core.windows.net`, credential);
             },
-            createFileService: () => {
-                return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+            createShareServiceClient: () => {
+                const credential = new azureStorageShare.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
+                return new azureStorageShare.ShareServiceClient(this.storageAccount.primaryEndpoints.file || `https://${this.storageAccount.name}.file.core.windows.net`, credential);
             },
             createQueueService: () => {
                 return azureStorage.createQueueService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.queue).withFilter(new azureStorage.ExponentialRetryPolicyFilter());

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { deleteFile } from '../../utils/fileUtils';
+import { createFileClient, deleteFile } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { IDirectoryDeleteContext } from "./DirectoryTreeItem";
@@ -18,13 +18,13 @@ import { IDirectoryDeleteContext } from "./DirectoryTreeItem";
 export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
     constructor(
         parent: AzureParentTreeItem,
-        public readonly file: azureStorage.FileService.FileResult,
+        public readonly fileName: string,
         public readonly directoryPath: string,
-        public readonly share: azureStorage.FileService.ShareResult) {
+        public readonly shareName: string) {
         super(parent);
     }
 
-    public label: string = this.file.name;
+    public label: string = this.fileName;
     public static contextValue: string = 'azureFile';
     public contextValue: string = FileTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
@@ -35,8 +35,11 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     public commandId: string = 'azureStorage.editFile';
 
     public async copyUrl(): Promise<void> {
-        let fileService = this.root.createFileService();
-        let url = fileService.getUrl(this.share.name, this.directoryPath, this.file.name);
+        const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);
+
+        // URLs for nested files aren't automatically decoded properly
+        const url = decodeURIComponent(fileClient.url);
+
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`File URL copied to clipboard: ${url}`);
@@ -52,7 +55,7 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         }
 
         if (result === DialogResponses.deleteResponse) {
-            await deleteFile(this.directoryPath, this.file.name, this.share.name, this.root);
+            await deleteFile(this.directoryPath, this.fileName, this.shareName, this.root);
         } else {
             throw new UserCancelledError();
         }

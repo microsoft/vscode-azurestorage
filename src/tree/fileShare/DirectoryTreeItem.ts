@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, Uri, window } from 'vscode';
@@ -11,7 +11,7 @@ import { AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplC
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile } from '../../utils/fileUtils';
+import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { IFileShareCreateChildContext } from "./FileShareTreeItem";
@@ -21,13 +21,13 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     constructor(
         parent: AzureParentTreeItem,
         public readonly parentPath: string,
-        public readonly directory: azureStorage.FileService.DirectoryResult, // directory.name should not include parent path
-        public readonly share: azureStorage.FileService.ShareResult) {
+        public readonly directoryName: string, // directoryName should not include parent path
+        public readonly shareName: string) {
         super(parent);
     }
 
-    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
-    public label: string = this.directory.name;
+    private _continuationToken: string | undefined;
+    public label: string = this.directoryName;
     public static contextValue: string = 'azureFileShareDirectory';
     public contextValue: string = DirectoryTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
@@ -36,7 +36,7 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     };
 
     private get fullPath(): string {
-        return path.posix.join(this.parentPath, this.directory.name);
+        return path.posix.join(this.parentPath, this.directoryName);
     }
 
     hasMoreChildrenImpl(): boolean {
@@ -48,38 +48,40 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             this._continuationToken = undefined;
         }
 
-        // tslint:disable-next-line:no-non-null-assertion // currentToken argument typed incorrectly in SDK
-        let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken!);
-        let { entries, continuationToken } = fileResults;
+        let { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await this.listFiles(this._continuationToken);
         this._continuationToken = continuationToken;
 
         return (<(DirectoryTreeItem | FileTreeItem)[]>[])
-            .concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
-                return new DirectoryTreeItem(this, this.fullPath, directory, this.share);
+            .concat(files.map((file: azureStorageShare.FileItem) => {
+                return new FileTreeItem(this, file.name, this.fullPath, this.shareName);
             }))
-            .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
-                return new FileTreeItem(this, file, this.fullPath, this.share);
+            .concat(directories.map((directory: azureStorageShare.DirectoryItem) => {
+                return new DirectoryTreeItem(this, this.fullPath, directory.name, this.shareName);
             }));
     }
 
     public async copyUrl(): Promise<void> {
-        let fileService = this.root.createFileService();
-        let url = fileService.getUrl(this.share.name, this.fullPath);
+        // Use this.fullPath here instead of this.directoryName. Otherwise only the leaf directory is displayed in the URL
+        let directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, this.fullPath);
+
+        // URLs for nested directories aren't automatically decoded properly
+        const url = decodeURIComponent(directoryClient.url);
+
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Directory URL copied to clipboard: ${url}`);
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
-        return listFilesInDirectory(this.fullPath, this.share.name, this.root, currentToken);
+    listFiles(currentToken: string | undefined): Promise<{ files: azureStorageShare.FileItem[], directories: azureStorageShare.DirectoryItem[], continuationToken: string }> {
+        return listFilesInDirectory(this.fullPath, this.shareName, this.root, currentToken);
     }
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem | DirectoryTreeItem> {
         if (context.childType === FileTreeItem.contextValue) {
-            return askAndCreateEmptyTextFile(this, this.fullPath, this.share, context);
+            return askAndCreateEmptyTextFile(this, this.fullPath, this.shareName, context);
         } else {
-            return askAndCreateChildDirectory(this, this.fullPath, this.share, context);
+            return askAndCreateChildDirectory(this, this.fullPath, this.shareName, context);
         }
     }
 
@@ -95,7 +97,7 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
         if (result === DialogResponses.deleteResponse) {
             ext.outputChannel.show();
-            await deleteDirectoryAndContents(this.fullPath, this.share.name, this.root);
+            await deleteDirectoryAndContents(this.fullPath, this.shareName, this.root);
         } else {
             throw new UserCancelledError();
         }
