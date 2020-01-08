@@ -16,7 +16,7 @@ import { BlobTreeItem } from "./tree/blob/BlobTreeItem";
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./tree/fileShare/DirectoryTreeItem";
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "./tree/fileShare/FileTreeItem";
-import { createBlobClient, createBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
+import { createBlobClient, createOrUpdateBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
 import { doesFileExist, updateFileFromText } from "./utils/fileUtils";
 import { localize } from "./utils/localize";
 import { validateDirectoryName } from "./utils/validateNames";
@@ -68,9 +68,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                 } else if (child instanceof DirectoryTreeItem) {
                     result.push([child.directory.name, vscode.FileType.Directory]);
                 } else if (child instanceof BlobTreeItem) {
-                    result.push([path.basename(child.blob.name), vscode.FileType.File]);
+                    result.push([child.blobName, vscode.FileType.File]);
                 } else if (child instanceof BlobDirectoryTreeItem) {
-                    result.push([child.directory.name, vscode.FileType.Directory]);
+                    result.push([child.dirName, vscode.FileType.Directory]);
                 }
             }
 
@@ -212,7 +212,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                         if (treeItem instanceof FileShareTreeItem) {
                             await updateFileFromText(parsedUri.parentDirPath, parsedUri.baseName, treeItem.share, treeItem.root, content.toString());
                         } else {
-                            await createBlockBlob(treeItem, parsedUri.filePath, content.toString());
+                            await createOrUpdateBlockBlob(treeItem, parsedUri.filePath, content.toString());
 
                         }
                     } else {
@@ -318,9 +318,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             let children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
             let child = children.find((element) => {
                 if (element instanceof BlobTreeItem) {
-                    return path.basename(element.blob.name) === childName;
+                    return element.blobName === childName;
                 } else if (element instanceof BlobDirectoryTreeItem) {
-                    return path.basename(element.directory.name) === childName;
+                    return element.dirName === childName;
                 }
                 return false;
             });
