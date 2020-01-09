@@ -58,12 +58,15 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return children;
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<BlobTreeItem | BlobDirectoryTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
+        let child: AzExtTreeItem;
         if (context.childType === BlobTreeItem.contextValue) {
-            return await createChildAsNewBlockBlob(this, context);
+            child = await createChildAsNewBlockBlob(this, context);
         } else {
-            return new BlobDirectoryTreeItem(this, path.posix.join(this.dirPath, context.childName), this.container);
+            child = new BlobDirectoryTreeItem(this, path.posix.join(this.dirPath, context.childName), this.container);
         }
+        AzureStorageFS.fireCreateEvent(child);
+        return child;
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
