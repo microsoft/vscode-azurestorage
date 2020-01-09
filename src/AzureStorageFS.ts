@@ -289,6 +289,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     private async lookupFileShare(uri: vscode.Uri, context: IActionContext, resourceId: string, filePath: string): Promise<AzureStorageFileTreeItem> {
+        // Lookup the root first to address https://github.com/microsoft/vscode-azurestorage/issues/556
+        // We don't actually use the result of this, but it caches tree items and will make `findTreeItem` faster below
+        await this.lookupRoot(uri, context, resourceId);
+
         let uriPath = path.posix.join(resourceId, filePath);
         let treeItem = await ext.tree.findTreeItem(uriPath, { ...context, loadAll: true });
         if (!treeItem) {
@@ -338,7 +342,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     private async lookupRoot(uri: vscode.Uri, context: IActionContext, resourceId: string): Promise<FileShareTreeItem | BlobContainerTreeItem> {
-        let treeItem = await ext.tree.findTreeItem(resourceId, { ...context, loadAll: true });
+        const rootName: string = path.basename(resourceId);
+        const loadingMessage: string = this.isFileShareUri(uri) ? localize('loadingFileShare', 'Loading file share "{0}"...', rootName) : localize('loadingContainer', 'Loading blob container "{0}"...', rootName);
+        let treeItem = await ext.tree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage });
         if (!treeItem) {
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
         } else if (treeItem instanceof FileShareTreeItem || treeItem instanceof BlobContainerTreeItem) {
