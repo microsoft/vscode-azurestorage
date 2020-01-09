@@ -7,7 +7,7 @@ import * as azureStorageBlob from '@azure/storage-blob';
 import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, IActionContext, ICreateChildImplContext } from 'vscode-azureextensionui';
 import { maxPageSize } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
@@ -31,11 +31,9 @@ export function createBlockBlobClient(root: IStorageRoot, containerName: string,
 }
 
 export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, continuationToken?: string): Promise<{ children: AzExtTreeItem[], continuationToken?: string }> {
-    const dirPath: string = parent instanceof BlobDirectoryTreeItem ? parent.dirPath : '';
-    // tslint:disable-next-line: strict-boolean-expressions
-    const listOptions: azureStorageBlob.ContainerListBlobsOptions = { prefix: dirPath || undefined };
+    const prefix: string | undefined = parent instanceof BlobDirectoryTreeItem ? parent.dirPath : undefined;
     const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
-    let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy('/', listOptions).byPage({ continuationToken, maxPageSize: maxPageSize });
+    let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(path.posix.sep, { prefix }).byPage({ continuationToken, maxPageSize: maxPageSize });
 
     // tslint:disable-next-line: no-unsafe-any
     let responseValue: azureStorageBlob.ListBlobsHierarchySegmentResponse = (await response.next()).value;
@@ -43,14 +41,14 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
 
     let children: AzExtTreeItem[] = [];
     for (const blob of responseValue.segment.blobItems) {
-        blob.name = parent instanceof BlobDirectoryTreeItem ? path.basename(blob.name) : blob.name;
-        children.push(new BlobTreeItem(parent, dirPath, blob, parent.container));
+        // NOTE: `blob.name` as returned from Azure is actually the blob path in the container
+        children.push(new BlobTreeItem(parent, blob.name, parent.container));
     }
 
     // tslint:disable-next-line: strict-boolean-expressions
     for (const directory of responseValue.segment.blobPrefixes || []) {
-        directory.name = path.basename(directory.name.substring(0, directory.name.length - 1));
-        children.push(new BlobDirectoryTreeItem(parent, dirPath, directory, parent.container));
+        // NOTE: `directory.name` as returned from Azure is actually the directory path in the container
+        children.push(new BlobDirectoryTreeItem(parent, directory.name, parent.container));
     }
 
     return { children, continuationToken };
@@ -58,38 +56,29 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
 
 // Currently only supports creating block blobs
 export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
-    let blobName: string | undefined = context.childName;
-    if (!blobName) {
-        blobName = await vscode.window.showInputBox({
-            placeHolder: 'Enter a name for the new block blob',
-            validateInput: async (name: string) => {
-                let nameError = BlobContainerTreeItem.validateBlobName(name);
-                if (nameError) {
-                    return nameError;
-                } else if (await doesBlobExist(parent, name)) {
-                    return "A blob with this path and name already exists";
-                }
-
-                return undefined;
+    let blobPath: string = context.childName || await ext.ui.showInputBox({
+        placeHolder: 'Enter a name for the new block blob',
+        validateInput: async (name: string) => {
+            let nameError = BlobContainerTreeItem.validateBlobName(name);
+            if (nameError) {
+                return nameError;
+            } else if (await doesBlobExist(parent, name)) {
+                return "A blob with this path and name already exists";
             }
-        });
-    }
 
-    if (blobName) {
-        let blobNameString: string = <string>blobName;
-        return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-            context.showCreatingTreeItem(blobNameString);
-            progress.report({ message: `Azure Storage: Creating block blob '${blobNameString}'` });
-            const blob: azureStorageBlob.BlobItem = await createBlockBlob(parent, blobNameString);
-            blob.name = parent instanceof BlobDirectoryTreeItem ? path.basename(blob.name) : blob.name;
-            return new BlobTreeItem(parent, parent instanceof BlobDirectoryTreeItem ? parent.dirPath : '', blob, parent.container);
-        });
-    }
+            return undefined;
+        }
+    });
 
-    throw new UserCancelledError();
+    return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
+        context.showCreatingTreeItem(blobPath);
+        progress.report({ message: `Azure Storage: Creating block blob '${blobPath}'` });
+        await createOrUpdateBlockBlob(parent, blobPath);
+        return new BlobTreeItem(parent, blobPath, parent.container);
+    });
 }
 
-export async function createBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, name: string, text?: string | Buffer): Promise<azureStorageBlob.BlobItem> {
+export async function createOrUpdateBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, name: string, text?: string | Buffer): Promise<void> {
     text = text ? text : '';
     const contentLength: number = text instanceof Buffer ? text.byteLength : text.length;
     const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
@@ -102,27 +91,11 @@ export async function createBlockBlob(parent: BlobContainerTreeItem | BlobDirect
     // tslint:enable: strict-boolean-expressions
 
     await containerClient.uploadBlockBlob(name, text, contentLength, properties);
-    return await getBlob(parent, name);
 }
 
 export async function doesBlobExist(treeItem: BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<boolean> {
     const blobClient: azureStorageBlob.BlobClient = createBlobClient(treeItem.root, treeItem.container.name, blobPath);
     return blobClient.exists();
-}
-
-export async function getBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, name: string): Promise<azureStorageBlob.BlobItem> {
-    const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
-    let response = containerClient.listBlobsFlat().byPage();
-
-    // tslint:disable-next-line: no-unsafe-any
-    let responseValue: azureStorageBlob.ListBlobsFlatSegmentResponse = (await response.next()).value;
-    for (let blob of responseValue.segment.blobItems) {
-        if (blob.name === name) {
-            return blob;
-        }
-    }
-
-    throw new Error(`Could not find blob ${name}`);
 }
 
 export async function getExistingProperties(parent: BlobTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<azureStorageBlob.BlockBlobUploadOptions | undefined> {

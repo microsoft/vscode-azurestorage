@@ -15,7 +15,7 @@ import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, Gen
 import { configurationSettingsKeys, extensionPrefix, getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { BlobFileHandler } from '../../editors/BlobFileHandler';
 import { ext } from "../../extensionVariables";
-import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, getBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgress } from '../../utils/blobUtils';
+import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgress } from '../../utils/blobUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -149,10 +149,9 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         if (context.blobPath && context.filePath) {
             context.showCreatingTreeItem(context.blobPath);
             await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
-            const actualBlob = await getBlob(this, context.blobPath);
-            return new BlobTreeItem(this, "", actualBlob, this.container);
+            return new BlobTreeItem(this, context.blobPath, this.container);
         } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
-            return new BlobDirectoryTreeItem(this, "", { name: context.childName }, this.container);
+            return new BlobDirectoryTreeItem(this, context.childName, this.container);
         } else {
             return createChildAsNewBlockBlob(this, context);
         }
