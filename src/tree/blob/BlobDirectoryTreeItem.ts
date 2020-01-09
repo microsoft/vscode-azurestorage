@@ -7,6 +7,7 @@ import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
+import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
 import { createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { IStorageRoot } from "../IStorageRoot";
@@ -57,12 +58,15 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return children;
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<BlobTreeItem | BlobDirectoryTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
+        let child: AzExtTreeItem;
         if (context.childType === BlobTreeItem.contextValue) {
-            return await createChildAsNewBlockBlob(this, context);
+            child = await createChildAsNewBlockBlob(this, context);
         } else {
-            return new BlobDirectoryTreeItem(this, path.posix.join(this.dirPath, context.childName), this.container);
+            child = new BlobDirectoryTreeItem(this, path.posix.join(this.dirPath, context.childName), this.container);
         }
+        AzureStorageFS.fireCreateEvent(child);
+        return child;
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
@@ -84,6 +88,8 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 throw new Error(`Errors occurred when deleting "${this.dirName}".`);
             }
         });
+
+        AzureStorageFS.fireDeleteEvent(this);
     }
 
     private async deleteFolder(context: IActionContext): Promise<boolean> {

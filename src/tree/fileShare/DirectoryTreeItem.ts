@@ -7,7 +7,8 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
@@ -75,12 +76,15 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return listFilesInDirectory(this.fullPath, this.share.name, this.root, currentToken);
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem | DirectoryTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {
+        let child: AzExtTreeItem;
         if (context.childType === FileTreeItem.contextValue) {
-            return askAndCreateEmptyTextFile(this, this.fullPath, this.share, context);
+            child = await askAndCreateEmptyTextFile(this, this.fullPath, this.share, context);
         } else {
-            return askAndCreateChildDirectory(this, this.fullPath, this.share, context);
+            child = await askAndCreateChildDirectory(this, this.fullPath, this.share, context);
         }
+        AzureStorageFS.fireCreateEvent(child);
+        return child;
     }
 
     public async deleteTreeItemImpl(context: IActionContext & IDirectoryDeleteContext): Promise<void> {
@@ -99,6 +103,8 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         } else {
             throw new UserCancelledError();
         }
+
+        AzureStorageFS.fireDeleteEvent(this);
     }
 }
 

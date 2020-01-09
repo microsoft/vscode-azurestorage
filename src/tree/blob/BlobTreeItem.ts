@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, SaveDialogOptions, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { BlobFileHandler } from '../../editors/BlobFileHandler';
 import { ext } from "../../extensionVariables";
@@ -65,6 +66,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         } else {
             throw new UserCancelledError();
         }
+
+        AzureStorageFS.fireDeleteEvent(this);
     }
 
     public async download(): Promise<void> {
