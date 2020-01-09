@@ -290,7 +290,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
 
     private async lookupFileShare(uri: vscode.Uri, context: IActionContext, resourceId: string, filePath: string): Promise<AzureStorageFileTreeItem> {
         // Lookup the root first to address https://github.com/microsoft/vscode-azurestorage/issues/556
-        // We don't actually use the result of this, but it'll cache things as it goes
+        // We don't actually use the result of this, but it caches tree items and will make `findTreeItem` faster below
         await this.lookupRoot(uri, context, resourceId);
 
         let uriPath = path.posix.join(resourceId, filePath);
