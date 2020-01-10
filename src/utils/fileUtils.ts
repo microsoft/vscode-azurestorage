@@ -82,6 +82,7 @@ export async function updateFileFromText(directoryPath: string, name: string, sh
     // `ShareFileClient.uploadData` in @azure/storage-file-share hangs indefinitely if the buffer length is zero
     // And there isn't an SDK function to clear the contents of a file (clearRange doesn't update contentLength)
     // So revert to the old SDK here
+    // https://github.com/Azure/azure-sdk-for-js/issues/6904
 
     const fileService: FileService = root.createFileService();
     let options: FileService.CreateFileRequestOptions = await getExistingCreateOptionsDeprecated(directoryPath, name, shareName, root);
