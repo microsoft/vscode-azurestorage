@@ -47,15 +47,11 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     }
 
     public static fireDeleteEvent(node: AzExtTreeItem): void {
-        if (ext.azureStorageFS) {
-            ext.azureStorageFS.fireSoon({ uri: AzureStorageFS.idToUri(node.fullId), type: vscode.FileChangeType.Deleted });
-        }
+        ext.azureStorageFS.fireSoon({ uri: AzureStorageFS.idToUri(node.fullId), type: vscode.FileChangeType.Deleted });
     }
 
     public static fireCreateEvent(node: AzExtTreeItem): void {
-        if (ext.azureStorageFS) {
-            ext.azureStorageFS.fireSoon({ uri: AzureStorageFS.idToUri(node.fullId), type: vscode.FileChangeType.Created });
-        }
+        ext.azureStorageFS.fireSoon({ uri: AzureStorageFS.idToUri(node.fullId), type: vscode.FileChangeType.Created });
     }
 
     watch(_uri: vscode.Uri, _options: { recursive: boolean; excludes: string[]; }): vscode.Disposable {
