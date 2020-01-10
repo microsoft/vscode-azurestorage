@@ -243,11 +243,11 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         return await vscode.env.clipboard.readText();
     }
 
-    async function createShareClient(_resourceName: string, _shareName: string): Promise<azureStorageShare.ShareClient> {
+    async function createShareClient(newResourceName: string, newShareName: string): Promise<azureStorageShare.ShareClient> {
         const primaryKey: string = await getPrimaryKey();
-        const credential = new azureStorageShare.StorageSharedKeyCredential(_resourceName, primaryKey);
+        const credential = new azureStorageShare.StorageSharedKeyCredential(newResourceName, primaryKey);
         const shareServiceClient: azureStorageShare.ShareServiceClient = new azureStorageShare.ShareServiceClient(fileUrl, credential);
-        return shareServiceClient.getShareClient(_shareName);
+        return shareServiceClient.getShareClient(newShareName);
     }
 });
 

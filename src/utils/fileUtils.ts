@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageShare from '@azure/storage-file-share';
+import { FileService } from 'azure-storage';
 import * as mime from 'mime';
 import { ProgressLocation, window } from "vscode";
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from "vscode-azureextensionui";
@@ -47,10 +48,7 @@ export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<ISto
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
             context.showCreatingTreeItem(fileName);
             progress.report({ message: `Azure Storage: Creating file '${fileName}'` });
-            const fileResponse: azureStorageShare.FileCreateResponse = await createFile(directoryPath, fileName, shareName, parent.root);
-            if (fileResponse.errorCode) {
-                throw new Error(`Could not create file ${fileName}. ${fileResponse.errorCode}`);
-            }
+            await createFile(directoryPath, fileName, shareName, parent.root);
             return new FileTreeItem(parent, fileName, directoryPath, shareName);
         });
     }
@@ -81,27 +79,28 @@ export async function createFile(directoryPath: string, name: string, shareName:
 }
 
 export async function updateFileFromText(directoryPath: string, name: string, shareName: string, root: IStorageRoot, text: string | Buffer): Promise<void> {
-    const options: azureStorageShare.FileCreateOptions = await getExistingCreateOptions(directoryPath, name, shareName, root);
-    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
+    // `ShareFileClient.uploadData` in @azure/storage-file-share hangs indefinitely if the buffer length is zero
+    // And there isn't an SDK function to clear the contents of a file (clearRange doesn't update contentLength)
+    // So revert to the old SDK here
 
-    // uploadData hangs indefinitely if the text length is zero
-    if (text.length === 0) {
-        // There is no SDK function to clear the contents of a file (clearRange doesn't update contentLength)
-        // So delete & re-create
-        await fileClient.delete();
-        await fileClient.create(0, options);
-    } else {
-        if (!(text instanceof Buffer)) {
-            text = new Buffer(text);
-        }
-        await fileClient.uploadData(text, options);
-    }
-}
+    const fileService: FileService = root.createFileService();
+    let options: FileService.CreateFileRequestOptions = await getExistingCreateOptionsDeprecated(directoryPath, name, shareName, root);
 
-export async function updateFileFromLocalFile(directoryPath: string, name: string, shareName: string, root: IStorageRoot, filePath: string): Promise<void> {
-    const options: azureStorageShare.FileCreateOptions = await getExistingCreateOptions(directoryPath, name, shareName, root);
-    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
-    await fileClient.uploadFile(filePath, options);
+    // tslint:disable: strict-boolean-expressions
+    options = options || {};
+    options.contentSettings = options.contentSettings || {};
+    options.contentSettings.contentType = options.contentSettings.contentType || mime.getType(name) || undefined;
+    // tslint:enable: strict-boolean-expressions
+
+    return new Promise((resolve, reject) => {
+        fileService.createFileFromText(shareName, directoryPath, name, text, options, (err?: Error) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
 }
 
 export async function deleteFile(directory: string, name: string, share: string, root: IStorageRoot): Promise<void> {
@@ -109,7 +108,8 @@ export async function deleteFile(directory: string, name: string, share: string,
     await fileClient.delete();
 }
 
-async function getExistingCreateOptions(directoryPath: string, name: string, shareName: string, root: IStorageRoot): Promise<azureStorageShare.FileCreateOptions> {
+// Gets existing create options using the `@azure/storage-file-share` SDK
+export async function getExistingCreateOptions(directoryPath: string, name: string, shareName: string, root: IStorageRoot): Promise<azureStorageShare.FileCreateOptions> {
     const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
     let propertiesResult: azureStorageShare.FileGetPropertiesResponse = await fileClient.getProperties();
     let options: azureStorageShare.FileCreateOptions = {};
@@ -122,4 +122,38 @@ async function getExistingCreateOptions(directoryPath: string, name: string, sha
     options.fileHttpHeaders.fileContentType = propertiesResult.contentType;
     options.metadata = propertiesResult.metadata;
     return options;
+}
+
+// Gets existing create options using the `azure-storage` SDK
+async function getExistingCreateOptionsDeprecated(directoryPath: string, name: string, shareName: string, root: IStorageRoot): Promise<FileService.CreateFileRequestOptions> {
+    const fileService = root.createFileService();
+    const propertiesResult: FileService.FileResult = await new Promise((resolve, reject) => {
+        fileService.getFileProperties(shareName, directoryPath, name, (err?: Error, result?: FileService.FileResult) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+
+    if (propertiesResult.contentSettings) {
+        // Don't allow the existing MD5 hash to be used for the updated file
+        propertiesResult.contentSettings.contentMD5 = '';
+    }
+
+    const metadataResult: FileService.FileResult = await new Promise((resolve, reject) => {
+        fileService.getFileMetadata(shareName, directoryPath, name, (err?: Error, result?: FileService.FileResult) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        });
+    });
+
+    return {
+        contentSettings: propertiesResult.contentSettings,
+        metadata: metadataResult.metadata
+    };
 }

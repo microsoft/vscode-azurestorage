@@ -26,12 +26,8 @@ export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<ISt
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
             context.showCreatingTreeItem(dirName);
             progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
-            const dirResponse: azureStorageShare.DirectoryCreateResponse = await createDirectory(shareName, parent.root, parentPath, dirName);
-
-            if (dirResponse.errorCode) {
-                throw new Error(`Could not create directory ${dirName}. ${dirResponse.errorCode}`);
-            }
-
+            const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(parent.root, shareName, path.posix.join(parentPath, dirName));
+            await directoryClient.create();
             return new DirectoryTreeItem(parent, parentPath, dirName, shareName);
         });
     }
@@ -39,30 +35,16 @@ export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<ISt
     throw new UserCancelledError();
 }
 
-async function createDirectory(shareName: string, root: IStorageRoot, parentPath: string, name: string): Promise<azureStorageShare.DirectoryCreateResponse> {
-    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, path.posix.join(parentPath, name));
-    return await directoryClient.create();
-}
-
 export async function listFilesInDirectory(directory: string, shareName: string, root: IStorageRoot, currentToken?: string): Promise<{ files: azureStorageShare.FileItem[], directories: azureStorageShare.DirectoryItem[], continuationToken: string }> {
-    let responseValue: azureStorageShare.DirectoryListFilesAndDirectoriesSegmentResponse;
-    let files: azureStorageShare.FileItem[] = [];
-    let directories: azureStorageShare.DirectoryItem[] = [];
     const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directory);
     const response: AsyncIterableIterator<azureStorageShare.DirectoryListFilesAndDirectoriesSegmentResponse> = directoryClient.listFilesAndDirectories().byPage({ continuationToken: currentToken, maxPageSize });
 
-    // tslint:disable-next-line: no-constant-condition
-    while (true) {
-        // tslint:disable-next-line: no-unsafe-any
-        responseValue = (await response.next()).value;
+    // tslint:disable-next-line: no-unsafe-any
+    let responseValue: azureStorageShare.DirectoryListFilesAndDirectoriesSegmentResponse = (await response.next()).value;
 
-        files.push(...responseValue.segment.fileItems);
-        directories.push(...responseValue.segment.directoryItems);
-        currentToken = responseValue.continuationToken;
-        if (!currentToken) {
-            break;
-        }
-    }
+    let files: azureStorageShare.FileItem[] = responseValue.segment.fileItems;
+    let directories: azureStorageShare.DirectoryItem[] = responseValue.segment.directoryItems;
+    currentToken = responseValue.continuationToken;
 
     return { files, directories, continuationToken: currentToken };
 }
@@ -97,11 +79,7 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
         }
     }
 
-    await deleteDirectoryOnly(directory, shareName, root);
-    ext.outputChannel.appendLine(`Deleted directory "${directory}"`);
-}
-
-async function deleteDirectoryOnly(directoryName: string, shareName: string, root: IStorageRoot): Promise<void> {
-    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directoryName);
+    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directory);
     await directoryClient.delete();
+    ext.outputChannel.appendLine(`Deleted directory "${directory}"`);
 }

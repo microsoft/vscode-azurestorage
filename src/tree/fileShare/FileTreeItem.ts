@@ -36,10 +36,7 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
 
     public async copyUrl(): Promise<void> {
         const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);
-
-        // URLs for nested files aren't automatically decoded properly
-        const url = decodeURIComponent(fileClient.url);
-
+        const url = fileClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`File URL copied to clipboard: ${url}`);
