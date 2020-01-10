@@ -49,11 +49,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     public async copyUrl(): Promise<void> {
         // Use this.blobPath here instead of this.blobName. Otherwise the blob's containing directory/directories aren't displayed
         const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
-
-        // URLs for nested blobs aren't automatically decoded properly
-        // https://github.com/Azure/azure-sdk-for-js/issues/6886
-        const url = decodeURIComponent(blobClient.url);
-
+        const url = blobClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
