@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createFileClient, deleteFile } from '../../utils/fileUtils';
@@ -56,5 +57,7 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         } else {
             throw new UserCancelledError();
         }
+
+        AzureStorageFS.fireDeleteEvent(this);
     }
 }

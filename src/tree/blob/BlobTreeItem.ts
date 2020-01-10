@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, SaveDialogOptions, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { BlobFileHandler } from '../../editors/BlobFileHandler';
 import { ext } from "../../extensionVariables";
@@ -16,20 +17,28 @@ import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 
 export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
-    public contextValue: string = 'azureBlob';
     public static contextValue: string = 'azureBlob';
-
+    public contextValue: string = BlobTreeItem.contextValue;
     public commandId: string = 'azureStorage.editBlob';
 
-    public label: string = this.blob.name;
-    public fullPath: string = path.posix.join(this.directoryPath, this.blob.name);
+    /**
+     * The name (and only the name) of the directory
+     */
+    public readonly blobName: string;
 
-    constructor(
-        parent: AzureParentTreeItem,
-        public readonly directoryPath: string,
-        public readonly blob: azureStorageBlob.BlobItem,
-        public readonly container: azureStorageBlob.ContainerItem) {
+    /**
+     * The full path of the blob within the container.
+     */
+    public readonly blobPath: string;
+
+    constructor(parent: AzureParentTreeItem, blobPath: string, public readonly container: azureStorageBlob.ContainerItem) {
         super(parent);
+        this.blobPath = blobPath;
+        this.blobName = path.basename(blobPath);
+    }
+
+    public get label(): string {
+        return this.blobName;
     }
 
     public iconPath: { light: string | Uri; dark: string | Uri } = {
@@ -52,18 +61,20 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
             result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         }
         if (result === DialogResponses.deleteResponse || context.suppressMessage) {
-            let blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.fullPath);
+            let blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
             await blobClient.delete();
         } else {
             throw new UserCancelledError();
         }
+
+        AzureStorageFS.fireDeleteEvent(this);
     }
 
     public async download(): Promise<void> {
         const handler = new BlobFileHandler();
         await handler.checkCanDownload(this);
 
-        const extension = path.extname(this.blob.name);
+        const extension = path.extname(this.blobName);
         const filters = {
             "All files": ['*']
         };
@@ -75,7 +86,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         const uri: Uri | undefined = await window.showSaveDialog(<SaveDialogOptions>{
             saveLabel: "Download",
             filters,
-            defaultUri: Uri.file(this.blob.name)
+            defaultUri: Uri.file(this.blobName)
         });
         if (uri && uri.scheme === 'file') {
             await handler.downloadFile(this, uri.fsPath);

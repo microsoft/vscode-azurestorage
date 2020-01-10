@@ -12,10 +12,11 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureStorageFS } from '../../AzureStorageFS';
 import { configurationSettingsKeys, extensionPrefix, getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { BlobFileHandler } from '../../editors/BlobFileHandler';
 import { ext } from "../../extensionVariables";
-import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, getBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgress } from '../../utils/blobUtils';
+import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgress } from '../../utils/blobUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -142,19 +143,24 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
             await containerClient.delete();
         }
+
+        AzureStorageFS.fireDeleteEvent(this);
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<BlobTreeItem | BlobDirectoryTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
+        let child: AzExtTreeItem;
         if (context.blobPath && context.filePath) {
             context.showCreatingTreeItem(context.blobPath);
             await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
-            const actualBlob = await getBlob(this, context.blobPath);
-            return new BlobTreeItem(this, "", actualBlob, this.container);
+            child = new BlobTreeItem(this, context.blobPath, this.container);
         } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
-            return new BlobDirectoryTreeItem(this, "", { name: context.childName }, this.container);
+            child = new BlobDirectoryTreeItem(this, context.childName, this.container);
         } else {
-            return createChildAsNewBlockBlob(this, context);
+            child = await createChildAsNewBlockBlob(this, context);
         }
+
+        AzureStorageFS.fireCreateEvent(child);
+        return child;
     }
 
     public async copyUrl(): Promise<void> {

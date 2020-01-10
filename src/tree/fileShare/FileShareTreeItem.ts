@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureStorageFS } from "../../AzureStorageFS";
 import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { askAndCreateChildDirectory, listFilesInDirectory } from '../../utils/directoryUtils';
@@ -93,14 +94,19 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         } else {
             throw new UserCancelledError();
         }
+
+        AzureStorageFS.fireDeleteEvent(this);
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem | FileTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {
+        let child: AzExtTreeItem;
         if (context.childType === FileTreeItem.contextValue) {
-            return askAndCreateEmptyTextFile(this, '', this.shareName, context);
+            child = await askAndCreateEmptyTextFile(this, '', this.shareName, context);
         } else {
-            return askAndCreateChildDirectory(this, '', this.shareName, context);
+            child = await askAndCreateChildDirectory(this, '', this.shareName, context);
         }
+        AzureStorageFS.fireCreateEvent(child);
+        return child;
     }
 }
 
