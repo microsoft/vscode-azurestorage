@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
-import { FileService } from 'azure-storage';
+import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
@@ -17,7 +16,7 @@ const minQuotaGB = 1;
 const maxQuotaGB = 5120;
 
 export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
-    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
+    private _continuationToken: string | undefined;
 
     public label: string = "File Shares";
     public readonly childTypeLabel: string = "File Share";
@@ -33,34 +32,23 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             this._continuationToken = undefined;
         }
 
-        // currentToken argument typed incorrectly in SDK
-        let fileShares = await this.listFileShares(<azureStorage.common.ContinuationToken>this._continuationToken);
-        let { entries, continuationToken } = fileShares;
-        this._continuationToken = continuationToken;
+        const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
+        const response: AsyncIterableIterator<azureStorageShare.ServiceListSharesSegmentResponse> = shareServiceClient.listShares().byPage({ continuationToken: this._continuationToken, maxPageSize });
 
-        return entries.map((fileShare: azureStorage.FileService.ShareResult) => {
-            return new FileShareTreeItem(
-                this,
-                fileShare);
+        // tslint:disable-next-line: no-unsafe-any
+        let responseValue: azureStorageShare.ServiceListSharesSegmentResponse = (await response.next()).value;
+
+        // tslint:disable-next-line: strict-boolean-expressions
+        const shares: azureStorageShare.ShareItem[] = responseValue.shareItems || [];
+        this._continuationToken = responseValue.continuationToken;
+
+        return shares.map((share: azureStorageShare.ShareItem) => {
+            return new FileShareTreeItem(this, share.name);
         });
     }
 
     hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
-    }
-
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listFileShares(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListSharesResult> {
-        return new Promise((resolve, reject) => {
-            let fileService = this.root.createFileService();
-            fileService.listSharesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.FileService.ListSharesResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<FileShareTreeItem> {
@@ -80,30 +68,14 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
                     context.showCreatingTreeItem(shareName);
                     progress.report({ message: `Azure Storage: Creating file share '${shareName}'` });
-                    const share = await this.createFileShare(shareName, Number(quotaGB));
-                    return new FileShareTreeItem(this, share);
+                    const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
+                    await shareServiceClient.createShare(shareName, { quota: Number(quotaGB) });
+                    return new FileShareTreeItem(this, shareName);
                 });
             }
         }
 
         throw new UserCancelledError();
-    }
-
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private createFileShare(name: string, quotaGB: number): Promise<azureStorage.FileService.ShareResult> {
-        return new Promise((resolve, reject) => {
-            let shareService = this.root.createFileService();
-            const options = <FileService.CreateShareRequestOptions>{
-                quota: quotaGB
-            };
-            shareService.createShare(name, options, (err?: Error, result?: azureStorage.FileService.ShareResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
     }
 
     private static validateFileShareName(name: string): string | undefined | null {

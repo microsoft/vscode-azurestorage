@@ -3,32 +3,32 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath, maxPageSize } from "../../constants";
+import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { askAndCreateChildDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile } from '../../utils/fileUtils';
+import { askAndCreateChildDirectory, listFilesInDirectory } from '../../utils/directoryUtils';
+import { askAndCreateEmptyTextFile, createShareClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileTreeItem } from './FileTreeItem';
 
 export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
-    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
+    private _continuationToken: string | undefined;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
 
     constructor(
         parent: AzureParentTreeItem,
-        public readonly share: azureStorage.FileService.ShareResult) {
+        public readonly shareName: string) {
         super(parent);
     }
 
-    public label: string = this.share.name;
+    public label: string = this.shareName;
     public static contextValue: string = 'azureFileShare';
     public contextValue: string = FileShareTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
@@ -55,15 +55,13 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             result.push(ti);
         }
 
-        // currentToken argument typed incorrectly in SDK
-        let fileResults = await this.listFiles(<azureStorage.common.ContinuationToken>this._continuationToken);
-        let { entries, continuationToken } = fileResults;
+        let { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory('', this.shareName, this.root, this._continuationToken);
         this._continuationToken = continuationToken;
-        return result.concat(entries.directories.map((directory: azureStorage.FileService.DirectoryResult) => {
-            return new DirectoryTreeItem(this, '', directory, this.share);
+        return result.concat(directories.map((directory: azureStorageShare.DirectoryItem) => {
+            return new DirectoryTreeItem(this, '', directory.name, this.shareName);
         }))
-            .concat(entries.files.map((file: azureStorage.FileService.FileResult) => {
-                return new FileTreeItem(this, file, '', this.share);
+            .concat(files.map((file: azureStorageShare.FileItem) => {
+                return new FileTreeItem(this, file.name, '', this.shareName);
             }));
     }
 
@@ -78,39 +76,18 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     }
 
     public async copyUrl(): Promise<void> {
-        let fileService = this.root.createFileService();
-        let url = fileService.getUrl(this.share.name, "");
-        await vscode.env.clipboard.writeText(url);
+        const shareClient: azureStorageShare.ShareClient = createShareClient(this.root, this.shareName);
+        await vscode.env.clipboard.writeText(shareClient.url);
         ext.outputChannel.show();
-        ext.outputChannel.appendLine(`Share URL copied to clipboard: ${url}`);
-    }
-
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listFiles(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
-        return new Promise((resolve, reject) => {
-            let fileService = this.root.createFileService();
-            fileService.listFilesAndDirectoriesSegmented(this.share.name, '', currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+        ext.outputChannel.appendLine(`Share URL copied to clipboard: ${shareClient.url}`);
     }
 
     public async deleteTreeItemImpl(): Promise<void> {
         const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const fileService = this.root.createFileService();
-            await new Promise((resolve, reject) => {
-                // tslint:disable-next-line:no-any
-                fileService.deleteShare(this.share.name, (err?: any) => {
-                    // tslint:disable-next-line:no-void-expression // Grandfathered in
-                    err ? reject(err) : resolve();
-                });
-            });
+            const shareClient: azureStorageShare.ShareClient = createShareClient(this.root, this.shareName);
+            await shareClient.delete();
         } else {
             throw new UserCancelledError();
         }
@@ -121,9 +98,9 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {
         let child: AzExtTreeItem;
         if (context.childType === FileTreeItem.contextValue) {
-            child = await askAndCreateEmptyTextFile(this, '', this.share, context);
+            child = await askAndCreateEmptyTextFile(this, '', this.shareName, context);
         } else {
-            child = await askAndCreateChildDirectory(this, '', this.share, context);
+            child = await askAndCreateChildDirectory(this, '', this.shareName, context);
         }
         AzureStorageFS.fireCreateEvent(child);
         return child;

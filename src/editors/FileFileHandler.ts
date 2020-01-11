@@ -3,34 +3,29 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageShare from '@azure/storage-file-share';
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
-import { updateFileFromLocalFile } from '../utils/fileUtils';
+import { getExistingCreateOptions } from '../utils/fileUtils';
+import { createFileClient } from '../utils/fileUtils';
 import { IRemoteFileHandler } from './IRemoteFileHandler';
 
 export class FileFileHandler implements IRemoteFileHandler<FileTreeItem> {
     async getSaveConfirmationText(treeItem: FileTreeItem): Promise<string> {
-        return `Saving '${treeItem.file.name}' will update the file "${treeItem.file.name}" in File Share "${treeItem.share.name}"`;
+        return `Saving '${treeItem.fileName}' will update the file "${treeItem.fileName}" in File Share "${treeItem.shareName}"`;
     }
 
     async getFilename(treeItem: FileTreeItem): Promise<string> {
-        return treeItem.file.name;
+        return treeItem.fileName;
     }
 
     async downloadFile(treeItem: FileTreeItem, filePath: string): Promise<void> {
-        let fileService = treeItem.root.createFileService();
-        await new Promise<void>((resolve, reject) => {
-            fileService.getFileToLocalFile(treeItem.share.name, treeItem.directoryPath, treeItem.file.name, filePath, (error?: Error, _result?: azureStorage.FileService.FileResult, _response?: azureStorage.ServiceResponse) => {
-                if (!!error) {
-                    reject(error);
-                } else {
-                    resolve();
-                }
-            });
-        });
+        const fileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+        await fileClient.downloadToFile(filePath);
     }
 
     async uploadFile(treeItem: FileTreeItem, filePath: string): Promise<void> {
-        await updateFileFromLocalFile(treeItem.directoryPath, treeItem.file.name, treeItem.share, treeItem.root, filePath);
+        const options: azureStorageShare.FileCreateOptions = await getExistingCreateOptions(treeItem.directoryPath, treeItem.fileName, treeItem.shareName, treeItem.root);
+        const fileClient: azureStorageShare.ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+        await fileClient.uploadFile(filePath, options);
     }
 }

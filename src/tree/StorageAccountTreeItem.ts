@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
+import * as azureStorageShare from '@azure/storage-file-share';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccountKey } from 'azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
@@ -14,6 +15,7 @@ import { commands, MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
+import { nonNullProp } from '../utils/nonNull';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { BlobContainerTreeItem } from "./blob/BlobContainerTreeItem";
@@ -160,10 +162,14 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             storageAccount: this.storageAccount,
             createBlobServiceClient: () => {
                 const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
-                return new azureStorageBlob.BlobServiceClient(this.storageAccount.primaryEndpoints.blob || `https://${this.storageAccount.name}.blob.core.windows.net`, credential);
+                return new azureStorageBlob.BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
             },
             createFileService: () => {
                 return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+            },
+            createShareServiceClient: () => {
+                const credential = new azureStorageShare.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
+                return new azureStorageShare.ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
             },
             createQueueService: () => {
                 return azureStorage.createQueueService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.queue).withFilter(new azureStorage.ExponentialRetryPolicyFilter());

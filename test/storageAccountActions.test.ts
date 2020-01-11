@@ -3,12 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BlobServiceClient, ContainerClient, StorageSharedKeyCredential } from '@azure/storage-blob';
+import * as azureStorageBlob from '@azure/storage-blob';
+import * as azureStorageShare from '@azure/storage-file-share';
 import * as assert from 'assert';
 import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
-import { createFileService, createQueueService, createTableService, FileService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
+import { createQueueService, createTableService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
 import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
@@ -22,7 +23,8 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     const testAccount: TestAzureAccount = new TestAzureAccount(vscode);
     let client: StorageManagementClient;
     const resourceName: string = getRandomHexString().toLowerCase();
-    const url: string = `https://${resourceName}.blob.core.windows.net`;
+    const blobUrl: string = `https://${resourceName}.blob.core.windows.net`;
+    const fileUrl: string = `https://${resourceName}.file.core.windows.net`;
     // Blob container, file share and queue must have lower case name
     const containerName: string = getRandomHexString().toLowerCase();
     const shareName: string = getRandomHexString().toLowerCase();
@@ -83,8 +85,8 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("copyPrimaryKey", async () => {
         const primaryKey: string = await getPrimaryKey();
-        const credential = new StorageSharedKeyCredential(resourceName, primaryKey);
-        const blobServiceClient = new BlobServiceClient(url, credential);
+        const credential = new azureStorageBlob.StorageSharedKeyCredential(resourceName, primaryKey);
+        const blobServiceClient = new azureStorageBlob.BlobServiceClient(blobUrl, credential);
         await validateBlobService(blobServiceClient);
     });
 
@@ -103,9 +105,9 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
             await vscode.commands.executeCommand('azureStorage.deleteBlobContainer');
         });
         const primaryKey: string = await getPrimaryKey();
-        const credential = new StorageSharedKeyCredential(resourceName, primaryKey);
-        const blobServiceClient = new BlobServiceClient(url, credential);
-        const containerClient: ContainerClient = blobServiceClient.getContainerClient(containerName);
+        const credential = new azureStorageBlob.StorageSharedKeyCredential(resourceName, primaryKey);
+        const blobServiceClient = new azureStorageBlob.BlobServiceClient(blobUrl, credential);
+        const containerClient: azureStorageBlob.ContainerClient = blobServiceClient.getContainerClient(containerName);
         assert.ok(!(await containerClient.exists()));
     });
 
@@ -114,10 +116,9 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         await testUserInput.runWithInputs([resourceName, shareName, '5120'], async () => {
             await vscode.commands.executeCommand('azureStorage.createFileShare');
         });
-        const connectionString: string = await getConnectionString(resourceName);
-        const fileService: FileService = createFileService(connectionString);
-        const createdShare: FileService.ShareResult = await doesResourceExist<FileService.ShareResult>(fileService, 'doesShareExist', shareName);
-        assert.ok(createdShare.exists);
+        const shareClient: azureStorageShare.ShareClient = await createShareClient(resourceName, shareName);
+        const shareExists: boolean = await doesShareExist(shareClient);
+        assert.ok(shareExists);
     });
 
     test("deleteFileShare", async () => {
@@ -125,10 +126,9 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         await testUserInput.runWithInputs([resourceName, shareName, DialogResponses.deleteResponse.title], async () => {
             await vscode.commands.executeCommand('azureStorage.deleteFileShare');
         });
-        const connectionString: string = await getConnectionString(resourceName);
-        const fileService: FileService = createFileService(connectionString);
-        const createdShare: FileService.ShareResult = await doesResourceExist<FileService.ShareResult>(fileService, 'doesShareExist', shareName);
-        assert.ok(!createdShare.exists);
+        const shareClient: azureStorageShare.ShareClient = await createShareClient(resourceName, shareName);
+        const shareExists: boolean = await doesShareExist(shareClient);
+        assert.ok(!shareExists);
     });
 
     test("createQueue", async () => {
@@ -203,11 +203,21 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         }));
     }
 
+    // validate the file share exists or not
+    async function doesShareExist(shareClient: azureStorageShare.ShareClient): Promise<boolean> {
+        try {
+            await shareClient.getProperties();
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     // validate the blob service by verifying whether or not it creates a blob container
-    async function validateBlobService(blobServiceClient: BlobServiceClient): Promise<void> {
+    async function validateBlobService(blobServiceClient: azureStorageBlob.BlobServiceClient): Promise<void> {
         // Blob container must have lower case name
         const containerName1: string = getRandomHexString().toLowerCase();
-        const containerClient: ContainerClient = blobServiceClient.getContainerClient(containerName1);
+        const containerClient: azureStorageBlob.ContainerClient = blobServiceClient.getContainerClient(containerName1);
         if (!(await containerClient.exists())) {
             await containerClient.create();
         }
@@ -231,6 +241,13 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
             await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
         });
         return await vscode.env.clipboard.readText();
+    }
+
+    async function createShareClient(newResourceName: string, newShareName: string): Promise<azureStorageShare.ShareClient> {
+        const primaryKey: string = await getPrimaryKey();
+        const credential = new azureStorageShare.StorageSharedKeyCredential(newResourceName, primaryKey);
+        const shareServiceClient: azureStorageShare.ShareServiceClient = new azureStorageShare.ShareServiceClient(fileUrl, credential);
+        return shareServiceClient.getShareClient(newShareName);
     }
 });
 

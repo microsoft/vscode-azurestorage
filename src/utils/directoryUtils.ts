@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageShare from "@azure/storage-file-share";
 import * as path from "path";
 import { ProgressLocation, window } from "vscode";
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from "vscode-azureextensionui";
@@ -12,11 +12,11 @@ import { ext } from "../extensionVariables";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
 import { IStorageRoot } from "../tree/IStorageRoot";
-import { deleteFile } from "./fileUtils";
+import { createDirectoryClient, deleteFile } from "./fileUtils";
 import { validateDirectoryName } from "./validateNames";
 
 // Supports both file share and directory parents
-export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, share: azureStorage.FileService.ShareResult, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem> {
+export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem> {
     const dirName = context.childName || await window.showInputBox({
         placeHolder: 'Enter a name for the new directory',
         validateInput: validateDirectoryName
@@ -26,60 +26,39 @@ export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<ISt
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
             context.showCreatingTreeItem(dirName);
             progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
-            let dir = await createDirectory(share, parent.root, parentPath, dirName);
-
-            // DirectoryResult.name contains the parent path in this call, but doesn't in other places such as listing directories.
-            // Remove it here to be consistent.
-            dir.name = path.basename(dir.name);
-
-            return new DirectoryTreeItem(parent, parentPath, dir, share);
+            const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(parent.root, shareName, path.posix.join(parentPath, dirName));
+            await directoryClient.create();
+            return new DirectoryTreeItem(parent, parentPath, dirName, shareName);
         });
     }
 
     throw new UserCancelledError();
 }
 
-// tslint:disable-next-line:promise-function-async // Grandfathered in
-export function createDirectory(share: azureStorage.FileService.ShareResult, root: IStorageRoot, parentPath: string, name: string): Promise<azureStorage.FileService.DirectoryResult> {
-    return new Promise((resolve, reject) => {
-        const fileService = root.createFileService();
-        fileService.createDirectory(share.name, path.posix.join(parentPath, name), (err: Error, result: azureStorage.FileService.DirectoryResult) => {
-            // tslint:disable-next-line:strict-boolean-expressions // SDK is not strict-null-checking enabled, can't type err as optional
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
+export async function listFilesInDirectory(directory: string, shareName: string, root: IStorageRoot, currentToken?: string): Promise<{ files: azureStorageShare.FileItem[], directories: azureStorageShare.DirectoryItem[], continuationToken: string }> {
+    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directory);
+    const response: AsyncIterableIterator<azureStorageShare.DirectoryListFilesAndDirectoriesSegmentResponse> = directoryClient.listFilesAndDirectories().byPage({ continuationToken: currentToken, maxPageSize });
+
+    // tslint:disable-next-line: no-unsafe-any
+    let responseValue: azureStorageShare.DirectoryListFilesAndDirectoriesSegmentResponse = (await response.next()).value;
+
+    let files: azureStorageShare.FileItem[] = responseValue.segment.fileItems;
+    let directories: azureStorageShare.DirectoryItem[] = responseValue.segment.directoryItems;
+    currentToken = responseValue.continuationToken;
+
+    return { files, directories, continuationToken: currentToken };
 }
 
-// tslint:disable-next-line:promise-function-async // Grandfathered in
-export function listFilesInDirectory(directory: string, share: string, root: IStorageRoot, currentToken?: azureStorage.common.ContinuationToken): Promise<azureStorage.FileService.ListFilesAndDirectoriesResult> {
-    return new Promise((resolve, reject) => {
-        const fileService = root.createFileService();
-        // currentToken argument typed incorrectly in SDK
-        fileService.listFilesAndDirectoriesSegmented(share, directory, <azureStorage.common.ContinuationToken>currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.FileService.ListFilesAndDirectoriesResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
-}
-
-export async function deleteDirectoryAndContents(directory: string, share: string, root: IStorageRoot): Promise<void> {
+export async function deleteDirectoryAndContents(directory: string, shareName: string, root: IStorageRoot): Promise<void> {
     const parallelOperations = 5;
 
-    // tslint:disable-next-line:no-unnecessary-initializer
-    let currentToken: azureStorage.common.ContinuationToken | undefined = undefined;
+    let currentToken: string | undefined;
     // tslint:disable-next-line:no-constant-condition
     while (true) {
-        let { entries, continuationToken }: azureStorage.FileService.ListFilesAndDirectoriesResult = await listFilesInDirectory(directory, share, root, currentToken);
+        let { files, directories, continuationToken }: { files: azureStorageShare.FileItem[], directories: azureStorageShare.DirectoryItem[], continuationToken: string } = await listFilesInDirectory(directory, shareName, root, currentToken);
         let promises: Promise<void>[] = [];
-        for (let file of entries.files) {
-            let promise = deleteFile(directory, file.name, share, root);
+        for (let file of files) {
+            let promise = deleteFile(directory, file.name, shareName, root);
             promises.push(promise);
             ext.outputChannel.appendLine(`Deleted file "${directory}/${file.name}"`);
 
@@ -90,8 +69,8 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
         }
         await Promise.all(promises);
 
-        for (let dir of entries.directories) {
-            await deleteDirectoryAndContents(path.posix.join(directory, dir.name), share, root);
+        for (let dir of directories) {
+            await deleteDirectoryAndContents(path.posix.join(directory, dir.name), shareName, root);
         }
 
         currentToken = continuationToken;
@@ -100,17 +79,7 @@ export async function deleteDirectoryAndContents(directory: string, share: strin
         }
     }
 
-    await deleteDirectoryOnly(directory, share, root);
+    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directory);
+    await directoryClient.delete();
     ext.outputChannel.appendLine(`Deleted directory "${directory}"`);
-}
-
-async function deleteDirectoryOnly(directory: string, share: string, root: IStorageRoot): Promise<void> {
-    const fileService = root.createFileService();
-    await new Promise((resolve, reject) => {
-        // tslint:disable-next-line:no-any
-        fileService.deleteDirectory(share, directory, (err?: any) => {
-            // tslint:disable-next-line:no-void-expression // Grandfathered in
-            err ? reject(err) : resolve();
-        });
-    });
 }
