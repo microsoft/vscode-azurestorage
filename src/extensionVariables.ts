@@ -22,6 +22,6 @@ export namespace ext {
     export let tree: AzExtTreeDataProvider;
     export let treeView: TreeView<AzExtTreeItem>;
     export let azureAccountTreeItem: AzureAccountTreeItem;
-    export let azureStorageFS: AzureStorageFS | undefined; // NOTE: We can remove `| undefined` once this is no longer behind a feature flag
+    export let azureStorageFS: AzureStorageFS;
     export const prefix: string = 'azureStorage';
 }
