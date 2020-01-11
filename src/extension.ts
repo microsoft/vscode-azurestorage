@@ -27,7 +27,6 @@ import { selectStorageAccountTreeItemForCommand } from './commands/selectStorage
 import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
-import { configurationSettingsKeys, extensionPrefix } from './constants';
 import { ext } from './extensionVariables';
 import { AzureAccountTreeItem } from './tree/AzureAccountTreeItem';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
@@ -70,10 +69,8 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerTableActionHandlers();
         registerTableGroupActionHandlers();
 
-        if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.enableViewInFileExplorer)) {
-            ext.azureStorageFS = new AzureStorageFS();
-            context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', ext.azureStorageFS, { isCaseSensitive: true }));
-        }
+        ext.azureStorageFS = new AzureStorageFS();
+        context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', ext.azureStorageFS, { isCaseSensitive: true }));
 
         registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
             if (!treeItem) {

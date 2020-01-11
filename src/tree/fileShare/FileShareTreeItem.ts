@@ -6,10 +6,10 @@
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Uri, workspace } from 'vscode';
+import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { configurationSettingsKeys, extensionPrefix, getResourcesPath } from "../../constants";
+import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { askAndCreateChildDirectory, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createShareClient } from '../../utils/fileUtils';
@@ -45,17 +45,14 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
         if (clearCache) {
             this._continuationToken = undefined;
-            // tslint:disable-next-line: strict-boolean-expressions
-            if (workspace.getConfiguration(extensionPrefix).get(configurationSettingsKeys.enableViewInFileExplorer)) {
-                const ti = new GenericTreeItem(this, {
-                    label: this._openInFileExplorerString,
-                    commandId: 'azureStorage.openInFileExplorer',
-                    contextValue: 'openInFileExplorer'
-                });
+            const ti = new GenericTreeItem(this, {
+                label: this._openInFileExplorerString,
+                commandId: 'azureStorage.openInFileExplorer',
+                contextValue: 'openInFileExplorer'
+            });
 
-                ti.commandArgs = [this];
-                result.push(ti);
-            }
+            ti.commandArgs = [this];
+            result.push(ti);
         }
 
         let { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory('', this.shareName, this.root, this._continuationToken);

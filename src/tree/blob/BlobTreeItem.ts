@@ -12,7 +12,7 @@ import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { BlobFileHandler } from '../../editors/BlobFileHandler';
 import { ext } from "../../extensionVariables";
-import { createBlobClient, createBlobContainerClient } from '../../utils/blobUtils';
+import { createBlobClient } from '../../utils/blobUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 
@@ -47,8 +47,9 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     };
 
     public async copyUrl(): Promise<void> {
-        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
-        let url: string = containerClient.url;
+        // Use this.blobPath here instead of this.blobName. Otherwise the blob's containing directory/directories aren't displayed
+        const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
+        const url = blobClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);

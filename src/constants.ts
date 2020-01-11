@@ -12,7 +12,6 @@ export const maxPageSize = 50;
 export enum configurationSettingsKeys {
     deployPath = 'deployPath',
     preDeployTask = 'preDeployTask',
-    enableViewInFileExplorer = 'enableViewInFileExplorer',
 }
 
 export const extensionPrefix: string = 'azureStorage';
