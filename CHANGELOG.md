@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.8.0 - 2020-01-21
+### Added
+- View and edit Azure files and blobs in the file explorer
+
+### Changed
+- `Create Storage Account...` has been streamlined with fewer prompts. `Create Storage Account... (Advanced)`
+provides the same level as account customization as before
+- Files and blobs created with a file extention have a smart default content type
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-azurestorage/issues?utf8=%E2%9C%93&q=is%3Aclosed+is%3Aissue+milestone%3A0.8.0+)
+
 ## 0.7.2 - 2019-10-11
 ### Fixed
 - Deploying folders beginning with `.` to static websites is allowed [#457](https://github.com/Microsoft/vscode-azurestorage/issues/457)
