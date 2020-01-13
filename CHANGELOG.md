@@ -7,7 +7,7 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 
 ### Changed
 - `Create Storage Account...` has been streamlined with fewer prompts. `Create Storage Account... (Advanced)`
-provides the same level as account customization as before
+provides the same level of account customization as before
 - Files and blobs created with a file extention have a smart default content type
 
 ### Fixed
