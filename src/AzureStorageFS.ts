@@ -34,7 +34,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     private _fireSoonHandle?: NodeJS.Timer;
 
     private _queryCache: Map<string, { query: string, invalid?: boolean }> = new Map(); // Key: rootName
-    private _rangeErrorCache: Map<string, boolean> = new Map(); // Key: rootName, value: has a RangeError been thrown for this rootName?
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
     static idToUri(resourceId: string, filePath?: string): vscode.Uri {
@@ -381,25 +380,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         const rootName: string = path.basename(resourceId);
         const loadingMessage: string = this.isFileShareUri(uri) ? localize('loadingFileShare', 'Loading file share "{0}"...', rootName) : localize('loadingContainer', 'Loading blob container "{0}"...', rootName);
         let treeItem = await ext.tree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage });
-        if (!treeItem) {
-            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-        } else if (treeItem instanceof FileShareTreeItem || treeItem instanceof BlobContainerTreeItem) {
+        if (treeItem instanceof FileShareTreeItem || treeItem instanceof BlobContainerTreeItem) {
             return treeItem;
         } else {
-            // Ensure only one RangeError is displayed per rootName
-            if (!context.errorHandling.suppressDisplay) {
-                let cache = this._rangeErrorCache.get(rootName);
-
-                // A RangeError has already been or will be thrown for this rootName
-                this._rangeErrorCache.set(rootName, true);
-
-                if (!cache) {
-                    throw new RangeError(`Unexpected entry ${treeItem.constructor.name}.`);
-                }
-                context.errorHandling.suppressDisplay = true;
-            }
-
-            throw new RangeError(`Duplicate unexpected entry ${treeItem.constructor.name}.`);
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
         }
     }
 
