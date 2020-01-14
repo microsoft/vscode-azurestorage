@@ -34,6 +34,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     private _fireSoonHandle?: NodeJS.Timer;
 
     private _queryCache: Map<string, { query: string, invalid?: boolean }> = new Map(); // Key: rootName
+    private _rangeErrorCache: Map<string, boolean> = new Map(); // Key: rootName, value: has a RangeError been thrown for this rootName?
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
     static idToUri(resourceId: string, filePath?: string): vscode.Uri {
@@ -385,7 +386,20 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         } else if (treeItem instanceof FileShareTreeItem || treeItem instanceof BlobContainerTreeItem) {
             return treeItem;
         } else {
-            throw new RangeError(`Unexpected entry ${treeItem.constructor.name}.`);
+            // Ensure only one RangeError is displayed per rootName
+            if (!context.errorHandling.suppressDisplay) {
+                let cache = this._rangeErrorCache.get(rootName);
+
+                // A RangeError has already been or will be thrown for this rootName
+                this._rangeErrorCache.set(rootName, true);
+
+                if (!cache) {
+                    throw new RangeError(`Unexpected entry ${treeItem.constructor.name}.`);
+                }
+                context.errorHandling.suppressDisplay = true;
+            }
+
+            throw new RangeError(`Duplicate unexpected entry ${treeItem.constructor.name}.`);
         }
     }
 
