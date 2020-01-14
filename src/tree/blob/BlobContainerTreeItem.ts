@@ -155,6 +155,9 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             child = new BlobDirectoryTreeItem(this, context.childName, this.container);
         } else {
             child = await createChildAsNewBlockBlob(this, context);
+
+            // Refresh tree item to prevent https://github.com/microsoft/vscode-azurestorage/issues/565
+            await ext.tree.refresh(this);
         }
 
         AzureStorageFS.fireCreateEvent(child);
