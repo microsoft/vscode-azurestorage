@@ -380,12 +380,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         const rootName: string = path.basename(resourceId);
         const loadingMessage: string = this.isFileShareUri(uri) ? localize('loadingFileShare', 'Loading file share "{0}"...', rootName) : localize('loadingContainer', 'Loading blob container "{0}"...', rootName);
         let treeItem = await ext.tree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage });
-        if (!treeItem) {
-            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-        } else if (treeItem instanceof FileShareTreeItem || treeItem instanceof BlobContainerTreeItem) {
+        if (treeItem instanceof FileShareTreeItem || treeItem instanceof BlobContainerTreeItem) {
             return treeItem;
         } else {
-            throw new RangeError(`Unexpected entry ${treeItem.constructor.name}.`);
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
         }
     }
 
