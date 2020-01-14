@@ -11,6 +11,7 @@ import * as azureStorage from "azure-storage";
 // tslint:disable-next-line:no-require-imports
 import opn = require('opn');
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { commands, MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
@@ -151,7 +152,13 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
             let parsedId = this.parseAzureResourceId(this.storageAccount.id);
             let resourceGroupName = parsedId.resourceGroups;
+            const accountExistsBeforeDelete: boolean = await this.exists(storageManagementClient, resourceGroupName);
             await storageManagementClient.storageAccounts.deleteMethod(resourceGroupName, this.storageAccount.name);
+
+            // Deleting an already deleted storage account doesn't throw an error so alert the user if necessary
+            if (!accountExistsBeforeDelete) {
+                vscode.window.showWarningMessage(`Storage account ${this.storageAccount.name} has already been deleted.`);
+            }
         } else {
             throw new UserCancelledError();
         }
@@ -398,6 +405,15 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             }
 
             throw new Error("This storage account does not support static website hosting.");
+        }
+    }
+
+    private async exists(storageManagementClient: StorageManagementClient, resourceGroupName: string): Promise<boolean> {
+        try {
+            await storageManagementClient.storageAccounts.getProperties(resourceGroupName, this.storageAccount.name);
+            return true;
+        } catch {
+            return false;
         }
     }
 }
