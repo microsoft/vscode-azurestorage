@@ -4,11 +4,14 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 ## 0.8.0 - 2020-01-21
 ### Added
 - View and edit Azure files and blobs in the file explorer
+- Blobs have a hierarchical directory structure in the Azure view
+- Enable "Secure transfer required" by default when creating storage accounts
 
 ### Changed
 - `Create Storage Account...` has been streamlined with fewer prompts. `Create Storage Account... (Advanced)`
 provides the same level of account customization as before
 - Files and blobs created with a file extension have a smart default content type
+- Editing files and blobs doesn't clear metadata or properties
 
 ### Fixed
 - [Bugs fixed](https://github.com/microsoft/vscode-azurestorage/issues?utf8=%E2%9C%93&q=is%3Aclosed+is%3Aissue+milestone%3A0.8.0+)
