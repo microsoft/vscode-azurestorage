@@ -31,14 +31,11 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
      */
     public readonly blobPath: string;
 
-    constructor(parent: AzureParentTreeItem, blobPath: string, public readonly container: azureStorageBlob.ContainerItem) {
+    constructor(parent: AzureParentTreeItem, blobPath: string, public readonly container: azureStorageBlob.ContainerItem, public readonly label: string = '') {
         super(parent);
         this.blobPath = blobPath;
         this.blobName = path.basename(blobPath);
-    }
-
-    public get label(): string {
-        return this.blobName;
+        this.label = label || this.blobName;
     }
 
     public iconPath: { light: string | Uri; dark: string | Uri } = {

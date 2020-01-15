@@ -74,7 +74,8 @@ export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | 
         context.showCreatingTreeItem(blobPath);
         progress.report({ message: `Azure Storage: Creating block blob '${blobPath}'` });
         await createOrUpdateBlockBlob(parent, blobPath);
-        return new BlobTreeItem(parent, blobPath, parent.container);
+        // Use the full blob path as the label since this is a newly created blob. https://github.com/microsoft/vscode-azurestorage/issues/565
+        return new BlobTreeItem(parent, blobPath, parent.container, blobPath);
     });
 }
 
