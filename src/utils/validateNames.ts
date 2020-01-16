@@ -8,7 +8,7 @@ const invalidFileChars = ['"', '/', '\\', ':', '|', '<', '>', '?', '*'];
 const invalidFileCharsString = invalidFileChars.join(', ');
 
 export function validateBlobDirectoryName(name: string): string | undefined {
-    if (!name || name.indexOf(invalidBlobDirectoryChar) !== -1) {
+    if (!name || name.includes(invalidBlobDirectoryChar)) {
         return `Directory name cannot be empty or contain '${invalidBlobDirectoryChar}'`;
     }
 
