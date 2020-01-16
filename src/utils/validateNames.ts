@@ -7,7 +7,7 @@ const invalidBlobDirectoryChar = '\\'; // Prevents differing behavior when creat
 const invalidFileChars = ['"', '/', '\\', ':', '|', '<', '>', '?', '*'];
 const invalidFileCharsString = invalidFileChars.join(', ');
 
-export function validateBlobDirectoryName(name: string): string | undefined | null {
+export function validateBlobDirectoryName(name: string): string | undefined {
     if (!name || name.indexOf(invalidBlobDirectoryChar) !== -1) {
         return `Directory name cannot be empty or contain '${invalidBlobDirectoryChar}'`;
     }
@@ -15,7 +15,7 @@ export function validateBlobDirectoryName(name: string): string | undefined | nu
     return undefined;
 }
 
-export function validateFileDirectoryName(name: string): string | undefined | null {
+export function validateFileDirectoryName(name: string): string | undefined {
     const validLength = { min: 1, max: 255 };
 
     if (!name) {
@@ -33,7 +33,7 @@ export function validateFileDirectoryName(name: string): string | undefined | nu
     return undefined;
 }
 
-export function validateFileName(name: string): string | undefined | null {
+export function validateFileName(name: string): string | undefined {
     const validLength = { min: 1, max: 255 };
 
     if (!name) {

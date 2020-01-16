@@ -105,7 +105,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
 
             try {
                 let parsedUri: IParsedUri = this.parseUri(uri);
-                let response: string | undefined | null = this.isFileShareUri(uri) ? validateFileDirectoryName(parsedUri.baseName) : validateBlobDirectoryName(parsedUri.baseName);
+                let response: string | undefined = this.isFileShareUri(uri) ? validateFileDirectoryName(parsedUri.baseName) : validateBlobDirectoryName(parsedUri.baseName);
                 if (response) {
                     // Use getFileSystemError to prevent multiple error notifications
                     throw getFileSystemError(uri, context, () => { return new vscode.FileSystemError(<string>response); });
