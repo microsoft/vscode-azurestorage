@@ -3,10 +3,19 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-const invalidChars = ['"', '/', '\\', ':', '|', '<', '>', '?', '*'];
-const invalidCharsString = invalidChars.join(', ');
+const invalidBlobDirectoryChar = '\\'; // Keeps behavior consistent on Mac & Windows when creating blob directories via the file explorer
+const invalidFileChars = ['"', '/', '\\', ':', '|', '<', '>', '?', '*'];
+const invalidFileCharsString = invalidFileChars.join(', ');
 
-export function validateDirectoryName(name: string): string | undefined | null {
+export function validateBlobDirectoryName(name: string): string | undefined {
+    if (!name || name.includes(invalidBlobDirectoryChar)) {
+        return `Directory name cannot be empty or contain '${invalidBlobDirectoryChar}'`;
+    }
+
+    return undefined;
+}
+
+export function validateFileDirectoryName(name: string): string | undefined {
     const validLength = { min: 1, max: 255 };
 
     if (!name) {
@@ -17,14 +26,14 @@ export function validateDirectoryName(name: string): string | undefined | null {
         return `Directory name must contain between ${validLength.min} and ${validLength.max} characters`;
     }
 
-    if (invalidChars.some(ch => name.indexOf(ch) >= 0)) {
-        return `Directory name cannot contain the following characters: '${invalidCharsString}`;
+    if (invalidFileChars.some(ch => name.indexOf(ch) >= 0)) {
+        return `Directory name cannot contain the following characters: '${invalidFileCharsString}`;
     }
 
     return undefined;
 }
 
-export function validateFileName(name: string): string | undefined | null {
+export function validateFileName(name: string): string | undefined {
     const validLength = { min: 1, max: 255 };
 
     if (!name) {
@@ -35,8 +44,8 @@ export function validateFileName(name: string): string | undefined | null {
         return `Filename must contain between ${validLength.min} and ${validLength.max} characters`;
     }
 
-    if (invalidChars.some(ch => name.indexOf(ch) >= 0)) {
-        return `Filename cannot contain the following characters: ${invalidCharsString}'`;
+    if (invalidFileChars.some(ch => name.indexOf(ch) >= 0)) {
+        return `Filename cannot contain the following characters: ${invalidFileCharsString}'`;
     }
 
     return undefined;
