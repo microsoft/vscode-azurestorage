@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-const invalidBlobDirectoryChar = '\\'; // Prevents differing behavior when creating blob directories via the file explorer on Mac & Windows
+const invalidBlobDirectoryChar = '\\'; // Keeps behavior consistent on Mac & Windows when creating blob directories via the file explorer
 const invalidFileChars = ['"', '/', '\\', ':', '|', '<', '>', '?', '*'];
 const invalidFileCharsString = invalidFileChars.join(', ');
 
