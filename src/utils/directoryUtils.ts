@@ -13,13 +13,13 @@ import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
 import { IStorageRoot } from "../tree/IStorageRoot";
 import { createDirectoryClient, deleteFile } from "./fileUtils";
-import { validateDirectoryName } from "./validateNames";
+import { validateFileDirectoryName } from "./validateNames";
 
 // Supports both file share and directory parents
 export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem> {
     const dirName = context.childName || await window.showInputBox({
         placeHolder: 'Enter a name for the new directory',
-        validateInput: validateDirectoryName
+        validateInput: validateFileDirectoryName
     });
 
     if (dirName) {

@@ -21,7 +21,7 @@ import { doesFileExist, updateFileFromText } from "./utils/fileUtils";
 import { createFileClient } from './utils/fileUtils';
 import { localize } from "./utils/localize";
 import { nonNullValue } from "./utils/nonNull";
-import { validateDirectoryName } from "./utils/validateNames";
+import { validateBlobDirectoryName, validateFileDirectoryName } from "./utils/validateNames";
 
 type AzureStorageFileTreeItem = FileTreeItem | DirectoryTreeItem | FileShareTreeItem;
 type AzureStorageBlobTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
@@ -104,8 +104,15 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
 
             try {
+                let parsedUri: IParsedUri = this.parseUri(uri);
+                let response: string | undefined | null = this.isFileShareUri(uri) ? validateFileDirectoryName(parsedUri.baseName) : validateBlobDirectoryName(parsedUri.baseName);
+                if (response) {
+                    // Use getFileSystemError to prevent multiple error notifications
+                    throw getFileSystemError(uri, context, () => { return new vscode.FileSystemError(<string>response); });
+                }
+
                 // tslint:disable-next-line: no-void-expression
-                this.isFileShareUri(uri) ? await this.createDirectoryFileShare(uri, context) : await this.createDirectoryBlobContainer(uri, context);
+                this.isFileShareUri(uri) ? await this.createDirectoryFileShare(parsedUri, context) : await this.createDirectoryBlobContainer(uri, parsedUri, context);
             } catch (error) {
                 let pe = parseError(error);
                 if (pe.errorType === "ResourceAlreadyExists") {
@@ -117,20 +124,13 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         });
     }
 
-    async createDirectoryFileShare(uri: vscode.Uri, context: IActionContext): Promise<void> {
-        let parsedUri = this.parseUri(uri);
-        let response: string | undefined | null = validateDirectoryName(parsedUri.baseName);
-        if (response) {
-            throw new Error(response);
-        }
-
+    async createDirectoryFileShare(parsedUri: IParsedUri, context: IActionContext): Promise<void> {
         let parentUri: vscode.Uri = AzureStorageFS.idToUri(parsedUri.resourceId, parsedUri.parentDirPath);
         let parent = await this.lookupAsDirectory(parentUri, context, parsedUri.resourceId, parsedUri.parentDirPath);
         await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFileShareDirectory', childName: parsedUri.baseName });
     }
 
-    async createDirectoryBlobContainer(uri: vscode.Uri, context: IActionContext): Promise<void> {
-        let parsedUri = this.parseUri(uri);
+    async createDirectoryBlobContainer(uri: vscode.Uri, parsedUri: IParsedUri, context: IActionContext): Promise<void> {
         let treeItem: AzureStorageBlobTreeItem = await this.lookupBlobContainer(uri, context, parsedUri.resourceId, parsedUri.filePath, true);
         if (treeItem instanceof BlobTreeItem) {
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotADirectory);
