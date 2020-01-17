@@ -64,6 +64,13 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         return await callWithTelemetryAndErrorHandling('stat', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
+
+            if (uri.path.endsWith('/')) {
+                // Ignore trailing forward slashes
+                // https://github.com/microsoft/vscode-azurestorage/issues/576
+                uri = vscode.Uri.parse(`azurestorage://${uri.path.slice(0, -1)}?${uri.query}`);
+            }
+
             let treeItem: AzureStorageTreeItem = await this.lookup(uri, context);
             let fileType: vscode.FileType = treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem ? vscode.FileType.Directory : vscode.FileType.File;
 
@@ -186,6 +193,11 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         await callWithTelemetryAndErrorHandling('writeFile', async (context) => {
             if (!options.create && !options.overwrite) {
                 throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
+            }
+
+            if (uri.path.endsWith('/')) {
+                // https://github.com/microsoft/vscode-azurestorage/issues/576
+                throw getFileSystemError(uri, context, () => { return new vscode.FileSystemError("File/blob names with a trailing '/' are not allowed."); });
             }
 
             const writeToFileShare: boolean = this.isFileShareUri(uri);
