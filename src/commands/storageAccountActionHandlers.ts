@@ -56,7 +56,12 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
 
     // Disambiguate context this was executed from
     if (target instanceof vscode.Uri) {
-        // Command called from file view on a folder
+        // Command called from file view
+        if (target.scheme === 'azurestorage') {
+            context.telemetry.properties.contextValue = 'BlobContainer/FileShare';
+            throw new Error('Deploying an Azure resource from the Explorer is not supported.');
+        }
+
         sourcePath = target.fsPath;
         context.telemetry.properties.contextValue = 'Folder';
     } else {
