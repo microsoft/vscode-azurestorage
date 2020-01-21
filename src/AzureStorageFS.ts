@@ -68,7 +68,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             if (uri.path.endsWith('/')) {
                 // Ignore trailing forward slashes
                 // https://github.com/microsoft/vscode-azurestorage/issues/576
-                uri = uri.with({ scheme: uri.scheme, path: uri.path.slice(0, -1), query: uri.query });
+                uri = uri.with({ path: uri.path.slice(0, -1) });
             }
 
             let treeItem: AzureStorageTreeItem = await this.lookup(uri, context);
