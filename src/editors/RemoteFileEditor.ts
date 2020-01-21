@@ -7,7 +7,7 @@ import * as fse from 'fs-extra';
 import * as path from "path";
 import * as vscode from "vscode";
 import { TextDocument, window } from 'vscode';
-import { DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { DialogResponses, IActionContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { TemporaryFile } from '../utils/temporaryFile';
 import { IRemoteFileHandler } from './IRemoteFileHandler';
@@ -83,8 +83,7 @@ export class RemoteFileEditor<ContextT> implements vscode.Disposable {
             await this.remoteFileHandler.uploadFile(context, document.fileName);
             this.appendLineToOutput(`Successfully updated '${fileName}'`);
         } catch (error) {
-            this.appendLineToOutput(`Unable to save '${fileName}'`);
-            this.appendLineToOutput(`Error Details: ${error}`);
+            this.appendLineToOutput(`Unable to save '${fileName}': ${parseError(error).message}`);
         }
     }
 
