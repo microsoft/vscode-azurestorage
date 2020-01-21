@@ -68,7 +68,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
             if (uri.path.endsWith('/')) {
                 // Ignore trailing forward slashes
                 // https://github.com/microsoft/vscode-azurestorage/issues/576
-                uri = vscode.Uri.parse(`azurestorage://${uri.path.slice(0, -1)}?${uri.query}`);
+                uri = uri.with({ scheme: uri.scheme, path: uri.path.slice(0, -1), query: uri.query });
             }
 
             let treeItem: AzureStorageTreeItem = await this.lookup(uri, context);
@@ -197,7 +197,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
 
             if (uri.path.endsWith('/')) {
                 // https://github.com/microsoft/vscode-azurestorage/issues/576
-                throw getFileSystemError(uri, context, () => { return new vscode.FileSystemError("File/blob names with a trailing '/' are not allowed."); });
+                context.errorHandling.rethrow = true;
+                context.errorHandling.suppressDisplay = true;
+                vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer'); // Show any parent directories that may have already been created
+                throw new Error("File/blob names with a trailing '/' are not allowed.");
             }
 
             const writeToFileShare: boolean = this.isFileShareUri(uri);
