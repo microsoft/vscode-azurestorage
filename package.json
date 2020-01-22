@@ -95,6 +95,10 @@
 			{
 				"command": "azureStorage.openInFileExplorer",
 				"title": "Open in File Explorer...",
+				"icon": {
+					"light": "resources/light/openInFileExplorer.svg",
+					"dark": "resources/dark/openInFileExplorer.svg"
+				},
 				"category": "Azure Storage"
 			},
 			{
@@ -341,6 +345,11 @@
 					"command": "azureStorage.openInFileExplorer",
 					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureBlobContainer",
 					"group": "navigation@3"
+				},
+				{
+					"command": "azureStorage.openInFileExplorer",
+					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureBlobContainer",
+					"group": "inline"
 				},
 				{
 					"command": "azureStorage.copyConnectionString",
