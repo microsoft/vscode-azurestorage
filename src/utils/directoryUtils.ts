@@ -83,3 +83,13 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
     await directoryClient.delete();
     ext.outputChannel.appendLine(`Deleted directory "${directory}"`);
 }
+
+export async function doesDirectoryExist(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string): Promise<boolean> {
+    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(parent.root, shareName, directoryPath);
+    try {
+        await directoryClient.getProperties();
+        return true;
+    } catch {
+        return false;
+    }
+}

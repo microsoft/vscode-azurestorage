@@ -6,7 +6,6 @@
 import { TransferProgressEvent } from '@azure/core-http';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as fse from 'fs-extra';
-import * as glob from 'glob';
 import * as mime from 'mime';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -16,7 +15,11 @@ import { AzureStorageFS } from '../../AzureStorageFS';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { BlobFileHandler } from '../../editors/BlobFileHandler';
 import { ext } from "../../extensionVariables";
-import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgress } from '../../utils/blobUtils';
+import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { throwIfCanceled } from '../../utils/errorUtils';
+import { listFilePathsWithAzureSeparator } from '../../utils/fs';
+import { TransferProgress } from '../../utils/TransferProgress';
+import { uploadFiles } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -118,7 +121,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
         // tslint:disable-next-line:no-constant-condition
         while (true) {
-            this.throwIfCanceled(cancellationToken, properties, "listAllBlobs");
+            throwIfCanceled(cancellationToken, properties, "listAllBlobs");
             response = containerClient.listBlobsFlat().byPage({ continuationToken: currentToken, maxPageSize: 5000 });
 
             // tslint:disable-next-line: no-unsafe-any
@@ -243,9 +246,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 cancellable: true,
                 location: ProgressLocation.Notification,
                 title: `Deploying to ${this.friendlyContainerName} from ${sourceFolderPath}`,
-
             },
-            async (progress, cancellationToken) => await this.deployStaticWebsiteCore(context, sourceFolderPath, destBlobFolder, progress, cancellationToken),
+            async (notificationProgress, cancellationToken) => await this.deployStaticWebsiteCore(context.telemetry.properties, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken),
         );
 
         let browseWebsite: vscode.MessageItem = { title: "Browse to website" };
@@ -270,27 +272,16 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
      */
     // tslint:disable-next-line: max-func-body-length
     private async deployStaticWebsiteCore(
-        context: IActionContext,
+        properties: TelemetryProperties,
         sourceFolderPath: string,
         destBlobFolder: string,
-        progress: vscode.Progress<{ message?: string, increment?: number }>,
+        notificationProgress: vscode.Progress<{ message?: string, increment?: number }>,
         cancellationToken: vscode.CancellationToken
     ): Promise<string> {
-        let properties = <TelemetryProperties & {
-            blobsToDelete: number;
-            filesToUpload: number;
-            fileLengths: number[];
-        }>context.telemetry.properties;
-
         try {
-            properties.fileLengths = [];
-
-            const isFolder = (file: string): boolean => file.endsWith("/");
-
             // Find existing blobs
             let blobsToDelete: azureStorageBlob.BlobItem[] = [];
             blobsToDelete = await this.listAllBlobs(cancellationToken);
-            properties.blobsToDelete = blobsToDelete.length;
 
             if (blobsToDelete.length) {
                 let message = `The storage container "${this.friendlyContainerName}" contains ${blobsToDelete.length} files. Deploying will delete all of these existing files.  Continue?`;
@@ -302,67 +293,21 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 }
             }
 
-            // ext.outputChannel.show();
             ext.outputChannel.appendLine(`Deploying to static website ${this.root.storageAccount.name}/${this.container.name}`);
 
             // Find source files
-            // Note: glob always returns paths with '/' separator, even on Windows, which also is the main
-            // separator used by Azure.
-            let filePathsWithAzureSeparator = await new Promise<string[]>(
-                (resolve, reject) => {
-                    glob(
-                        path.join(sourceFolderPath, '**'),
-                        {
-                            mark: true, // Add '/' to folders
-                            dot: true, // Treat '.' as a normal character
-                            nodir: true, // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
-                            follow: true, // Follow symlinks to get all sub folders https://github.com/microsoft/vscode-azurefunctions/issues/1289
-                            ignore: path.join(sourceFolderPath, '.{git,vscode}/**')
-                        },
-                        (err, matches) => {
-                            if (err) {
-                                reject(err);
-                            } else {
-                                // Remove folders from source list
-                                let files = matches.filter(file => !isFolder(file));
-
-                                resolve(files);
-                            }
-                        });
-                });
-            properties.filesToUpload = filePathsWithAzureSeparator.length;
-
-            // Set up progress indicator
-            let totalWork = blobsToDelete.length + filePathsWithAzureSeparator.length;
-            let completedPercentage = 0;
-            let lastTimeReported: number;
-            const msBetweenReports = 1000;
-            const updateProgress = () => {
-                // tslint:disable-next-line:strict-boolean-expressions
-                let increment = 1 / (totalWork || 1) * 100;
-
-                // Work-around for https://github.com/Microsoft/vscode/issues/50479
-                if (!lastTimeReported || Date.now() > lastTimeReported + msBetweenReports) {
-                    let message = `Deploying ${filePathsWithAzureSeparator.length} files to ${this.friendlyContainerName}`;
-                    if (completedPercentage) {
-                        message = `${message} (${completedPercentage.toFixed(0)}% complete)`;
-                    }
-                    progress.report({ message });
-                    lastTimeReported = Date.now();
-                }
-
-                // Increment after so we can show an initial 0% message
-                completedPercentage += increment;
-            };
-
-            // Show initial progress indication before any work
-            updateProgress();
+            let filePathsWithAzureSeparator: string[] = await listFilePathsWithAzureSeparator(sourceFolderPath, '.{git,vscode}/**');
 
             // Delete existing blobs (if requested)
-            await this.deleteBlobs(blobsToDelete, updateProgress, cancellationToken, properties);
+            let transferProgress = new TransferProgress(blobsToDelete.length, 'Deleting');
+            await this.deleteBlobs(blobsToDelete, transferProgress, notificationProgress, cancellationToken, properties);
+
+            // Reset notification progress. Otherwise the progress bar will remain full when uploading blobs
+            notificationProgress.report({ increment: -1 });
 
             // Upload files as blobs
-            await this.uploadFiles(sourceFolderPath, filePathsWithAzureSeparator, destBlobFolder, properties, updateProgress, cancellationToken);
+            transferProgress = new TransferProgress(filePathsWithAzureSeparator.length, 'Uploading');
+            await uploadFiles(this, sourceFolderPath, destBlobFolder, filePathsWithAzureSeparator, properties, transferProgress, notificationProgress, cancellationToken);
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
@@ -398,44 +343,21 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             throw new Error("Internal error: Couldn't find storage account treeItem for container");
         }
     }
-    private async uploadFiles(
-        sourceFolderPath: string,
-        filePathsWithAzureSeparator: string[],
-        destBlobFolder: string,
-        properties: TelemetryProperties & { fileLengths: number[] },
-        incrementProgress: () => void,
-        cancellationToken: vscode.CancellationToken
-    ): Promise<void> {
-        for (let filePath of filePathsWithAzureSeparator) {
-            this.throwIfCanceled(cancellationToken, properties, "uploadFiles");
-
-            try {
-                let stat = await fse.stat(filePath);
-                properties.fileLengths.push(stat.size);
-            } catch (error) {
-                // Ignore
-            }
-
-            let relativeFile = path.relative(sourceFolderPath, filePath);
-            let blobPath = path.join(destBlobFolder, relativeFile);
-            ext.outputChannel.appendLine(`Uploading ${filePath}...`);
-            try {
-                await this.uploadFileToBlockBlob(filePath, blobPath, true /* suppressLogs */);
-            } catch (error) {
-                throw new Error(`Error uploading "${filePath}": ${parseError(error).message} `);
-            }
-            incrementProgress();
-        }
-    }
 
     private async deleteBlobs(
         blobsToDelete: azureStorageBlob.BlobItem[],
-        incrementProgress: () => void,
+        transferProgress: TransferProgress,
+        notificationProgress: vscode.Progress<{
+            message?: string | undefined;
+            increment?: number | undefined;
+        }>,
         cancellationToken: vscode.CancellationToken,
         properties: TelemetryProperties,
     ): Promise<void> {
         const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
-        for (let blob of blobsToDelete) {
+        for (let blobIndex of blobsToDelete.keys()) {
+            let blob: azureStorageBlob.BlobItem = blobsToDelete[blobIndex];
+
             try {
                 ext.outputChannel.appendLine(`Deleting blob "${blob.name}"...`);
                 let response: azureStorageBlob.BlobDeleteResponse = await containerClient.deleteBlob(blob.name);
@@ -444,7 +366,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 } else if (response.errorCode) {
                     throw new Error(response.errorCode);
                 } else {
-                    incrementProgress();
+                    transferProgress.reportToNotification(notificationProgress, blobIndex);
                 }
             } catch (error) {
                 if (parseError(error).isUserCancelledError) {
@@ -457,7 +379,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(this.root, this.container.name, blobPath);
 
@@ -465,16 +387,17 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
 
         if (!suppressLogs) {
+            ext.outputChannel.show();
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
-        const transferProgress: TransferProgress = new TransferProgress();
+        const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
         const options: azureStorageBlob.BlockBlobParallelUploadOptions = {
             blobHTTPHeaders: {
                 // tslint:disable-next-line: strict-boolean-expressions
                 blobContentType: mime.getType(blobPath) || undefined
             },
-            onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(blobPath, transferProgressEvent.loadedBytes, totalBytes)
+            onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
         };
         await blockBlobClient.uploadFile(filePath, options);
 
@@ -495,14 +418,5 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
 
         return undefined;
-    }
-
-    private throwIfCanceled(cancellationToken: vscode.CancellationToken | undefined, properties: TelemetryProperties | undefined, cancelStep: string): void {
-        if (cancellationToken && cancellationToken.isCancellationRequested) {
-            if (properties && cancelStep) {
-                properties.cancelStep = cancelStep;
-            }
-            throw new UserCancelledError();
-        }
     }
 }

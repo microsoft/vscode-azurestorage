@@ -68,7 +68,8 @@
 		"onCommand:azureStorage.createTable",
 		"onCommand:azureStorage.deleteTable",
 		"onCommand:azureStorage.createQueue",
-		"onCommand:azureStorage.deleteQueue"
+		"onCommand:azureStorage.deleteQueue",
+		"onCommand:azureStorage.uploadToAzureStorage"
 	],
 	"main": "main",
 	"icon": "media/azureStorageIcon.png",
@@ -291,6 +292,11 @@
 				"command": "azureStorage.deleteQueue",
 				"title": "Delete Queue...",
 				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.uploadToAzureStorage",
+				"title": "Upload to Azure Storage...",
+				"category": "Azure Storage"
 			}
 		],
 		"menus": {
@@ -316,6 +322,11 @@
 					"command": "azureStorage.deployStaticWebsite",
 					"when": "explorerResourceIsFolder == true",
 					"group": "zzz_azuretools_deploy@3"
+				},
+				{
+					"command": "azureStorage.uploadToAzureStorage",
+					"when": "explorerResourceIsFolder == true",
+					"group": "zzzz_azurestorage@1"
 				}
 			],
 			"view/item/context": [

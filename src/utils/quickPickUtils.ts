@@ -6,9 +6,11 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
+import { IActionContext, IAzureQuickPickItem, ITreeItemPickerContext } from 'vscode-azureextensionui';
 import { extensionPrefix } from '../constants';
 import { ext } from '../extensionVariables';
+import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
+import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 
 export async function showWorkspaceFoldersQuickPick(placeHolderString: string, context: IActionContext, subPathSetting: string | undefined): Promise<string> {
     const folderQuickPickItems: IAzureQuickPickItem<string | undefined>[] = [];
@@ -67,4 +69,18 @@ export async function showWorkspaceFoldersQuickPick(placeHolderString: string, c
         context.telemetry.properties.cancelStep = undefined;
         return pickedItem.data;
     }
+}
+
+export async function showContainerShareQuickPick(context: ITreeItemPickerContext, placeHolder: string): Promise<BlobContainerTreeItem | FileShareTreeItem> {
+    let quickPicks: IAzureQuickPickItem<string>[] = [
+        {
+            label: 'Blob Container',
+            data: BlobContainerTreeItem.contextValue
+        },
+        {
+            label: 'File Share',
+            data: FileShareTreeItem.contextValue
+        }];
+    let contextValue: string = (await ext.ui.showQuickPick(quickPicks, { placeHolder })).data;
+    return await ext.tree.showTreeItemPicker(contextValue, context);
 }

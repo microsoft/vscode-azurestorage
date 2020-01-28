@@ -119,47 +119,6 @@ export async function getExistingProperties(parent: BlobTreeItem | BlobContainer
     return undefined;
 }
 
-// Implements `onProgress` callbacks used by @azure/storage-blob for blob uploads/downloads
-export class TransferProgress {
-    private message: string = '';
-    private percentage: number = 0;
-    private lastPercentage: number = 0;
-    private lastUpdated: number = Date.now();
-
-    constructor(
-        private readonly updateTimerMs: number = 200
-    ) { }
-
-    public reportToNotification(blobPath: string, loadedBytes: number, totalBytes: number, notificationProgress: vscode.Progress<{
-        message?: string | undefined;
-        increment?: number | undefined;
-    }>): void {
-        // This function is called very frequently and calls made to notificationProgress.report too rapidly result in incremental
-        // progress not displaying in the notification window. So debounce calls to notificationProgress.report
-        if (this.lastUpdated + this.updateTimerMs < Date.now()) {
-            this.preReport(blobPath, loadedBytes, totalBytes);
-            notificationProgress.report({ message: this.message, increment: this.percentage - this.lastPercentage });
-            this.postReport();
-        }
-    }
-
-    public reportToOutputWindow(blobPath: string, loadedBytes: number, totalBytes: number): void {
-        this.preReport(blobPath, loadedBytes, totalBytes);
-        ext.outputChannel.appendLine(this.message);
-        this.postReport();
-    }
-
-    private preReport(blobPath: string, loadedBytes: number, totalBytes: number): void {
-        this.percentage = Math.trunc((loadedBytes / totalBytes) * 100);
-        this.message = `${blobPath}: ${loadedBytes}/${totalBytes} (${this.percentage}%)`;
-    }
-
-    private postReport(): void {
-        this.lastPercentage = this.percentage;
-        this.lastUpdated = Date.now();
-    }
-}
-
 export interface IBlobContainerCreateChildContext extends IActionContext {
     childType: string;
     childName: string;
