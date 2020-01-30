@@ -4,15 +4,16 @@
   **/
 
 import * as azureStorageBlob from "@azure/storage-blob";
+import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, SaveDialogOptions, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
-import { BlobFileHandler } from '../../editors/BlobFileHandler';
 import { ext } from "../../extensionVariables";
-import { createBlobClient } from '../../utils/blobUtils';
+import { createBlobClient, createBlockBlobClient, TransferProgress } from '../../utils/blobUtils';
+import { Limits } from "../../utils/limits";
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 
@@ -69,8 +70,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     }
 
     public async download(): Promise<void> {
-        const handler = new BlobFileHandler();
-        await handler.checkCanDownload(this);
+        await this.checkCanDownload();
 
         const extension = path.extname(this.blobName);
         const filters = {
@@ -87,7 +87,40 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
             defaultUri: Uri.file(this.blobName)
         });
         if (uri && uri.scheme === 'file') {
-            await handler.downloadFile(this, uri.fsPath);
+            const linkablePath: Uri = Uri.file(uri.fsPath); // Allows CTRL+Click in Output panel
+            const blockBlobClient: BlockBlobClient = createBlockBlobClient(this.root, this.container.name, this.blobPath);
+
+            // tslint:disable-next-line: strict-boolean-expressions
+            const totalBytes: number = (await blockBlobClient.getProperties()).contentLength || 1;
+
+            ext.outputChannel.show();
+            ext.outputChannel.appendLine(`Downloading ${this.blobName} to ${uri.fsPath}...`);
+
+            await window.withProgress({ title: `Downloading ${this.blobName}`, location: vscode.ProgressLocation.Notification }, async (notificationProgress) => {
+                const transferProgress: TransferProgress = new TransferProgress();
+                await blockBlobClient.downloadToFile(uri.fsPath, undefined, undefined, {
+                    onProgress: (transferProgressEvent) => transferProgress.reportToNotification(this.blobName, transferProgressEvent.loadedBytes, totalBytes, notificationProgress)
+                });
+            });
+
+            ext.outputChannel.appendLine(`Successfully downloaded ${linkablePath}.`);
+        }
+    }
+
+    private async checkCanDownload(): Promise<void> {
+        let message: string | undefined;
+
+        const client: BlockBlobClient = createBlockBlobClient(this.root, this.container.name, this.blobPath);
+        let props: BlobGetPropertiesResponse = await client.getProperties();
+
+        if (Number(props.contentLength) > Limits.maxUploadDownloadSizeBytes) {
+            message = `Please use Storage Explorer for blobs larger than ${Limits.maxUploadDownloadSizeMB}MB.`;
+        } else if (props.blobType && !props.blobType.toLocaleLowerCase().startsWith("block")) {
+            message = `Please use Storage Explorer for blobs of type '${props.blobType}'.`;
+        }
+
+        if (message) {
+            await Limits.askOpenInStorageExplorer(message, this.root.storageAccount.id, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
         }
     }
 }

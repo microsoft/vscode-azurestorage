@@ -4,28 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { IActionContext, registerCommand, registerEvent } from 'vscode-azureextensionui';
-import { BlobFileHandler } from '../../editors/BlobFileHandler';
-import { RemoteFileEditor } from '../../editors/RemoteFileEditor';
-import { ext } from '../../extensionVariables';
+import { IActionContext, registerCommand } from 'vscode-azureextensionui';
+import { AzureStorageFS } from '../../AzureStorageFS';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from '../../tree/blob/BlobContainerTreeItem';
 import { BlobTreeItem } from '../../tree/blob/BlobTreeItem';
 import { deleteNode } from '../commonTreeCommands';
 
 export function registerBlobContainerActionHandlers(): void {
-    const _editor: RemoteFileEditor<BlobTreeItem> = new RemoteFileEditor(new BlobFileHandler(), "azureStorage.blob.showSavePrompt");
-    ext.context.subscriptions.push(_editor);
-
     registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
-    registerCommand("azureStorage.editBlob", async (_context: IActionContext, treeItem: BlobTreeItem) => await _editor.showEditor(treeItem));
+    registerCommand("azureStorage.editBlob", async (_context: IActionContext, treeItem: BlobTreeItem) => AzureStorageFS.showEditor(treeItem));
     registerCommand("azureStorage.deleteBlobContainer", async (context: IActionContext, treeItem?: BlobContainerTreeItem) => await deleteNode(context, BlobContainerTreeItem.contextValue, treeItem));
     registerCommand("azureStorage.createBlockBlob", async (context: IActionContext, treeItem: BlobContainerTreeItem) => {
         let childTreeItem = await treeItem.createChild(context);
         await vscode.commands.executeCommand("azureStorage.editBlob", childTreeItem);
     });
     registerCommand("azureStorage.uploadBlockBlob", async (context: IActionContext, treeItem: BlobContainerTreeItem) => await treeItem.uploadBlockBlob(context));
-    registerEvent('azureStorage.blobEditor.onDidSaveTextDocument', vscode.workspace.onDidSaveTextDocument, async (context: IActionContext, doc: vscode.TextDocument) => { await _editor.onDidSaveTextDocument(context, doc); });
 }
 
 async function openBlobContainerInStorageExplorer(_context: IActionContext, treeItem: BlobContainerTreeItem): Promise<void> {
