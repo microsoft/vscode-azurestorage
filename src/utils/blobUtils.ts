@@ -156,11 +156,7 @@ export class TransferProgress {
 
     private preReport(finishedWork: number): void {
         this.percentage = Math.trunc((finishedWork / this.totalWork) * 100);
-
-        let prefix: string = '';
-        if (this.messagePrefix) {
-            prefix = `${this.messagePrefix}: `;
-        }
+        const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
         this.message = `${prefix}${finishedWork}/${this.totalWork} (${this.percentage}%)`;
     }
 
