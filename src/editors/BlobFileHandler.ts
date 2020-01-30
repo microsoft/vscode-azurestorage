@@ -9,8 +9,9 @@ import { ProgressLocation, Uri, window } from 'vscode';
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { BlobTreeItem } from '../tree/blob/BlobTreeItem';
-import { createBlockBlobClient, getExistingProperties, TransferProgress } from "../utils/blobUtils";
+import { createBlockBlobClient, getExistingProperties } from "../utils/blobUtils";
 import { Limits } from '../utils/limits';
+import { TransferProgress } from '../utils/TransferProgress';
 import { IRemoteFileHandler } from './IRemoteFileHandler';
 
 export class BlobFileHandler implements IRemoteFileHandler<BlobTreeItem> {
