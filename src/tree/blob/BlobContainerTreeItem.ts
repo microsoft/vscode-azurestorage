@@ -468,13 +468,13 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
-        const transferProgress: TransferProgress = new TransferProgress();
+        const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
         const options: azureStorageBlob.BlockBlobParallelUploadOptions = {
             blobHTTPHeaders: {
                 // tslint:disable-next-line: strict-boolean-expressions
                 blobContentType: mime.getType(blobPath) || undefined
             },
-            onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(blobPath, transferProgressEvent.loadedBytes, totalBytes)
+            onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
         };
         await blockBlobClient.uploadFile(filePath, options);
 

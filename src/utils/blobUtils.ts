@@ -127,31 +127,41 @@ export class TransferProgress {
     private lastUpdated: number = Date.now();
 
     constructor(
+        private readonly totalWork: number,
+        private readonly messagePrefix?: string,
         private readonly updateTimerMs: number = 200
     ) { }
 
-    public reportToNotification(blobPath: string, loadedBytes: number, totalBytes: number, notificationProgress: vscode.Progress<{
-        message?: string | undefined;
-        increment?: number | undefined;
-    }>): void {
-        // This function is called very frequently and calls made to notificationProgress.report too rapidly result in incremental
+    public reportToNotification(
+        finishedWork: number,
+        notificationProgress: vscode.Progress<{
+            message?: string | undefined;
+            increment?: number | undefined;
+        }>
+    ): void {
+        // This function may be called very frequently. Calls made to notificationProgress.report too rapidly result in incremental
         // progress not displaying in the notification window. So debounce calls to notificationProgress.report
         if (this.lastUpdated + this.updateTimerMs < Date.now()) {
-            this.preReport(blobPath, loadedBytes, totalBytes);
+            this.preReport(finishedWork);
             notificationProgress.report({ message: this.message, increment: this.percentage - this.lastPercentage });
             this.postReport();
         }
     }
 
-    public reportToOutputWindow(blobPath: string, loadedBytes: number, totalBytes: number): void {
-        this.preReport(blobPath, loadedBytes, totalBytes);
+    public reportToOutputWindow(finishedWork: number): void {
+        this.preReport(finishedWork);
         ext.outputChannel.appendLine(this.message);
         this.postReport();
     }
 
-    private preReport(blobPath: string, loadedBytes: number, totalBytes: number): void {
-        this.percentage = Math.trunc((loadedBytes / totalBytes) * 100);
-        this.message = `${blobPath}: ${loadedBytes}/${totalBytes} (${this.percentage}%)`;
+    private preReport(finishedWork: number): void {
+        this.percentage = Math.trunc((finishedWork / this.totalWork) * 100);
+
+        let prefix: string = '';
+        if (this.messagePrefix) {
+            prefix = `${this.messagePrefix}: `;
+        }
+        this.message = `${prefix}${finishedWork}/${this.totalWork} (${this.percentage}%)`;
     }
 
     private postReport(): void {
