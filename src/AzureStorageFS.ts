@@ -268,9 +268,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 });
             }
         });
-
-        // Nested files/blobs created by choosing "Create File" via the "Unable to open <file>" notification don't appear in the explorer without a refresh
-        vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
     }
 
     // tslint:disable-next-line: no-reserved-keywords
