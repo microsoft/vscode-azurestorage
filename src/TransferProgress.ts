@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { ext } from '../extensionVariables';
+import { ext } from './extensionVariables';
 
 export class TransferProgress {
     private message: string = '';
