@@ -689,16 +689,6 @@
 					"default": "/Applications/Microsoft Azure Storage Explorer.app",
 					"description": "[Mac only] Set to \"Path/To/Microsoft Azure Storage Explorer.app\" to the location of Storage Explorer. Default is \"/Applications/Microsoft Azure Storage Explorer.app\"."
 				},
-				"azureStorage.file.showSavePrompt": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show warning dialog on File file save."
-				},
-				"azureStorage.blob.showSavePrompt": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show warning dialog on Blob file save."
-				},
 				"azureStorage.preDeployTask": {
 					"scope": "resource",
 					"type": "string",
