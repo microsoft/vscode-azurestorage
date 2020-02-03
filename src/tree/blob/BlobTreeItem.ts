@@ -97,9 +97,9 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
             ext.outputChannel.appendLine(`Downloading ${this.blobName} to ${uri.fsPath}...`);
 
             await window.withProgress({ title: `Downloading ${this.blobName}`, location: vscode.ProgressLocation.Notification }, async (notificationProgress) => {
-                const transferProgress: TransferProgress = new TransferProgress();
+                const transferProgress: TransferProgress = new TransferProgress(totalBytes, this.blobName);
                 await blockBlobClient.downloadToFile(uri.fsPath, undefined, undefined, {
-                    onProgress: (transferProgressEvent) => transferProgress.reportToNotification(this.blobName, transferProgressEvent.loadedBytes, totalBytes, notificationProgress)
+                    onProgress: (transferProgressEvent) => transferProgress.reportToNotification(transferProgressEvent.loadedBytes, notificationProgress)
                 });
             });
 
