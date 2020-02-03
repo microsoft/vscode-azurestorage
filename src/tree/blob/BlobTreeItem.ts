@@ -12,7 +12,8 @@ import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, Us
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { createBlobClient, createBlockBlobClient, TransferProgress } from '../../utils/blobUtils';
+import { TransferProgress } from "../../TransferProgress";
+import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
 import { Limits } from "../../utils/limits";
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";

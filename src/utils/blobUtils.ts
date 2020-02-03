@@ -119,53 +119,6 @@ export async function getExistingProperties(parent: BlobTreeItem | BlobContainer
     return undefined;
 }
 
-// Implements `onProgress` callbacks used by @azure/storage-blob for blob uploads/downloads
-export class TransferProgress {
-    private message: string = '';
-    private percentage: number = 0;
-    private lastPercentage: number = 0;
-    private lastUpdated: number = Date.now();
-
-    constructor(
-        private readonly totalWork: number,
-        private readonly messagePrefix?: string,
-        private readonly updateTimerMs: number = 200
-    ) { }
-
-    public reportToNotification(
-        finishedWork: number,
-        notificationProgress: vscode.Progress<{
-            message?: string | undefined;
-            increment?: number | undefined;
-        }>
-    ): void {
-        // This function may be called very frequently. Calls made to notificationProgress.report too rapidly result in incremental
-        // progress not displaying in the notification window. So debounce calls to notificationProgress.report
-        if (this.lastUpdated + this.updateTimerMs < Date.now()) {
-            this.preReport(finishedWork);
-            notificationProgress.report({ message: this.message, increment: this.percentage - this.lastPercentage });
-            this.postReport();
-        }
-    }
-
-    public reportToOutputWindow(finishedWork: number): void {
-        this.preReport(finishedWork);
-        ext.outputChannel.appendLine(this.message);
-        this.postReport();
-    }
-
-    private preReport(finishedWork: number): void {
-        this.percentage = Math.trunc((finishedWork / this.totalWork) * 100);
-        const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
-        this.message = `${prefix}${finishedWork}/${this.totalWork} (${this.percentage}%)`;
-    }
-
-    private postReport(): void {
-        this.lastPercentage = this.percentage;
-        this.lastUpdated = Date.now();
-    }
-}
-
 export interface IBlobContainerCreateChildContext extends IActionContext {
     childType: string;
     childName: string;
