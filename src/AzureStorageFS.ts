@@ -28,7 +28,7 @@ type AzureStorageBlobTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobConta
 type AzureStorageTreeItem = AzureStorageFileTreeItem | AzureStorageBlobTreeItem;
 type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
-export class AzureStorageFS implements vscode.FileSystemProvider {
+export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDocumentContentProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     private _bufferedEvents: vscode.FileChangeEvent[] = [];
     private _fireSoonHandle?: NodeJS.Timer;
@@ -47,6 +47,12 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath)}?resourceId=${rootId}`);
     }
 
+    static async showEditor(treeItem: BlobTreeItem | FileTreeItem): Promise<void> {
+        const uri = this.idToUri(treeItem.fullId);
+        let doc = await vscode.workspace.openTextDocument(uri);
+        await vscode.window.showTextDocument(doc, { preserveFocus: true, preview: false });
+    }
+
     public static fireDeleteEvent(node: AzExtTreeItem): void {
         ext.azureStorageFS.fireSoon({ uri: AzureStorageFS.idToUri(node.fullId), type: vscode.FileChangeType.Deleted });
     }
@@ -59,6 +65,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
         return new vscode.Disposable(() => {
             // Since we're not actually watching "in Azure" (i.e. polling for changes), there's no need to selectively watch based on the Uri passed in here. Thus there's nothing to dispose
         });
+    }
+
+    async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
+        return (await this.readFile(uri)).toString();
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
@@ -258,9 +268,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider {
                 });
             }
         });
-
-        // Nested files/blobs created by choosing "Create File" via the "Unable to open <file>" notification don't appear in the explorer without a refresh
-        vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer');
     }
 
     // tslint:disable-next-line: no-reserved-keywords
