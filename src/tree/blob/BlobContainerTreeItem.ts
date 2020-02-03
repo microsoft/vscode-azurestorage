@@ -14,9 +14,9 @@ import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
-import { BlobFileHandler } from '../../editors/BlobFileHandler';
 import { ext } from "../../extensionVariables";
 import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, IBlobContainerCreateChildContext, loadMoreBlobChildren, TransferProgress } from '../../utils/blobUtils';
+import { Limits } from '../../utils/limits';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -198,8 +198,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             lastUploadFolder = uri;
             let filePath = uri.fsPath;
 
-            let handler = new BlobFileHandler();
-            await handler.checkCanUpload(this, filePath);
+            await this.checkCanUpload(filePath);
 
             let blobPath = await vscode.window.showInputBox({
                 prompt: 'Enter a name for the uploaded block blob (may include a path)',
@@ -503,6 +502,18 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 properties.cancelStep = cancelStep;
             }
             throw new UserCancelledError();
+        }
+    }
+
+    private async checkCanUpload(localPath: string): Promise<void> {
+        let size = (await fse.stat(localPath)).size;
+        if (size > Limits.maxUploadDownloadSizeBytes) {
+            await Limits.askOpenInStorageExplorer(
+                `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
+                this.root.storageAccount.id,
+                this.root.subscriptionId,
+                'Azure.BlobContainer',
+                this.container.name);
         }
     }
 }
