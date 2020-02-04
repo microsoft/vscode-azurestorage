@@ -210,7 +210,7 @@
 			},
 			{
 				"command": "azureStorage.deleteBlob",
-				"title": "Delete",
+				"title": "Delete...",
 				"category": "Azure Storage"
 			},
 			{
@@ -245,7 +245,7 @@
 			},
 			{
 				"command": "azureStorage.deleteDirectory",
-				"title": "Delete Directory...",
+				"title": "Delete...",
 				"category": "Azure Storage"
 			},
 			{
@@ -269,7 +269,7 @@
 			},
 			{
 				"command": "azureStorage.deleteFile",
-				"title": "Delete",
+				"title": "Delete...",
 				"category": "Azure Storage"
 			},
 			{
