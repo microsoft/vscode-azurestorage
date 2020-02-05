@@ -608,10 +608,6 @@
 					"when": "never"
 				},
 				{
-					"command": "azureStorage.refresh",
-					"when": "never"
-				},
-				{
 					"command": "azureStorage.copyUrl",
 					"when": "never"
 				},
