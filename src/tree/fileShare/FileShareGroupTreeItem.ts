@@ -78,6 +78,14 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         throw new UserCancelledError();
     }
 
+    public isAncestorOfImpl(contextValue: string): boolean {
+        if (contextValue === FileShareTreeItem.contextValue) {
+            return true;
+        }
+
+        return false;
+    }
+
     private static validateFileShareName(name: string): string | undefined | null {
         const validLength = { min: 3, max: 63 };
 

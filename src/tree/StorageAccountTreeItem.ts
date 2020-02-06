@@ -12,23 +12,17 @@ import * as azureStorage from "azure-storage";
 import opn = require('opn');
 import * as path from 'path';
 import { commands, MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, IActionContext, IAzureQuickPickItem, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
-import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { BlobContainerTreeItem } from "./blob/BlobContainerTreeItem";
-import { DirectoryTreeItem } from './fileShare/DirectoryTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
-import { FileShareTreeItem } from './fileShare/FileShareTreeItem';
-import { FileTreeItem } from './fileShare/FileTreeItem';
 import { IStorageRoot } from './IStorageRoot';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
-import { QueueTreeItem } from './queue/QueueTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
-import { TableTreeItem } from './table/TableTreeItem';
 
 export type WebsiteHostingStatus = {
     capable: boolean;
@@ -45,6 +39,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
     };
+    public childTypeLabel: string = 'resource type';
+    public autoSelectInTreeItemPicker: boolean = true;
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
@@ -101,71 +97,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
 
         return groupTreeItems;
-    }
-
-    public async pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): Promise<AzureTreeItem<IStorageRoot> | undefined> {
-        let contextValue: string;
-        if (expectedContextValues.length === 1) {
-            contextValue = expectedContextValues[0].toString();
-        } else {
-            const placeHolder: string = localize('selectResourceType', 'Select resource type');
-            let quickPicks: IAzureQuickPickItem<string>[] = expectedContextValues.map(expectedContextValue => {
-                expectedContextValue = expectedContextValue.toString();
-                return {
-                    label: this.getLabel(expectedContextValue),
-                    data: expectedContextValue
-                };
-            });
-
-            contextValue = (await ext.ui.showQuickPick(quickPicks, { placeHolder })).data;
-        }
-
-        switch (contextValue) {
-            case BlobContainerGroupTreeItem.contextValue:
-            case BlobContainerTreeItem.contextValue:
-                return this._blobContainerGroupTreeItem;
-            case FileShareGroupTreeItem.contextValue:
-            case FileShareTreeItem.contextValue:
-            case DirectoryTreeItem.contextValue:
-            case FileTreeItem.contextValue:
-                return this._fileShareGroupTreeItem;
-            case QueueGroupTreeItem.contextValue:
-            case QueueTreeItem.contextValue:
-                return this._queueGroupTreeItem;
-            case TableGroupTreeItem.contextValue:
-            case TableTreeItem.contextValue:
-                return this._tableGroupTreeItem;
-            default:
-        }
-
-        return undefined;
-    }
-
-    private getLabel(contextValue: string): string {
-        switch (contextValue) {
-            case BlobContainerGroupTreeItem.contextValue:
-                return 'Blob Containers';
-            case BlobContainerTreeItem.contextValue:
-                return 'Blob Container';
-            case FileShareGroupTreeItem.contextValue:
-                return 'File Shares';
-            case FileShareTreeItem.contextValue:
-                return 'File Share';
-            case DirectoryTreeItem.contextValue:
-                return 'Directory';
-            case FileTreeItem.contextValue:
-                return 'File';
-            case QueueGroupTreeItem.contextValue:
-                return 'Queues';
-            case QueueTreeItem.contextValue:
-                return 'Queue';
-            case TableGroupTreeItem.contextValue:
-                return 'Tables';
-            case TableTreeItem.contextValue:
-                return 'Table';
-            default:
-                return '';
-        }
     }
 
     hasMoreChildrenImpl(): boolean {

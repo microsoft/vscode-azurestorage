@@ -79,6 +79,14 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         throw new UserCancelledError();
     }
 
+    public isAncestorOfImpl(contextValue: string): boolean {
+        if (contextValue === TableTreeItem.contextValue) {
+            return true;
+        }
+
+        return false;
+    }
+
     private async createTable(name: string): Promise<azureStorage.TableService.TableResult> {
         return new Promise((resolve, reject) => {
             let tableService = this.root.createTableService();
