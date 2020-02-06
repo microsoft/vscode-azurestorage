@@ -33,11 +33,7 @@ export async function uploadFiles(
         ext.outputChannel.appendLine(`Uploading ${sourceFilePath}...`);
 
         try {
-            if (destTreeItem instanceof BlobContainerTreeItem) {
-                await destTreeItem.uploadFileToBlockBlob(sourceFilePath, destFilePath, true /* suppressLogs */);
-            } else {
-                await destTreeItem.uploadLocalFile(sourceFilePath, destFilePath, true /* suppressLogs */);
-            }
+            await destTreeItem.uploadLocalFile(sourceFilePath, destFilePath, true /* suppressLogs */);
         } catch (error) {
             throw new Error(`Error uploading "${sourceFilePath}": ${parseError(error).message} `);
         }

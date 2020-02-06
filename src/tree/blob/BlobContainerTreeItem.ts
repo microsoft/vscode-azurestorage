@@ -150,7 +150,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let child: AzExtTreeItem;
         if (context.blobPath && context.filePath) {
             context.showCreatingTreeItem(context.blobPath);
-            await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
+            await this.uploadLocalFile(context.filePath, context.blobPath);
             child = new BlobTreeItem(this, context.blobPath, this.container);
         } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
             child = new BlobDirectoryTreeItem(this, context.childName, this.container);
@@ -221,7 +221,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                         let blobTreeItem = await this.treeDataProvider.findTreeItem(blobId, context);
                         if (blobTreeItem) {
                             // A treeItem for this blob already exists, no need to do anything with the tree, just upload
-                            await this.uploadFileToBlockBlob(filePath, blobPath);
+                            await this.uploadLocalFile(filePath, blobPath);
                             return;
                         }
                     } catch (err) {
@@ -395,7 +395,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             let blobPath = path.join(destBlobFolder, relativeFile);
             ext.outputChannel.appendLine(`Uploading ${filePath}...`);
             try {
-                await this.uploadFileToBlockBlob(filePath, blobPath, true /* suppressLogs */);
+                await this.uploadLocalFile(filePath, blobPath, true /* suppressLogs */);
             } catch (error) {
                 throw new Error(`Error uploading "${filePath}": ${parseError(error).message} `);
             }
@@ -432,7 +432,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(this.root, this.container.name, blobPath);
 
