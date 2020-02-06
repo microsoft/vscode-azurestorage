@@ -71,11 +71,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        if (contextValue === BlobContainerTreeItem.contextValue) {
-            return true;
-        }
-
-        return false;
+        return contextValue === BlobContainerTreeItem.contextValue;
     }
 
     private async createBlobContainer(name: string): Promise<azureStorageBlob.ContainerItem> {

@@ -79,11 +79,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        if (contextValue === QueueTreeItem.contextValue) {
-            return true;
-        }
-
-        return false;
+        return contextValue === QueueTreeItem.contextValue;
     }
 
     private async createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
