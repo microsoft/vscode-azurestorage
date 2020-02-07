@@ -8,8 +8,9 @@
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, createTelemetryReporter, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
-import { AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
+import { AzureExtensionApi, AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureStorageFS } from './AzureStorageFS';
+import { revealTreeItem } from './commands/api/revealTreeItem';
 import { registerBlobActionHandlers } from './commands/blob/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './commands/blob/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './commands/blob/blobContainerGroupActionHandlers';
@@ -132,7 +133,10 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     });
     registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
 
-    return createApiProvider([]);
+    return createApiProvider([<AzureExtensionApi>{
+        revealTreeItem,
+        apiVersion: '1.0.0'
+    }]);
 }
 
 // this method is called when your extension is deactivated
