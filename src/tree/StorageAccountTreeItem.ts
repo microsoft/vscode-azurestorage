@@ -19,15 +19,10 @@ import { nonNullProp } from '../utils/nonNull';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { BlobContainerTreeItem } from "./blob/BlobContainerTreeItem";
-import { DirectoryTreeItem } from './fileShare/DirectoryTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
-import { FileShareTreeItem } from './fileShare/FileShareTreeItem';
-import { FileTreeItem } from './fileShare/FileTreeItem';
 import { IStorageRoot } from './IStorageRoot';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
-import { QueueTreeItem } from './queue/QueueTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
-import { TableTreeItem } from './table/TableTreeItem';
 
 export type WebsiteHostingStatus = {
     capable: boolean;
@@ -44,6 +39,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
     };
+    public childTypeLabel: string = 'resource type';
+    public autoSelectInTreeItemPicker: boolean = true;
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
@@ -100,30 +97,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
 
         return groupTreeItems;
-    }
-
-    public pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): AzureTreeItem<IStorageRoot> | undefined {
-        for (const expectedContextValue of expectedContextValues) {
-            switch (expectedContextValue) {
-                case BlobContainerGroupTreeItem.contextValue:
-                case BlobContainerTreeItem.contextValue:
-                    return this._blobContainerGroupTreeItem;
-                case FileShareGroupTreeItem.contextValue:
-                case FileShareTreeItem.contextValue:
-                case DirectoryTreeItem.contextValue:
-                case FileTreeItem.contextValue:
-                    return this._fileShareGroupTreeItem;
-                case QueueGroupTreeItem.contextValue:
-                case QueueTreeItem.contextValue:
-                    return this._queueGroupTreeItem;
-                case TableGroupTreeItem.contextValue:
-                case TableTreeItem.contextValue:
-                    return this._tableGroupTreeItem;
-                default:
-            }
-        }
-
-        return undefined;
     }
 
     hasMoreChildrenImpl(): boolean {

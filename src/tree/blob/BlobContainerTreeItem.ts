@@ -6,7 +6,6 @@
 import { TransferProgressEvent } from '@azure/core-http';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as fse from 'fs-extra';
-import * as glob from 'glob';
 import * as mime from 'mime';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -17,6 +16,7 @@ import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { listFilePathsWithAzureSeparator } from '../../utils/fs';
 import { Limits } from '../../utils/limits';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -150,7 +150,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let child: AzExtTreeItem;
         if (context.blobPath && context.filePath) {
             context.showCreatingTreeItem(context.blobPath);
-            await this.uploadFileToBlockBlob(context.filePath, context.blobPath);
+            await this.uploadLocalFile(context.filePath, context.blobPath);
             child = new BlobTreeItem(this, context.blobPath, this.container);
         } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
             child = new BlobDirectoryTreeItem(this, context.childName, this.container);
@@ -221,7 +221,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                         let blobTreeItem = await this.treeDataProvider.findTreeItem(blobId, context);
                         if (blobTreeItem) {
                             // A treeItem for this blob already exists, no need to do anything with the tree, just upload
-                            await this.uploadFileToBlockBlob(filePath, blobPath);
+                            await this.uploadLocalFile(filePath, blobPath);
                             return;
                         }
                     } catch (err) {
@@ -285,8 +285,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         try {
             properties.fileLengths = [];
 
-            const isFolder = (file: string): boolean => file.endsWith("/");
-
             // Find existing blobs
             let blobsToDelete: azureStorageBlob.BlobItem[] = [];
             blobsToDelete = await this.listAllBlobs(cancellationToken);
@@ -306,30 +304,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             ext.outputChannel.appendLine(`Deploying to static website ${this.root.storageAccount.name}/${this.container.name}`);
 
             // Find source files
-            // Note: glob always returns paths with '/' separator, even on Windows, which also is the main
-            // separator used by Azure.
-            let filePathsWithAzureSeparator = await new Promise<string[]>(
-                (resolve, reject) => {
-                    glob(
-                        path.join(sourceFolderPath, '**'),
-                        {
-                            mark: true, // Add '/' to folders
-                            dot: true, // Treat '.' as a normal character
-                            nodir: true, // required for symlinks https://github.com/archiverjs/node-archiver/issues/311#issuecomment-445924055
-                            follow: true, // Follow symlinks to get all sub folders https://github.com/microsoft/vscode-azurefunctions/issues/1289
-                            ignore: path.join(sourceFolderPath, '.{git,vscode}/**')
-                        },
-                        (err, matches) => {
-                            if (err) {
-                                reject(err);
-                            } else {
-                                // Remove folders from source list
-                                let files = matches.filter(file => !isFolder(file));
-
-                                resolve(files);
-                            }
-                        });
-                });
+            let filePathsWithAzureSeparator: string[] = await listFilePathsWithAzureSeparator(sourceFolderPath, '.{git,vscode}/**');
             properties.filesToUpload = filePathsWithAzureSeparator.length;
 
             // Set up progress indicator
@@ -420,7 +395,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             let blobPath = path.join(destBlobFolder, relativeFile);
             ext.outputChannel.appendLine(`Uploading ${filePath}...`);
             try {
-                await this.uploadFileToBlockBlob(filePath, blobPath, true /* suppressLogs */);
+                await this.uploadLocalFile(filePath, blobPath, true /* suppressLogs */);
             } catch (error) {
                 throw new Error(`Error uploading "${filePath}": ${parseError(error).message} `);
             }
@@ -457,7 +432,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    private async uploadFileToBlockBlob(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(this.root, this.container.name, blobPath);
 

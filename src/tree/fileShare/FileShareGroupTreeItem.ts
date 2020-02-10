@@ -10,7 +10,9 @@ import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
+import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareTreeItem } from './FileShareTreeItem';
+import { FileTreeItem } from './FileTreeItem';
 
 const minQuotaGB = 1;
 const maxQuotaGB = 5120;
@@ -76,6 +78,12 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
 
         throw new UserCancelledError();
+    }
+
+    public isAncestorOfImpl(contextValue: string): boolean {
+        return contextValue === FileShareTreeItem.contextValue ||
+            contextValue === DirectoryTreeItem.contextValue ||
+            contextValue === FileTreeItem.contextValue;
     }
 
     private static validateFileShareName(name: string): string | undefined | null {

@@ -70,6 +70,10 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         throw new UserCancelledError();
     }
 
+    public isAncestorOfImpl(contextValue: string): boolean {
+        return contextValue === BlobContainerTreeItem.contextValue;
+    }
+
     private async createBlobContainer(name: string): Promise<azureStorageBlob.ContainerItem> {
         const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, name);
         await containerClient.create();

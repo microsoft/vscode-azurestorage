@@ -78,6 +78,10 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         throw new UserCancelledError();
     }
 
+    public isAncestorOfImpl(contextValue: string): boolean {
+        return contextValue === QueueTreeItem.contextValue;
+    }
+
     private async createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
         return new Promise((resolve, reject) => {
             let queueService = this.root.createQueueService();

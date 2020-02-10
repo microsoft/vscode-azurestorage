@@ -3,7 +3,10 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TransferProgressEvent } from '@azure/core-http';
 import * as azureStorageShare from '@azure/storage-file-share';
+import * as fse from 'fs-extra';
+import * as mime from 'mime';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
@@ -11,8 +14,9 @@ import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, I
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { askAndCreateChildDirectory, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile, createShareClient } from '../../utils/fileUtils';
+import { TransferProgress } from '../../TransferProgress';
+import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
+import { askAndCreateEmptyTextFile, createDirectoryClient, createFileClient, createShareClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './DirectoryTreeItem';
@@ -104,6 +108,51 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         }
         AzureStorageFS.fireCreateEvent(child);
         return child;
+    }
+
+    public async uploadLocalFile(sourceFilePath: string, destFilePath: string, suppressLogs: boolean = false): Promise<void> {
+        const destDisplayPath: string = `${this.shareName}/${destFilePath}`;
+        const parentDirectoryPath: string = path.dirname(destFilePath);
+        const parentDirectories: string[] = parentDirectoryPath.split('/');
+
+        // Ensure parent directories exist before creating child files
+        let partialParentDirectoryPath: string = '';
+        for (let dir of parentDirectories) {
+            partialParentDirectoryPath += `${dir}/`;
+            if (!(await doesDirectoryExist(this, partialParentDirectoryPath, this.shareName))) {
+                const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, partialParentDirectoryPath);
+                await directoryClient.create();
+            }
+        }
+
+        if (!suppressLogs) {
+            ext.outputChannel.show();
+            ext.outputChannel.appendLine(`Uploading ${sourceFilePath} as ${destDisplayPath}`);
+        }
+
+        const fileSize: number = (await fse.stat(sourceFilePath)).size;
+        const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.root, this.shareName, parentDirectoryPath, path.basename(destFilePath));
+        // tslint:disable-next-line: strict-boolean-expressions
+        const transferProgress: TransferProgress = new TransferProgress(fileSize || 1, destFilePath);
+        const options: azureStorageShare.FileParallelUploadOptions = {
+            fileHttpHeaders: {
+                // tslint:disable-next-line: strict-boolean-expressions
+                fileContentType: mime.getType(destFilePath) || undefined
+            },
+            onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
+        };
+
+        if (fileSize) {
+            await fileClient.uploadFile(sourceFilePath, options);
+        } else {
+            // uploadFile hangs indefinately if the source file size is zero, so create an empty file
+            // Related: https://github.com/Azure/azure-sdk-for-js/issues/6904
+            await fileClient.create(0, options);
+        }
+
+        if (!suppressLogs) {
+            ext.outputChannel.appendLine(`Successfully uploaded ${destDisplayPath}.`);
+        }
     }
 }
 
