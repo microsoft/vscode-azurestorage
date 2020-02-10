@@ -56,26 +56,14 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
 
 // Currently only supports creating block blobs
 export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
-    let blobPath: string = context.childName || await ext.ui.showInputBox({
-        placeHolder: 'Enter a name for the new block blob',
-        validateInput: async (name: string) => {
-            let nameError = BlobContainerTreeItem.validateBlobName(name);
-            if (nameError) {
-                return nameError;
-            } else if (await doesBlobExist(parent, name)) {
-                return "A blob with this path and name already exists";
-            }
-
-            return undefined;
-        }
-    });
+    let blobPath: string = context.childName || await showBlobPathInputBox(parent);
 
     return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(blobPath);
         progress.report({ message: `Azure Storage: Creating block blob '${blobPath}'` });
         await createOrUpdateBlockBlob(parent, blobPath);
         // Use the full blob path as the label since this is a newly created blob. https://github.com/microsoft/vscode-azurestorage/issues/565
-        return new BlobTreeItem(parent, blobPath, parent.container, blobPath);
+        return new BlobTreeItem(parent, blobPath, parent.container);
     });
 }
 
@@ -117,6 +105,22 @@ export async function getExistingProperties(parent: BlobTreeItem | BlobContainer
     }
 
     return undefined;
+}
+
+export async function showBlobPathInputBox(parent: BlobContainerTreeItem | BlobDirectoryTreeItem): Promise<string> {
+    return await ext.ui.showInputBox({
+        placeHolder: 'Enter a name for the new block blob',
+        validateInput: async (name: string) => {
+            let nameError = BlobContainerTreeItem.validateBlobName(name);
+            if (nameError) {
+                return nameError;
+            } else if (await doesBlobExist(parent, name)) {
+                return "A blob with this path and name already exists";
+            }
+
+            return undefined;
+        }
+    });
 }
 
 export interface IBlobContainerCreateChildContext extends IActionContext {
