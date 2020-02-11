@@ -304,12 +304,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             context.errorHandling.rethrow = true;
             if (oldUriParsed.baseName === newUriParsed.baseName) {
-                // Set suppressDisplay true when trying to move the files because VS code will handle the error.
-                context.errorHandling.suppressDisplay = true;
-                throw new Error('Moving folders or files not supported.');
+                throw getFileSystemError(oldUri, context, () => { return new vscode.FileSystemError('Moving folders or files is not supported.'); });
             } else {
-                // When renaming a file, VS code will not handle the error so the message must be displayed here.
-                throw new Error('Renaming folders or files not supported.');
+                throw getFileSystemError(oldUri, context, () => { return new vscode.FileSystemError('Renaming folders or files is not supported.'); });
             }
         });
     }
