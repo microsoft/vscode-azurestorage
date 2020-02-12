@@ -8,12 +8,14 @@ import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, IActionContext, ICreateChildImplContext } from 'vscode-azureextensionui';
+import { AzureStorageBlobTreeItem, getFileSystemError } from '../AzureStorageFS';
 import { maxPageSize } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { BlobDirectoryTreeItem } from '../tree/blob/BlobDirectoryTreeItem';
 import { BlobTreeItem } from '../tree/blob/BlobTreeItem';
 import { IStorageRoot } from "../tree/IStorageRoot";
+import { localize } from './localize';
 
 export function createBlobContainerClient(root: IStorageRoot, containerName: string): azureStorageBlob.ContainerClient {
     const blobServiceClient: azureStorageBlob.BlobServiceClient = root.createBlobServiceClient();
@@ -62,7 +64,6 @@ export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | 
         context.showCreatingTreeItem(blobPath);
         progress.report({ message: `Azure Storage: Creating block blob '${blobPath}'` });
         await createOrUpdateBlockBlob(parent, blobPath);
-        // Use the full blob path as the label since this is a newly created blob. https://github.com/microsoft/vscode-azurestorage/issues/565
         return new BlobTreeItem(parent, blobPath, parent.container);
     });
 }
@@ -109,18 +110,73 @@ export async function getExistingProperties(parent: BlobTreeItem | BlobContainer
 
 export async function showBlobPathInputBox(parent: BlobContainerTreeItem | BlobDirectoryTreeItem): Promise<string> {
     return await ext.ui.showInputBox({
-        placeHolder: 'Enter a name for the new block blob',
+        placeHolder: localize('enterNameForNewBlockBlob', 'Enter a name for the new block blob'),
         validateInput: async (name: string) => {
             let nameError = BlobContainerTreeItem.validateBlobName(name);
             if (nameError) {
                 return nameError;
             } else if (await doesBlobExist(parent, name)) {
-                return "A blob with this path and name already exists";
+                return localize('aBlobWithThisPathAndNameAlreadyExists', 'A blob with this path and name already exists');
             }
 
             return undefined;
         }
     });
+}
+
+export async function findBlobTreeItem(uri: vscode.Uri, filePath: string, containerTreeItem: BlobContainerTreeItem, context: IActionContext, endSearchEarly?: boolean): Promise<AzureStorageBlobTreeItem> {
+    let treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem = containerTreeItem;
+
+    if (filePath === '') {
+        return treeItem;
+    }
+
+    let pathToLook = filePath.split('/');
+    for (const childName of pathToLook) {
+        if (treeItem instanceof BlobTreeItem) {
+            if (endSearchEarly) {
+                return treeItem;
+            }
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+        }
+
+        let children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
+        let child = children.find((element) => {
+            if (element instanceof BlobTreeItem) {
+                return element.blobName === childName;
+            } else if (element instanceof BlobDirectoryTreeItem) {
+                return element.dirName === childName;
+            }
+            return false;
+        });
+        if (!child) {
+            if (endSearchEarly) {
+                return treeItem;
+            }
+            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+        }
+
+        treeItem = <BlobTreeItem | BlobDirectoryTreeItem>child;
+    }
+
+    return treeItem;
+}
+
+export async function getBlobResourceType(filePath: string, containerTreeItem: BlobContainerTreeItem, context: IActionContext): Promise<vscode.FileType> {
+    let treeItem: AzureStorageBlobTreeItem = await findBlobTreeItem(vscode.Uri.parse(containerTreeItem.fullId), filePath, containerTreeItem, context);
+    return treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem ? vscode.FileType.Directory : vscode.FileType.File;
+}
+
+export async function createBlobDirectory(fullDirPath: string, parentPath: string, parentTreeItem: BlobDirectoryTreeItem | BlobContainerTreeItem, context: IActionContext): Promise<void> {
+    let matches = fullDirPath.match(`^${regexEscape(parentPath)}\/?([^\/^]+)\/?(.*?)$`);
+    while (!!matches) {
+        parentTreeItem = <BlobDirectoryTreeItem>await parentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlobDirectory', childName: matches[1] });
+        matches = matches[2].match("^([^\/]+)\/?(.*?)$");
+    }
+}
+
+function regexEscape(s: string): string {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
 export interface IBlobContainerCreateChildContext extends IActionContext {
