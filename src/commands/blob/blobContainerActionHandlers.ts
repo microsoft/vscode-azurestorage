@@ -23,32 +23,23 @@ export function registerBlobContainerActionHandlers(): void {
     registerCommand("azureStorage.createBlockBlob", async (context: IActionContext, parent: BlobContainerTreeItem) => {
         const blobPath: string = await showBlobPathInputBox(parent);
         const dirNames: string[] = blobPath.includes('/') ? path.dirname(blobPath).split('/') : [];
-        let currentDirId: string = parent.fullId;
-        let currentDirPath: string = '';
+        let dirParentTreeItem: BlobDirectoryTreeItem | BlobContainerTreeItem = parent;
 
         for (const dirName of dirNames) {
-            currentDirPath += dirName;
-            currentDirId = `${parent.fullId}/${currentDirPath}`;
-
-            let treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | undefined = await ext.tree.findTreeItem(currentDirId, context);
+            let treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | undefined = await ext.tree.findTreeItem(`${dirParentTreeItem.fullId}/${dirName}`, context);
             if (!treeItem) {
                 // This directory doesn't exist yet
-                const dirParentPath: string = currentDirPath.includes('/') ? `/${path.dirname(currentDirPath)}` : '';
-                const dirParentId: string = `${parent.fullId}${dirParentPath}`;
-                const dirParentTreeItem: BlobDirectoryTreeItem | BlobContainerTreeItem = <BlobDirectoryTreeItem | BlobContainerTreeItem>await ext.tree.findTreeItem(dirParentId, context);
-                await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobDirectoryTreeItem.contextValue, childName: dirName });
+                dirParentTreeItem = await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobDirectoryTreeItem.contextValue, childName: dirName });
             } else {
-                const fileType: vscode.FileType = treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem ? vscode.FileType.Directory : vscode.FileType.File;
-                if (fileType !== vscode.FileType.Directory) {
-                    throw new Error(localize('resourceIsNotADirectory', `"${currentDirPath}" is not a directory`));
+                if (treeItem instanceof BlobTreeItem) {
+                    throw new Error(localize('resourceIsNotADirectory', `"${treeItem.blobPath}" is not a directory`));
                 }
-            }
 
-            currentDirPath += '/';
+                dirParentTreeItem = treeItem;
+            }
         }
 
-        const blobParent: BlobDirectoryTreeItem | BlobContainerTreeItem = <BlobDirectoryTreeItem | BlobContainerTreeItem>await ext.tree.findTreeItem(currentDirId, context);
-        const childTreeItem: BlobTreeItem = <BlobTreeItem>await blobParent.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobTreeItem.contextValue, childName: blobPath });
+        const childTreeItem: BlobTreeItem = <BlobTreeItem>await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobTreeItem.contextValue, childName: blobPath });
         await vscode.commands.executeCommand("azureStorage.editBlob", childTreeItem);
     });
     registerCommand("azureStorage.uploadBlockBlob", async (context: IActionContext, treeItem: BlobContainerTreeItem) => await treeItem.uploadBlockBlob(context));
