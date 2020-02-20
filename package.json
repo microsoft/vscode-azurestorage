@@ -72,7 +72,7 @@
 		"onCommand:azureStorage.uploadToAzureStorage"
 	],
 	"main": "main",
-	"icon": "media/azureStorageIcon.png",
+	"icon": "resources/storageAccount.png",
 	"contributes": {
 		"viewsContainers": {
 			"activitybar": [
