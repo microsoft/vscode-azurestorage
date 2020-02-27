@@ -6,27 +6,49 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IStorageRoot } from "../IStorageRoot";
+import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { QueueTreeItem } from './QueueTreeItem';
 
 export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
-    public label: string = "Queues";
     public readonly childTypeLabel: string = "Queue";
     public static contextValue: string = 'azureQueueGroup';
-    public contextValue: string = QueueGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
     };
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<QueueTreeItem[]> {
+    public get label(): string {
+        return `Queues${this.active ? '' : ' (stopped)'}`;
+    }
+
+    public get contextValue(): string {
+        return `${QueueGroupTreeItem.contextValue}${this.active ? '' : 'Stopped'}`;
+    }
+
+    public constructor(
+        parent: StorageAccountTreeItem,
+        public active: boolean = true) {
+        super(parent);
+    }
+
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
+        }
+
+        if (!this.active) {
+            return [new GenericTreeItem(this, {
+                contextValue: 'startQueueEmulator',
+                label: 'Start Queue Emulator',
+                commandId: 'azureStorage.startQueueEmulator',
+                includeInTreeItemPicker: false
+            })];
         }
 
         // currentToken argument typed incorrectly in SDK

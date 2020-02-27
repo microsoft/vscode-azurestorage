@@ -7,7 +7,7 @@
 
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, createTelemetryReporter, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, createTelemetryReporter, IActionContext, registerCommand, registerUIExtensionVariables, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureExtensionApi, AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureStorageFS } from './AzureStorageFS';
 import { revealTreeItem } from './commands/api/revealTreeItem';
@@ -25,16 +25,19 @@ import { OpenTreeItemStep } from './commands/openInFileExplorer/OpenTreeItemStep
 import { registerQueueActionHandlers } from './commands/queue/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './commands/queue/queueGroupActionHandlers';
 import { selectStorageAccountTreeItemForCommand } from './commands/selectStorageAccountNodeForCommand';
+import { EmulatorType, startEmulator } from './commands/startEmulator';
 import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
 import { uploadToAzureStorage } from './commands/uploadToAzureStorage';
 import { ext } from './extensionVariables';
+import { attachedAccountSuffix } from './tree/AttachedStorageAccountsTreeItem';
 import { AzureAccountTreeItem } from './tree/AzureAccountTreeItem';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
 import { StorageAccountTreeItem } from './tree/StorageAccountTreeItem';
+import { localize } from './utils/localize';
 
 // tslint:disable-next-line:max-func-body-length
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }): Promise<AzureExtensionApiProvider> {
@@ -132,6 +135,45 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         });
     });
     registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
+    registerCommand("azureStorage.attachStorageAccount", async () => {
+        const attachPick: { label: string; data: string; } | undefined = await vscode.window.showQuickPick(
+            [
+                { label: localize('attachEmulator', 'Attach Emulator'), data: 'emulator' },
+                { label: localize('attachWithConnectionString', 'Attach with Connection String...'), data: 'connectionString' }
+            ],
+            { placeHolder: localize('selectHowToAttach', 'Select how to attach'), ignoreFocusOut: true }
+        );
+
+        if (attachPick) {
+            if (attachPick.data === 'emulator') {
+                await ext.attachedStorageAccountsTreeItem.attachEmulator();
+            } else {
+                await ext.attachedStorageAccountsTreeItem.attachWithConnectionString();
+            }
+
+            await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
+        } else {
+            throw new UserCancelledError();
+        }
+    });
+    registerCommand('azureStorage.attachEmulator', async () => {
+        await ext.attachedStorageAccountsTreeItem.attachEmulator();
+        await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
+    });
+    registerCommand('azureStorage.attachWithConnectionString', async () => {
+        await ext.attachedStorageAccountsTreeItem.attachWithConnectionString();
+        await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
+    });
+    registerCommand('azureStorage.detachStorageAccount', async (actionContext: IActionContext, treeItem?: StorageAccountTreeItem) => {
+        if (!treeItem) {
+            treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue + attachedAccountSuffix, actionContext);
+        }
+
+        await ext.attachedStorageAccountsTreeItem.detach(treeItem);
+        await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
+    });
+    registerCommand('azureStorage.startBlobEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.blob); });
+    registerCommand('azureStorage.startQueueEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.queue); });
 
     return createApiProvider([<AzureExtensionApi>{
         revealTreeItem,

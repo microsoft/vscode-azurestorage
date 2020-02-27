@@ -37,12 +37,12 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
     static idToUri(resourceId: string, filePath?: string): vscode.Uri {
-        let matches: RegExpMatchArray | null = resourceId.match(/(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i);
+        let matches: RegExpMatchArray | null = resourceId.match(/((\/.*)?\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i);
         matches = nonNullValue(matches, 'resourceIdMatches');
 
         let rootId = matches[1];
         const rootName = path.basename(rootId);
-        filePath = filePath || matches[2];
+        filePath = filePath || matches[3];
 
         return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath)}?resourceId=${rootId}`);
     }

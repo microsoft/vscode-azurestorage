@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
+import { attachedAccountSuffix } from './AttachedStorageAccountsTreeItem';
 import { StorageAccountCreateStep } from './createWizard/storageAccountCreateStep';
 import { StorageAccountNameStep } from './createWizard/storageAccountNameStep';
 import { StorageAccountTreeItem } from './StorageAccountTreeItem';
@@ -77,5 +78,9 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     public hasMoreChildrenImpl(): boolean {
         return false;
+    }
+
+    public isAncestorOfImpl(contextValue: string): boolean {
+        return contextValue !== (StorageAccountTreeItem.contextValue + attachedAccountSuffix);
     }
 }

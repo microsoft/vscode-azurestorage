@@ -7,28 +7,50 @@ import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createBlobContainerClient } from '../../utils/blobUtils';
 import { IStorageRoot } from "../IStorageRoot";
+import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 
 export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: string | undefined;
 
-    public label: string = "Blob Containers";
     public readonly childTypeLabel: string = "Blob Container";
     public static contextValue: string = 'azureBlobContainerGroup';
-    public contextValue: string = BlobContainerGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
     };
 
+    public get label(): string {
+        return `Blob Containers${this.active ? '' : ' (stopped)'}`;
+    }
+
+    public get contextValue(): string {
+        return `${BlobContainerGroupTreeItem.contextValue}${this.active ? '' : 'Stopped'}`;
+    }
+
+    public constructor(
+        parent: StorageAccountTreeItem,
+        public active: boolean = true) {
+        super(parent);
+    }
+
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
+        }
+
+        if (!this.active) {
+            return [new GenericTreeItem(this, {
+                contextValue: 'startBlobEmulator',
+                label: 'Start Blob Emulator',
+                commandId: 'azureStorage.startBlobEmulator',
+                includeInTreeItemPicker: false
+            })];
         }
 
         let containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers(this._continuationToken);

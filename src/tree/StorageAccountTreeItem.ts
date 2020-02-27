@@ -17,6 +17,7 @@ import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
 import { nonNullProp } from '../utils/nonNull';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
+import { attachedAccountSuffix, AttachedStorageAccountsTreeItem } from './AttachedStorageAccountsTreeItem';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { BlobContainerTreeItem } from "./blob/BlobContainerTreeItem";
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
@@ -51,7 +52,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private constructor(
         parent: AzureParentTreeItem,
         public readonly storageAccount: StorageAccountWrapper,
-        public readonly storageManagementClient: StorageManagementClient) {
+        public readonly storageManagementClient?: StorageManagementClient,
+        public readonly connectionString?: string) {
         super(parent);
         this._root = this.createRoot(parent.root);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
@@ -60,8 +62,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         this._tableGroupTreeItem = new TableGroupTreeItem(this);
     }
 
-    public static async createStorageAccountTreeItem(parent: AzureParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
-        const ti = new StorageAccountTreeItem(parent, storageAccount, client);
+    public static async createStorageAccountTreeItem(parent: AzureParentTreeItem, storageAccount: StorageAccountWrapper, client?: StorageManagementClient, connectionString?: string): Promise<StorageAccountTreeItem> {
+        const ti = new StorageAccountTreeItem(parent, storageAccount, client, connectionString);
         // make sure key is initialized
         await ti.refreshKey();
         return ti;
@@ -74,26 +76,76 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public id: string = this.storageAccount.id;
     public label: string = this.storageAccount.name;
     public static contextValue: string = 'azureStorageAccount';
-    public contextValue: string = StorageAccountTreeItem.contextValue;
+    public contextValue: string = `${StorageAccountTreeItem.contextValue}${this.connectionString ? attachedAccountSuffix : ''}`;
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<IStorageRoot>[]> {
-        let primaryEndpoints = this.storageAccount.primaryEndpoints;
         let groupTreeItems: AzureTreeItem<IStorageRoot>[] = [];
 
-        if (!!primaryEndpoints.blob) {
-            groupTreeItems.push(this._blobContainerGroupTreeItem);
-        }
+        if (this.connectionString) {
+            // This is an attached account
+            const blobClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+            const blobContainersActive: boolean = await this.taskResolvesBeforeTimeout(blobClient.getProperties());
 
-        if (!!primaryEndpoints.file) {
-            groupTreeItems.push(this._fileShareGroupTreeItem);
-        }
+            const queueService: azureStorage.QueueService = this.root.createQueueService();
+            const queueTask: Promise<void> = new Promise((resolve, reject) => {
+                // tslint:disable-next-line:no-any
+                queueService.getServiceProperties({}, (err?: any) => {
+                    err ? reject(err) : resolve();
+                });
+            });
+            const queuesActive: boolean = await this.taskResolvesBeforeTimeout(queueTask);
 
-        if (!!primaryEndpoints.queue) {
-            groupTreeItems.push(this._queueGroupTreeItem);
-        }
+            if (this.connectionString === AttachedStorageAccountsTreeItem.emulatorConnectionString) {
+                // Emulated accounts always include blob containers and queues regardless of if they're active or not
+                this._blobContainerGroupTreeItem.active = blobContainersActive;
+                groupTreeItems.push(this._blobContainerGroupTreeItem);
 
-        if (!!primaryEndpoints.table) {
-            groupTreeItems.push(this._tableGroupTreeItem);
+                this._queueGroupTreeItem.active = queuesActive;
+                groupTreeItems.push(this._queueGroupTreeItem);
+            } else {
+                if (blobContainersActive) {
+                    groupTreeItems.push(this._blobContainerGroupTreeItem);
+                }
+
+                if (queuesActive) {
+                    groupTreeItems.push(this._queueGroupTreeItem);
+                }
+
+                const shareClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
+                if (await this.taskResolvesBeforeTimeout(shareClient.getProperties())) {
+                    groupTreeItems.push(this._fileShareGroupTreeItem);
+                }
+
+                const tableService: azureStorage.TableService = this.root.createTableService();
+                const tableTask: Promise<void> = new Promise((resolve, reject) => {
+                    // Getting table service properties will succeed even when tables aren't supported, so attempt to list tables instead
+                    // tslint:disable-next-line:no-any
+                    tableService.listTablesSegmented(<azureStorage.TableService.ListTablesContinuationToken><unknown>undefined, (err?: any) => {
+                        err ? reject(err) : resolve();
+                    });
+                });
+                if (await this.taskResolvesBeforeTimeout(tableTask)) {
+                    groupTreeItems.push(this._tableGroupTreeItem);
+                }
+            }
+        } else {
+            let primaryEndpoints = this.storageAccount.primaryEndpoints;
+
+            if (!!primaryEndpoints.blob) {
+                groupTreeItems.push(this._blobContainerGroupTreeItem);
+            }
+
+            if (!!primaryEndpoints.file) {
+                groupTreeItems.push(this._fileShareGroupTreeItem);
+            }
+
+            if (!!primaryEndpoints.queue) {
+                groupTreeItems.push(this._queueGroupTreeItem);
+            }
+
+            if (!!primaryEndpoints.table) {
+                groupTreeItems.push(this._tableGroupTreeItem);
+            }
         }
 
         return groupTreeItems;
@@ -111,7 +163,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
         if (primaryKey) {
             this.key = new StorageAccountKeyWrapper(primaryKey);
-        } else {
+        } else if (!this.connectionString) {
+            // A key is expected
             throw new Error("Could not find primary key");
         }
     }
@@ -134,36 +187,60 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return Object.assign({}, subRoot, {
             storageAccount: this.storageAccount,
             createBlobServiceClient: () => {
-                const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
-                return new azureStorageBlob.BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
+                if (this.connectionString) {
+                    return azureStorageBlob.BlobServiceClient.fromConnectionString(this.connectionString);
+                } else {
+                    const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
+                    return new azureStorageBlob.BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
+                }
             },
             createFileService: () => {
-                return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                if (this.connectionString) {
+                    return new azureStorage.FileService(this.connectionString).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                } else {
+                    return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                }
             },
             createShareServiceClient: () => {
-                const credential = new azureStorageShare.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
-                return new azureStorageShare.ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
+                if (this.connectionString) {
+                    return azureStorageShare.ShareServiceClient.fromConnectionString(this.connectionString);
+                } else {
+                    const credential = new azureStorageShare.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
+                    return new azureStorageShare.ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
+                }
             },
             createQueueService: () => {
-                return azureStorage.createQueueService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.queue).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                if (this.connectionString) {
+                    return new azureStorage.QueueService(this.connectionString).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                } else {
+                    return azureStorage.createQueueService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.queue).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                }
             },
             createTableService: () => {
-                // tslint:disable-next-line:no-any the typings for createTableService are incorrect
-                return azureStorage.createTableService(this.storageAccount.name, this.key.value, <any>this.storageAccount.primaryEndpoints.table).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                if (this.connectionString) {
+                    return new azureStorage.TableService(this.connectionString).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                } else {
+                    // tslint:disable-next-line:no-any the typings for createTableService are incorrect
+                    return azureStorage.createTableService(this.storageAccount.name, this.key.value, <any>this.storageAccount.primaryEndpoints.table).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                }
             }
         });
     }
 
     async getConnectionString(): Promise<string> {
-        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};`;
+        return this.connectionString || `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};`;
     }
 
     async getKeys(): Promise<StorageAccountKeyWrapper[]> {
-        let parsedId = this.parseAzureResourceId(this.storageAccount.id);
-        let resourceGroupName = parsedId.resourceGroups;
-        let keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
-        // tslint:disable-next-line:strict-boolean-expressions
-        return (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
+        if (this.storageManagementClient) {
+            let parsedId = this.parseAzureResourceId(this.storageAccount.id);
+            let resourceGroupName = parsedId.resourceGroups;
+            let keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
+            // tslint:disable-next-line:strict-boolean-expressions
+            return (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
+        }
+
+        return [];
     }
 
     parseAzureResourceId(resourceId: string): { [key: string]: string } {
@@ -371,6 +448,27 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             }
 
             throw new Error("This storage account does not support static website hosting.");
+        }
+    }
+
+    // tslint:disable-next-line:no-any
+    private async taskResolvesBeforeTimeout(promise: any): Promise<boolean> {
+        let timeout = new Promise((_resolve, reject) => {
+            let id = setTimeout(() => {
+                clearTimeout(id);
+                reject();
+                // tslint:disable-next-line:align
+            }, 1000);
+        });
+
+        try {
+            await Promise.race([
+                promise,
+                timeout
+            ]);
+            return true;
+        } catch {
+            return false;
         }
     }
 }
