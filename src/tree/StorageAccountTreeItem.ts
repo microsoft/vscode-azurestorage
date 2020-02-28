@@ -272,7 +272,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         };
         await this.setWebsiteHostingProperties(newStatus);
         let msg = oldStatus.enabled ?
-            'Static website hosting configuration updated.' :
+            `Static website hosting configuration updated for storage account '${this.storageAccount.name}'.` :
             `The storage account '${this.label}' has been enabled for static website hosting.`;
         // tslint:disable-next-line: strict-boolean-expressions
         msg += ` Index document: ${indexDocument}, 404 error document: ${errorDocument404Path || 'none'}`;
