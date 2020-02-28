@@ -11,10 +11,12 @@ import * as azureStorage from "azure-storage";
 // tslint:disable-next-line:no-require-imports
 import opn = require('opn');
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { commands, MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
+import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
@@ -117,14 +119,21 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async deleteTreeItemImpl(): Promise<void> {
-        const message: string = `Are you sure you want to delete account '${this.label}' and all its contents?`;
+        const message: string = `Are you sure you want to delete account "${this.label}" and all its contents?`;
         //Use ext.ui to emulate user input by TestUserInput() method so that the tests can work
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
+            const deletingStorageAccountString: string = localize('deletingStorageAccount', `Deleting storage account "${this.label}"...`);
             let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
             let parsedId = this.parseAzureResourceId(this.storageAccount.id);
             let resourceGroupName = parsedId.resourceGroups;
-            await storageManagementClient.storageAccounts.deleteMethod(resourceGroupName, this.storageAccount.name);
+
+            ext.outputChannel.appendLine(deletingStorageAccountString);
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deletingStorageAccountString }, async () => {
+                await storageManagementClient.storageAccounts.deleteMethod(resourceGroupName, this.storageAccount.name);
+            });
+
+            ext.outputChannel.appendLine(localize('successfullyDeletedStorageAccount', `Successfully deleted storage account "${this.label}".`));
         } else {
             throw new UserCancelledError();
         }
