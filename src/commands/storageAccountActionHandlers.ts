@@ -11,10 +11,10 @@ import { storageExplorerLauncher } from '../storageExplorerLauncher/storageExplo
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { StorageAccountTreeItem } from '../tree/StorageAccountTreeItem';
 import { isPathEqual, isSubpath } from '../utils/fs';
+import { localize } from "../utils/localize";
 import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
 import { deleteNode } from './commonTreeCommands';
 import { selectStorageAccountTreeItemForCommand } from './selectStorageAccountNodeForCommand';
-import { localize } from "../utils/localize";
 
 export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
