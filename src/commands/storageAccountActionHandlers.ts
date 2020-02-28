@@ -14,6 +14,7 @@ import { isPathEqual, isSubpath } from '../utils/fs';
 import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
 import { deleteNode } from './commonTreeCommands';
 import { selectStorageAccountTreeItemForCommand } from './selectStorageAccountNodeForCommand';
+import { localize } from "../utils/localize";
 
 export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
@@ -71,9 +72,12 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
         context.telemetry.properties.contextValue = (destTreeItem && destTreeItem.contextValue) || 'CommandPalette';
     }
 
-    // Ask first for destination account if needed since it might require configuration and don't want to have user
-    // select source location only to have to possibly cancel.
+    //  Ask for source folder if needed
+    if (!sourcePath) {
+        sourcePath = await showWorkspaceFoldersQuickPick(localize('selectFolderToDeploy', 'Select the folder to deploy'), context, configurationSettingsKeys.deployPath);
+    }
 
+    // Ask for destination account
     let destAccountTreeItem: StorageAccountTreeItem = await selectStorageAccountTreeItemForCommand(
         destTreeItem,
         context,
@@ -81,11 +85,6 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
             mustBeWebsiteCapable: true,
             configureWebsite: true
         });
-
-    //  Ask for source folder if needed
-    if (!sourcePath) {
-        sourcePath = await showWorkspaceFoldersQuickPick("Select the folder to deploy", context, configurationSettingsKeys.deployPath);
-    }
 
     // Get the $web container
     let destContainerTreeItem = await destAccountTreeItem.getWebsiteCapableContainer(context);
