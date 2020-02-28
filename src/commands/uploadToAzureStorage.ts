@@ -42,14 +42,10 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
     let parentDirectory: string;
     let destinationName: string;
 
-    try {
-        await fse.readdir(resourcePath);
-
-        // resourcePath is a directory
+    if ((await fse.stat(resourcePath)).isDirectory()) {
         filePathsToUpload = await listFilePathsWithAzureSeparator(resourcePath);
         parentDirectory = resourcePath;
-    } catch {
-        // resourcePath is a file
+    } else {
         filePathsToUpload = [resourcePath];
         parentDirectory = path.dirname(resourcePath);
     }
