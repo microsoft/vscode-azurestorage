@@ -4,7 +4,7 @@
   **/
 
 import { window } from "vscode";
-import { UserCancelledError } from "vscode-azureextensionui";
+import { IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import { ResourceType } from "../storageExplorerLauncher/ResourceType";
 import { storageExplorerLauncher } from "../storageExplorerLauncher/storageExplorerLauncher";
 
@@ -13,9 +13,10 @@ export namespace Limits {
     export const maxUploadDownloadSizeMB = 4;
     export const maxUploadDownloadSizeBytes = maxUploadDownloadSizeMB * 1000 * 1000;
 
-    export async function askOpenInStorageExplorer(errorMessage: string, resourceId: string, subscriptionId: string, resourceType: ResourceType, resourceName: string): Promise<void> {
+    export async function askOpenInStorageExplorer(errorMessage: string, resourceId: string, subscriptionId: string, resourceType: ResourceType, resourceName: string, context: IActionContext): Promise<void> {
         const message = "Open container in Storage Explorer";
         if (message === await window.showErrorMessage(errorMessage, message)) {
+            context.telemetry.properties.openInStorageExplorerAfterUnsuccessfulBlockBlobTransfer = 'true';
             await storageExplorerLauncher.openResource(resourceId, subscriptionId, resourceType, resourceName);
         }
 

@@ -73,8 +73,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         AzureStorageFS.fireDeleteEvent(this);
     }
 
-    public async download(): Promise<void> {
-        await this.checkCanDownload();
+    public async download(context: IActionContext): Promise<void> {
+        await this.checkCanDownload(context);
 
         const extension = path.extname(this.blobName);
         const filters = {
@@ -111,20 +111,25 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         }
     }
 
-    private async checkCanDownload(): Promise<void> {
+    private async checkCanDownload(context: IActionContext): Promise<void> {
         let message: string | undefined;
 
         const client: BlockBlobClient = createBlockBlobClient(this.root, this.container.name, this.blobPath);
         let props: BlobGetPropertiesResponse = await client.getProperties();
 
         if (Number(props.contentLength) > Limits.maxUploadDownloadSizeBytes) {
+            context.telemetry.properties.blockBlobTooLargeForDownload = 'true';
+            context.telemetry.properties.invalidBlockBlobDownloadSize = Number(props.contentLength).toString();
             message = `Please use Storage Explorer for blobs larger than ${Limits.maxUploadDownloadSizeMB}MB.`;
         } else if (props.blobType && !props.blobType.toLocaleLowerCase().startsWith("block")) {
+            context.telemetry.properties.invalidBlobTypeForDownload = 'true';
             message = `Please use Storage Explorer for blobs of type '${props.blobType}'.`;
+        } else {
+            context.telemetry.properties.validBlockBlobDownloadSize = Number(props.contentLength).toString();
         }
 
         if (message) {
-            await Limits.askOpenInStorageExplorer(message, this.root.storageAccount.id, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
+            await Limits.askOpenInStorageExplorer(message, this.root.storageAccount.id, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name, context);
         }
     }
 }

@@ -8,5 +8,5 @@ import { BlobTreeItem } from "../../tree/blob/BlobTreeItem";
 
 export function registerBlobActionHandlers(): void {
     registerCommand("azureStorage.deleteBlob", async (context: IActionContext, treeItem: BlobTreeItem) => await treeItem.deleteTreeItem(context));
-    registerCommand("azureStorage.downloadBlob", async (_context: IActionContext, treeItem: BlobTreeItem) => await treeItem.download());
+    registerCommand("azureStorage.downloadBlob", async (context: IActionContext, treeItem: BlobTreeItem) => await treeItem.download(context));
 }
