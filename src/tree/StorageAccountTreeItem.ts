@@ -12,13 +12,17 @@ import * as azureStorage from "azure-storage";
 import opn = require('opn');
 import * as path from 'path';
 import { commands, MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, AzureWizard, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
 import { nonNullProp } from '../utils/nonNull';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { BlobContainerTreeItem } from "./blob/BlobContainerTreeItem";
+import { IStaticWebsiteConfigWizardContext } from './createWizard/IStaticWebsiteConfigWizardContext';
+import { StaticWebsiteConfigureStep } from './createWizard/staticWebsiteConfigureStep';
+import { StaticWebsiteErrorDocument404Step } from './createWizard/staticWebsiteErrorDocument404Step';
+import { StaticWebsiteIndexDocumentStep } from './createWizard/staticWebsiteIndexDocumentStep';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
@@ -240,46 +244,16 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return accountType;
     }
 
-    public async configureStaticWebsite(promptForSettings: boolean = true): Promise<void> {
-        const defaultIndexDocument: string = 'index.html';
-        const defaultErrorDocument404Path: string = defaultIndexDocument;
-        let indexDocument: string = defaultIndexDocument;
-        let errorDocument404Path: string | undefined = defaultErrorDocument404Path;
-        let oldStatus: WebsiteHostingStatus = await this.getActualWebsiteHostingStatus();
-        await this.ensureHostingCapable(oldStatus);
-
-        if (promptForSettings) {
-            indexDocument = await ext.ui.showInputBox({
-                prompt: "Enter the index document name",
-                value: oldStatus.indexDocument ? oldStatus.indexDocument : defaultIndexDocument,
-                validateInput: (value: string): string | undefined => this.validateIndexDocumentName(value)
-            });
-
-            errorDocument404Path = await ext.ui.showInputBox({
-                prompt: "Enter the 404 error document path",
-                value: oldStatus.errorDocument404Path ? oldStatus.errorDocument404Path : defaultErrorDocument404Path,
-                validateInput: (value: string): string | undefined => this.validateErrorDocumentName(value)
-                // tslint:disable-next-line: strict-boolean-expressions
-            }) || undefined;
-        }
-
-        let newStatus: azureStorageBlob.BlobServiceProperties = {
-            staticWebsite: {
-                enabled: true,
-                errorDocument404Path,
-                indexDocument
-            }
-        };
-        await this.setWebsiteHostingProperties(newStatus);
-        let msg = oldStatus.enabled ?
-            'Static website hosting configuration updated.' :
-            `The storage account '${this.label}' has been enabled for static website hosting.`;
-        // tslint:disable-next-line: strict-boolean-expressions
-        msg += ` Index document: ${indexDocument}, 404 error document: ${errorDocument404Path || 'none'}`;
-        window.showInformationMessage(msg);
-        if (newStatus.staticWebsite && oldStatus.enabled !== newStatus.staticWebsite.enabled) {
-            await ext.tree.refresh(this);
-        }
+    public async configureStaticWebsite(context: IActionContext): Promise<void> {
+        const oldStatus: WebsiteHostingStatus = await this.getActualWebsiteHostingStatus();
+        const wizardContext: IStaticWebsiteConfigWizardContext = Object.assign(<IStaticWebsiteConfigWizardContext>context, this);
+        wizardContext.enableStaticWebsite = true;
+        const wizard: AzureWizard<IStaticWebsiteConfigWizardContext> = new AzureWizard(wizardContext, {
+            promptSteps: [new StaticWebsiteIndexDocumentStep(oldStatus.indexDocument), new StaticWebsiteErrorDocument404Step(oldStatus.errorDocument404Path)],
+            executeSteps: [new StaticWebsiteConfigureStep(this, oldStatus.enabled)]
+        });
+        await wizard.prompt();
+        await wizard.execute();
     }
 
     public async disableStaticWebsite(): Promise<void> {
@@ -296,31 +270,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
             await ext.tree.refresh(this);
         }
-    }
-
-    private validateIndexDocumentName(documentpath: string): undefined | string {
-        const minLengthDocumentPath = 3;
-        const maxLengthDocumentPath = 255;
-        if (documentpath.includes('/')) {
-            return "The index document path cannot contain a '/' character.";
-        } else if (documentpath.length < minLengthDocumentPath || documentpath.length > maxLengthDocumentPath) {
-            return `The index document path must be between ${minLengthDocumentPath} and ${maxLengthDocumentPath} characters in length.`;
-        }
-
-        return undefined;
-    }
-
-    private validateErrorDocumentName(documentpath: string): undefined | string {
-        const minLengthDocumentPath = 3;
-        const maxLengthDocumentPath = 255;
-        if (documentpath) {
-            if (documentpath.startsWith('/') || documentpath.endsWith('/')) {
-                return "The error document path start or end with a '/' character.";
-            } else if (documentpath.length < minLengthDocumentPath || documentpath.length > maxLengthDocumentPath) {
-                return `The error document path must be between ${minLengthDocumentPath} and ${maxLengthDocumentPath} characters in length.`;
-            }
-        }
-        return undefined;
     }
 
     public async browseStaticWebsite(): Promise<void> {
