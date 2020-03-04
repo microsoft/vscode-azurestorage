@@ -10,8 +10,6 @@ import { ext } from '../../extensionVariables';
 import { localize } from '../../utils/localize';
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { IStaticWebsiteConfigWizardContext } from "./IStaticWebsiteConfigWizardContext";
-import { StaticWebsiteErrorDocument404Step } from './staticWebsiteErrorDocument404Step';
-import { StaticWebsiteIndexDocumentStep } from './staticWebsiteIndexDocumentStep';
 import { IStorageAccountTreeItemCreateContext } from "./storageAccountTreeItemCreateStep";
 
 export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageAccountTreeItemCreateContext & IStaticWebsiteConfigWizardContext> {
@@ -30,18 +28,18 @@ export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageA
         const newStatus: azureStorageBlob.BlobServiceProperties = {
             staticWebsite: {
                 enabled: true,
-                indexDocument: wizardContext.indexDocument || StaticWebsiteIndexDocumentStep.defaultIndexDocument,
-                errorDocument404Path: wizardContext.errorDocument404Path || StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
+                indexDocument: wizardContext.indexDocument,
+                errorDocument404Path: wizardContext.errorDocument404Path
             }
         };
 
         await this.accountTreeItem.setWebsiteHostingProperties(newStatus);
 
         let msg = this.previouslyEnabled ?
-            'Static website hosting configuration updated.' :
-            `The storage account '${this.accountTreeItem.label}' has been enabled for static website hosting.`;
+            localize('staticWebsiteHostingConfigurationUpdated', 'Static website hosting configuration updated.') :
+            localize('storageAccountHasBeenEnabledForStaticWebsiteHosting', `The storage account "${this.accountTreeItem.label}" has been enabled for static website hosting.`);
         // tslint:disable-next-line: strict-boolean-expressions
-        msg += ` Index document: ${wizardContext.indexDocument}, 404 error document: ${wizardContext.errorDocument404Path || 'none'}`;
+        msg += localize('indexDocumentAndErrorDocument', ` Index document: "${wizardContext.indexDocument}", 404 error document: "${wizardContext.errorDocument404Path}"`);
         window.showInformationMessage(msg);
 
         if (newStatus.staticWebsite && this.previouslyEnabled !== newStatus.staticWebsite.enabled) {

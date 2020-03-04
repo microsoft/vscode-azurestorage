@@ -30,13 +30,12 @@ export class StaticWebsiteErrorDocument404Step extends AzureWizardPromptStep<ISt
     private validateErrorDocumentName(documentPath: string): undefined | string {
         const minLengthDocumentPath = 3;
         const maxLengthDocumentPath = 255;
-        if (documentPath) {
-            if (documentPath.startsWith('/') || documentPath.endsWith('/')) {
-                return localize('errorDocumentCannotStartOrEndWithForwardSlash', 'The error document path start or end with a "/" character.');
-            } else if (documentPath.length < minLengthDocumentPath || documentPath.length > maxLengthDocumentPath) {
-                return localize('errorDocumentPathLengthIsInvalid', `The error document path must be between ${minLengthDocumentPath} and ${maxLengthDocumentPath} characters in length.`);
-            }
+        if (documentPath.startsWith('/') || documentPath.endsWith('/')) {
+            return localize('errorDocumentCannotStartOrEndWithForwardSlash', 'The error document path start or end with a "/" character.');
+        } else if (documentPath.length < minLengthDocumentPath || documentPath.length > maxLengthDocumentPath) {
+            return localize('errorDocumentPathLengthIsInvalid', `The error document path must be between ${minLengthDocumentPath} and ${maxLengthDocumentPath} characters in length.`);
         }
+
         return undefined;
     }
 }
