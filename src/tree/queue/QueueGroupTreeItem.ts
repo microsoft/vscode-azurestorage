@@ -9,6 +9,7 @@ import { ProgressLocation, Uri, window } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
+import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { QueueTreeItem } from './QueueTreeItem';
@@ -16,6 +17,7 @@ import { QueueTreeItem } from './QueueTreeItem';
 export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
+    public label: string = "Queues";
     public readonly childTypeLabel: string = "Queue";
     public static contextValue: string = 'azureQueueGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
@@ -23,8 +25,8 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
     };
 
-    public get label(): string {
-        return `Queues${this.active ? '' : ' (stopped)'}`;
+    public get description(): string {
+        return this.active ? '' : 'stopped';
     }
 
     public get contextValue(): string {
@@ -32,7 +34,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public constructor(
-        parent: StorageAccountTreeItem,
+        parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem,
         public active: boolean = true) {
         super(parent);
     }

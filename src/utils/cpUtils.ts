@@ -6,11 +6,12 @@
 import * as cp from 'child_process';
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { IChildProcWrapper } from '../commands/startEmulator';
 import { localize } from './localize';
 
 export namespace cpUtils {
-    export async function executeCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, ...args: string[]): Promise<string> {
-        const result: ICommandResult = await tryExecuteCommand(outputChannel, workingDirectory, command, ...args);
+    export async function executeCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, childProcWrapper: IChildProcWrapper = {}, ...args: string[]): Promise<string> {
+        const result: ICommandResult = await tryExecuteCommand(outputChannel, workingDirectory, command, childProcWrapper, ...args);
         if (result.code !== 0) {
             // We want to make sure the full error message is displayed to the user, not just the error code.
             // If outputChannel is defined, then we simply call 'outputChannel.show()' and throw a generic error telling the user to check the output window
@@ -29,7 +30,7 @@ export namespace cpUtils {
         return result.cmdOutput;
     }
 
-    export async function tryExecuteCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, ...args: string[]): Promise<ICommandResult> {
+    export async function tryExecuteCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, childProcWrapper: IChildProcWrapper = {}, ...args: string[]): Promise<ICommandResult> {
         return await new Promise((resolve: (res: ICommandResult) => void, reject: (e: Error) => void): void => {
             let cmdOutput: string = '';
             let cmdOutputIncludingStderr: string = '';
@@ -40,13 +41,13 @@ export namespace cpUtils {
                 cwd: workingDirectory,
                 shell: true
             };
-            const childProc: cp.ChildProcess = cp.spawn(command, args, options);
+            childProcWrapper.childProc = cp.spawn(command, args, options);
 
             if (outputChannel) {
                 outputChannel.appendLine(localize('runningCommand', 'Running command: "{0} {1}"...', command, formattedArgs));
             }
 
-            childProc.stdout.on('data', (data: string | Buffer) => {
+            childProcWrapper.childProc.stdout.on('data', (data: string | Buffer) => {
                 data = data.toString();
                 cmdOutput = cmdOutput.concat(data);
                 cmdOutputIncludingStderr = cmdOutputIncludingStderr.concat(data);
@@ -55,7 +56,7 @@ export namespace cpUtils {
                 }
             });
 
-            childProc.stderr.on('data', (data: string | Buffer) => {
+            childProcWrapper.childProc.stderr.on('data', (data: string | Buffer) => {
                 data = data.toString();
                 cmdOutputIncludingStderr = cmdOutputIncludingStderr.concat(data);
                 if (outputChannel) {
@@ -63,8 +64,8 @@ export namespace cpUtils {
                 }
             });
 
-            childProc.on('error', reject);
-            childProc.on('close', (code: number) => {
+            childProcWrapper.childProc.on('error', reject);
+            childProcWrapper.childProc.on('close', (code: number) => {
                 resolve({
                     code,
                     cmdOutput,

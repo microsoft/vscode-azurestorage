@@ -11,6 +11,7 @@ import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplCo
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createBlobContainerClient } from '../../utils/blobUtils';
+import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
@@ -18,6 +19,7 @@ import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _continuationToken: string | undefined;
 
+    public label: string = "Blob Containers";
     public readonly childTypeLabel: string = "Blob Container";
     public static contextValue: string = 'azureBlobContainerGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
@@ -25,8 +27,8 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
     };
 
-    public get label(): string {
-        return `Blob Containers${this.active ? '' : ' (stopped)'}`;
+    public get description(): string {
+        return this.active ? '' : 'stopped';
     }
 
     public get contextValue(): string {
@@ -34,7 +36,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     }
 
     public constructor(
-        parent: StorageAccountTreeItem,
+        parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem,
         public active: boolean = true) {
         super(parent);
     }

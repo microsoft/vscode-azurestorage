@@ -17,3 +17,12 @@ export interface IStorageRoot extends ISubscriptionContext {
     createQueueService(): azureStorage.QueueService;
     createTableService(): azureStorage.TableService;
 }
+
+export interface IAttachedStorageRoot {
+    storageAccount: StorageAccountWrapper;
+    createBlobServiceClient(): azureStorageBlob.BlobServiceClient;
+    createFileService(): azureStorage.FileService;
+    createShareServiceClient(): azureStorageShare.ShareServiceClient;
+    createQueueService(): azureStorage.QueueService;
+    createTableService(): azureStorage.TableService;
+}

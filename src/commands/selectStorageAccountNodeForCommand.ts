@@ -6,8 +6,10 @@
 import * as assert from 'assert';
 import { AzureTreeItem, IActionContext } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
+import { AttachedStorageAccountTreeItem } from '../tree/AttachedStorageAccountTreeItem';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { StorageAccountTreeItem } from "../tree/StorageAccountTreeItem";
+import { localize } from '../utils/localize';
 
 /**
  * Given a treeItem argument for a command, if it is:
@@ -25,6 +27,10 @@ export async function selectStorageAccountTreeItemForCommand(
     //   undefined
     //   a storage account treeItem
     //   a blob container treeItem
+
+    if (treeItem?.parent?.parent instanceof AttachedStorageAccountTreeItem) {
+        throw new Error(localize('staticWebsiteCommandsNotSupportedForAttachedAccounts', 'Static website commands are not supported for attached accounts.'));
+    }
 
     context.showEnableWebsiteHostingPrompt = true;
 

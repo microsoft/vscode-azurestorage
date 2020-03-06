@@ -20,7 +20,8 @@ export class AzureAccountTreeItem extends AzureAccountTreeItemBase {
 
     public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         const children: AzExtTreeItem[] = await super.loadMoreChildrenImpl(clearCache, context);
-        return children.concat(ext.attachedStorageAccountsTreeItem);
+        children.push(ext.attachedStorageAccountsTreeItem);
+        return children;
     }
 
     public compareChildrenImpl(item1: AzExtTreeItem, item2: AzExtTreeItem): number {
