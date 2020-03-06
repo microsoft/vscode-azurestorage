@@ -123,17 +123,19 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         //Use ext.ui to emulate user input by TestUserInput() method so that the tests can work
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const deletingStorageAccountString: string = localize('deletingStorageAccount', `Deleting storage account "${this.label}"...`);
+            const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
             let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
             let parsedId = this.parseAzureResourceId(this.storageAccount.id);
             let resourceGroupName = parsedId.resourceGroups;
 
-            ext.outputChannel.appendLine(deletingStorageAccountString);
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deletingStorageAccountString }, async () => {
+            ext.outputChannel.appendLine(deletingStorageAccount);
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deletingStorageAccount }, async () => {
                 await storageManagementClient.storageAccounts.deleteMethod(resourceGroupName, this.storageAccount.name);
             });
 
-            ext.outputChannel.appendLine(localize('successfullyDeletedStorageAccount', `Successfully deleted storage account "${this.label}".`));
+            const deleteSuccessful: string = localize('successfullyDeletedStorageAccount', 'Successfully deleted storage account "{0}".', this.label);
+            ext.outputChannel.appendLine(deleteSuccessful);
+            window.showInformationMessage(deleteSuccessful);
         } else {
             throw new UserCancelledError();
         }
