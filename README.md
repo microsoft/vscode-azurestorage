@@ -14,7 +14,8 @@ Azure Storage is a Microsoft-managed service providing cloud storage that is hig
 * Create, Edit, and Delete Block Blobs and Files
 * Upload and Download Blobs up to 4MB in size
 * Access Connection String and Primary Key
-* Open in Storage Explorer for memory or computationally heavy tasks, or for upload/download of large or non-text files.
+* Open in Storage Explorer for memory or computationally heavy tasks, or for upload/download of large or non-text files
+* Attach Storage Accounts via Connection String or by using the Azure Storage Emulator
 
 ## Installation
 
