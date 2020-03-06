@@ -6,7 +6,6 @@
 import * as cp from 'child_process';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { IChildProcWrapper } from '../commands/startEmulator';
 import { localize } from './localize';
 
 export namespace cpUtils {
@@ -81,5 +80,9 @@ export namespace cpUtils {
         cmdOutput: string;
         cmdOutputIncludingStderr: string;
         formattedArgs: string;
+    }
+
+    export interface IChildProcWrapper {
+        childProc?: cp.ChildProcess;
     }
 }

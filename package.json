@@ -409,12 +409,7 @@
 				},
 				{
 					"command": "azureStorage.copyConnectionString",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "5_cutcopypaste@1"
-				},
-				{
-					"command": "azureStorage.copyConnectionString",
-					"when": "view == azureStorage && viewItem == azureStorageAccountAttached",
+					"when": "view == azureStorage && viewItem =~ /azureStorageAccount/",
 					"group": "5_cutcopypaste@1"
 				},
 				{
@@ -665,16 +660,16 @@
 				{
 					"command": "azureStorage.attachEmulator",
 					"when": "view == azureStorage && viewItem == attachedStorageAccounts",
-					"group": "2_create"
+					"group": "2_create@1"
 				},
 				{
 					"command": "azureStorage.attachWithConnectionString",
 					"when": "view == azureStorage && viewItem == attachedStorageAccounts",
-					"group": "2_create"
+					"group": "2_create@2"
 				},
 				{
 					"command": "azureStorage.detachStorageAccount",
-					"when": "view == azureStorage && viewItem == azureStorageAccountAttached",
+					"when": "view == azureStorage && viewItem == azureStorageAccount-attached",
 					"group": "7_modification"
 				},
 				{

@@ -3,16 +3,15 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as cp from 'child_process';
 import * as vscode from 'vscode';
-import { IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from "../extensionVariables";
 import { cpUtils } from '../utils/cpUtils';
 import { delay } from '../utils/delay';
 import { localize } from '../utils/localize';
 
 const emulatorTimeoutInSeconds: number = 3;
-export const emulatorTimeoutInMillis: number = emulatorTimeoutInSeconds * 1000;
+export const emulatorTimeoutInMs: number = emulatorTimeoutInSeconds * 1000;
 
 export async function startEmulator(context: IActionContext, emulatorType: EmulatorType): Promise<void> {
     if (!!vscode.extensions.getExtension('Azurite.azurite')) {
@@ -22,7 +21,7 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
     } else if (await azuriteCLIInstalled()) {
         // Use the Azurite CLI
 
-        let childProcWrapper: IChildProcWrapper = {};
+        let childProcWrapper: cpUtils.IChildProcWrapper = {};
         let emulatorError: Error | undefined;
 
         // This is a long running command, don't await it
@@ -37,7 +36,7 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
                 emulatorError = new Error(localize('failedToStartEmulatorUsingAzuriteCLI', 'Failed to start emulator using the Azurite CLI. Check the output window for more details.'));
             });
 
-            const maxTime: number = Date.now() + emulatorTimeoutInMillis;
+            const maxTime: number = Date.now() + emulatorTimeoutInMs;
             while (Date.now() < maxTime) {
                 if (emulatorError && Date.now() > startTime + 1000) {
                     throw emulatorError;
@@ -56,8 +55,6 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
         if (result === installAzurite) {
             context.telemetry.properties.installAzuriteExtension = 'true';
             await vscode.commands.executeCommand('extension.open', 'Azurite.azurite');
-        } else {
-            throw new UserCancelledError();
         }
     }
 }
@@ -74,8 +71,4 @@ async function azuriteCLIInstalled(): Promise<boolean> {
 export enum EmulatorType {
     blob = 'blob',
     queue = 'queue'
-}
-
-export interface IChildProcWrapper {
-    childProc?: cp.ChildProcess;
 }

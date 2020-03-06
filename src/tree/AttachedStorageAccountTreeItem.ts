@@ -19,8 +19,6 @@ import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
-const attachedAccountSuffix: string = 'Attached';
-
 export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
@@ -30,7 +28,7 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
     public autoSelectInTreeItemPicker: boolean = true;
     public id: string = this.storageAccount.id;
     public label: string = this.storageAccount.name;
-    public static contextValue: string = `${StorageAccountTreeItem.contextValue}${attachedAccountSuffix}`;
+    public static contextValue: string = `${StorageAccountTreeItem.contextValue}-attached`;
     public contextValue: string = AttachedStorageAccountTreeItem.contextValue;
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
@@ -56,19 +54,10 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(): Promise<AzureTreeItem<IStorageRoot>[]> {
-        const blobClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        const blobContainersActive: boolean = await this.taskResolvesBeforeTimeout(blobClient.getProperties());
-
-        const queueService: azureStorage.QueueService = this.root.createQueueService();
-        const queueTask: Promise<void> = new Promise((resolve, reject) => {
-            // tslint:disable-next-line:no-any
-            queueService.getServiceProperties({}, (err?: any) => {
-                err ? reject(err) : resolve();
-            });
-        });
-        const queuesActive: boolean = await this.taskResolvesBeforeTimeout(queueTask);
-
+        const blobContainersActive: boolean = await this.isBlobContainerActive();
+        const queuesActive: boolean = await this.isQueueActive();
         let groupTreeItems: AzureTreeItem<IStorageRoot>[] = [];
+
         if (this.connectionString === AttachedStorageAccountsTreeItem.emulatorConnectionString) {
             // Emulated accounts always include blob containers and queues regardless of if they're active or not
             this._blobContainerGroupTreeItem.active = blobContainersActive;
@@ -85,20 +74,11 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
                 groupTreeItems.push(this._queueGroupTreeItem);
             }
 
-            const shareClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
-            if (await this.taskResolvesBeforeTimeout(shareClient.getProperties())) {
+            if (await this.isFileShareActive()) {
                 groupTreeItems.push(this._fileShareGroupTreeItem);
             }
 
-            const tableService: azureStorage.TableService = this.root.createTableService();
-            const tableTask: Promise<void> = new Promise((resolve, reject) => {
-                // Getting table service properties will succeed even when tables aren't supported, so attempt to list tables instead
-                // tslint:disable-next-line:no-any
-                tableService.listTablesSegmented(<azureStorage.TableService.ListTablesContinuationToken><unknown>undefined, (err?: any) => {
-                    err ? reject(err) : resolve();
-                });
-            });
-            if (await this.taskResolvesBeforeTimeout(tableTask)) {
+            if (await this.isTableActive()) {
                 groupTreeItems.push(this._tableGroupTreeItem);
             }
         }
@@ -147,6 +127,41 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
                 return new azureStorage.TableService(this.connectionString).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             }
         };
+    }
+
+    private async isBlobContainerActive(): Promise<boolean> {
+        const blobClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        return await this.taskResolvesBeforeTimeout(blobClient.getProperties());
+    }
+
+    private async isFileShareActive(): Promise<boolean> {
+        const shareClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
+        return await this.taskResolvesBeforeTimeout(shareClient.getProperties());
+    }
+
+    private async isQueueActive(): Promise<boolean> {
+        const queueService: azureStorage.QueueService = this.root.createQueueService();
+        const queueTask: Promise<void> = new Promise((resolve, reject) => {
+            // tslint:disable-next-line:no-any
+            queueService.getServiceProperties({}, (err?: any) => {
+                err ? reject(err) : resolve();
+            });
+        });
+
+        return await this.taskResolvesBeforeTimeout(queueTask);
+    }
+
+    private async isTableActive(): Promise<boolean> {
+        const tableService: azureStorage.TableService = this.root.createTableService();
+        const tableTask: Promise<void> = new Promise((resolve, reject) => {
+            // Getting table service properties will succeed even when tables aren't supported, so attempt to list tables instead
+            // tslint:disable-next-line:no-any
+            tableService.listTablesSegmented(<azureStorage.TableService.ListTablesContinuationToken><unknown>undefined, (err?: any) => {
+                err ? reject(err) : resolve();
+            });
+        });
+
+        return await this.taskResolvesBeforeTimeout(tableTask);
     }
 
     // tslint:disable-next-line:no-any

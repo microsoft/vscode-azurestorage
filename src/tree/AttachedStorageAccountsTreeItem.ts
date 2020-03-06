@@ -169,7 +169,6 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         return persistedAccounts;
     }
 
-    // tslint:disable-next-line:no-reserved-keywords
     private async createTreeItem(connectionString: string, name: string): Promise<AttachedStorageAccountTreeItem> {
         let storageAccountWrapper: StorageAccountWrapper = new StorageAccountWrapper(<StorageAccount>{
             id: this.getAttachedAccountId(name),
