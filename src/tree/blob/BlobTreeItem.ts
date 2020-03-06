@@ -129,7 +129,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         }
 
         if (message) {
-            await Limits.askOpenInStorageExplorer(message, this.root.storageAccount.id, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name, context);
+            await Limits.askOpenInStorageExplorer(context, message, this.root.storageAccount.id, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
         }
     }
 }

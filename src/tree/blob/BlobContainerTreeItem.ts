@@ -201,7 +201,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             lastUploadFolder = uri;
             let filePath = uri.fsPath;
 
-            await this.checkCanUpload(filePath, context);
+            await this.checkCanUpload(context, filePath);
 
             let blobPath = await vscode.window.showInputBox({
                 prompt: 'Enter a name for the uploaded block blob (may include a path)',
@@ -419,20 +419,18 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         return undefined;
     }
 
-    private async checkCanUpload(localPath: string, context: IActionContext): Promise<void> {
+    private async checkCanUpload(context: IActionContext, localPath: string): Promise<void> {
         let size = (await fse.stat(localPath)).size;
+        context.telemetry.measurements.blockBlobUploadSize = size;
         if (size > Limits.maxUploadDownloadSizeBytes) {
             context.telemetry.properties.blockBlobTooLargeForUpload = 'true';
-            context.telemetry.properties.invalidBlockBlobUploadSize = size.toString();
             await Limits.askOpenInStorageExplorer(
+                context,
                 `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
                 this.root.storageAccount.id,
                 this.root.subscriptionId,
                 'Azure.BlobContainer',
-                this.container.name,
-                context);
-        } else {
-            context.telemetry.properties.validBlockBlobUploadSize = size.toString();
+                this.container.name);
         }
     }
 }
