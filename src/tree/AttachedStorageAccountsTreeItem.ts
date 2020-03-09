@@ -171,7 +171,7 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
 
     private async createTreeItem(connectionString: string, name: string): Promise<AttachedStorageAccountTreeItem> {
         let storageAccountWrapper: StorageAccountWrapper = new StorageAccountWrapper(<StorageAccount>{
-            id: this.getAttachedAccountId(name),
+            id: name,
             type: this._storageAccountType,
             name,
             primaryEndpoints: {
@@ -192,10 +192,6 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
             };
         });
         await ext.context.globalState.update(this._serviceName, JSON.stringify(value));
-    }
-
-    private getAttachedAccountId(name: string): string {
-        return `/subscriptions/attached/resourceGroups/attached/providers/Microsoft.Storage/storageAccounts/${name}`;
     }
 
     private getPropertyFromConnectionString(connectionString: string, property: string): string | undefined {
