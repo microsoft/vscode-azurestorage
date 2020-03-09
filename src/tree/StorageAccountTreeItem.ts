@@ -166,7 +166,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     async getConnectionString(): Promise<string> {
-        // storageEndpointSuffix has a '.' prefix that we need to remove
+        // https://github.com/Azure/azure-sdk-for-node/issues/4706
         const storageEndpointSuffix: string = this.root.environment.storageEndpointSuffix.charAt(0) === '.' ? this.root.environment.storageEndpointSuffix.substr(1) : this.root.environment.storageEndpointSuffix;
         return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${storageEndpointSuffix}`;
     }
