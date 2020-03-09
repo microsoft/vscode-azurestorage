@@ -37,12 +37,19 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
     static idToUri(resourceId: string, filePath?: string): vscode.Uri {
-        let matches: RegExpMatchArray | null = resourceId.match(/((\/.*)?\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i);
+        let idRegExp: RegExp;
+        if (resourceId.startsWith('/attachedStorageAccounts')) {
+            idRegExp = /(\/attachedStorageAccounts\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
+        } else {
+            idRegExp = /(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
+        }
+
+        let matches: RegExpMatchArray | null = resourceId.match(idRegExp);
         matches = nonNullValue(matches, 'resourceIdMatches');
 
         let rootId = matches[1];
         const rootName = path.basename(rootId);
-        filePath = filePath || matches[3];
+        filePath = filePath || matches[2];
 
         return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath)}?resourceId=${rootId}`);
     }
