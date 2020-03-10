@@ -40,10 +40,9 @@ export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageA
         await this.accountTreeItem.setWebsiteHostingProperties(newStatus);
 
         let msg = this.previouslyEnabled ?
-            localize('staticWebsiteHostingConfigurationUpdated', 'Static website hosting configuration updated.') :
-            localize('storageAccountHasBeenEnabledForStaticWebsiteHosting', `The storage account "${this.accountTreeItem.label}" has been enabled for static website hosting.`);
-        // tslint:disable-next-line: strict-boolean-expressions
-        msg += localize('indexDocumentAndErrorDocument', ` Index document: "${wizardContext.indexDocument}", 404 error document: "${wizardContext.errorDocument404Path}"`);
+            localize('staticWebsiteHostingConfigurationUpdated', 'Static website hosting configuration updated for storage account "{0}".', this.accountTreeItem.label) :
+            localize('storageAccountHasBeenEnabledForStaticWebsiteHosting', 'The storage account "{0}" has been enabled for static website hosting.', this.accountTreeItem.label);
+        msg += localize('indexDocumentAndErrorDocument', ' Index document: "{0}", 404 error document: "{1}"', wizardContext.indexDocument, wizardContext.errorDocument404Path);
         window.showInformationMessage(msg);
 
         if (newStatus.staticWebsite && this.previouslyEnabled !== newStatus.staticWebsite.enabled) {

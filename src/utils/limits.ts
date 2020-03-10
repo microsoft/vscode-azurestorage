@@ -4,7 +4,7 @@
   **/
 
 import { window } from "vscode";
-import { UserCancelledError } from "vscode-azureextensionui";
+import { IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import { ResourceType } from "../storageExplorerLauncher/ResourceType";
 import { storageExplorerLauncher } from "../storageExplorerLauncher/storageExplorerLauncher";
 
@@ -13,11 +13,14 @@ export namespace Limits {
     export const maxUploadDownloadSizeMB = 4;
     export const maxUploadDownloadSizeBytes = maxUploadDownloadSizeMB * 1000 * 1000;
 
-    export async function askOpenInStorageExplorer(errorMessage: string, resourceId: string, subscriptionId: string, resourceType: ResourceType, resourceName: string): Promise<void> {
+    export async function askOpenInStorageExplorer(context: IActionContext, errorMessage: string, resourceId: string, subscriptionId: string, resourceType: ResourceType, resourceName: string): Promise<void> {
         const message = "Open container in Storage Explorer";
-        if (message === await window.showErrorMessage(errorMessage, message)) {
-            await storageExplorerLauncher.openResource(resourceId, subscriptionId, resourceType, resourceName);
-        }
+        window.showErrorMessage(errorMessage, message).then(async result => {
+            if (result === message) {
+                context.telemetry.properties.openInStorageExplorer = 'true';
+                await storageExplorerLauncher.openResource(resourceId, subscriptionId, resourceType, resourceName);
+            }
+        });
 
         // Either way, throw canceled error
         throw new UserCancelledError(message);
