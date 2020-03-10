@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardPromptStep, IAzureQuickPickItem, IWizardOptions } from "vscode-azureextensionui";
-// import { getStaticWebsiteConfig, IStaticWebsiteConfig } from "../../commands/configureStaticWebsite";
+import { QuickPickItem } from 'vscode';
+import { AzureWizardPromptStep, DialogResponses, IWizardOptions } from "vscode-azureextensionui";
 import { ext } from "../../extensionVariables";
 import { localize } from "../../utils/localize";
 import { IStaticWebsiteConfigWizardContext } from "./IStaticWebsiteConfigWizardContext";
@@ -14,12 +14,10 @@ import { StaticWebsiteIndexDocumentStep } from "./staticWebsiteIndexDocumentStep
 export class StaticWebsiteEnableStep extends AzureWizardPromptStep<IStaticWebsiteConfigWizardContext> {
     public async prompt(wizardContext: IStaticWebsiteConfigWizardContext): Promise<void> {
         const placeHolder: string = localize('wouldYouLikeToEnableStaticWebsiteHosting', 'Would you like to enable static website hosting?');
-        const picks: IAzureQuickPickItem<string>[] = [
-            { label: localize('yes', 'Yes'), data: 'yes' },
-            { label: localize('no', 'No'), data: 'no' }
-        ];
+        const yes: QuickPickItem = { label: DialogResponses.yes.title };
+        const no: QuickPickItem = { label: DialogResponses.no.title };
 
-        wizardContext.enableStaticWebsite = (await ext.ui.showQuickPick(picks, { placeHolder })).data === 'yes';
+        wizardContext.enableStaticWebsite = await ext.ui.showQuickPick([yes, no], { placeHolder }) === yes;
     }
 
     public async getSubWizard(wizardContext: IStaticWebsiteConfigWizardContext): Promise<IWizardOptions<IStaticWebsiteConfigWizardContext> | undefined> {
