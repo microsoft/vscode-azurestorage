@@ -9,13 +9,13 @@ import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
-import { StaticWebsiteConfigureStep } from './createWizard/staticWebsiteConfigureStep';
-import { StaticWebsiteEnableStep } from './createWizard/staticWebsiteEnableStep';
-import { StaticWebsiteErrorDocument404Step } from './createWizard/staticWebsiteErrorDocument404Step';
-import { StaticWebsiteIndexDocumentStep } from './createWizard/staticWebsiteIndexDocumentStep';
+import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigureStep';
+import { StaticWebsiteEnableStep } from './createWizard/StaticWebsiteEnableStep';
+import { StaticWebsiteErrorDocument404Step } from './createWizard/StaticWebsiteErrorDocument404Step';
+import { StaticWebsiteIndexDocumentStep } from './createWizard/StaticWebsiteIndexDocumentStep';
 import { StorageAccountCreateStep } from './createWizard/storageAccountCreateStep';
 import { StorageAccountNameStep } from './createWizard/storageAccountNameStep';
-import { IStorageAccountTreeItemCreateContext, StorageAccountTreeItemCreateStep } from './createWizard/storageAccountTreeItemCreateStep';
+import { IStorageAccountTreeItemCreateContext, StorageAccountTreeItemCreateStep } from './createWizard/StorageAccountTreeItemCreateStep';
 import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 
 export class SubscriptionTreeItem extends SubscriptionTreeItemBase {

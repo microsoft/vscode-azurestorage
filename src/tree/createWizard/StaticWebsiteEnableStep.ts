@@ -8,8 +8,8 @@ import { AzureWizardPromptStep, DialogResponses, IWizardOptions } from "vscode-a
 import { ext } from "../../extensionVariables";
 import { localize } from "../../utils/localize";
 import { IStaticWebsiteConfigWizardContext } from "./IStaticWebsiteConfigWizardContext";
-import { StaticWebsiteErrorDocument404Step } from "./staticWebsiteErrorDocument404Step";
-import { StaticWebsiteIndexDocumentStep } from "./staticWebsiteIndexDocumentStep";
+import { StaticWebsiteErrorDocument404Step } from "./StaticWebsiteErrorDocument404Step";
+import { StaticWebsiteIndexDocumentStep } from "./StaticWebsiteIndexDocumentStep";
 
 export class StaticWebsiteEnableStep extends AzureWizardPromptStep<IStaticWebsiteConfigWizardContext> {
     public async prompt(wizardContext: IStaticWebsiteConfigWizardContext): Promise<void> {

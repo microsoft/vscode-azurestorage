@@ -16,9 +16,11 @@ export interface IStorageAccountTreeItemCreateContext extends IStorageAccountWiz
 
 export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<IStorageAccountTreeItemCreateContext> {
     public priority: number = 170;
+    public parent: SubscriptionTreeItem;
 
-    public constructor(public parent: SubscriptionTreeItem) {
+    public constructor(parent: SubscriptionTreeItem) {
         super();
+        this.parent = parent;
     }
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {

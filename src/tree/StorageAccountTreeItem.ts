@@ -20,9 +20,9 @@ import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storag
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { BlobContainerTreeItem } from "./blob/BlobContainerTreeItem";
 import { IStaticWebsiteConfigWizardContext } from './createWizard/IStaticWebsiteConfigWizardContext';
-import { StaticWebsiteConfigureStep } from './createWizard/staticWebsiteConfigureStep';
-import { StaticWebsiteErrorDocument404Step } from './createWizard/staticWebsiteErrorDocument404Step';
-import { StaticWebsiteIndexDocumentStep } from './createWizard/staticWebsiteIndexDocumentStep';
+import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigureStep';
+import { StaticWebsiteErrorDocument404Step } from './createWizard/StaticWebsiteErrorDocument404Step';
+import { StaticWebsiteIndexDocumentStep } from './createWizard/StaticWebsiteIndexDocumentStep';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';

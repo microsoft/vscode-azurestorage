@@ -10,7 +10,7 @@ import { ext } from '../../extensionVariables';
 import { localize } from '../../utils/localize';
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { IStaticWebsiteConfigWizardContext } from "./IStaticWebsiteConfigWizardContext";
-import { IStorageAccountTreeItemCreateContext } from "./storageAccountTreeItemCreateStep";
+import { IStorageAccountTreeItemCreateContext } from "./StorageAccountTreeItemCreateStep";
 
 export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageAccountTreeItemCreateContext & IStaticWebsiteConfigWizardContext> {
     public priority: number = 200;
