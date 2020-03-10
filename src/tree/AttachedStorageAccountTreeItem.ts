@@ -54,33 +54,16 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
     }
 
     public async loadMoreChildrenImpl(): Promise<AzureTreeItem<IStorageRoot>[]> {
-        const blobContainersActive: boolean = await this.isBlobContainerActive();
-        const queuesActive: boolean = await this.isQueueActive();
-        let groupTreeItems: AzureTreeItem<IStorageRoot>[] = [];
+        let groupTreeItems: AzureTreeItem<IStorageRoot>[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem];
 
         if (this.connectionString === AttachedStorageAccountsTreeItem.emulatorConnectionString) {
-            // Emulated accounts always include blob containers and queues regardless of if they're active or not
-            this._blobContainerGroupTreeItem.active = blobContainersActive;
-            groupTreeItems.push(this._blobContainerGroupTreeItem);
-
-            this._queueGroupTreeItem.active = queuesActive;
-            groupTreeItems.push(this._queueGroupTreeItem);
+            this._blobContainerGroupTreeItem.active = await this._blobContainerGroupTreeItem.isActive();
+            this._blobContainerGroupTreeItem.isEmulated = true;
+            this._queueGroupTreeItem.active = await this._queueGroupTreeItem.isActive();
+            this._queueGroupTreeItem.isEmulated = true;
         } else {
-            if (blobContainersActive) {
-                groupTreeItems.push(this._blobContainerGroupTreeItem);
-            }
-
-            if (queuesActive) {
-                groupTreeItems.push(this._queueGroupTreeItem);
-            }
-
-            if (await this.isFileShareActive()) {
-                groupTreeItems.push(this._fileShareGroupTreeItem);
-            }
-
-            if (await this.isTableActive()) {
-                groupTreeItems.push(this._tableGroupTreeItem);
-            }
+            groupTreeItems.push(this._fileShareGroupTreeItem);
+            groupTreeItems.push(this._tableGroupTreeItem);
         }
 
         return groupTreeItems;
@@ -127,61 +110,5 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
                 return new azureStorage.TableService(this.connectionString).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             }
         };
-    }
-
-    private async isBlobContainerActive(): Promise<boolean> {
-        const blobClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        return await this.taskResolvesBeforeTimeout(blobClient.getProperties());
-    }
-
-    private async isFileShareActive(): Promise<boolean> {
-        const shareClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
-        return await this.taskResolvesBeforeTimeout(shareClient.getProperties());
-    }
-
-    private async isQueueActive(): Promise<boolean> {
-        const queueService: azureStorage.QueueService = this.root.createQueueService();
-        const queueTask: Promise<void> = new Promise((resolve, reject) => {
-            // tslint:disable-next-line:no-any
-            queueService.getServiceProperties({}, (err?: any) => {
-                err ? reject(err) : resolve();
-            });
-        });
-
-        return await this.taskResolvesBeforeTimeout(queueTask);
-    }
-
-    private async isTableActive(): Promise<boolean> {
-        const tableService: azureStorage.TableService = this.root.createTableService();
-        const tableTask: Promise<void> = new Promise((resolve, reject) => {
-            // Getting table service properties will succeed even when tables aren't supported, so attempt to list tables instead
-            // tslint:disable-next-line:no-any
-            tableService.listTablesSegmented(<azureStorage.TableService.ListTablesContinuationToken><unknown>undefined, (err?: any) => {
-                err ? reject(err) : resolve();
-            });
-        });
-
-        return await this.taskResolvesBeforeTimeout(tableTask);
-    }
-
-    // tslint:disable-next-line:no-any
-    private async taskResolvesBeforeTimeout(promise: any): Promise<boolean> {
-        let timeout = new Promise((_resolve, reject) => {
-            let id = setTimeout(() => {
-                clearTimeout(id);
-                reject();
-                // tslint:disable-next-line:align
-            }, 1000);
-        });
-
-        try {
-            await Promise.race([
-                promise,
-                timeout
-            ]);
-            return true;
-        } catch {
-            return false;
-        }
     }
 }

@@ -9,15 +9,6 @@ import * as azureStorage from "azure-storage";
 import { ISubscriptionContext } from "vscode-azureextensionui";
 import { StorageAccountWrapper } from "../utils/storageWrappers";
 
-export interface IStorageRoot extends ISubscriptionContext {
-    storageAccount: StorageAccountWrapper;
-    createBlobServiceClient(): azureStorageBlob.BlobServiceClient;
-    createFileService(): azureStorage.FileService;
-    createShareServiceClient(): azureStorageShare.ShareServiceClient;
-    createQueueService(): azureStorage.QueueService;
-    createTableService(): azureStorage.TableService;
-}
-
 export interface IAttachedStorageRoot {
     storageAccount: StorageAccountWrapper;
     createBlobServiceClient(): azureStorageBlob.BlobServiceClient;
@@ -26,3 +17,5 @@ export interface IAttachedStorageRoot {
     createQueueService(): azureStorage.QueueService;
     createTableService(): azureStorage.TableService;
 }
+
+export interface IStorageRoot extends ISubscriptionContext, IAttachedStorageRoot { }

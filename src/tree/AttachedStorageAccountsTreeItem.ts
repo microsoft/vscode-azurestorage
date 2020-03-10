@@ -8,7 +8,7 @@ import { StorageAccount } from 'azure-arm-storage/lib/models';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem } from "vscode-azureextensionui";
+import { AzExtParentTreeItem, AzExtTreeItem } from "vscode-azureextensionui";
 import { getResourcesPath } from '../constants';
 import { ext } from '../extensionVariables';
 import { KeyTar, tryGetKeyTar } from '../utils/keytar';
@@ -58,31 +58,15 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
             this._attachedAccounts = undefined;
         }
 
-        const attachedAccounts: AttachedStorageAccountTreeItem[] = await this.getAttachedAccounts();
-
-        if (attachedAccounts.length === 0) {
-            return [new GenericTreeItem(this, {
-                contextValue: 'azureStorageAttachAccount',
-                label: 'Attach Storage Account...',
-                commandId: 'azureStorage.attachStorageAccount',
-                includeInTreeItemPicker: false
-            })];
-        }
-
-        return attachedAccounts;
+        return await this.getAttachedAccounts();
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
         return contextValue === (AttachedStorageAccountTreeItem.contextValue);
     }
 
-    public async attachEmulator(): Promise<void> {
-        await this.attachAccount(await this.createTreeItem(AttachedStorageAccountsTreeItem.emulatorConnectionString, this._emulatorAccountName));
-        await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
-    }
-
     public async attachWithConnectionString(): Promise<void> {
-        const connectionString = await vscode.window.showInputBox({
+        const connectionString = await ext.ui.showInputBox({
             prompt: localize('enterConnectionString', 'Enter the connection string for your storage account'),
             ignoreFocusOut: true,
             validateInput: (value: string): string | undefined => this.validateConnectionString(value)
@@ -104,16 +88,17 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
     }
 
     public async detach(treeItem: AttachedStorageAccountTreeItem): Promise<void> {
+        if (treeItem.storageAccount.name === this._emulatorAccountName) {
+            throw new Error(localize('cannotDetachEmulatedStorageAccount', 'Cannot detach emulated storage account.'));
+        }
+
         const attachedAccounts: AttachedStorageAccountTreeItem[] = await this.getAttachedAccounts();
 
         const index = attachedAccounts.findIndex((account) => account.fullId === treeItem.fullId);
         if (index !== -1) {
             attachedAccounts.splice(index, 1);
             if (this._keytar) {
-                if (treeItem.storageAccount.name !== this._emulatorAccountName) {
-                    await this._keytar.deletePassword(this._serviceName, treeItem.fullId);
-                }
-
+                await this._keytar.deletePassword(this._serviceName, treeItem.fullId);
                 await this.persistIds(attachedAccounts);
             }
         }
@@ -142,9 +127,8 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
 
             if (this._keytar && treeItem.storageAccount.name !== this._emulatorAccountName) {
                 await this._keytar.setPassword(this._serviceName, treeItem.fullId, await treeItem.getConnectionString());
+                await this.persistIds(attachedAccounts);
             }
-
-            await this.persistIds(attachedAccounts);
         }
     }
 
@@ -156,16 +140,12 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         if (value && this._keytar) {
             const accounts: IPersistedAccount[] = <IPersistedAccount[]>JSON.parse(value);
             await Promise.all(accounts.map(async account => {
-                if (account.name === this._emulatorAccountName) {
-                    connectionString = AttachedStorageAccountsTreeItem.emulatorConnectionString;
-                } else {
-                    connectionString = <string>(this._keytar && await this._keytar.getPassword(this._serviceName, account.fullId));
-                }
-
+                connectionString = <string>(this._keytar && await this._keytar.getPassword(this._serviceName, account.fullId));
                 persistedAccounts.push(await this.createTreeItem(connectionString, account.name));
             }));
         }
 
+        persistedAccounts.push(await this.createTreeItem(AttachedStorageAccountsTreeItem.emulatorConnectionString, this._emulatorAccountName));
         return persistedAccounts;
     }
 
@@ -185,12 +165,16 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
     }
 
     private async persistIds(attachedAccounts: AttachedStorageAccountTreeItem[]): Promise<void> {
-        const value: IPersistedAccount[] = attachedAccounts.map((treeItem: AttachedStorageAccountTreeItem) => {
-            return <IPersistedAccount>{
-                fullId: treeItem.fullId,
-                name: treeItem.storageAccount.name,
-            };
-        });
+        let value: IPersistedAccount[] = [];
+        for (let treeItem of attachedAccounts) {
+            if (treeItem.storageAccount.name !== this._emulatorAccountName) {
+                value.push(<IPersistedAccount>{
+                    fullId: treeItem.fullId,
+                    name: treeItem.storageAccount.name,
+                });
+            }
+        }
+
         await ext.context.globalState.update(this._serviceName, JSON.stringify(value));
     }
 

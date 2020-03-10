@@ -29,6 +29,7 @@ export async function selectStorageAccountTreeItemForCommand(
     //   a blob container treeItem
 
     if (treeItem?.parent?.parent instanceof AttachedStorageAccountTreeItem) {
+        // https://github.com/microsoft/vscode-azurestorage/issues/634
         throw new Error(localize('staticWebsiteCommandsNotSupportedForAttachedAccounts', 'Static website commands are not supported for attached accounts.'));
     }
 

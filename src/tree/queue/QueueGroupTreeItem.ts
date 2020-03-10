@@ -9,6 +9,8 @@ import { ProgressLocation, Uri, window } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
+import { localize } from "../../utils/localize";
+import { taskResolvesBeforeTimeout } from "../../utils/taskUtils";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -26,25 +28,37 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     };
 
     public get description(): string {
-        return this.active ? '' : 'stopped';
+        return this.isEmulated && !this.active ? 'stopped' : '';
     }
 
     public get contextValue(): string {
-        return `${QueueGroupTreeItem.contextValue}${this.active ? '' : 'Stopped'}`;
+        return `${QueueGroupTreeItem.contextValue}${this.isEmulated && !this.active ? 'Stopped' : ''}`;
     }
 
     public constructor(
         parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem,
-        public active: boolean = true) {
+        public active: boolean = true,
+        public isEmulated: boolean = false) {
         super(parent);
     }
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
-        if (clearCache) {
-            this._continuationToken = undefined;
-        }
+        if (await this.isActive()) {
+            if (clearCache) {
+                this._continuationToken = undefined;
+            }
 
-        if (!this.active) {
+            // currentToken argument typed incorrectly in SDK
+            let containers = await this.listQueues(<azureStorage.common.ContinuationToken>this._continuationToken);
+            let { entries, continuationToken } = containers;
+            this._continuationToken = continuationToken;
+
+            return entries.map((queue: azureStorage.QueueService.QueueResult) => {
+                return new QueueTreeItem(
+                    this,
+                    queue);
+            });
+        } else if (this.isEmulated) {
             return [new GenericTreeItem(this, {
                 contextValue: 'startQueueEmulator',
                 label: 'Start Queue Emulator',
@@ -53,17 +67,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             })];
         }
 
-        // currentToken argument typed incorrectly in SDK
-        let containers = await this.listQueues(<azureStorage.common.ContinuationToken>this._continuationToken);
-        let { entries, continuationToken } = containers;
-        this._continuationToken = continuationToken;
-
-        return entries.map((queue: azureStorage.QueueService.QueueResult) => {
-            return new QueueTreeItem(
-                this,
-                queue);
-        });
-
+        return [];
     }
 
     hasMoreChildrenImpl(): boolean {
@@ -85,6 +89,10 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<QueueTreeItem> {
+        if (!(await this.isActive())) {
+            throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'));
+        }
+
         const queueName = await ext.ui.showInputBox({
             placeHolder: 'Enter a name for the new queue',
             validateInput: QueueGroupTreeItem.validateQueueName
@@ -104,6 +112,18 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public isAncestorOfImpl(contextValue: string): boolean {
         return contextValue === QueueTreeItem.contextValue;
+    }
+
+    public async isActive(): Promise<boolean> {
+        const queueService: azureStorage.QueueService = this.root.createQueueService();
+        const queueTask: Promise<void> = new Promise((resolve, reject) => {
+            // tslint:disable-next-line:no-any
+            queueService.getServiceProperties({}, (err?: any) => {
+                err ? reject(err) : resolve();
+            });
+        });
+
+        return await taskResolvesBeforeTimeout(queueTask);
     }
 
     private async createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {

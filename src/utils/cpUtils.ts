@@ -5,31 +5,31 @@
 
 import * as cp from 'child_process';
 import * as os from 'os';
-import * as vscode from 'vscode';
+import { IAzExtOutputChannel } from 'vscode-azureextensionui';
 import { localize } from './localize';
 
 export namespace cpUtils {
-    export async function executeCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, childProcWrapper: IChildProcWrapper = {}, ...args: string[]): Promise<string> {
-        const result: ICommandResult = await tryExecuteCommand(outputChannel, workingDirectory, command, childProcWrapper, ...args);
+    export async function executeCommand(outputChannel: IAzExtOutputChannel | undefined, workingDirectory: string | undefined, command: string, ...args: string[]): Promise<string> {
+        const result: ICommandResult = await tryExecuteCommand(outputChannel, workingDirectory, command, ...args);
         if (result.code !== 0) {
             // We want to make sure the full error message is displayed to the user, not just the error code.
             // If outputChannel is defined, then we simply call 'outputChannel.show()' and throw a generic error telling the user to check the output window
             // If outputChannel is _not_ defined, then we include the command's output in the error itself and rely on AzureActionHandler to display it properly
             if (outputChannel) {
                 outputChannel.show();
-                throw new Error(localize('azVms.commandErrorWithOutput', 'Failed to run "{0}" command. Check output window for more details.', command));
+                throw new Error(localize('commandErrorWithOutput', 'Failed to run "{0}" command. Check output window for more details.', command));
             } else {
-                throw new Error(localize('azVms.commandError', 'Command "{0} {1}" failed with exit code "{2}":{3}{4}', command, result.formattedArgs, result.code, os.EOL, result.cmdOutputIncludingStderr));
+                throw new Error(localize('commandError', 'Command "{0} {1}" failed with exit code "{2}":{3}{4}', command, result.formattedArgs, result.code, os.EOL, result.cmdOutputIncludingStderr));
             }
         } else {
             if (outputChannel) {
-                outputChannel.appendLine(localize('finishedRunningCommand', 'Finished running command: "{0} {1}".', command, result.formattedArgs));
+                outputChannel.appendLog(localize('finishedRunningCommand', 'Finished running command: "{0} {1}".', command, result.formattedArgs));
             }
         }
         return result.cmdOutput;
     }
 
-    export async function tryExecuteCommand(outputChannel: vscode.OutputChannel | undefined, workingDirectory: string | undefined, command: string, childProcWrapper: IChildProcWrapper = {}, ...args: string[]): Promise<ICommandResult> {
+    export async function tryExecuteCommand(outputChannel: IAzExtOutputChannel | undefined, workingDirectory: string | undefined, command: string, ...args: string[]): Promise<ICommandResult> {
         return await new Promise((resolve: (res: ICommandResult) => void, reject: (e: Error) => void): void => {
             let cmdOutput: string = '';
             let cmdOutputIncludingStderr: string = '';
@@ -40,13 +40,13 @@ export namespace cpUtils {
                 cwd: workingDirectory,
                 shell: true
             };
-            childProcWrapper.childProc = cp.spawn(command, args, options);
+            const childProc: cp.ChildProcess = cp.spawn(command, args, options);
 
             if (outputChannel) {
-                outputChannel.appendLine(localize('runningCommand', 'Running command: "{0} {1}"...', command, formattedArgs));
+                outputChannel.appendLog(localize('runningCommand', 'Running command: "{0} {1}"...', command, formattedArgs));
             }
 
-            childProcWrapper.childProc.stdout.on('data', (data: string | Buffer) => {
+            childProc.stdout.on('data', (data: string | Buffer) => {
                 data = data.toString();
                 cmdOutput = cmdOutput.concat(data);
                 cmdOutputIncludingStderr = cmdOutputIncludingStderr.concat(data);
@@ -55,7 +55,7 @@ export namespace cpUtils {
                 }
             });
 
-            childProcWrapper.childProc.stderr.on('data', (data: string | Buffer) => {
+            childProc.stderr.on('data', (data: string | Buffer) => {
                 data = data.toString();
                 cmdOutputIncludingStderr = cmdOutputIncludingStderr.concat(data);
                 if (outputChannel) {
@@ -63,8 +63,8 @@ export namespace cpUtils {
                 }
             });
 
-            childProcWrapper.childProc.on('error', reject);
-            childProcWrapper.childProc.on('close', (code: number) => {
+            childProc.on('error', reject);
+            childProc.on('close', (code: number) => {
                 resolve({
                     code,
                     cmdOutput,
@@ -80,9 +80,5 @@ export namespace cpUtils {
         cmdOutput: string;
         cmdOutputIncludingStderr: string;
         formattedArgs: string;
-    }
-
-    export interface IChildProcWrapper {
-        childProc?: cp.ChildProcess;
     }
 }

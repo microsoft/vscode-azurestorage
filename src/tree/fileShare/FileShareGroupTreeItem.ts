@@ -9,6 +9,8 @@ import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
+import { localize } from '../../utils/localize';
+import { taskResolvesBeforeTimeout } from '../../utils/taskUtils';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareTreeItem } from './FileShareTreeItem';
@@ -30,23 +32,27 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     };
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<FileShareTreeItem[]> {
-        if (clearCache) {
-            this._continuationToken = undefined;
+        if (await this.isActive()) {
+            if (clearCache) {
+                this._continuationToken = undefined;
+            }
+
+            const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
+            const response: AsyncIterableIterator<azureStorageShare.ServiceListSharesSegmentResponse> = shareServiceClient.listShares().byPage({ continuationToken: this._continuationToken, maxPageSize });
+
+            // tslint:disable-next-line: no-unsafe-any
+            let responseValue: azureStorageShare.ServiceListSharesSegmentResponse = (await response.next()).value;
+
+            // tslint:disable-next-line: strict-boolean-expressions
+            const shares: azureStorageShare.ShareItem[] = responseValue.shareItems || [];
+            this._continuationToken = responseValue.continuationToken;
+
+            return shares.map((share: azureStorageShare.ShareItem) => {
+                return new FileShareTreeItem(this, share.name);
+            });
         }
 
-        const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
-        const response: AsyncIterableIterator<azureStorageShare.ServiceListSharesSegmentResponse> = shareServiceClient.listShares().byPage({ continuationToken: this._continuationToken, maxPageSize });
-
-        // tslint:disable-next-line: no-unsafe-any
-        let responseValue: azureStorageShare.ServiceListSharesSegmentResponse = (await response.next()).value;
-
-        // tslint:disable-next-line: strict-boolean-expressions
-        const shares: azureStorageShare.ShareItem[] = responseValue.shareItems || [];
-        this._continuationToken = responseValue.continuationToken;
-
-        return shares.map((share: azureStorageShare.ShareItem) => {
-            return new FileShareTreeItem(this, share.name);
-        });
+        return [];
     }
 
     hasMoreChildrenImpl(): boolean {
@@ -54,6 +60,10 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<FileShareTreeItem> {
+        if (!(await this.isActive())) {
+            throw new Error(localize('storageAccountDoesNotSupportFileShares', 'This storage account does not support file shares.'));
+        }
+
         const shareName = await ext.ui.showInputBox({
             placeHolder: 'Enter a name for the new file share',
             validateInput: FileShareGroupTreeItem.validateFileShareName
@@ -84,6 +94,16 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return contextValue === FileShareTreeItem.contextValue ||
             contextValue === DirectoryTreeItem.contextValue ||
             contextValue === FileTreeItem.contextValue;
+    }
+
+    private async isActive(): Promise<boolean> {
+        try {
+            const shareClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
+            return await taskResolvesBeforeTimeout(shareClient.getProperties());
+        } catch {
+            // If this account is emulated, creating shareClient will fail
+            return false;
+        }
     }
 
     private static validateFileShareName(name: string): string | undefined | null {

@@ -71,8 +71,6 @@
 		"onCommand:azureStorage.deleteQueue",
 		"onCommand:azureStorage.uploadToAzureStorage",
 		"onCommand:azureStorage.attachStorageAccount",
-		"onCommand:azureStorage.attachEmulator",
-		"onCommand:azureStorage.attachWithConnectionString",
 		"onCommand:azureStorage.detachStorageAccount",
 		"onCommand:azureStorage.startBlobEmulator",
 		"onCommand:azureStorage.startQueueEmulator"
@@ -312,16 +310,6 @@
 					"light": "resources/light/Connect.svg",
 					"dark": "resources/dark/Connect.svg"
 				}
-			},
-			{
-				"command": "azureStorage.attachEmulator",
-				"title": "Attach Emulator",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.attachWithConnectionString",
-				"title": "Attach with Connection String...",
-				"category": "Azure Storage"
 			},
 			{
 				"command": "azureStorage.detachStorageAccount",
@@ -658,14 +646,9 @@
 					"group": "7_modification"
 				},
 				{
-					"command": "azureStorage.attachEmulator",
+					"command": "azureStorage.attachStorageAccount",
 					"when": "view == azureStorage && viewItem == attachedStorageAccounts",
-					"group": "2_create@1"
-				},
-				{
-					"command": "azureStorage.attachWithConnectionString",
-					"when": "view == azureStorage && viewItem == attachedStorageAccounts",
-					"group": "2_create@2"
+					"group": "2_create"
 				},
 				{
 					"command": "azureStorage.detachStorageAccount",
@@ -737,10 +720,6 @@
 				},
 				{
 					"command": "azureStorage.openQueue",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.attachStorageAccount",
 					"when": "never"
 				},
 				{
