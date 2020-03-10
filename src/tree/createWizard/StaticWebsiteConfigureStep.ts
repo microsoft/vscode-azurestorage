@@ -14,9 +14,13 @@ import { IStorageAccountTreeItemCreateContext } from "./StorageAccountTreeItemCr
 
 export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageAccountTreeItemCreateContext & IStaticWebsiteConfigWizardContext> {
     public priority: number = 200;
+    public accountTreeItem: StorageAccountTreeItem | undefined;
+    private previouslyEnabled: boolean | undefined;
 
-    public constructor(public accountTreeItem?: StorageAccountTreeItem, private previouslyEnabled?: boolean) {
+    public constructor(accountTreeItem?: StorageAccountTreeItem, previouslyEnabled?: boolean) {
         super();
+        this.accountTreeItem = accountTreeItem;
+        this.previouslyEnabled = previouslyEnabled;
     }
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext & IStaticWebsiteConfigWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
