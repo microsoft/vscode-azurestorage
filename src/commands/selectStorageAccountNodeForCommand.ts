@@ -64,7 +64,7 @@ export async function selectStorageAccountTreeItemForCommand(
                 context.telemetry.properties.enableResponse = 'true';
             }
 
-            await accountTreeItem.configureStaticWebsite();
+            await accountTreeItem.configureStaticWebsite(context);
         }
     }
 
