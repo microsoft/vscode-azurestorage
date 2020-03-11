@@ -12,7 +12,6 @@ import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createBlobContainerClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
-import { taskResolvesBeforeTimeout } from "../../utils/taskUtils";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -30,35 +29,21 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     };
 
     public get description(): string {
-        return this.isEmulated && !this.active ? 'stopped' : '';
+        return this.root.isEmulated && !this.active ? 'stopped' : '';
     }
 
     public get contextValue(): string {
-        return `${BlobContainerGroupTreeItem.contextValue}${this.isEmulated && !this.active ? 'Stopped' : ''}`;
+        return `${BlobContainerGroupTreeItem.contextValue}${this.root.isEmulated && !this.active ? 'Stopped' : ''}`;
     }
 
     public constructor(
         parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem,
-        public active: boolean = true,
-        public isEmulated: boolean = false) {
+        public active: boolean = true) {
         super(parent);
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
-        if (await this.isActive()) {
-            if (clearCache) {
-                this._continuationToken = undefined;
-            }
-
-            let containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers(this._continuationToken);
-            this._continuationToken = containersResponse.continuationToken;
-
-            const result: AzExtTreeItem[] = await Promise.all(containersResponse.containerItems.map(async (container: azureStorageBlob.ContainerItem) => {
-                return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
-            }));
-
-            return result;
-        } else if (this.isEmulated) {
+        if (this.root.isEmulated && !this.active) {
             return [new GenericTreeItem(this, {
                 contextValue: 'startBlobEmulator',
                 label: 'Start Blob Emulator',
@@ -67,7 +52,25 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
             })];
         }
 
-        return [];
+        if (clearCache) {
+            this._continuationToken = undefined;
+        }
+
+        let containersResponse: azureStorageBlob.ListContainersSegmentResponse;
+        try {
+            containersResponse = await this.listContainers(this._continuationToken);
+        } catch {
+            throw new Error(localize('blobServiceNotActive', 'Blob service is not currently active.'));
+        }
+
+        this._continuationToken = containersResponse.continuationToken;
+
+        const result: AzExtTreeItem[] = await Promise.all(containersResponse.containerItems.map(async (container: azureStorageBlob.ContainerItem) => {
+            return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
+        }));
+
+        return result;
+
     }
 
     public hasMoreChildrenImpl(): boolean {
@@ -83,10 +86,6 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<BlobContainerTreeItem> {
-        if (!(await this.isActive())) {
-            throw new Error(localize('storageAccountDoesNotSupportBlobContainers', 'This storage account does not support blob containers.'));
-        }
-
         const containerName = await ext.ui.showInputBox({
             placeHolder: 'Enter a name for the new blob container',
             validateInput: BlobContainerGroupTreeItem.validateContainerName
@@ -109,7 +108,13 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
 
     public async isActive(): Promise<boolean> {
         const blobClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        return await taskResolvesBeforeTimeout(blobClient.getProperties());
+
+        try {
+            await blobClient.getProperties();
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     private async createBlobContainer(name: string): Promise<azureStorageBlob.ContainerItem> {

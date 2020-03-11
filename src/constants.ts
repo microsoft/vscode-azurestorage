@@ -16,6 +16,9 @@ export enum configurationSettingsKeys {
 
 export const extensionPrefix: string = 'azureStorage';
 
+export const emulatorAccountName: string = 'devstoreaccount1';
+export const emulatorConnectionString: string = 'UseDevelopmentStorage=true;';
+
 export function getResourcesPath(): string {
     return ext.context.asAbsolutePath('resources');
 }

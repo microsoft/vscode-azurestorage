@@ -8,59 +8,63 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { AzExtParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
-import { getResourcesPath } from '../constants';
-import { StorageAccountWrapper } from '../utils/storageWrappers';
-import { AttachedStorageAccountsTreeItem } from './AttachedStorageAccountsTreeItem';
+import { AzureParentTreeItem, AzureTreeItem, ISubscriptionContext } from 'vscode-azureextensionui';
+import { emulatorAccountName, emulatorConnectionString, getResourcesPath } from '../constants';
+import { localize } from '../utils/localize';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
-import { IAttachedStorageRoot, IStorageRoot } from './IStorageRoot';
+import { IStorageRoot } from './IStorageRoot';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
-export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
+export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
     };
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
-    public id: string = this.storageAccount.id;
-    public label: string = this.storageAccount.name;
-    public static contextValue: string = `${StorageAccountTreeItem.contextValue}-attached`;
-    public contextValue: string = AttachedStorageAccountTreeItem.contextValue;
+    public id: string = this.storageAccountName;
+    public static baseContextValue: string = `${StorageAccountTreeItem.contextValue}-attached`;
+    public static emulatedContextValue: string = `${AttachedStorageAccountTreeItem.baseContextValue}-emulated`;
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
     private readonly _queueGroupTreeItem: QueueGroupTreeItem;
     private readonly _tableGroupTreeItem: TableGroupTreeItem;
-    private _root: IAttachedStorageRoot;
+    private _root: IStorageRoot;
 
     constructor(
-        parent: AzExtParentTreeItem,
-        public readonly storageAccount: StorageAccountWrapper,
-        public readonly connectionString: string) {
+        parent: AzureParentTreeItem,
+        public readonly connectionString: string,
+        private readonly storageAccountName: string) {
         super(parent);
-        this._root = this.createRoot();
+        this._root = this.createRoot(parent.root);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
         this._queueGroupTreeItem = new QueueGroupTreeItem(this);
         this._tableGroupTreeItem = new TableGroupTreeItem(this);
     }
 
-    public get root(): IAttachedStorageRoot {
+    public get root(): IStorageRoot {
         return this._root;
+    }
+
+    public get label(): string {
+        return this.root.isEmulated ? localize('localEmulator', 'Local Emulator') : this.storageAccountName;
+    }
+
+    public get contextValue(): string {
+        return this.root.isEmulated ? AttachedStorageAccountTreeItem.emulatedContextValue : AttachedStorageAccountTreeItem.baseContextValue;
     }
 
     public async loadMoreChildrenImpl(): Promise<AzureTreeItem<IStorageRoot>[]> {
         let groupTreeItems: AzureTreeItem<IStorageRoot>[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem];
 
-        if (this.connectionString === AttachedStorageAccountsTreeItem.emulatorConnectionString) {
+        if (this.connectionString === emulatorConnectionString) {
             this._blobContainerGroupTreeItem.active = await this._blobContainerGroupTreeItem.isActive();
-            this._blobContainerGroupTreeItem.isEmulated = true;
             this._queueGroupTreeItem.active = await this._queueGroupTreeItem.isActive();
-            this._queueGroupTreeItem.isEmulated = true;
         } else {
             groupTreeItems.push(this._fileShareGroupTreeItem);
             groupTreeItems.push(this._tableGroupTreeItem);
@@ -91,24 +95,28 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
         };
     }
 
-    private createRoot(): IAttachedStorageRoot {
-        return {
-            storageAccount: this.storageAccount,
+    private createRoot(subRoot: ISubscriptionContext): IStorageRoot {
+        const serviceClientPipelineOptions = { retryOptions: { maxTries: 2 } };
+
+        return Object.assign({}, subRoot, {
+            storageAccountName: this.storageAccountName,
+            storageAccountId: this.storageAccountName,
+            isEmulated: this.storageAccountName === emulatorAccountName,
             createBlobServiceClient: () => {
-                return azureStorageBlob.BlobServiceClient.fromConnectionString(this.connectionString);
+                return azureStorageBlob.BlobServiceClient.fromConnectionString(this.connectionString, serviceClientPipelineOptions);
             },
             createFileService: () => {
-                return new azureStorage.FileService(this.connectionString).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                return new azureStorage.FileService(this.connectionString);
             },
             createShareServiceClient: () => {
-                return azureStorageShare.ShareServiceClient.fromConnectionString(this.connectionString);
+                return azureStorageShare.ShareServiceClient.fromConnectionString(this.connectionString, serviceClientPipelineOptions);
             },
             createQueueService: () => {
-                return new azureStorage.QueueService(this.connectionString).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                return new azureStorage.QueueService(this.connectionString);
             },
             createTableService: () => {
-                return new azureStorage.TableService(this.connectionString).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+                return new azureStorage.TableService(this.connectionString);
             }
-        };
+        });
     }
 }

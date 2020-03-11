@@ -26,7 +26,7 @@ import { OpenTreeItemStep } from './commands/openInFileExplorer/OpenTreeItemStep
 import { registerQueueActionHandlers } from './commands/queue/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './commands/queue/queueGroupActionHandlers';
 import { selectStorageAccountTreeItemForCommand } from './commands/selectStorageAccountNodeForCommand';
-import { EmulatorType, startEmulator, startEmulatorDebounce } from './commands/startEmulator';
+import { emulatorTimeoutMS as startEmulatorDebounce, EmulatorType, startEmulator } from './commands/startEmulator';
 import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';

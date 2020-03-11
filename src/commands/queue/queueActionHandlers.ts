@@ -14,7 +14,7 @@ export function registerQueueActionHandlers(): void {
 }
 
 async function openQueueInStorageExplorer(_context: IActionContext, treeItem: QueueTreeItem): Promise<void> {
-    let accountId = treeItem.root.storageAccount.id;
+    let accountId = treeItem.root.storageAccountId;
     const resourceType = "Azure.Queue";
     let resourceName = treeItem.queue.name;
 

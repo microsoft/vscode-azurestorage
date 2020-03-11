@@ -4,14 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { IActionContext } from 'vscode-azureextensionui';
+import { IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from "../extensionVariables";
 import { cpUtils } from '../utils/cpUtils';
 import { localize } from '../utils/localize';
 
 const azuriteExtensionId: string = 'Azurite.azurite';
-const emulatorTimeoutInSeconds: number = 3;
-export const startEmulatorDebounce: number = emulatorTimeoutInSeconds * 1000;
+export const emulatorTimeoutMS: number = 3 * 1000;
 
 export async function startEmulator(context: IActionContext, emulatorType: EmulatorType): Promise<void> {
     if (!!vscode.extensions.getExtension(azuriteExtensionId)) {
@@ -26,7 +25,7 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
         ext.outputChannel.show();
         await new Promise((resolve: () => void, reject: (error: unknown) => void) => {
             emulatorTask.catch(reject);
-            setTimeout(resolve, 3 * 1000);
+            setTimeout(resolve, emulatorTimeoutMS);
         });
 
         await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
@@ -36,8 +35,9 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
 
         const result: vscode.MessageItem = await ext.ui.showWarningMessage(message, { modal: true }, installAzurite);
         if (result === installAzurite) {
-            context.telemetry.properties.installAzuriteExtension = 'true';
+            context.telemetry.properties.cancelStep = 'installAzuriteExtension';
             await vscode.commands.executeCommand('extension.open', azuriteExtensionId);
+            throw new UserCancelledError();
         }
     }
 }

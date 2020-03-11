@@ -81,6 +81,6 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        return contextValue !== (AttachedStorageAccountTreeItem.contextValue);
+        return contextValue !== AttachedStorageAccountTreeItem.baseContextValue && contextValue !== AttachedStorageAccountTreeItem.emulatedContextValue;
     }
 }

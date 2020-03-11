@@ -11,7 +11,6 @@ import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { localize } from "../../utils/localize";
 import { nonNull } from "../../utils/storageWrappers";
-import { taskResolvesBeforeTimeout } from "../../utils/taskUtils";
 import { IStorageRoot } from "../IStorageRoot";
 import { TableTreeItem } from './TableTreeItem';
 
@@ -28,24 +27,26 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     };
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<TableTreeItem[]> {
-        if (await this.isActive()) {
-            if (clearCache) {
-                this._continuationToken = undefined;
-            }
-
-            // currentToken argument typed incorrectly in SDK
-            let containers = await this.listContainers(<azureStorage.TableService.ListTablesContinuationToken>this._continuationToken);
-            let { entries, continuationToken } = containers;
-            this._continuationToken = continuationToken;
-
-            return entries.map((table: string) => {
-                return new TableTreeItem(
-                    this,
-                    table);
-            });
+        if (clearCache) {
+            this._continuationToken = undefined;
         }
 
-        return [];
+        let tables: azureStorage.TableService.ListTablesResponse;
+        try {
+            // currentToken argument typed incorrectly in SDK
+            tables = await this.listTables(<azureStorage.TableService.ListTablesContinuationToken>this._continuationToken);
+        } catch {
+            throw new Error(localize('tableServiceNotActive', 'Table service is not currently active.'));
+        }
+
+        let { entries, continuationToken } = tables;
+        this._continuationToken = continuationToken;
+
+        return entries.map((table: string) => {
+            return new TableTreeItem(
+                this,
+                table);
+        });
     }
 
     hasMoreChildrenImpl(): boolean {
@@ -53,7 +54,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
+    listTables(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
             let tableService = this.root.createTableService();
             tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {
@@ -67,10 +68,6 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<TableTreeItem> {
-        if (!(await this.isActive())) {
-            throw new Error(localize('storageAccountDoesNotSupportTables', 'This storage account does not support tables.'));
-        }
-
         const tableName = await ext.ui.showInputBox({
             placeHolder: 'Enter a name for the new table',
             validateInput: TableGroupTreeItem.validateTableName
@@ -86,19 +83,6 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
 
         throw new UserCancelledError();
-    }
-
-    private async isActive(): Promise<boolean> {
-        const tableService: azureStorage.TableService = this.root.createTableService();
-        const tableTask: Promise<void> = new Promise((resolve, reject) => {
-            // Getting table service properties will succeed even when tables aren't supported, so attempt to list tables instead
-            // tslint:disable-next-line:no-any
-            tableService.listTablesSegmented(<azureStorage.TableService.ListTablesContinuationToken><unknown>undefined, (err?: any) => {
-                err ? reject(err) : resolve();
-            });
-        });
-
-        return await taskResolvesBeforeTimeout(tableTask);
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
