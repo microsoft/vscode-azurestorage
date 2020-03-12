@@ -19,7 +19,7 @@ import { deleteNode } from '../commonTreeCommands';
 export function registerBlobContainerActionHandlers(): void {
     registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
     registerCommand("azureStorage.editBlob", async (_context: IActionContext, treeItem: BlobTreeItem) => AzureStorageFS.showEditor(treeItem), 250);
-    registerCommand("azureStorage.deleteBlobContainer", async (context: IActionContext, treeItem?: BlobContainerTreeItem) => await deleteNode(context, BlobContainerTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.deleteBlobContainer", async (context: IActionContext, treeItem?: BlobContainerTreeItem) => await deleteNode(context, BlobContainerTreeItem.baseContextValue, treeItem));
     registerCommand("azureStorage.createBlockBlob", async (context: IActionContext, parent: BlobContainerTreeItem) => {
         const blobPath: string = await showBlobPathInputBox(parent);
         const dirNames: string[] = blobPath.includes('/') ? path.dirname(blobPath).split('/') : [];
@@ -29,7 +29,7 @@ export function registerBlobContainerActionHandlers(): void {
             let treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | undefined = await ext.tree.findTreeItem(`${dirParentTreeItem.fullId}/${dirName}`, context);
             if (!treeItem) {
                 // This directory doesn't exist yet
-                dirParentTreeItem = await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobDirectoryTreeItem.contextValue, childName: dirName });
+                dirParentTreeItem = await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobDirectoryTreeItem.baseContextValue, childName: dirName });
             } else {
                 if (treeItem instanceof BlobTreeItem) {
                     throw new Error(localize('resourceIsNotADirectory', `"${treeItem.blobPath}" is not a directory`));
@@ -39,7 +39,7 @@ export function registerBlobContainerActionHandlers(): void {
             }
         }
 
-        const childTreeItem: BlobTreeItem = <BlobTreeItem>await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobTreeItem.contextValue, childName: blobPath });
+        const childTreeItem: BlobTreeItem = <BlobTreeItem>await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobTreeItem.baseContextValue, childName: blobPath });
         await vscode.commands.executeCommand("azureStorage.editBlob", childTreeItem);
     });
     registerCommand("azureStorage.uploadBlockBlob", async (context: IActionContext, treeItem: BlobContainerTreeItem) => await treeItem.uploadBlockBlob(context));

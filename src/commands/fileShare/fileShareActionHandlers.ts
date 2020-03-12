@@ -14,10 +14,10 @@ import { deleteNode } from '../commonTreeCommands';
 export function registerFileShareActionHandlers(): void {
     registerCommand("azureStorage.openFileShare", openFileShareInStorageExplorer);
     registerCommand("azureStorage.editFile", async (_context: IActionContext, treeItem: FileTreeItem) => AzureStorageFS.showEditor(treeItem), 250);
-    registerCommand("azureStorage.deleteFileShare", async (context: IActionContext, treeItem?: FileShareTreeItem) => await deleteNode(context, FileShareTreeItem.contextValue, treeItem));
-    registerCommand("azureStorage.createDirectory", async (context: IActionContext, treeItem: FileShareTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.contextValue }));
+    registerCommand("azureStorage.deleteFileShare", async (context: IActionContext, treeItem?: FileShareTreeItem) => await deleteNode(context, FileShareTreeItem.baseContextValue, treeItem));
+    registerCommand("azureStorage.createDirectory", async (context: IActionContext, treeItem: FileShareTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.baseContextValue }));
     registerCommand("azureStorage.createFile", async (context: IActionContext, treeItem: FileShareTreeItem) => {
-        let childTreeItem = await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue });
+        let childTreeItem = await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.baseContextValue });
         await vscode.commands.executeCommand("azureStorage.editFile", childTreeItem);
     });
 }

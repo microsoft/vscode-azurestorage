@@ -37,7 +37,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
             });
     }
 
-    let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
+    let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.baseContextValue, FileShareTreeItem.baseContextValue], actionContext);
     let filePathsToUpload: string[];
     let parentDirectory: string;
     let destinationName: string;

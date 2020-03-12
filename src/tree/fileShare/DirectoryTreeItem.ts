@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { MessageItem, Uri, window } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath } from "../../constants";
+import { attachedSuffix, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
@@ -29,8 +29,7 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     private _continuationToken: string | undefined;
     public label: string = this.directoryName;
-    public static contextValue: string = 'azureFileShareDirectory';
-    public contextValue: string = DirectoryTreeItem.contextValue;
+    public static baseContextValue: string = 'azureFileShareDirectory';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'folder.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'folder.svg')
@@ -38,6 +37,10 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     private get fullPath(): string {
         return path.posix.join(this.parentPath, this.directoryName);
+    }
+
+    public get contextValue(): string {
+        return `${DirectoryTreeItem.baseContextValue}${this.root.isAttached ? attachedSuffix : ''}`;
     }
 
     hasMoreChildrenImpl(): boolean {
@@ -72,7 +75,7 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {
         let child: AzExtTreeItem;
-        if (context.childType === FileTreeItem.contextValue) {
+        if (context.childType === FileTreeItem.baseContextValue) {
             child = await askAndCreateEmptyTextFile(this, this.fullPath, this.shareName, context);
         } else {
             child = await askAndCreateChildDirectory(this, this.fullPath, this.shareName, context);

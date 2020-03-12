@@ -12,7 +12,7 @@ import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath } from "../../constants";
+import { attachedSuffix, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
@@ -33,12 +33,15 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     }
 
     public label: string = this.shareName;
-    public static contextValue: string = 'azureFileShare';
-    public contextValue: string = FileShareTreeItem.contextValue;
+    public static baseContextValue: string = 'azureFileShare';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
     };
+
+    public get contextValue(): string {
+        return `${FileShareTreeItem.baseContextValue}${this.root.isAttached ? attachedSuffix : ''}`;
+    }
 
     hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
@@ -49,14 +52,17 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
         if (clearCache) {
             this._continuationToken = undefined;
-            const ti = new GenericTreeItem(this, {
-                label: this._openInFileExplorerString,
-                commandId: 'azureStorage.openInFileExplorer',
-                contextValue: 'openInFileExplorer'
-            });
 
-            ti.commandArgs = [this];
-            result.push(ti);
+            if (!this.root.isAttached) {
+                const ti = new GenericTreeItem(this, {
+                    label: this._openInFileExplorerString,
+                    commandId: 'azureStorage.openInFileExplorer',
+                    contextValue: 'openInFileExplorer'
+                });
+
+                ti.commandArgs = [this];
+                result.push(ti);
+            }
         }
 
         let { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory('', this.shareName, this.root, this._continuationToken);
@@ -101,7 +107,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {
         let child: AzExtTreeItem;
-        if (context.childType === FileTreeItem.contextValue) {
+        if (context.childType === FileTreeItem.baseContextValue) {
             child = await askAndCreateEmptyTextFile(this, '', this.shareName, context);
         } else {
             child = await askAndCreateChildDirectory(this, '', this.shareName, context);

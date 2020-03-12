@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath } from "../../constants";
+import { attachedSuffix, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { IStorageRoot } from "../IStorageRoot";
@@ -16,8 +16,7 @@ import { BlobContainerTreeItem, IExistingBlobContext } from "./BlobContainerTree
 import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 
 export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
-    public static contextValue: string = 'azureBlobDirectory';
-    public contextValue: string = BlobDirectoryTreeItem.contextValue;
+    public static baseContextValue: string = 'azureBlobDirectory';
     public iconPath: { light: string | vscode.Uri; dark: string | vscode.Uri } = {
         light: path.join(getResourcesPath(), 'light', 'folder.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'folder.svg')
@@ -49,6 +48,10 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return this.dirName;
     }
 
+    public get contextValue(): string {
+        return `${BlobDirectoryTreeItem.baseContextValue}${this.root.isEmulated ? attachedSuffix : ''}`;
+    }
+
     public hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
     }
@@ -65,7 +68,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
         let child: AzExtTreeItem;
-        if (context.childType === BlobTreeItem.contextValue) {
+        if (context.childType === BlobTreeItem.baseContextValue) {
             child = await createChildAsNewBlockBlob(this, context);
         } else {
             child = new BlobDirectoryTreeItem(this, path.posix.join(this.dirPath, context.childName), this.container);

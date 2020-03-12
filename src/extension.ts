@@ -78,7 +78,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
             if (!treeItem) {
-                treeItem = <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
+                treeItem = <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.baseContextValue, FileShareTreeItem.baseContextValue], actionContext));
             }
 
             const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });

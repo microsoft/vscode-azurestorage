@@ -4,17 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
-import * as azureStorageShare from '@azure/storage-file-share';
-import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
-import { emulatorAccountName, getResourcesPath } from '../constants';
+import { attachedSuffix, emulatorAccountName, getResourcesPath } from '../constants';
 import { localize } from '../utils/localize';
-import { AttachedAccountRoot } from './AttachedStorageAccountsTreeItem';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
-import { IStorageRoot } from './IStorageRoot';
+import { AttachedStorageRoot, IStorageRoot } from './IStorageRoot';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
@@ -27,7 +24,7 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
     public id: string = this.storageAccountName;
-    public static baseContextValue: string = `${StorageAccountTreeItem.contextValue}-attached`;
+    public static baseContextValue: string = `${StorageAccountTreeItem.contextValue}${attachedSuffix}`;
     public static emulatedContextValue: string = `${AttachedStorageAccountTreeItem.baseContextValue}-emulated`;
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
@@ -41,7 +38,6 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
         public readonly connectionString: string,
         private readonly storageAccountName: string) {
         super(parent);
-        // tslint:disable-next-line: no-use-before-declare
         this._root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
@@ -95,45 +91,5 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
 
     public isAncestorOfImpl(contextValue: string): boolean {
         return contextValue !== AttachedStorageAccountTreeItem.baseContextValue || !this.root.isEmulated;
-    }
-}
-
-class AttachedStorageRoot extends AttachedAccountRoot {
-    public storageAccountName: string;
-    public isEmulated: boolean;
-
-    // tslint:disable-next-line:typedef
-    private readonly _serviceClientPipelineOptions = { retryOptions: { maxTries: 2 } };
-    private _connectionString: string;
-
-    constructor(connectionString: string, storageAccountName: string, isEmulated: boolean) {
-        super();
-        this._connectionString = connectionString;
-        this.storageAccountName = storageAccountName;
-        this.isEmulated = isEmulated;
-    }
-
-    public get storageAccountId(): string {
-        throw new Error(localize('cannotRetrieveStorageAccountIdForAttachedAccount', 'Cannot retrieve storage account id for an attached account.'));
-    }
-
-    public createBlobServiceClient(): azureStorageBlob.BlobServiceClient {
-        return azureStorageBlob.BlobServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
-    }
-
-    public createFileService(): azureStorage.FileService {
-        return new azureStorage.FileService(this._connectionString);
-    }
-
-    public createShareServiceClient(): azureStorageShare.ShareServiceClient {
-        return azureStorageShare.ShareServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
-    }
-
-    public createQueueService(): azureStorage.QueueService {
-        return new azureStorage.QueueService(this._connectionString);
-    }
-
-    public createTableService(): azureStorage.TableService {
-        return new azureStorage.TableService(this._connectionString);
     }
 }

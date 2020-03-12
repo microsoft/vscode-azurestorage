@@ -7,7 +7,7 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
-import { getResourcesPath, maxPageSize } from "../../constants";
+import { attachedSuffix, getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { localize } from '../../utils/localize';
 import { IStorageRoot } from "../IStorageRoot";
@@ -23,12 +23,15 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public label: string = "File Shares";
     public readonly childTypeLabel: string = "File Share";
-    public static contextValue: string = 'azureFileShareGroup';
-    public contextValue: string = FileShareGroupTreeItem.contextValue;
+    public static baseContextValue: string = 'azureFileShareGroup';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
     };
+
+    public get contextValue(): string {
+        return `${FileShareGroupTreeItem.baseContextValue}${this.root.isAttached ? attachedSuffix : ''}`;
+    }
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<FileShareTreeItem[]> {
         if (clearCache) {
@@ -91,9 +94,9 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        return contextValue === FileShareTreeItem.contextValue ||
-            contextValue === DirectoryTreeItem.contextValue ||
-            contextValue === FileTreeItem.contextValue;
+        return contextValue === FileShareTreeItem.baseContextValue ||
+            contextValue === DirectoryTreeItem.baseContextValue ||
+            contextValue === FileTreeItem.baseContextValue;
     }
 
     private static validateFileShareName(name: string): string | undefined | null {

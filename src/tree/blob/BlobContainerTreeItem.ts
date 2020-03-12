@@ -12,7 +12,7 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
-import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
+import { attachedSuffix, getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
@@ -67,9 +67,12 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         };
     }
 
+    public get contextValue(): string {
+        return `${BlobContainerTreeItem.baseContextValue}${this.root.isAttached ? attachedSuffix : ''}`;
+    }
+
     public label: string = this.container.name;
-    public static contextValue: string = 'azureBlobContainer';
-    public contextValue: string = BlobContainerTreeItem.contextValue;
+    public static baseContextValue: string = 'azureBlobContainer';
 
     public hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
@@ -79,14 +82,17 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const result: AzExtTreeItem[] = [];
         if (clearCache) {
             this._continuationToken = undefined;
-            const ti = new GenericTreeItem(this, {
-                label: this._openInFileExplorerString,
-                commandId: 'azureStorage.openInFileExplorer',
-                contextValue: 'openInFileExplorer'
-            });
 
-            ti.commandArgs = [this];
-            result.push(ti);
+            if (!this.root.isAttached) {
+                const ti = new GenericTreeItem(this, {
+                    label: this._openInFileExplorerString,
+                    commandId: 'azureStorage.openInFileExplorer',
+                    contextValue: 'openInFileExplorer'
+                });
+
+                ti.commandArgs = [this];
+                result.push(ti);
+            }
         }
 
         let { children, continuationToken } = await loadMoreBlobChildren(this, this._continuationToken);
@@ -154,7 +160,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             context.showCreatingTreeItem(context.blobPath);
             await this.uploadLocalFile(context.filePath, context.blobPath);
             child = new BlobTreeItem(this, context.blobPath, this.container);
-        } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
+        } else if (context.childName && context.childType === BlobDirectoryTreeItem.baseContextValue) {
             child = new BlobDirectoryTreeItem(this, context.childName, this.container);
         } else {
             child = await createChildAsNewBlockBlob(this, context);

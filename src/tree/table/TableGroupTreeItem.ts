@@ -90,7 +90,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        return contextValue === TableTreeItem.contextValue;
+        return contextValue === TableTreeItem.baseContextValue;
     }
 
     private async createTable(name: string): Promise<azureStorage.TableService.TableResult> {

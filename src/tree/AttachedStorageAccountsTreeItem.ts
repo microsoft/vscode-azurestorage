@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment } from 'ms-rest-azure';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, ISubscriptionContext, parseError } from "vscode-azureextensionui";
@@ -14,14 +12,15 @@ import { ext } from '../extensionVariables';
 import { KeyTar, tryGetKeyTar } from '../utils/keytar';
 import { localize } from '../utils/localize';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
-import { StorageAccountTreeItem } from './StorageAccountTreeItem';
+import { AttachedAccountRoot } from './IStorageRoot';
 
 interface IPersistedAccount {
     fullId: string;
 }
 
 export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
-    public readonly contextValue: string = 'attachedStorageAccounts';
+    public static contextValue: string = 'attachedStorageAccounts';
+    public readonly contextValue: string = AttachedStorageAccountsTreeItem.contextValue;
     public readonly id: string = 'attachedStorageAccounts';
     public readonly label: string = 'Attached Storage Accounts';
     public childTypeLabel: string = 'Account';
@@ -35,7 +34,6 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
     constructor(parent: AzExtParentTreeItem) {
         super(parent);
         this._keytar = tryGetKeyTar();
-        // tslint:disable-next-line: no-use-before-declare
         this._root = new AttachedAccountRoot();
         this._loadPersistedAccountsTask = this.loadPersistedAccounts();
     }
@@ -65,7 +63,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        return contextValue !== StorageAccountTreeItem.contextValue;
+        return !!contextValue.match(/-attached/);
     }
 
     public async attachWithConnectionString(): Promise<void> {
@@ -187,37 +185,5 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
         }
 
         return localize('connectionStringMustMatchFormat', 'Connection string must match format "DefaultEndpointsProtocol=...;AccountName=...;AccountKey=...;"');
-    }
-}
-
-export class AttachedAccountRoot implements ISubscriptionContext {
-    private _error: Error = new Error(localize('cannotRetrieveAzureSubscriptionInfoForAttachedAccount', 'Cannot retrieve Azure subscription information for an attached account.'));
-
-    public get credentials(): ServiceClientCredentials {
-        throw this._error;
-    }
-
-    public get subscriptionDisplayName(): string {
-        throw this._error;
-    }
-
-    public get subscriptionId(): string {
-        throw this._error;
-    }
-
-    public get subscriptionPath(): string {
-        throw this._error;
-    }
-
-    public get tenantId(): string {
-        throw this._error;
-    }
-
-    public get userId(): string {
-        throw this._error;
-    }
-
-    public get environment(): AzureEnvironment {
-        throw this._error;
     }
 }

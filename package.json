@@ -427,18 +427,18 @@
 				},
 				{
 					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"when": "view == azureStorage && viewItem =~ /azureStorageAccount/",
 					"group": "9_refresh"
 				},
 				{
 					"$comment": "========= azureBlobContainerGroup =========",
 					"command": "azureStorage.createBlobContainer",
-					"when": "view == azureStorage && viewItem == azureBlobContainerGroup",
+					"when": "view == azureStorage && viewItem =~ /azureBlobContainerGroup/",
 					"group": "2_create"
 				},
 				{
 					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureBlobContainerGroup",
+					"when": "view == azureStorage && viewItem =~ /azureBlobContainerGroup/",
 					"group": "9_refresh"
 				},
 				{
@@ -449,7 +449,7 @@
 				},
 				{
 					"command": "azureStorage.createBlockBlob",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
+					"when": "view == azureStorage && viewItem == azureBlobContainer || viewItem == azureBlobContainer-attached",
 					"group": "2_create@1"
 				},
 				{
@@ -484,22 +484,22 @@
 				},
 				{
 					"command": "azureStorage.deleteBlobContainer",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
+					"when": "view == azureStorage && viewItem == azureBlobContainer || viewItem == azureBlobContainer-attached",
 					"group": "7_modification"
 				},
 				{
 					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
+					"when": "view == azureStorage && viewItem == azureBlobContainer || viewItem == azureBlobContainer-attached",
 					"group": "9_refresh"
 				},
 				{
 					"$comment": "========= azureBlob =========",
 					"command": "azureStorage.deleteBlob",
-					"when": "view == azureStorage && viewItem == azureBlob"
+					"when": "view == azureStorage && viewItem == azureBlob || viewItem == azureBlob-attached"
 				},
 				{
 					"command": "azureStorage.downloadBlob",
-					"when": "view == azureStorage && viewItem == azureBlob",
+					"when": "view == azureStorage && viewItem == azureBlob || viewItem == azureBlob-attached",
 					"group": "3_download"
 				},
 				{
@@ -510,12 +510,12 @@
 				{
 					"$comment": "========= azureFileShareGroup =========",
 					"command": "azureStorage.createFileShare",
-					"when": "view == azureStorage && viewItem == azureFileShareGroup",
+					"when": "view == azureStorage && viewItem =~ /azureFileShareGroup/",
 					"group": "2_create"
 				},
 				{
 					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureFileShareGroup",
+					"when": "view == azureStorage && viewItem =~ /azureFileShareGroup/",
 					"group": "9_refresh"
 				},
 				{
@@ -526,12 +526,12 @@
 				},
 				{
 					"command": "azureStorage.createFile",
-					"when": "view == azureStorage && viewItem == azureFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureFileShare-attached",
 					"group": "2_create@1"
 				},
 				{
 					"command": "azureStorage.createDirectory",
-					"when": "view == azureStorage && viewItem == azureFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureFileShare-attached",
 					"group": "2_create@2"
 				},
 				{
@@ -551,7 +551,7 @@
 				},
 				{
 					"command": "azureStorage.deleteFileShare",
-					"when": "view == azureStorage && viewItem == azureFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureFileShare-attached",
 					"group": "7_modification"
 				},
 				{
@@ -561,7 +561,7 @@
 				},
 				{
 					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureFileShare",
+					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureFileShare-attached",
 					"group": "9_refresh"
 				},
 				{
@@ -572,18 +572,18 @@
 				},
 				{
 					"command": "azureStorage.deleteFile",
-					"when": "view == azureStorage && viewItem == azureFile",
+					"when": "view == azureStorage && viewItem == azureFile || viewItem == azureFile-attached",
 					"group": "7_modification"
 				},
 				{
 					"$comment": "========= azureFileShareDirectory =========",
 					"command": "azureStorage.createFile",
-					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
+					"when": "view == azureStorage && viewItem =~ /azureFileShareDirectory/",
 					"group": "2_create@1"
 				},
 				{
 					"command": "azureStorage.createSubdirectory",
-					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
+					"when": "view == azureStorage && viewItem =~ /azureFileShareDirectory/",
 					"group": "2_create@2"
 				},
 				{
@@ -593,12 +593,12 @@
 				},
 				{
 					"command": "azureStorage.deleteDirectory",
-					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
+					"when": "view == azureStorage && viewItem =~ /azureFileShareDirectory/",
 					"group": "7_modification"
 				},
 				{
 					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
+					"when": "view == azureStorage && viewItem =~ /azureFileShareDirectory/",
 					"group": "9_refresh"
 				},
 				{
@@ -620,7 +620,7 @@
 				},
 				{
 					"command": "azureStorage.deleteQueue",
-					"when": "view == azureStorage && viewItem == azureQueue",
+					"when": "view == azureStorage && viewItem == azureQueue || viewItem == azureQueue-attached",
 					"group": "7_modification"
 				},
 				{
@@ -642,7 +642,7 @@
 				},
 				{
 					"command": "azureStorage.deleteTable",
-					"when": "view == azureStorage && viewItem == azureTable",
+					"when": "view == azureStorage && viewItem == azureTable || viewItem == azureTable-attached",
 					"group": "7_modification"
 				},
 				{

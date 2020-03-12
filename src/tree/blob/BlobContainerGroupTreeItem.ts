@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
-import { getResourcesPath, maxPageSize } from "../../constants";
+import { attachedSuffix, getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createBlobContainerClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
@@ -23,7 +23,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     public label: string = "Blob Containers";
     public readonly childTypeLabel: string = "Blob Container";
     public static contextValue: string = 'azureBlobContainerGroup';
-    public contextValue: string = BlobContainerGroupTreeItem.contextValue;
+    public contextValue: string = `${BlobContainerGroupTreeItem.contextValue}${this.root.isAttached ? attachedSuffix : ''}`;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
@@ -96,7 +96,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        return contextValue === BlobContainerTreeItem.contextValue;
+        return contextValue === BlobContainerTreeItem.baseContextValue;
     }
 
     private async createBlobContainer(name: string): Promise<azureStorageBlob.ContainerItem> {

@@ -9,7 +9,7 @@ import { IFileShareCreateChildContext } from '../../tree/fileShare/FileShareTree
 
 export function registerDirectoryActionHandlers(): void {
     registerCommand("azureStorage.deleteDirectory", async (context: IActionContext, treeItem: AzureParentTreeItem) => await treeItem.deleteTreeItem(context));
-    registerCommand("azureStorage.createSubdirectory", async (context: IActionContext, treeItem: AzureParentTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.contextValue }));
+    registerCommand("azureStorage.createSubdirectory", async (context: IActionContext, treeItem: AzureParentTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.baseContextValue }));
 
     // Note: azureStorage.createTextFile is registered in fileShareActionHandlers
 }

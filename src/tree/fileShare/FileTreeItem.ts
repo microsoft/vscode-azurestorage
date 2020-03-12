@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 import { MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath } from "../../constants";
+import { attachedSuffix, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createFileClient, deleteFile } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
@@ -26,14 +26,17 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     }
 
     public label: string = this.fileName;
-    public static contextValue: string = 'azureFile';
-    public contextValue: string = FileTreeItem.contextValue;
+    public static baseContextValue: string = 'azureFile';
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'document.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'document.svg')
     };
 
     public commandId: string = 'azureStorage.editFile';
+
+    public get contextValue(): string {
+        return `${FileTreeItem.baseContextValue}${this.root.isAttached ? attachedSuffix : ''}`;
+    }
 
     public async copyUrl(): Promise<void> {
         const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);

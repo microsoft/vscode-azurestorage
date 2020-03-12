@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { MessageItem, SaveDialogOptions, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath } from "../../constants";
+import { attachedSuffix, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from "../../TransferProgress";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
@@ -19,8 +19,7 @@ import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 
 export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
-    public static contextValue: string = 'azureBlob';
-    public contextValue: string = BlobTreeItem.contextValue;
+    public static baseContextValue: string = 'azureBlob';
     public commandId: string = 'azureStorage.editBlob';
 
     /**
@@ -41,6 +40,10 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
 
     public get label(): string {
         return this.blobName;
+    }
+
+    public get contextValue(): string {
+        return `${BlobTreeItem.baseContextValue}${this.root.isAttached ? attachedSuffix : ''}`;
     }
 
     public iconPath: { light: string | Uri; dark: string | Uri } = {

@@ -10,7 +10,7 @@ import { deleteNode } from '../commonTreeCommands';
 
 export function registerTableActionHandlers(): void {
     registerCommand("azureStorage.openTable", openTableInStorageExplorer);
-    registerCommand("azureStorage.deleteTable", async (context: IActionContext, treeItem?: TableTreeItem) => await deleteNode(context, TableTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.deleteTable", async (context: IActionContext, treeItem?: TableTreeItem) => await deleteNode(context, TableTreeItem.baseContextValue, treeItem));
 }
 
 async function openTableInStorageExplorer(_context: IActionContext, treeItem: TableTreeItem): Promise<void> {
