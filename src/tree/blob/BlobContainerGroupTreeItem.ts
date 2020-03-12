@@ -41,15 +41,18 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         try {
             containersResponse = await this.listContainers(this._continuationToken);
         } catch (error) {
-            if (this.root.isEmulated && parseError(error).errorType === 'ECONNREFUSED') {
+            const errorType: string = parseError(error).errorType;
+            if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
                 return [new GenericTreeItem(this, {
                     contextValue: 'startBlobEmulator',
                     label: 'Start Blob Emulator',
                     commandId: 'azureStorage.startBlobEmulator',
                     includeInTreeItemPicker: false
                 })];
-            } else {
+            } else if (errorType === 'ENOTFOUND') {
                 throw new Error(localize('storageAccountDoesNotSupportBlobs', 'This storage account does not support blobs.'));
+            } else {
+                throw error;
             }
         }
 

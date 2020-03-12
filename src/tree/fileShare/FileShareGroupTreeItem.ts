@@ -6,7 +6,7 @@
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { localize } from '../../utils/localize';
@@ -42,8 +42,12 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         try {
             // tslint:disable-next-line: no-unsafe-any
             responseValue = (await response.next()).value;
-        } catch {
-            throw new Error(localize('storageAccountDoesNotSupportFileShares', 'This storage account does not support file shares.'));
+        } catch (error) {
+            if (parseError(error).errorType === 'REQUEST_SEND_ERROR') {
+                throw new Error(localize('storageAccountDoesNotSupportFileShares', 'This storage account does not support file shares.'));
+            } else {
+                throw error;
+            }
         }
 
         // tslint:disable-next-line: strict-boolean-expressions

@@ -40,15 +40,18 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         try {
             queues = await this.listQueues(<azureStorage.common.ContinuationToken>this._continuationToken);
         } catch (error) {
-            if (this.root.isEmulated && parseError(error).errorType === 'ECONNREFUSED') {
+            const errorType: string = parseError(error).errorType;
+            if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
                 return [new GenericTreeItem(this, {
                     contextValue: 'startQueueEmulator',
                     label: 'Start Queue Emulator',
                     commandId: 'azureStorage.startQueueEmulator',
                     includeInTreeItemPicker: false
                 })];
-            } else {
+            } else if (errorType === 'ENOTFOUND') {
                 throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'));
+            } else {
+                throw error;
             }
         }
 
@@ -100,22 +103,6 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public isAncestorOfImpl(contextValue: string): boolean {
         return contextValue === QueueTreeItem.contextValue;
-    }
-
-    public async isActive(): Promise<boolean> {
-        const queueService: azureStorage.QueueService = this.root.createQueueService();
-
-        try {
-            await new Promise((resolve, reject) => {
-                // tslint:disable-next-line:no-any
-                queueService.getServiceProperties({}, (err?: any) => {
-                    err ? reject(err) : resolve();
-                });
-            });
-            return true;
-        } catch {
-            return false;
-        }
     }
 
     private async createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
