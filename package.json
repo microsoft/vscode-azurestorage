@@ -358,7 +358,7 @@
 				},
 				{
 					"command": "azureStorage.uploadToAzureStorage",
-					"when": "explorerResourceIsFolder == true",
+					"when": "isFileSystemResource == true",
 					"group": "zzzz_azurestorage@1"
 				}
 			],

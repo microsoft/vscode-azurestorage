@@ -108,7 +108,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                     mustBeWebsiteCapable: true,
                     configureWebsite: false
                 });
-            await accountTreeItem.configureStaticWebsite();
+            await accountTreeItem.configureStaticWebsite(actionContext);
         });
         registerCommand("azureStorage.disableStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
             let accountTreeItem = await selectStorageAccountTreeItemForCommand(
