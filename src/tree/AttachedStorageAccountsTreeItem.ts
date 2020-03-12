@@ -15,6 +15,7 @@ import { KeyTar, tryGetKeyTar } from '../utils/keytar';
 import { localize } from '../utils/localize';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
 import { StorageAccountTreeItem } from './StorageAccountTreeItem';
+import { SubscriptionTreeItem } from './SubscriptionTreeItem';
 
 interface IPersistedAccount {
     fullId: string;
@@ -65,7 +66,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        return contextValue !== StorageAccountTreeItem.contextValue;
+        return contextValue !== StorageAccountTreeItem.contextValue && contextValue !== SubscriptionTreeItem.contextValue;
     }
 
     public async attachWithConnectionString(): Promise<void> {
