@@ -42,5 +42,5 @@ export async function uploadFiles(
         transferProgress.reportToNotification(sourceFileIndex, notificationProgress);
     }
 
-    ext.outputChannel.appendLine(localize('finishedUpload', 'Finished upload to "{0}"', destTreeItem.label));
+    ext.outputChannel.appendLine(localize('finishedUpload', 'Uploaded to "{0}".', destTreeItem.label));
 }
