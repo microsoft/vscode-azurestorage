@@ -7,11 +7,14 @@ import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createBlobContainerClient } from '../../utils/blobUtils';
+import { localize } from "../../utils/localize";
+import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
+import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 
 export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
@@ -25,13 +28,34 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
     };
+    public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
+        super(parent);
+    }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
 
-        let containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers(this._continuationToken);
+        let containersResponse: azureStorageBlob.ListContainersSegmentResponse;
+        try {
+            containersResponse = await this.listContainers(this._continuationToken);
+        } catch (error) {
+            const errorType: string = parseError(error).errorType;
+            if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
+                return [new GenericTreeItem(this, {
+                    contextValue: 'startBlobEmulator',
+                    label: 'Start Blob Emulator',
+                    commandId: 'azureStorage.startBlobEmulator',
+                    includeInTreeItemPicker: false
+                })];
+            } else if (errorType === 'ENOTFOUND') {
+                throw new Error(localize('storageAccountDoesNotSupportBlobs', 'This storage account does not support blobs.'));
+            } else {
+                throw error;
+            }
+        }
+
         this._continuationToken = containersResponse.continuationToken;
 
         const result: AzExtTreeItem[] = await Promise.all(containersResponse.containerItems.map(async (container: azureStorageBlob.ContainerItem) => {
@@ -39,6 +63,7 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         }));
 
         return result;
+
     }
 
     public hasMoreChildrenImpl(): boolean {

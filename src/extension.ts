@@ -15,6 +15,7 @@ import { registerBlobActionHandlers } from './commands/blob/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './commands/blob/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './commands/blob/blobContainerGroupActionHandlers';
 import { createStorageAccount, createStorageAccountAdvanced } from './commands/createStorageAccount';
+import { detachStorageAccount } from './commands/detachStorageAccount';
 import { registerDirectoryActionHandlers } from './commands/fileShare/directoryActionHandlers';
 import { registerFileActionHandlers } from './commands/fileShare/fileActionHandlers';
 import { registerFileShareActionHandlers } from './commands/fileShare/fileShareActionHandlers';
@@ -25,6 +26,7 @@ import { OpenTreeItemStep } from './commands/openInFileExplorer/OpenTreeItemStep
 import { registerQueueActionHandlers } from './commands/queue/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './commands/queue/queueGroupActionHandlers';
 import { selectStorageAccountTreeItemForCommand } from './commands/selectStorageAccountNodeForCommand';
+import { emulatorTimeoutMS as startEmulatorDebounce, EmulatorType, startEmulator } from './commands/startEmulator';
 import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
@@ -132,6 +134,12 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         });
     });
     registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
+    registerCommand("azureStorage.attachStorageAccount", async () => {
+        await ext.attachedStorageAccountsTreeItem.attachWithConnectionString();
+    });
+    registerCommand('azureStorage.detachStorageAccount', detachStorageAccount);
+    registerCommand('azureStorage.startBlobEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.blob); }, startEmulatorDebounce);
+    registerCommand('azureStorage.startQueueEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.queue); }, startEmulatorDebounce);
 
     return createApiProvider([<AzureExtensionApi>{
         revealTreeItem,

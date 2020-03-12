@@ -9,6 +9,7 @@ import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
+import { localize } from "../../utils/localize";
 import { nonNull } from "../../utils/storageWrappers";
 import { IStorageRoot } from "../IStorageRoot";
 import { TableTreeItem } from './TableTreeItem';
@@ -30,9 +31,19 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             this._continuationToken = undefined;
         }
 
-        // currentToken argument typed incorrectly in SDK
-        let containers = await this.listContainers(<azureStorage.TableService.ListTablesContinuationToken>this._continuationToken);
-        let { entries, continuationToken } = containers;
+        let tables: azureStorage.TableService.ListTablesResponse;
+        try {
+            // currentToken argument typed incorrectly in SDK
+            tables = await this.listTables(<azureStorage.TableService.ListTablesContinuationToken>this._continuationToken);
+        } catch (error) {
+            if (parseError(error).errorType === 'NotImplemented') {
+                throw new Error(localize('storageAccountDoesNotSupportTables', 'This storage account does not support tables.'));
+            } else {
+                throw error;
+            }
+        }
+
+        let { entries, continuationToken } = tables;
         this._continuationToken = continuationToken;
 
         return entries.map((table: string) => {
@@ -40,7 +51,6 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 this,
                 table);
         });
-
     }
 
     hasMoreChildrenImpl(): boolean {
@@ -48,7 +58,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listContainers(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
+    listTables(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
             let tableService = this.root.createTableService();
             tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {

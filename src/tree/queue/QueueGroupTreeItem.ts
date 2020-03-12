@@ -6,10 +6,13 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
+import { localize } from "../../utils/localize";
+import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
+import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { QueueTreeItem } from './QueueTreeItem';
 
 export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
@@ -24,14 +27,35 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
     };
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<QueueTreeItem[]> {
+    public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
+        super(parent);
+    }
+
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
 
-        // currentToken argument typed incorrectly in SDK
-        let containers = await this.listQueues(<azureStorage.common.ContinuationToken>this._continuationToken);
-        let { entries, continuationToken } = containers;
+        let queues: azureStorage.QueueService.ListQueueResult;
+        try {
+            queues = await this.listQueues(<azureStorage.common.ContinuationToken>this._continuationToken);
+        } catch (error) {
+            const errorType: string = parseError(error).errorType;
+            if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
+                return [new GenericTreeItem(this, {
+                    contextValue: 'startQueueEmulator',
+                    label: 'Start Queue Emulator',
+                    commandId: 'azureStorage.startQueueEmulator',
+                    includeInTreeItemPicker: false
+                })];
+            } else if (errorType === 'ENOTFOUND') {
+                throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'));
+            } else {
+                throw error;
+            }
+        }
+
+        let { entries, continuationToken } = queues;
         this._continuationToken = continuationToken;
 
         return entries.map((queue: azureStorage.QueueService.QueueResult) => {
@@ -39,7 +63,6 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 this,
                 queue);
         });
-
     }
 
     hasMoreChildrenImpl(): boolean {

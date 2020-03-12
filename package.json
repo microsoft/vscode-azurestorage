@@ -69,7 +69,11 @@
 		"onCommand:azureStorage.deleteTable",
 		"onCommand:azureStorage.createQueue",
 		"onCommand:azureStorage.deleteQueue",
-		"onCommand:azureStorage.uploadToAzureStorage"
+		"onCommand:azureStorage.uploadToAzureStorage",
+		"onCommand:azureStorage.attachStorageAccount",
+		"onCommand:azureStorage.detachStorageAccount",
+		"onCommand:azureStorage.startBlobEmulator",
+		"onCommand:azureStorage.startQueueEmulator"
 	],
 	"main": "main",
 	"icon": "resources/storageAccount.png",
@@ -297,6 +301,30 @@
 				"command": "azureStorage.uploadToAzureStorage",
 				"title": "Upload to Azure Storage...",
 				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.attachStorageAccount",
+				"title": "Attach Storage Account...",
+				"category": "Azure Storage",
+				"icon": {
+					"light": "resources/light/Connect.svg",
+					"dark": "resources/dark/Connect.svg"
+				}
+			},
+			{
+				"command": "azureStorage.detachStorageAccount",
+				"title": "Detach Storage Account",
+				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.startBlobEmulator",
+				"title": "Start Blob Emulator",
+				"category": "Azure Storage"
+			},
+			{
+				"command": "azureStorage.startQueueEmulator",
+				"title": "Start Queue Emulator",
+				"category": "Azure Storage"
 			}
 		],
 		"menus": {
@@ -310,6 +338,11 @@
 					"command": "azureStorage.deployStaticWebsite",
 					"when": "view == azureStorage",
 					"group": "navigation@2"
+				},
+				{
+					"command": "azureStorage.attachStorageAccount",
+					"when": "view == azureStorage",
+					"group": "navigation@3"
 				},
 				{
 					"command": "azureStorage.refresh",
@@ -364,7 +397,7 @@
 				},
 				{
 					"command": "azureStorage.copyConnectionString",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
+					"when": "view == azureStorage && viewItem =~ /azureStorageAccount/",
 					"group": "5_cutcopypaste@1"
 				},
 				{
@@ -611,6 +644,21 @@
 					"command": "azureStorage.deleteTable",
 					"when": "view == azureStorage && viewItem == azureTable",
 					"group": "7_modification"
+				},
+				{
+					"command": "azureStorage.attachStorageAccount",
+					"when": "view == azureStorage && viewItem == attachedStorageAccounts",
+					"group": "2_create"
+				},
+				{
+					"command": "azureStorage.detachStorageAccount",
+					"when": "view == azureStorage && viewItem == azureStorageAccount-attached",
+					"group": "7_modification"
+				},
+				{
+					"command": "azureStorage.refresh",
+					"when": "view == azureStorage && viewItem == attachedStorageAccounts",
+					"group": "9_refresh"
 				}
 			],
 			"commandPalette": [
@@ -673,6 +721,14 @@
 				{
 					"command": "azureStorage.openQueue",
 					"when": "never"
+				},
+				{
+					"command": "azureStorage.startBlobEmulator",
+					"when": "never"
+				},
+				{
+					"command": "azureStorage.startQueueEmulator",
+					"when": "never"
 				}
 			]
 		},
@@ -722,10 +778,12 @@
 	"devDependencies": {
 		"@types/fs-extra": "=5.0.2",
 		"@types/glob": "^5.0.35",
+		"@types/keytar": "4.0.1",
 		"@types/mocha": "^5.2.5",
 		"@types/node": "^7.10.6",
 		"@types/opn": "5.1.0",
 		"@types/winreg": "1.2.30",
+		"copy-webpack-plugin": "^4.5.4",
 		"gulp": "^4.0.0",
 		"mocha": "^5.2.0",
 		"mocha-junit-reporter": "^1.18.0",

@@ -14,7 +14,7 @@ export function registerTableActionHandlers(): void {
 }
 
 async function openTableInStorageExplorer(_context: IActionContext, treeItem: TableTreeItem): Promise<void> {
-    let accountId = treeItem.root.storageAccount.id;
+    let accountId = treeItem.root.storageAccountId;
     const resourceType = "Azure.Table";
     let resourceName = treeItem.tableName;
 

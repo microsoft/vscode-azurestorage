@@ -6,9 +6,10 @@
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
+import { localize } from '../../utils/localize';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareTreeItem } from './FileShareTreeItem';
@@ -37,8 +38,17 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
         const response: AsyncIterableIterator<azureStorageShare.ServiceListSharesSegmentResponse> = shareServiceClient.listShares().byPage({ continuationToken: this._continuationToken, maxPageSize });
 
-        // tslint:disable-next-line: no-unsafe-any
-        let responseValue: azureStorageShare.ServiceListSharesSegmentResponse = (await response.next()).value;
+        let responseValue: azureStorageShare.ServiceListSharesSegmentResponse;
+        try {
+            // tslint:disable-next-line: no-unsafe-any
+            responseValue = (await response.next()).value;
+        } catch (error) {
+            if (parseError(error).errorType === 'REQUEST_SEND_ERROR') {
+                throw new Error(localize('storageAccountDoesNotSupportFileShares', 'This storage account does not support file shares.'));
+            } else {
+                throw error;
+            }
+        }
 
         // tslint:disable-next-line: strict-boolean-expressions
         const shares: azureStorageShare.ShareItem[] = responseValue.shareItems || [];

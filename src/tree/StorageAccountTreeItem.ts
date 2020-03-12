@@ -147,7 +147,10 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     private createRoot(subRoot: ISubscriptionContext): IStorageRoot {
         return Object.assign({}, subRoot, {
-            storageAccount: this.storageAccount,
+            storageAccountName: this.storageAccount.name,
+            storageAccountId: this.storageAccount.id,
+            isEmulated: false,
+            primaryEndpoints: this.storageAccount.primaryEndpoints,
             createBlobServiceClient: () => {
                 const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
                 return new azureStorageBlob.BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);

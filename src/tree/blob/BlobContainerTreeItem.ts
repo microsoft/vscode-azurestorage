@@ -262,7 +262,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     private get friendlyContainerName(): string {
-        return `${this.root.storageAccount.name}/${this.container.name}`;
+        return `${this.root.storageAccountName}/${this.container.name}`;
     }
 
     /**
@@ -293,7 +293,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 }
             }
 
-            ext.outputChannel.appendLine(`Deploying to static website ${this.root.storageAccount.name}/${this.container.name}`);
+            ext.outputChannel.appendLine(`Deploying to static website ${this.root.storageAccountName}/${this.container.name}`);
 
             // Find source files
             let filePathsWithAzureSeparator: string[] = await listFilePathsWithAzureSeparator(sourceFolderPath, '.{git,vscode}/**');
@@ -311,7 +311,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
-                throw new Error(`Could not obtain the primary web endpoint for ${this.root.storageAccount.name}`);
+                throw new Error(`Could not obtain the primary web endpoint for ${this.root.storageAccountName}`);
             }
 
             ext.outputChannel.appendLine(`Deployment to static website complete. Primary web endpoint is ${webEndpoint}`);
@@ -328,7 +328,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     public getPrimaryWebEndpoint(): string | undefined {
         // Right now only one web endpoint is supported per storage account
         // tslint:disable-next-line:strict-boolean-expressions
-        return this.root.storageAccount.primaryEndpoints && this.root.storageAccount.primaryEndpoints.web;
+        return this.root.primaryEndpoints && this.root.primaryEndpoints.web;
     }
 
     public getStorageAccountTreeItem(treeItem: AzureTreeItem): StorageAccountTreeItem {
@@ -427,7 +427,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             await Limits.askOpenInStorageExplorer(
                 context,
                 `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
-                this.root.storageAccount.id,
+                this.root.storageAccountId,
                 this.root.subscriptionId,
                 'Azure.BlobContainer',
                 this.container.name);
