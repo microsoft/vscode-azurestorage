@@ -9,9 +9,17 @@ import { AttachedStorageAccountsTreeItem } from "./AttachedStorageAccountsTreeIt
 import { SubscriptionTreeItem } from "./SubscriptionTreeItem";
 
 export class AzureAccountTreeItem extends AzureAccountTreeItemBase {
+    private _isTestAccount: boolean;
+
     public constructor(testAccount?: {}) {
         super(undefined, testAccount);
-        ext.attachedStorageAccountsTreeItem = new AttachedStorageAccountsTreeItem(this);
+
+        if (testAccount) {
+            this._isTestAccount = true;
+        } else {
+            this._isTestAccount = false;
+            ext.attachedStorageAccountsTreeItem = new AttachedStorageAccountsTreeItem(this);
+        }
     }
 
     public createSubscriptionTreeItem(root: ISubscriptionContext): SubscriptionTreeItem {
@@ -20,7 +28,11 @@ export class AzureAccountTreeItem extends AzureAccountTreeItemBase {
 
     public async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         const children: AzExtTreeItem[] = await super.loadMoreChildrenImpl(clearCache, context);
-        children.push(ext.attachedStorageAccountsTreeItem);
+
+        if (!this._isTestAccount) {
+            children.push(ext.attachedStorageAccountsTreeItem);
+        }
+
         return children;
     }
 
