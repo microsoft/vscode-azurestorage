@@ -36,7 +36,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             // currentToken argument typed incorrectly in SDK
             tables = await this.listTables(<azureStorage.TableService.ListTablesContinuationToken>this._continuationToken);
         } catch {
-            throw new Error(localize('tableServiceNotActive', 'Table service is not currently active.'));
+            throw new Error(localize('storageAccountDoesNotSupportTables', 'This storage account does not support tables.'));
         }
 
         let { entries, continuationToken } = tables;

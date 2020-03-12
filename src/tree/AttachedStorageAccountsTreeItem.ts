@@ -8,12 +8,13 @@ import { ServiceClientCredentials } from 'ms-rest';
 import { AzureEnvironment } from 'ms-rest-azure';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, ISubscriptionContext } from "vscode-azureextensionui";
+import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, ISubscriptionContext, parseError } from "vscode-azureextensionui";
 import { emulatorAccountName, emulatorConnectionString, getResourcesPath } from '../constants';
 import { ext } from '../extensionVariables';
 import { KeyTar, tryGetKeyTar } from '../utils/keytar';
 import { localize } from '../utils/localize';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
+import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 
 interface IPersistedAccount {
     fullId: string;
@@ -64,7 +65,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        return contextValue === AttachedStorageAccountTreeItem.baseContextValue || contextValue === AttachedStorageAccountTreeItem.emulatedContextValue;
+        return contextValue !== StorageAccountTreeItem.contextValue;
     }
 
     public async attachWithConnectionString(): Promise<void> {
@@ -170,8 +171,8 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
             try {
                 // Attempt to use the connection string
                 azureStorageBlob.BlobServiceClient.fromConnectionString(connectionString);
-            } catch {
-                return localize('couldNotAttachStorageAccountWithProvidedConnectionString', 'Could not attach storage account with provided connection string.');
+            } catch (error) {
+                return parseError(error).message;
             }
         }
 
@@ -189,7 +190,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
     }
 }
 
-class AttachedAccountRoot implements ISubscriptionContext {
+export class AttachedAccountRoot implements ISubscriptionContext {
     private _error: Error = new Error(localize('cannotRetrieveAzureSubscriptionInfoForAttachedAccount', 'Cannot retrieve Azure subscription information for an attached account.'));
 
     public get credentials(): ServiceClientCredentials {

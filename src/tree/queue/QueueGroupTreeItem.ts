@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { localize } from "../../utils/localize";
@@ -21,35 +21,17 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public label: string = "Queues";
     public readonly childTypeLabel: string = "Queue";
     public static contextValue: string = 'azureQueueGroup';
+    public contextValue: string = QueueGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
     };
 
-    public get description(): string {
-        return this.root.isEmulated && !this.active ? 'stopped' : '';
-    }
-
-    public get contextValue(): string {
-        return `${QueueGroupTreeItem.contextValue}${this.root.isEmulated && !this.active ? 'Stopped' : ''}`;
-    }
-
-    public constructor(
-        parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem,
-        public active: boolean = true) {
+    public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
         super(parent);
     }
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
-        if (this.root.isEmulated && !this.active) {
-            return [new GenericTreeItem(this, {
-                contextValue: 'startQueueEmulator',
-                label: 'Start Queue Emulator',
-                commandId: 'azureStorage.startQueueEmulator',
-                includeInTreeItemPicker: false
-            })];
-        }
-
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -57,8 +39,17 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         let queues: azureStorage.QueueService.ListQueueResult;
         try {
             queues = await this.listQueues(<azureStorage.common.ContinuationToken>this._continuationToken);
-        } catch {
-            throw new Error(localize('queueServiceNotActive', 'Queue service is not currently active.'));
+        } catch (error) {
+            if (this.root.isEmulated && parseError(error).errorType === 'ECONNREFUSED') {
+                return [new GenericTreeItem(this, {
+                    contextValue: 'startQueueEmulator',
+                    label: 'Start Queue Emulator',
+                    commandId: 'azureStorage.startQueueEmulator',
+                    includeInTreeItemPicker: false
+                })];
+            } else {
+                throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'));
+            }
         }
 
         let { entries, continuationToken } = queues;

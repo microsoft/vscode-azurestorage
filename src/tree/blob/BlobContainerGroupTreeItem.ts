@@ -7,7 +7,7 @@ import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createBlobContainerClient } from '../../utils/blobUtils';
@@ -23,35 +23,16 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     public label: string = "Blob Containers";
     public readonly childTypeLabel: string = "Blob Container";
     public static contextValue: string = 'azureBlobContainerGroup';
+    public contextValue: string = BlobContainerGroupTreeItem.contextValue;
     public iconPath: { light: string | Uri; dark: string | Uri } = {
         light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
         dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
     };
-
-    public get description(): string {
-        return this.root.isEmulated && !this.active ? 'stopped' : '';
-    }
-
-    public get contextValue(): string {
-        return `${BlobContainerGroupTreeItem.contextValue}${this.root.isEmulated && !this.active ? 'Stopped' : ''}`;
-    }
-
-    public constructor(
-        parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem,
-        public active: boolean = true) {
+    public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
         super(parent);
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
-        if (this.root.isEmulated && !this.active) {
-            return [new GenericTreeItem(this, {
-                contextValue: 'startBlobEmulator',
-                label: 'Start Blob Emulator',
-                commandId: 'azureStorage.startBlobEmulator',
-                includeInTreeItemPicker: false
-            })];
-        }
-
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -59,8 +40,17 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         let containersResponse: azureStorageBlob.ListContainersSegmentResponse;
         try {
             containersResponse = await this.listContainers(this._continuationToken);
-        } catch {
-            throw new Error(localize('blobServiceNotActive', 'Blob service is not currently active.'));
+        } catch (error) {
+            if (this.root.isEmulated && parseError(error).errorType === 'ECONNREFUSED') {
+                return [new GenericTreeItem(this, {
+                    contextValue: 'startBlobEmulator',
+                    label: 'Start Blob Emulator',
+                    commandId: 'azureStorage.startBlobEmulator',
+                    includeInTreeItemPicker: false
+                })];
+            } else {
+                throw new Error(localize('storageAccountDoesNotSupportBlobs', 'This storage account does not support blobs.'));
+            }
         }
 
         this._continuationToken = containersResponse.continuationToken;
@@ -104,17 +94,6 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
 
     public isAncestorOfImpl(contextValue: string): boolean {
         return contextValue === BlobContainerTreeItem.contextValue;
-    }
-
-    public async isActive(): Promise<boolean> {
-        const blobClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-
-        try {
-            await blobClient.getProperties();
-            return true;
-        } catch {
-            return false;
-        }
     }
 
     private async createBlobContainer(name: string): Promise<azureStorageBlob.ContainerItem> {

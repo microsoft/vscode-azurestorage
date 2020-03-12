@@ -43,7 +43,7 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             // tslint:disable-next-line: no-unsafe-any
             responseValue = (await response.next()).value;
         } catch {
-            throw new Error(localize('fileServiceNotActive', 'File service is not currently active.'));
+            throw new Error(localize('storageAccountDoesNotSupportFileShares', 'This storage account does not support file shares.'));
         }
 
         // tslint:disable-next-line: strict-boolean-expressions
