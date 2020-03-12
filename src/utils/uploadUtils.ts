@@ -11,6 +11,7 @@ import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { throwIfCanceled } from './errorUtils';
+import { localize } from './localize';
 
 export async function uploadFiles(
     destTreeItem: BlobContainerTreeItem | FileShareTreeItem,
@@ -30,7 +31,7 @@ export async function uploadFiles(
         let sourceFilePath: string = filePathsToUpload[sourceFileIndex];
         let relativeFile: string = path.relative(sourceFolder, sourceFilePath);
         let destFilePath: string = path.join(destFolder, relativeFile);
-        ext.outputChannel.appendLine(`Uploading ${sourceFilePath}...`);
+        ext.outputChannel.appendLine(localize('uploadingFile', 'Uploading "{0}" to "{1}"...', sourceFilePath, destTreeItem.label));
 
         try {
             await destTreeItem.uploadLocalFile(sourceFilePath, destFilePath, true /* suppressLogs */);
@@ -40,4 +41,6 @@ export async function uploadFiles(
 
         transferProgress.reportToNotification(sourceFileIndex, notificationProgress);
     }
+
+    ext.outputChannel.appendLine(localize('finishedUpload', 'Uploaded to "{0}".', destTreeItem.label));
 }
