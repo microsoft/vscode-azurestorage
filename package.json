@@ -2,7 +2,7 @@
 	"name": "vscode-azurestorage",
 	"displayName": "Azure Storage",
 	"description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
-	"version": "0.8.1-alpha",
+	"version": "0.9.0",
 	"publisher": "ms-azuretools",
 	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
 	"engines": {
@@ -795,7 +795,7 @@
 		"vsce": "^1.51.1",
 		"vscode": "^1.1.5",
 		"vscode-azureextensiondev": "^0.2.4",
-		"webpack": "4.28.1",
+		"webpack": "^4.42.0",
 		"webpack-cli": "^3.1.2"
 	},
 	"extensionDependencies": [
