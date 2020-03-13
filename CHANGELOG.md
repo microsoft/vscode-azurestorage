@@ -6,7 +6,7 @@ All notable changes to the "vscode-azurestorage" extension will be documented in
 - Azure Storage Emulator support
 - Attach storage accounts using connection strings
 - `Upload to Azure Storage...` command for uploading local files and folders
-- Quick action icon for the `Open in File Explorer...` command
+- Inline button for the `Open in File Explorer...` command
 
 ### Changed
 - Improved experiences for deployment and storage account creation
