@@ -14,16 +14,8 @@ import { ext } from '../extensionVariables';
 import { KeyTar, tryGetKeyTar } from '../utils/keytar';
 import { localize } from '../utils/localize';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
-import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
-import { BlobContainerTreeItem } from './blob/BlobContainerTreeItem';
-import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
-import { FileShareTreeItem } from './fileShare/FileShareTreeItem';
-import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
-import { QueueTreeItem } from './queue/QueueTreeItem';
 import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 import { SubscriptionTreeItem } from './SubscriptionTreeItem';
-import { TableGroupTreeItem } from './table/TableGroupTreeItem';
-import { TableTreeItem } from './table/TableTreeItem';
 
 interface IPersistedAccount {
     fullId: string;
@@ -74,16 +66,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
-        return contextValue !== StorageAccountTreeItem.contextValue &&
-            contextValue !== SubscriptionTreeItem.contextValue &&
-            contextValue !== BlobContainerGroupTreeItem.contextValue &&
-            contextValue !== FileShareGroupTreeItem.contextValue &&
-            contextValue !== QueueGroupTreeItem.contextValue &&
-            contextValue !== TableGroupTreeItem.contextValue &&
-            contextValue !== BlobContainerTreeItem.contextValue &&
-            contextValue !== FileShareTreeItem.contextValue &&
-            contextValue !== QueueTreeItem.contextValue &&
-            contextValue !== TableTreeItem.contextValue;
+        return contextValue !== StorageAccountTreeItem.contextValue && contextValue !== SubscriptionTreeItem.contextValue;
     }
 
     public async attachWithConnectionString(): Promise<void> {
