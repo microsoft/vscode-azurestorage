@@ -32,6 +32,9 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     // Table name cannot begin with a digit
     const tableName: string = 'f' + `${getRandomHexString()}`;
 
+    // https://stackoverflow.com/questions/406230/regular-expression-to-match-a-line-that-doesnt-contain-a-word
+    const attachedRegex: RegExp = /^((?!Attached).)*$/;
+
     suiteSetup(async function (this: IHookCallbackContext): Promise<void> {
         if (!longRunningTestsEnabled) {
             this.skip();
@@ -92,7 +95,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("createBlobContainer", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([resourceName, containerName], async () => {
+        await testUserInput.runWithInputs([attachedRegex, resourceName, containerName], async () => {
             await vscode.commands.executeCommand('azureStorage.createBlobContainer');
         });
         const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName);
@@ -101,7 +104,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("deleteBlobContainer", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([resourceName, containerName, DialogResponses.deleteResponse.title], async () => {
+        await testUserInput.runWithInputs([attachedRegex, resourceName, containerName, DialogResponses.deleteResponse.title], async () => {
             await vscode.commands.executeCommand('azureStorage.deleteBlobContainer');
         });
         const primaryKey: string = await getPrimaryKey();
@@ -113,7 +116,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("copyConnectionString and createFileShare", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([resourceName, shareName, '5120'], async () => {
+        await testUserInput.runWithInputs([attachedRegex, resourceName, shareName, '5120'], async () => {
             await vscode.commands.executeCommand('azureStorage.createFileShare');
         });
         const shareClient: azureStorageShare.ShareClient = await createShareClient(resourceName, shareName);
@@ -123,7 +126,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("deleteFileShare", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([resourceName, shareName, DialogResponses.deleteResponse.title], async () => {
+        await testUserInput.runWithInputs([attachedRegex, resourceName, shareName, DialogResponses.deleteResponse.title], async () => {
             await vscode.commands.executeCommand('azureStorage.deleteFileShare');
         });
         const shareClient: azureStorageShare.ShareClient = await createShareClient(resourceName, shareName);
@@ -133,7 +136,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("createQueue", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([resourceName, queueName], async () => {
+        await testUserInput.runWithInputs([attachedRegex, resourceName, queueName], async () => {
             await vscode.commands.executeCommand('azureStorage.createQueue');
         });
         const connectionString: string = await getConnectionString(resourceName);
@@ -144,7 +147,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("deleteQueue", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([resourceName, queueName, DialogResponses.deleteResponse.title], async () => {
+        await testUserInput.runWithInputs([attachedRegex, resourceName, queueName, DialogResponses.deleteResponse.title], async () => {
             await vscode.commands.executeCommand('azureStorage.deleteQueue');
         });
         const connectionString: string = await getConnectionString(resourceName);
@@ -155,7 +158,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
 
     test("createTable", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([resourceName, tableName], async () => {
+        await testUserInput.runWithInputs([attachedRegex, resourceName, tableName], async () => {
             await vscode.commands.executeCommand('azureStorage.createTable');
         });
         const connectionString: string = await getConnectionString(resourceName);
@@ -170,7 +173,7 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         const tableService: TableService = createTableService(connectionString);
         let createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
         assert.ok(createdTable.exists);
-        await testUserInput.runWithInputs([resourceName, tableName, DialogResponses.deleteResponse.title], async () => {
+        await testUserInput.runWithInputs([attachedRegex, resourceName, tableName, DialogResponses.deleteResponse.title], async () => {
             await vscode.commands.executeCommand('azureStorage.deleteTable');
         });
         createdTable = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
