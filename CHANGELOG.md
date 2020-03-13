@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
-## 0.9.0 - 2020-03-12
+## 0.9.0 - 2020-03-13
 ### Added
 - Azure Storage Emulator support
 - Attach storage accounts using connection strings
