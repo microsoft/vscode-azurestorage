@@ -5,31 +5,28 @@
 
 "use strict";
 
-// This is the extension entrypoint, which imports extension.js, the actual extension code.
+// This is the extension entrypoint module, which imports extension.bundle.js, the actual extension code.
 //
-// This is in a separate file so we can properly measure extension.js load time.
+// This is in a separate file so we can properly measure extension.bundle.js load time.
 
 let perfStats = {
     loadStartTime: Date.now(),
     loadEndTime: undefined
 };
 
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
+Object.defineProperty(exports, "__esModule", { value: true });
 
-const ignoreBundle = !/^(false|0)?$/i.test(process.env.AZCODE_STORAGE_IGNORE_BUNDLE || '');
-const extensionPath = ignoreBundle ? "./out/src/extension" : "./dist/extension.bundle";
-const extension = require(extensionPath);
+const extension = require('./out/src/extension');
 
 async function activate(ctx) {
-    return await extension.activateInternal(ctx, perfStats);
+    return await extension.activateInternal(ctx, perfStats, true /* ignoreBundle */);
 }
 
 async function deactivate(ctx) {
-    return await extension.deactivateInternal();
+    return await extension.deactivateInternal(ctx, perfStats);
 }
 
+// Export as entrypoints for vscode
 exports.activate = activate;
 exports.deactivate = deactivate;
 
