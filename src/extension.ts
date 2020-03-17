@@ -39,10 +39,9 @@ import { ICopyUrl } from './tree/ICopyUrl';
 import { StorageAccountTreeItem } from './tree/StorageAccountTreeItem';
 
 // tslint:disable-next-line:max-func-body-length
-export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }): Promise<AzureExtensionApiProvider> {
-    console.log('Extension "Azure Storage Tools" is now active.');
-
+export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
     ext.context = context;
+    ext.ignoreBundle = ignoreBundle;
     ext.reporter = createTelemetryReporter(context);
     ext.ui = new AzureUserInput(context.globalState);
     ext.outputChannel = createAzExtOutputChannel('Azure Storage', ext.prefix);

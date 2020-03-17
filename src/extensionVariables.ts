@@ -17,8 +17,7 @@ export namespace ext {
     export let outputChannel: IAzExtOutputChannel;
     export let ui: IAzureUserInput;
     export let reporter: ITelemetryReporter;
-    // tslint:disable-next-line: strict-boolean-expressions
-    export let ignoreBundle: boolean = !/^(false|0)?$/i.test(process.env.AZCODE_STORAGE_IGNORE_BUNDLE || '');
+    export let ignoreBundle: boolean | undefined;
 
     export let tree: AzExtTreeDataProvider;
     export let treeView: TreeView<AzExtTreeItem>;
