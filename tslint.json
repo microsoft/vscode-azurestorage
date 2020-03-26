@@ -100,5 +100,10 @@
         ],
         "radix": false,
         "no-use-before-declare": false
+    },
+    "linterOptions": {
+        "exclude": [
+            "**/*.d.ts"
+        ]
     }
 }
