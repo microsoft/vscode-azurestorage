@@ -27,3 +27,4 @@ webpack.config*
 stats.json
 *.vsix
 *.zip
+testWorkspace/**

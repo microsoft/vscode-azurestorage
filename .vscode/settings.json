@@ -1,4 +1,9 @@
 {
+    "editor.codeActionsOnSave": {
+        "source.fixAll.tslint": true,
+        "source.organizeImports": true
+    },
+    "editor.detectIndentation": false,
     "editor.formatOnSave": true,
     "editor.insertSpaces": true,
     "editor.tabSize": 4,
@@ -9,10 +14,9 @@
         "**/node_modules": true,
         ".vscode-test": true
     },
-    "editor.codeActionsOnSave": {
-        "source.fixAll.tslint": true,
-    },
     "tslint.ignoreDefinitionFiles": true,
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "typescript.tsdk": "node_modules/typescript/lib",
     "cSpell.words": [
         "azureextensionui",
         "azurestorage",
@@ -21,17 +25,5 @@
         "norequired",
         "opencode",
         "repo"
-    ],
-    "files.exclude": {
-        "**/.git": true,
-        "**/.svn": true,
-        "**/.hg": true,
-        "**/CVS": true,
-        "**/.DS_Store": true,
-        ".vscode-test/**": true,
-        "out": false, // set this to true to hide the "out" folder with the compiled JS files
-        ".vscode-test": true
-    },
-    "typescript.preferences.importModuleSpecifier": "relative",
-    "typescript.tsdk": "node_modules/typescript/lib"
+    ]
 }

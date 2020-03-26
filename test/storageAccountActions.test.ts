@@ -10,14 +10,13 @@ import { ResourceManagementClient } from 'azure-arm-resource';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
 import { createQueueService, createTableService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
-import { IHookCallbackContext, ISuiteCallbackContext } from 'mocha';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
 import { AzExtTreeDataProvider, AzureAccountTreeItem, createAzureClient, DialogResponses, ext, getRandomHexString } from '../extension.bundle';
 import { longRunningTestsEnabled, testUserInput } from './global.test';
 
 // tslint:disable-next-line: max-func-body-length
-suite('Storage Account Actions', async function (this: ISuiteCallbackContext): Promise<void> {
+suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<void> {
     this.timeout(1200 * 1000);
     const resourceGroupsToDelete: string[] = [];
     const testAccount: TestAzureAccount = new TestAzureAccount(vscode);
@@ -35,10 +34,11 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
     // https://stackoverflow.com/questions/406230/regular-expression-to-match-a-line-that-doesnt-contain-a-word
     const attachedRegex: RegExp = /^((?!Attached).)*$/;
 
-    suiteSetup(async function (this: IHookCallbackContext): Promise<void> {
+    suiteSetup(async function (this: Mocha.Context): Promise<void> {
         if (!longRunningTestsEnabled) {
             this.skip();
         }
+
         this.timeout(120 * 1000);
         await testAccount.signIn();
 
@@ -47,23 +47,21 @@ suite('Storage Account Actions', async function (this: ISuiteCallbackContext): P
         client = createAzureClient(testAccount.getSubscriptionContext(), StorageManagementClient);
     });
 
-    suiteTeardown(async function (this: IHookCallbackContext): Promise<void> {
-        if (!longRunningTestsEnabled) {
-            this.skip();
+    suiteTeardown(async () => {
+        if (longRunningTestsEnabled) {
+            const resourceClient = createAzureClient(testAccount.getSubscriptionContext(), ResourceManagementClient);
+            await Promise.all(resourceGroupsToDelete.map(async resourceGroup => {
+                if (await resourceClient.resourceGroups.checkExistence(resourceGroup)) {
+                    console.log(`Deleting resource group "${resourceGroup}"...`);
+                    await resourceClient.resourceGroups.deleteMethod(resourceGroup);
+                    console.log(`Resource group "${resourceGroup}" deleted.`);
+                } else {
+                    // If the test failed, the resource group might not actually exist
+                    console.log(`Ignoring resource group "${resourceGroup}" because it does not exist.`);
+                }
+            }));
+            ext.azureAccountTreeItem.dispose();
         }
-
-        const resourceClient = createAzureClient(testAccount.getSubscriptionContext(), ResourceManagementClient);
-        await Promise.all(resourceGroupsToDelete.map(async resourceGroup => {
-            if (await resourceClient.resourceGroups.checkExistence(resourceGroup)) {
-                console.log(`Deleting resource group "${resourceGroup}"...`);
-                await resourceClient.resourceGroups.deleteMethod(resourceGroup);
-                console.log(`Resource group "${resourceGroup}" deleted.`);
-            } else {
-                // If the test failed, the resource group might not actually exist
-                console.log(`Ignoring resource group "${resourceGroup}" because it does not exist.`);
-            }
-        }));
-        ext.azureAccountTreeItem.dispose();
     });
 
     test("createStorageAccount", async () => {

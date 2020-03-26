@@ -298,3 +298,4 @@ dist
 # Artifacts from running vscode extension tests
 .vscode-test
 test-results.xml
+testWorkspace

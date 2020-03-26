@@ -97,6 +97,8 @@
                 "keyIndex": 0,
                 "messageIndex": 1
             }
-        ]
+        ],
+        "radix": false,
+        "no-use-before-declare": false
     }
 }
