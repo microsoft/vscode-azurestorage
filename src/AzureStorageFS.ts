@@ -17,8 +17,7 @@ import { DirectoryTreeItem, IDirectoryDeleteContext } from "./tree/fileShare/Dir
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "./tree/fileShare/FileTreeItem";
 import { createBlobClient, createOrUpdateBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
-import { doesFileExist, updateFileFromText } from "./utils/fileUtils";
-import { createFileClient } from './utils/fileUtils';
+import { createFileClient, doesFileExist, updateFileFromText } from "./utils/fileUtils";
 import { localize } from "./utils/localize";
 import { nonNullValue } from "./utils/nonNull";
 import { validateBlobDirectoryName, validateFileDirectoryName } from "./utils/validateNames";
@@ -458,8 +457,8 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         let rootName = this.getRootName(uri);
         uri = this.verifyUri(uri, rootName);
 
-        const parsedQuery: { [key: string]: string | undefined } = querystring.parse<{}>(uri.query);
-        const resourceId = parsedQuery.resourceId;
+        const parsedQuery: querystring.ParsedUrlQuery = querystring.parse(uri.query);
+        const resourceId = <string>parsedQuery.resourceId;
 
         const filePath: string = uri.path.replace(rootName, '');
         let parentDirPath = path.dirname(filePath);

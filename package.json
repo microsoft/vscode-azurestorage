@@ -1,821 +1,821 @@
 {
-	"name": "vscode-azurestorage",
-	"displayName": "Azure Storage",
-	"description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
-	"version": "0.9.1-alpha",
-	"publisher": "ms-azuretools",
-	"aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-	"engines": {
-		"vscode": "^1.31.0"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-azurestorage"
-	},
-	"galleryBanner": {
-		"color": "#0072c6",
-		"theme": "dark"
-	},
-	"homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/master/README.md",
-	"license": "SEE LICENSE IN LICENSE.md",
-	"categories": [
-		"Azure"
-	],
-	"keywords": [
-		"Azure",
-		"Blob Containers",
-		"File Share",
-		"Storage Account",
-		"Static website"
-	],
-	"preview": true,
-	"activationEvents": [
-		"onView:azureStorage",
-		"onFileSystem:azurestorage",
-		"onCommand:azureStorage.openInFileExplorer",
-		"onCommand:azureStorage.deployStaticWebsite",
-		"onCommand:azureStorage.configureStaticWebsite",
-		"onCommand:azureStorage.disableStaticWebsite",
-		"onCommand:azureStorage.refresh",
-		"onCommand:azureStorage.browseStaticWebsite",
-		"onCommand:azureStorage.openInPortal",
-		"onCommand:azureStorage.selectSubscriptions",
-		"onCommand:azureStorage.copyUrl",
-		"onCommand:azureStorage.openBlobContainer",
-		"onCommand:azureStorage.openTable",
-		"onCommand:azureStorage.openFileShare",
-		"onCommand:azureStorage.openQueue",
-		"onCommand:azureStorage.openStorageAccount",
-		"onCommand:azureStorage.copyPrimaryKey",
-		"onCommand:azureStorage.copyConnectionString",
-		"onCommand:azureStorage.createBlobContainer",
-		"onCommand:azureStorage.deleteBlobContainer",
-		"onCommand:azureStorage.createBlockBlob",
-		"onCommand:azureStorage.uploadBlockBlob",
-		"onCommand:azureStorage.deleteBlob",
-		"onCommand:azureStorage.downloadBlob",
-		"onCommand:azureStorage.createFileShare",
-		"onCommand:azureStorage.deleteFileShare",
-		"onCommand:azureStorage.deleteStorageAccount",
-		"onCommand:azureStorage.createDirectory",
-		"onCommand:azureStorage.deleteDirectory",
-		"onCommand:azureStorage.createFile",
-		"onCommand:azureStorage.createGpv2Account",
-		"onCommand:azureStorage.createGpv2AccountAdvanced",
-		"onCommand:azureStorage.deleteFile",
-		"onCommand:azureStorage.createDirectory",
-		"onCommand:azureStorage.createSubdirectory",
-		"onCommand:azureStorage.createTable",
-		"onCommand:azureStorage.deleteTable",
-		"onCommand:azureStorage.createQueue",
-		"onCommand:azureStorage.deleteQueue",
-		"onCommand:azureStorage.uploadToAzureStorage",
-		"onCommand:azureStorage.attachStorageAccount",
-		"onCommand:azureStorage.detachStorageAccount",
-		"onCommand:azureStorage.startBlobEmulator",
-		"onCommand:azureStorage.startQueueEmulator"
-	],
-	"main": "main",
-	"icon": "resources/storageAccount.png",
-	"contributes": {
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "azure",
-					"title": "Azure",
-					"icon": "resources/azure.svg"
-				}
-			]
-		},
-		"views": {
-			"azure": [
-				{
-					"id": "azureStorage",
-					"name": "Storage",
-					"when": "config.azureStorage.showExplorer == true"
-				}
-			]
-		},
-		"commands": [
-			{
-				"command": "azureStorage.openInFileExplorer",
-				"title": "Open in File Explorer...",
-				"icon": {
-					"light": "resources/light/openInFileExplorer.svg",
-					"dark": "resources/dark/openInFileExplorer.svg"
-				},
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.refresh",
-				"title": "Refresh",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				},
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openInPortal",
-				"title": "Open in Portal",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.configureStaticWebsite",
-				"title": "Configure Static Website...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.disableStaticWebsite",
-				"title": "Disable Static Website",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.browseStaticWebsite",
-				"title": "Browse Static Website",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.selectSubscriptions",
-				"title": "Select Subscriptions...",
-				"icon": {
-					"light": "resources/light/filter.svg",
-					"dark": "resources/dark/filter.svg"
-				},
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.deployStaticWebsite",
-				"title": "Deploy to Static Website...",
-				"category": "Azure Storage",
-				"icon": {
-					"light": "resources/light/Deploy.svg",
-					"dark": "resources/dark/Deploy.svg"
-				}
-			},
-			{
-				"command": "azureStorage.copyUrl",
-				"title": "Copy URL",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openBlobContainer",
-				"title": "Open in Storage Explorer",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openTable",
-				"title": "Open in Storage Explorer",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openFileShare",
-				"title": "Open in Storage Explorer",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openQueue",
-				"title": "Open in Storage Explorer",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.openStorageAccount",
-				"title": "Open in Storage Explorer",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.copyPrimaryKey",
-				"title": "Copy Primary Key",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.copyConnectionString",
-				"title": "Copy Connection String",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.createBlobContainer",
-				"title": "Create Blob Container...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.deleteBlobContainer",
-				"title": "Delete Blob Container...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.createBlockBlob",
-				"title": "Create Empty Blob...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.uploadBlockBlob",
-				"title": "Upload Block Blob...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.deleteBlob",
-				"title": "Delete...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.downloadBlob",
-				"title": "Download...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.createFileShare",
-				"title": "Create File Share...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.deleteFileShare",
-				"title": "Delete File Share...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.deleteStorageAccount",
-				"title": "Delete Storage Account...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.createDirectory",
-				"title": "Create Directory...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.createSubdirectory",
-				"title": "Create Subdirectory...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.deleteDirectory",
-				"title": "Delete...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.createFile",
-				"title": "Create Empty File...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.createGpv2Account",
-				"title": "Create Storage Account...",
-				"category": "Azure Storage",
-				"icon": {
-					"light": "resources/light/createStorageAccount.svg",
-					"dark": "resources/dark/createStorageAccount.svg"
-				}
-			},
-			{
-				"command": "azureStorage.createGpv2AccountAdvanced",
-				"title": "Create Storage Account... (Advanced)",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.deleteFile",
-				"title": "Delete...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.createTable",
-				"title": "Create Table...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.deleteTable",
-				"title": "Delete Table...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.createQueue",
-				"title": "Create Queue...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.deleteQueue",
-				"title": "Delete Queue...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.uploadToAzureStorage",
-				"title": "Upload to Azure Storage...",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.attachStorageAccount",
-				"title": "Attach Storage Account...",
-				"category": "Azure Storage",
-				"icon": {
-					"light": "resources/light/Connect.svg",
-					"dark": "resources/dark/Connect.svg"
-				}
-			},
-			{
-				"command": "azureStorage.detachStorageAccount",
-				"title": "Detach Storage Account",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.startBlobEmulator",
-				"title": "Start Blob Emulator",
-				"category": "Azure Storage"
-			},
-			{
-				"command": "azureStorage.startQueueEmulator",
-				"title": "Start Queue Emulator",
-				"category": "Azure Storage"
-			}
-		],
-		"menus": {
-			"view/title": [
-				{
-					"command": "azureStorage.createGpv2Account",
-					"when": "view == azureStorage",
-					"group": "navigation@1"
-				},
-				{
-					"command": "azureStorage.deployStaticWebsite",
-					"when": "view == azureStorage",
-					"group": "navigation@2"
-				},
-				{
-					"command": "azureStorage.attachStorageAccount",
-					"when": "view == azureStorage",
-					"group": "navigation@3"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage",
-					"group": "navigation@99"
-				}
-			],
-			"explorer/context": [
-				{
-					"command": "azureStorage.deployStaticWebsite",
-					"when": "explorerResourceIsFolder == true",
-					"group": "zzz_azuretools_deploy@3"
-				},
-				{
-					"command": "azureStorage.uploadToAzureStorage",
-					"when": "isFileSystemResource == true",
-					"group": "zzzz_azurestorage@1"
-				}
-			],
-			"view/item/context": [
-				{
-					"$comment": "========= azureSubscription =========",
-					"command": "azureStorage.selectSubscriptions",
-					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
-					"group": "inline"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
-					"group": "9_refresh"
-				},
-				{
-					"$comment": "========= azureStorageAccount =========",
-					"command": "azureStorage.openStorageAccount",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "navigation@1"
-				},
-				{
-					"command": "azureStorage.openInPortal",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "navigation@2"
-				},
-				{
-					"command": "azureStorage.openInFileExplorer",
-					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureBlobContainer",
-					"group": "navigation@3"
-				},
-				{
-					"command": "azureStorage.openInFileExplorer",
-					"when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureBlobContainer",
-					"group": "inline"
-				},
-				{
-					"command": "azureStorage.copyConnectionString",
-					"when": "view == azureStorage && viewItem =~ /azureStorageAccount/",
-					"group": "5_cutcopypaste@1"
-				},
-				{
-					"command": "azureStorage.copyPrimaryKey",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "5_cutcopypaste@2"
-				},
-				{
-					"command": "azureStorage.browseStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "6_staticwebsites@1"
-				},
-				{
-					"command": "azureStorage.deployStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "6_staticwebsites@2"
-				},
-				{
-					"command": "azureStorage.configureStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "6_staticwebsites@3"
-				},
-				{
-					"command": "azureStorage.disableStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "6_staticwebsites@4"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "9_refresh"
-				},
-				{
-					"$comment": "========= azureBlobContainerGroup =========",
-					"command": "azureStorage.createBlobContainer",
-					"when": "view == azureStorage && viewItem == azureBlobContainerGroup",
-					"group": "2_create"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureBlobContainerGroup",
-					"group": "9_refresh"
-				},
-				{
-					"$comment": "========= azureBlobContainer =========",
-					"command": "azureStorage.openBlobContainer",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "navigation@1"
-				},
-				{
-					"command": "azureStorage.createBlockBlob",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "2_create@1"
-				},
-				{
-					"command": "azureStorage.uploadBlockBlob",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "2_create@2"
-				},
-				{
-					"command": "azureStorage.copyUrl",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "5_cutcopypaste"
-				},
-				{
-					"command": "azureStorage.browseStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "6_staticwebsites@1"
-				},
-				{
-					"command": "azureStorage.deployStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "6_staticwebsites@2"
-				},
-				{
-					"command": "azureStorage.configureStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "6_staticwebsites@3"
-				},
-				{
-					"command": "azureStorage.disableStaticWebsite",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "6_staticwebsites@4"
-				},
-				{
-					"command": "azureStorage.deleteBlobContainer",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "7_modification"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureBlobContainer",
-					"group": "9_refresh"
-				},
-				{
-					"$comment": "========= azureBlob =========",
-					"command": "azureStorage.deleteBlob",
-					"when": "view == azureStorage && viewItem == azureBlob"
-				},
-				{
-					"command": "azureStorage.downloadBlob",
-					"when": "view == azureStorage && viewItem == azureBlob",
-					"group": "3_download"
-				},
-				{
-					"command": "azureStorage.copyUrl",
-					"when": "view == azureStorage && viewItem == azureBlob",
-					"group": "5_cutcopypaste"
-				},
-				{
-					"$comment": "========= azureFileShareGroup =========",
-					"command": "azureStorage.createFileShare",
-					"when": "view == azureStorage && viewItem == azureFileShareGroup",
-					"group": "2_create"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureFileShareGroup",
-					"group": "9_refresh"
-				},
-				{
-					"$comment": "========= azureFileShare =========",
-					"command": "azureStorage.openFileShare",
-					"when": "view == azureStorage && viewItem == azureFileShare",
-					"group": "navigation@1"
-				},
-				{
-					"command": "azureStorage.createFile",
-					"when": "view == azureStorage && viewItem == azureFileShare",
-					"group": "2_create@1"
-				},
-				{
-					"command": "azureStorage.createDirectory",
-					"when": "view == azureStorage && viewItem == azureFileShare",
-					"group": "2_create@2"
-				},
-				{
-					"command": "azureStorage.createGpv2Account",
-					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
-					"group": "2_create@3"
-				},
-				{
-					"command": "azureStorage.createGpv2AccountAdvanced",
-					"when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
-					"group": "2_create@4"
-				},
-				{
-					"command": "azureStorage.copyUrl",
-					"when": "view == azureStorage && viewItem == azureFileShare",
-					"group": "5_cutcopypaste"
-				},
-				{
-					"command": "azureStorage.deleteFileShare",
-					"when": "view == azureStorage && viewItem == azureFileShare",
-					"group": "7_modification"
-				},
-				{
-					"command": "azureStorage.deleteStorageAccount",
-					"when": "view == azureStorage && viewItem == azureStorageAccount",
-					"group": "7_modification"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureFileShare",
-					"group": "9_refresh"
-				},
-				{
-					"$comment": "========= azureFile =========",
-					"command": "azureStorage.copyUrl",
-					"when": "view == azureStorage && viewItem == azureFile",
-					"group": "5_cutcopypaste"
-				},
-				{
-					"command": "azureStorage.deleteFile",
-					"when": "view == azureStorage && viewItem == azureFile",
-					"group": "7_modification"
-				},
-				{
-					"$comment": "========= azureFileShareDirectory =========",
-					"command": "azureStorage.createFile",
-					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
-					"group": "2_create@1"
-				},
-				{
-					"command": "azureStorage.createSubdirectory",
-					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
-					"group": "2_create@2"
-				},
-				{
-					"command": "azureStorage.copyUrl",
-					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
-					"group": "5_cutcopypaste"
-				},
-				{
-					"command": "azureStorage.deleteDirectory",
-					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
-					"group": "7_modification"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureFileShareDirectory",
-					"group": "9_refresh"
-				},
-				{
-					"$comment": "========= azureQueueGroup =========",
-					"command": "azureStorage.createQueue",
-					"when": "view == azureStorage && viewItem == azureQueueGroup",
-					"group": "2_create"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureQueueGroup",
-					"group": "9_refresh"
-				},
-				{
-					"$comment": "========= azureQueue =========",
-					"command": "azureStorage.openQueue",
-					"when": "view == azureStorage && viewItem == azureQueue",
-					"group": "navigation@1"
-				},
-				{
-					"command": "azureStorage.deleteQueue",
-					"when": "view == azureStorage && viewItem == azureQueue",
-					"group": "7_modification"
-				},
-				{
-					"$comment": "========= azureTableGroup =========",
-					"command": "azureStorage.createTable",
-					"when": "view == azureStorage && viewItem == azureTableGroup",
-					"group": "2_create"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == azureTableGroup",
-					"group": "9_refresh"
-				},
-				{
-					"$comment": "========= azureTable =========",
-					"command": "azureStorage.openTable",
-					"when": "view == azureStorage && viewItem == azureTable",
-					"group": "navigation@1"
-				},
-				{
-					"command": "azureStorage.deleteTable",
-					"when": "view == azureStorage && viewItem == azureTable",
-					"group": "7_modification"
-				},
-				{
-					"command": "azureStorage.attachStorageAccount",
-					"when": "view == azureStorage && viewItem == attachedStorageAccounts",
-					"group": "2_create"
-				},
-				{
-					"command": "azureStorage.detachStorageAccount",
-					"when": "view == azureStorage && viewItem == azureStorageAccount-attached",
-					"group": "7_modification"
-				},
-				{
-					"command": "azureStorage.refresh",
-					"when": "view == azureStorage && viewItem == attachedStorageAccounts",
-					"group": "9_refresh"
-				}
-			],
-			"commandPalette": [
-				{
-					"command": "azureStorage.selectSubscriptions",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.copyUrl",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.openBlobContainer",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.createBlockBlob",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.uploadBlockBlob",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.deleteBlob",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.downloadBlob",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.openTable",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.openFileShare",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.createDirectory",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.createSubdirectory",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.deleteDirectory",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.createFile",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.deleteFile",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.openQueue",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.startBlobEmulator",
-					"when": "never"
-				},
-				{
-					"command": "azureStorage.startQueueEmulator",
-					"when": "never"
-				}
-			]
-		},
-		"keybindings": [
-			{
-				"command": "workbench.view.extension.azure",
-				"key": "ctrl+shift+a",
-				"mac": "cmd+shift+a"
-			}
-		],
-		"configuration": {
-			"title": "Azure Storage Accounts",
-			"properties": {
-				"azureStorage.showExplorer": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show or hide the Azure Storage Explorer"
-				},
-				"azureStorage.storageExplorerLocation": {
-					"type": "string",
-					"default": "/Applications/Microsoft Azure Storage Explorer.app",
-					"description": "[Mac only] Set to \"Path/To/Microsoft Azure Storage Explorer.app\" to the location of Storage Explorer. Default is \"/Applications/Microsoft Azure Storage Explorer.app\"."
-				},
-				"azureStorage.preDeployTask": {
-					"scope": "resource",
-					"type": "string",
-					"description": "The name of the task to run before deploying."
-				}
-			}
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run webpack-prod",
-		"build": "tsc -p ./",
-		"compile": "tsc -watch -p ./",
-		"package": "vsce package",
-		"lint": "tslint --project tsconfig.json -e src/*.d.ts -t verbose",
-		"lint-fix": "tslint --project tsconfig.json -t verbose --fix",
-		"postinstall": "node ./node_modules/vscode/bin/install",
-		"pretest": "npm run build && npm run webpack",
-		"test": "gulp test",
-		"all": "npm i && npm run lint && npm test",
-		"webpack": "gulp webpack-dev",
-		"webpack-prod": "gulp webpack-prod",
-		"webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats"
-	},
-	"devDependencies": {
-		"@types/fs-extra": "=5.0.2",
-		"@types/glob": "^5.0.35",
-		"@types/keytar": "4.0.1",
-		"@types/mocha": "^5.2.5",
-		"@types/node": "^7.10.6",
-		"@types/opn": "5.1.0",
-		"@types/winreg": "1.2.30",
-		"copy-webpack-plugin": "^4.5.4",
-		"gulp": "^4.0.0",
-		"mocha": "^5.2.0",
-		"mocha-junit-reporter": "^1.18.0",
-		"mocha-multi-reporters": "^1.1.7",
-		"ts-node": "^7.0.1",
-		"tslint": "^5.7.0",
-		"tslint-microsoft-contrib": "5.0.1",
-		"typescript": "^3.5.1",
-		"vsce": "^1.51.1",
-		"vscode": "^1.1.5",
-		"vscode-azureextensiondev": "^0.2.4",
-		"webpack": "^4.42.0",
-		"webpack-cli": "^3.1.2"
-	},
-	"extensionDependencies": [
-		"ms-vscode.azure-account"
-	],
-	"dependencies": {
-		"@azure/storage-blob": "^12.0.0",
-		"@azure/storage-file-share": "^12.0.0",
-		"@types/mime": "^2.0.1",
-		"azure-arm-resource": "^3.1.1-preview",
-		"azure-arm-storage": "^5.1.1-preview",
-		"azure-storage": "^2.10.0",
-		"fs-extra": "^4.0.2",
-		"glob": "^7.1.2",
-		"mime": "^2.4.4",
-		"ms-rest": "^2.2.2",
-		"ms-rest-azure": "^2.3.1",
-		"opn": "^5.3.0",
-		"vscode-azureextensionui": "^0.29.9",
-		"vscode-nls": "^4.1.1",
-		"winreg": "^1.2.3"
-	}
+    "name": "vscode-azurestorage",
+    "displayName": "Azure Storage",
+    "description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
+    "version": "0.9.1-alpha",
+    "publisher": "ms-azuretools",
+    "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
+    "engines": {
+        "vscode": "^1.31.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/vscode-azurestorage"
+    },
+    "galleryBanner": {
+        "color": "#0072c6",
+        "theme": "dark"
+    },
+    "homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/master/README.md",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "categories": [
+        "Azure"
+    ],
+    "keywords": [
+        "Azure",
+        "Blob Containers",
+        "File Share",
+        "Storage Account",
+        "Static website"
+    ],
+    "preview": true,
+    "activationEvents": [
+        "onView:azureStorage",
+        "onFileSystem:azurestorage",
+        "onCommand:azureStorage.openInFileExplorer",
+        "onCommand:azureStorage.deployStaticWebsite",
+        "onCommand:azureStorage.configureStaticWebsite",
+        "onCommand:azureStorage.disableStaticWebsite",
+        "onCommand:azureStorage.refresh",
+        "onCommand:azureStorage.browseStaticWebsite",
+        "onCommand:azureStorage.openInPortal",
+        "onCommand:azureStorage.selectSubscriptions",
+        "onCommand:azureStorage.copyUrl",
+        "onCommand:azureStorage.openBlobContainer",
+        "onCommand:azureStorage.openTable",
+        "onCommand:azureStorage.openFileShare",
+        "onCommand:azureStorage.openQueue",
+        "onCommand:azureStorage.openStorageAccount",
+        "onCommand:azureStorage.copyPrimaryKey",
+        "onCommand:azureStorage.copyConnectionString",
+        "onCommand:azureStorage.createBlobContainer",
+        "onCommand:azureStorage.deleteBlobContainer",
+        "onCommand:azureStorage.createBlockBlob",
+        "onCommand:azureStorage.uploadBlockBlob",
+        "onCommand:azureStorage.deleteBlob",
+        "onCommand:azureStorage.downloadBlob",
+        "onCommand:azureStorage.createFileShare",
+        "onCommand:azureStorage.deleteFileShare",
+        "onCommand:azureStorage.deleteStorageAccount",
+        "onCommand:azureStorage.createDirectory",
+        "onCommand:azureStorage.deleteDirectory",
+        "onCommand:azureStorage.createFile",
+        "onCommand:azureStorage.createGpv2Account",
+        "onCommand:azureStorage.createGpv2AccountAdvanced",
+        "onCommand:azureStorage.deleteFile",
+        "onCommand:azureStorage.createDirectory",
+        "onCommand:azureStorage.createSubdirectory",
+        "onCommand:azureStorage.createTable",
+        "onCommand:azureStorage.deleteTable",
+        "onCommand:azureStorage.createQueue",
+        "onCommand:azureStorage.deleteQueue",
+        "onCommand:azureStorage.uploadToAzureStorage",
+        "onCommand:azureStorage.attachStorageAccount",
+        "onCommand:azureStorage.detachStorageAccount",
+        "onCommand:azureStorage.startBlobEmulator",
+        "onCommand:azureStorage.startQueueEmulator"
+    ],
+    "main": "main",
+    "icon": "resources/storageAccount.png",
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "azure",
+                    "title": "Azure",
+                    "icon": "resources/azure.svg"
+                }
+            ]
+        },
+        "views": {
+            "azure": [
+                {
+                    "id": "azureStorage",
+                    "name": "Storage",
+                    "when": "config.azureStorage.showExplorer == true"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "azureStorage.openInFileExplorer",
+                "title": "Open in File Explorer...",
+                "icon": {
+                    "light": "resources/light/openInFileExplorer.svg",
+                    "dark": "resources/dark/openInFileExplorer.svg"
+                },
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.refresh",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                },
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.openInPortal",
+                "title": "Open in Portal",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.configureStaticWebsite",
+                "title": "Configure Static Website...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.disableStaticWebsite",
+                "title": "Disable Static Website",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.browseStaticWebsite",
+                "title": "Browse Static Website",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.selectSubscriptions",
+                "title": "Select Subscriptions...",
+                "icon": {
+                    "light": "resources/light/filter.svg",
+                    "dark": "resources/dark/filter.svg"
+                },
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.deployStaticWebsite",
+                "title": "Deploy to Static Website...",
+                "category": "Azure Storage",
+                "icon": {
+                    "light": "resources/light/Deploy.svg",
+                    "dark": "resources/dark/Deploy.svg"
+                }
+            },
+            {
+                "command": "azureStorage.copyUrl",
+                "title": "Copy URL",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.openBlobContainer",
+                "title": "Open in Storage Explorer",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.openTable",
+                "title": "Open in Storage Explorer",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.openFileShare",
+                "title": "Open in Storage Explorer",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.openQueue",
+                "title": "Open in Storage Explorer",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.openStorageAccount",
+                "title": "Open in Storage Explorer",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.copyPrimaryKey",
+                "title": "Copy Primary Key",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.copyConnectionString",
+                "title": "Copy Connection String",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.createBlobContainer",
+                "title": "Create Blob Container...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.deleteBlobContainer",
+                "title": "Delete Blob Container...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.createBlockBlob",
+                "title": "Create Empty Blob...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.uploadBlockBlob",
+                "title": "Upload Block Blob...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.deleteBlob",
+                "title": "Delete...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.downloadBlob",
+                "title": "Download...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.createFileShare",
+                "title": "Create File Share...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.deleteFileShare",
+                "title": "Delete File Share...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.deleteStorageAccount",
+                "title": "Delete Storage Account...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.createDirectory",
+                "title": "Create Directory...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.createSubdirectory",
+                "title": "Create Subdirectory...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.deleteDirectory",
+                "title": "Delete...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.createFile",
+                "title": "Create Empty File...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.createGpv2Account",
+                "title": "Create Storage Account...",
+                "category": "Azure Storage",
+                "icon": {
+                    "light": "resources/light/createStorageAccount.svg",
+                    "dark": "resources/dark/createStorageAccount.svg"
+                }
+            },
+            {
+                "command": "azureStorage.createGpv2AccountAdvanced",
+                "title": "Create Storage Account... (Advanced)",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.deleteFile",
+                "title": "Delete...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.createTable",
+                "title": "Create Table...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.deleteTable",
+                "title": "Delete Table...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.createQueue",
+                "title": "Create Queue...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.deleteQueue",
+                "title": "Delete Queue...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.uploadToAzureStorage",
+                "title": "Upload to Azure Storage...",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.attachStorageAccount",
+                "title": "Attach Storage Account...",
+                "category": "Azure Storage",
+                "icon": {
+                    "light": "resources/light/Connect.svg",
+                    "dark": "resources/dark/Connect.svg"
+                }
+            },
+            {
+                "command": "azureStorage.detachStorageAccount",
+                "title": "Detach Storage Account",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.startBlobEmulator",
+                "title": "Start Blob Emulator",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.startQueueEmulator",
+                "title": "Start Queue Emulator",
+                "category": "Azure Storage"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "azureStorage.createGpv2Account",
+                    "when": "view == azureStorage",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "azureStorage.deployStaticWebsite",
+                    "when": "view == azureStorage",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "azureStorage.attachStorageAccount",
+                    "when": "view == azureStorage",
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage",
+                    "group": "navigation@99"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "azureStorage.deployStaticWebsite",
+                    "when": "explorerResourceIsFolder == true",
+                    "group": "zzz_azuretools_deploy@3"
+                },
+                {
+                    "command": "azureStorage.uploadToAzureStorage",
+                    "when": "isFileSystemResource == true",
+                    "group": "zzzz_azurestorage@1"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "$comment": "========= azureSubscription =========",
+                    "command": "azureStorage.selectSubscriptions",
+                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+                    "group": "inline"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+                    "group": "9_refresh"
+                },
+                {
+                    "$comment": "========= azureStorageAccount =========",
+                    "command": "azureStorage.openStorageAccount",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "azureStorage.openInPortal",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "azureStorage.openInFileExplorer",
+                    "when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureBlobContainer",
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "azureStorage.openInFileExplorer",
+                    "when": "view == azureStorage && viewItem == azureFileShare || viewItem == azureBlobContainer",
+                    "group": "inline"
+                },
+                {
+                    "command": "azureStorage.copyConnectionString",
+                    "when": "view == azureStorage && viewItem =~ /azureStorageAccount/",
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.copyPrimaryKey",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "group": "5_cutcopypaste@2"
+                },
+                {
+                    "command": "azureStorage.browseStaticWebsite",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "group": "6_staticwebsites@1"
+                },
+                {
+                    "command": "azureStorage.deployStaticWebsite",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "group": "6_staticwebsites@2"
+                },
+                {
+                    "command": "azureStorage.configureStaticWebsite",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "group": "6_staticwebsites@3"
+                },
+                {
+                    "command": "azureStorage.disableStaticWebsite",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "group": "6_staticwebsites@4"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "group": "9_refresh"
+                },
+                {
+                    "$comment": "========= azureBlobContainerGroup =========",
+                    "command": "azureStorage.createBlobContainer",
+                    "when": "view == azureStorage && viewItem == azureBlobContainerGroup",
+                    "group": "2_create"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == azureBlobContainerGroup",
+                    "group": "9_refresh"
+                },
+                {
+                    "$comment": "========= azureBlobContainer =========",
+                    "command": "azureStorage.openBlobContainer",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "azureStorage.createBlockBlob",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "2_create@1"
+                },
+                {
+                    "command": "azureStorage.uploadBlockBlob",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "2_create@2"
+                },
+                {
+                    "command": "azureStorage.copyUrl",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "5_cutcopypaste"
+                },
+                {
+                    "command": "azureStorage.browseStaticWebsite",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "6_staticwebsites@1"
+                },
+                {
+                    "command": "azureStorage.deployStaticWebsite",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "6_staticwebsites@2"
+                },
+                {
+                    "command": "azureStorage.configureStaticWebsite",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "6_staticwebsites@3"
+                },
+                {
+                    "command": "azureStorage.disableStaticWebsite",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "6_staticwebsites@4"
+                },
+                {
+                    "command": "azureStorage.deleteBlobContainer",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "group": "9_refresh"
+                },
+                {
+                    "$comment": "========= azureBlob =========",
+                    "command": "azureStorage.deleteBlob",
+                    "when": "view == azureStorage && viewItem == azureBlob"
+                },
+                {
+                    "command": "azureStorage.downloadBlob",
+                    "when": "view == azureStorage && viewItem == azureBlob",
+                    "group": "3_download"
+                },
+                {
+                    "command": "azureStorage.copyUrl",
+                    "when": "view == azureStorage && viewItem == azureBlob",
+                    "group": "5_cutcopypaste"
+                },
+                {
+                    "$comment": "========= azureFileShareGroup =========",
+                    "command": "azureStorage.createFileShare",
+                    "when": "view == azureStorage && viewItem == azureFileShareGroup",
+                    "group": "2_create"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == azureFileShareGroup",
+                    "group": "9_refresh"
+                },
+                {
+                    "$comment": "========= azureFileShare =========",
+                    "command": "azureStorage.openFileShare",
+                    "when": "view == azureStorage && viewItem == azureFileShare",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "azureStorage.createFile",
+                    "when": "view == azureStorage && viewItem == azureFileShare",
+                    "group": "2_create@1"
+                },
+                {
+                    "command": "azureStorage.createDirectory",
+                    "when": "view == azureStorage && viewItem == azureFileShare",
+                    "group": "2_create@2"
+                },
+                {
+                    "command": "azureStorage.createGpv2Account",
+                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+                    "group": "2_create@3"
+                },
+                {
+                    "command": "azureStorage.createGpv2AccountAdvanced",
+                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+                    "group": "2_create@4"
+                },
+                {
+                    "command": "azureStorage.copyUrl",
+                    "when": "view == azureStorage && viewItem == azureFileShare",
+                    "group": "5_cutcopypaste"
+                },
+                {
+                    "command": "azureStorage.deleteFileShare",
+                    "when": "view == azureStorage && viewItem == azureFileShare",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "azureStorage.deleteStorageAccount",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == azureFileShare",
+                    "group": "9_refresh"
+                },
+                {
+                    "$comment": "========= azureFile =========",
+                    "command": "azureStorage.copyUrl",
+                    "when": "view == azureStorage && viewItem == azureFile",
+                    "group": "5_cutcopypaste"
+                },
+                {
+                    "command": "azureStorage.deleteFile",
+                    "when": "view == azureStorage && viewItem == azureFile",
+                    "group": "7_modification"
+                },
+                {
+                    "$comment": "========= azureFileShareDirectory =========",
+                    "command": "azureStorage.createFile",
+                    "when": "view == azureStorage && viewItem == azureFileShareDirectory",
+                    "group": "2_create@1"
+                },
+                {
+                    "command": "azureStorage.createSubdirectory",
+                    "when": "view == azureStorage && viewItem == azureFileShareDirectory",
+                    "group": "2_create@2"
+                },
+                {
+                    "command": "azureStorage.copyUrl",
+                    "when": "view == azureStorage && viewItem == azureFileShareDirectory",
+                    "group": "5_cutcopypaste"
+                },
+                {
+                    "command": "azureStorage.deleteDirectory",
+                    "when": "view == azureStorage && viewItem == azureFileShareDirectory",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == azureFileShareDirectory",
+                    "group": "9_refresh"
+                },
+                {
+                    "$comment": "========= azureQueueGroup =========",
+                    "command": "azureStorage.createQueue",
+                    "when": "view == azureStorage && viewItem == azureQueueGroup",
+                    "group": "2_create"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == azureQueueGroup",
+                    "group": "9_refresh"
+                },
+                {
+                    "$comment": "========= azureQueue =========",
+                    "command": "azureStorage.openQueue",
+                    "when": "view == azureStorage && viewItem == azureQueue",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "azureStorage.deleteQueue",
+                    "when": "view == azureStorage && viewItem == azureQueue",
+                    "group": "7_modification"
+                },
+                {
+                    "$comment": "========= azureTableGroup =========",
+                    "command": "azureStorage.createTable",
+                    "when": "view == azureStorage && viewItem == azureTableGroup",
+                    "group": "2_create"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == azureTableGroup",
+                    "group": "9_refresh"
+                },
+                {
+                    "$comment": "========= azureTable =========",
+                    "command": "azureStorage.openTable",
+                    "when": "view == azureStorage && viewItem == azureTable",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "azureStorage.deleteTable",
+                    "when": "view == azureStorage && viewItem == azureTable",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "azureStorage.attachStorageAccount",
+                    "when": "view == azureStorage && viewItem == attachedStorageAccounts",
+                    "group": "2_create"
+                },
+                {
+                    "command": "azureStorage.detachStorageAccount",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount-attached",
+                    "group": "7_modification"
+                },
+                {
+                    "command": "azureStorage.refresh",
+                    "when": "view == azureStorage && viewItem == attachedStorageAccounts",
+                    "group": "9_refresh"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "azureStorage.selectSubscriptions",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.copyUrl",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.openBlobContainer",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.createBlockBlob",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.uploadBlockBlob",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.deleteBlob",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.downloadBlob",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.openTable",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.openFileShare",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.createDirectory",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.createSubdirectory",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.deleteDirectory",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.createFile",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.deleteFile",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.openQueue",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.startBlobEmulator",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.startQueueEmulator",
+                    "when": "never"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "command": "workbench.view.extension.azure",
+                "key": "ctrl+shift+a",
+                "mac": "cmd+shift+a"
+            }
+        ],
+        "configuration": {
+            "title": "Azure Storage Accounts",
+            "properties": {
+                "azureStorage.showExplorer": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show or hide the Azure Storage Explorer"
+                },
+                "azureStorage.storageExplorerLocation": {
+                    "type": "string",
+                    "default": "/Applications/Microsoft Azure Storage Explorer.app",
+                    "description": "[Mac only] Set to \"Path/To/Microsoft Azure Storage Explorer.app\" to the location of Storage Explorer. Default is \"/Applications/Microsoft Azure Storage Explorer.app\"."
+                },
+                "azureStorage.preDeployTask": {
+                    "scope": "resource",
+                    "type": "string",
+                    "description": "The name of the task to run before deploying."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run webpack-prod",
+        "build": "tsc",
+        "compile": "tsc -watch",
+        "package": "vsce package",
+        "lint": "tslint --project tsconfig.json -t verbose",
+        "lint-fix": "tslint --project tsconfig.json -t verbose --fix",
+        "pretest": "npm run webpack-prod && gulp preTest",
+        "test": "node ./out/test/runTest.js",
+        "webpack": "npm run build && gulp webpack-dev",
+        "webpack-prod": "npm run build && gulp webpack-prod",
+        "webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats",
+        "all": "npm i && npm run lint && npm test"
+    },
+    "devDependencies": {
+        "@types/fs-extra": "^8.1.0",
+        "@types/keytar": "4.0.1",
+        "@types/gulp": "^4.0.6",
+        "@types/mocha": "^7.0.2",
+        "@types/node": "^10.0.0",
+        "@types/opn": "5.1.0",
+        "@types/vscode": "1.31.0",
+        "@types/winreg": "1.2.30",
+        "copy-webpack-plugin": "^5.1.1",
+        "gulp": "^4.0.0",
+        "mocha": "^7.1.1",
+        "mocha-junit-reporter": "^1.18.0",
+        "mocha-multi-reporters": "^1.1.7",
+        "ts-node": "^7.0.1",
+        "tslint": "^5.7.0",
+        "tslint-microsoft-contrib": "5.0.1",
+        "typescript": "^3.8.3",
+        "vsce": "^1.51.1",
+        "vscode-azureextensiondev": "^0.3.1",
+        "vscode-test": "^1.3.0",
+        "webpack": "^4.42.0",
+        "webpack-cli": "^3.1.2"
+    },
+    "dependencies": {
+        "@azure/storage-blob": "^12.0.0",
+        "@azure/storage-file-share": "^12.0.0",
+        "@types/mime": "^2.0.1",
+        "azure-arm-resource": "^3.1.1-preview",
+        "azure-arm-storage": "^5.1.1-preview",
+        "azure-storage": "^2.10.0",
+        "fs-extra": "^8.0.0",
+        "glob": "^7.1.2",
+        "mime": "^2.4.4",
+        "ms-rest": "^2.2.2",
+        "ms-rest-azure": "^2.3.1",
+        "opn": "^5.3.0",
+        "vscode-azureextensionui": "^0.29.12",
+        "vscode-nls": "^4.1.1",
+        "winreg": "^1.2.3"
+    },
+    "extensionDependencies": [
+        "ms-vscode.azure-account"
+    ]
 }
