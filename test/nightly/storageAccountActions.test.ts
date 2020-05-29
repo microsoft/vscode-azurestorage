@@ -6,66 +6,46 @@
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as assert from 'assert';
-import { ResourceManagementClient } from 'azure-arm-resource';
-import { StorageManagementClient } from 'azure-arm-storage';
 import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
 import { createQueueService, createTableService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
 import * as vscode from 'vscode';
-import { TestAzureAccount } from 'vscode-azureextensiondev';
-import { AzExtTreeDataProvider, AzureAccountTreeItem, createAzureClient, DialogResponses, ext, getRandomHexString } from '../extension.bundle';
-import { longRunningTestsEnabled, testUserInput } from './global.test';
+import { DialogResponses, getRandomHexString } from '../../extension.bundle';
+import { longRunningTestsEnabled, testUserInput } from '../global.test';
+import { resourceGroupsToDelete, webSiteClient as client } from './global.resource.test';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<void> {
-    this.timeout(1200 * 1000);
-    const resourceGroupsToDelete: string[] = [];
-    const testAccount: TestAzureAccount = new TestAzureAccount(vscode);
-    let client: StorageManagementClient;
-    const resourceName: string = getRandomHexString().toLowerCase();
-    const blobUrl: string = `https://${resourceName}.blob.core.windows.net`;
-    const fileUrl: string = `https://${resourceName}.file.core.windows.net`;
-    // Blob container, file share and queue must have lower case name
-    const containerName: string = getRandomHexString().toLowerCase();
-    const shareName: string = getRandomHexString().toLowerCase();
-    const queueName: string = getRandomHexString().toLowerCase();
-    // Table name cannot begin with a digit
-    const tableName: string = 'f' + `${getRandomHexString()}`;
-
-    // https://stackoverflow.com/questions/406230/regular-expression-to-match-a-line-that-doesnt-contain-a-word
-    const attachedRegex: RegExp = /^((?!Attached).)*$/;
+    this.timeout(5 * 60 * 1000);
+    let blobUrl: string;
+    let fileUrl: string;
+    let containerName: string;
+    let shareName: string;
+    let queueName: string;
+    let tableName: string;
+    let attachedRegex: RegExp;
+    let resourceName: string;
 
     suiteSetup(async function (this: Mocha.Context): Promise<void> {
         if (!longRunningTestsEnabled) {
             this.skip();
         }
+        this.timeout(2 * 60 * 1000);
+        resourceName = getRandomHexString().toLowerCase();
+        blobUrl = `https://${resourceName}.blob.core.windows.net`;
+        fileUrl = `https://${resourceName}.file.core.windows.net`;
+        // Blob container, file share and queue must have lower case name
+        containerName = getRandomHexString().toLowerCase();
+        shareName = getRandomHexString().toLowerCase();
+        queueName = getRandomHexString().toLowerCase();
+        // Table name cannot begin with a digit
+        tableName = 'f' + `${getRandomHexString()}`;
 
-        this.timeout(120 * 1000);
-        await testAccount.signIn();
-
-        ext.azureAccountTreeItem = new AzureAccountTreeItem(testAccount);
-        ext.tree = new AzExtTreeDataProvider(ext.azureAccountTreeItem, 'azureStorage.loadMore');
-        client = createAzureClient(testAccount.getSubscriptionContext(), StorageManagementClient);
-    });
-
-    suiteTeardown(async () => {
-        if (longRunningTestsEnabled) {
-            const resourceClient = createAzureClient(testAccount.getSubscriptionContext(), ResourceManagementClient);
-            await Promise.all(resourceGroupsToDelete.map(async resourceGroup => {
-                if (await resourceClient.resourceGroups.checkExistence(resourceGroup)) {
-                    console.log(`Deleting resource group "${resourceGroup}"...`);
-                    await resourceClient.resourceGroups.deleteMethod(resourceGroup);
-                    console.log(`Resource group "${resourceGroup}" deleted.`);
-                } else {
-                    // If the test failed, the resource group might not actually exist
-                    console.log(`Ignoring resource group "${resourceGroup}" because it does not exist.`);
-                }
-            }));
-            ext.azureAccountTreeItem.dispose();
-        }
+        // https://stackoverflow.com/questions/406230/regular-expression-to-match-a-line-that-doesnt-contain-a-word
+        attachedRegex = /^((?!Attached).)*$/;
+        resourceGroupsToDelete.push(resourceName);
     });
 
     test("createStorageAccount", async () => {
-        resourceGroupsToDelete.push(resourceName);
         await testUserInput.runWithInputs([resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.createGpv2Account');
         });
@@ -186,34 +166,6 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
         await assertThrowsAsync(async () => await client.storageAccounts.getProperties(resourceName, resourceName), /Error/);
     });
 
-    // Validate the storage account exists or not based on its resource group name and account name
-    async function validateAccountExists(resourceGroupName: string, accountName: string): Promise<void> {
-        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceGroupName, accountName);
-        assert.ok(createdAccount);
-    }
-
-    // validate the resource exists or not
-    async function doesResourceExist<T>(service: StorageServiceClient, fn: string, name: string): Promise<T> {
-        // tslint:disable-next-line: no-unsafe-any
-        return new Promise((resolve, reject) => service[fn](name, (err: Error | undefined, res: T) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(res);
-            }
-        }));
-    }
-
-    // validate the file share exists or not
-    async function doesShareExist(shareClient: azureStorageShare.ShareClient): Promise<boolean> {
-        try {
-            await shareClient.getProperties();
-            return true;
-        } catch {
-            return false;
-        }
-    }
-
     // validate the blob service by verifying whether or not it creates a blob container
     async function validateBlobService(blobServiceClient: azureStorageBlob.BlobServiceClient): Promise<void> {
         // Blob container must have lower case name
@@ -224,15 +176,6 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
         }
         const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName1);
         assert.ok(createdContainer);
-    }
-
-    // get the connection string of a storage account by the command azureStorage.copyConnectionString
-    async function getConnectionString(storageAccountName: string): Promise<string> {
-        vscode.env.clipboard.writeText('');
-        await testUserInput.runWithInputs([storageAccountName], async () => {
-            await vscode.commands.executeCommand('azureStorage.copyConnectionString');
-        });
-        return vscode.env.clipboard.readText();
     }
 
     async function getPrimaryKey(): Promise<string> {
@@ -251,6 +194,43 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
         return shareServiceClient.getShareClient(newShareName);
     }
 });
+
+// Validate the storage account exists or not based on its resource group name and account name
+async function validateAccountExists(resourceGroupName: string, accountName: string): Promise<void> {
+    const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceGroupName, accountName);
+    assert.ok(createdAccount);
+}
+
+// validate the resource exists or not
+async function doesResourceExist<T>(service: StorageServiceClient, fn: string, name: string): Promise<T> {
+    // tslint:disable-next-line: no-unsafe-any
+    return new Promise((resolve, reject) => service[fn](name, (err: Error | undefined, res: T) => {
+        if (err) {
+            reject(err);
+        } else {
+            resolve(res);
+        }
+    }));
+}
+
+// validate the file share exists or not
+async function doesShareExist(shareClient: azureStorageShare.ShareClient): Promise<boolean> {
+    try {
+        await shareClient.getProperties();
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+// get the connection string of a storage account by the command azureStorage.copyConnectionString
+async function getConnectionString(storageAccountName: string): Promise<string> {
+    vscode.env.clipboard.writeText('');
+    await testUserInput.runWithInputs([storageAccountName], async () => {
+        await vscode.commands.executeCommand('azureStorage.copyConnectionString');
+    });
+    return vscode.env.clipboard.readText();
+}
 
 async function assertThrowsAsync(fn: { (): Promise<StorageAccount>; (): void; }, regExp: RegExp): Promise<void> {
     let f = () => { return undefined; };
