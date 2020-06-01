@@ -40,7 +40,7 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         const url = fileClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
-        ext.outputChannel.appendLine(`File URL copied to clipboard: ${url}`);
+        ext.outputChannel.appendLog(`File URL copied to clipboard: ${url}`);
     }
 
     public async deleteTreeItemImpl(context: IActionContext & IDirectoryDeleteContext): Promise<void> {

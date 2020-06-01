@@ -60,7 +60,7 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
         for (let file of files) {
             let promise = deleteFile(directory, file.name, shareName, root);
             promises.push(promise);
-            ext.outputChannel.appendLine(`Deleted file "${directory}/${file.name}"`);
+            ext.outputChannel.appendLog(`Deleted file "${directory}/${file.name}"`);
 
             if (promises.length >= parallelOperations) {
                 await Promise.all(promises);
@@ -81,7 +81,7 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
 
     const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directory);
     await directoryClient.delete();
-    ext.outputChannel.appendLine(`Deleted directory "${directory}"`);
+    ext.outputChannel.appendLog(`Deleted directory "${directory}"`);
 }
 
 export async function doesDirectoryExist(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string): Promise<boolean> {

@@ -35,7 +35,7 @@ export async function awaitWithProgress<T>(title: string, promise: Promise<T>, g
         nextChannelUpdate -= 1;
         if (nextChannelUpdate <= 0) {
             nextChannelUpdate = uiUpdatesPerChannelUpdate;
-            ext.outputChannel.appendLine(`${title}: ${msg}`);
+            ext.outputChannel.appendLog(`${title}: ${msg}`);
         }
 
         thisProgress.report({ message: msg });

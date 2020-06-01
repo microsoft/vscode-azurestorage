@@ -36,7 +36,7 @@ export class TransferProgress {
 
     public reportToOutputWindow(finishedWork: number): void {
         this.preReport(finishedWork);
-        ext.outputChannel.appendLine(this.message);
+        ext.outputChannel.appendLog(this.message);
         this.postReport();
     }
 

@@ -67,7 +67,7 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         const url = directoryClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
-        ext.outputChannel.appendLine(`Directory URL copied to clipboard: ${url}`);
+        ext.outputChannel.appendLog(`Directory URL copied to clipboard: ${url}`);
     }
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {

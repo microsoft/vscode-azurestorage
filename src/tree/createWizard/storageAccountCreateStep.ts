@@ -25,7 +25,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         const newName: string = wizardContext.newStorageAccountName!;
         const newSkuName: string = `${this._defaults.performance}_${this._defaults.replication}`;
         const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation}" with sku "${newSkuName}"...`;
-        ext.outputChannel.appendLine(creatingStorageAccount);
+        ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
         const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
         wizardContext.storageAccount = await storageClient.storageAccounts.create(
@@ -40,7 +40,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
             }
         );
         const createdStorageAccount: string = `Successfully created storage account "${newName}".`;
-        ext.outputChannel.appendLine(createdStorageAccount);
+        ext.outputChannel.appendLog(createdStorageAccount);
     }
 
     public shouldExecute(wizardContext: T): boolean {
