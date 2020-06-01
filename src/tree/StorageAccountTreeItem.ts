@@ -132,13 +132,13 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             let parsedId = this.parseAzureResourceId(this.storageAccount.id);
             let resourceGroupName = parsedId.resourceGroups;
 
-            ext.outputChannel.appendLine(deletingStorageAccount);
+            ext.outputChannel.appendLog(deletingStorageAccount);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deletingStorageAccount }, async () => {
                 await storageManagementClient.storageAccounts.deleteMethod(resourceGroupName, this.storageAccount.name);
             });
 
             const deleteSuccessful: string = localize('successfullyDeletedStorageAccount', 'Successfully deleted storage account "{0}".', this.label);
-            ext.outputChannel.appendLine(deleteSuccessful);
+            ext.outputChannel.appendLog(deleteSuccessful);
             window.showInformationMessage(deleteSuccessful);
         } else {
             throw new UserCancelledError();

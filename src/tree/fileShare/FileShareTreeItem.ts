@@ -83,7 +83,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         const shareClient: azureStorageShare.ShareClient = createShareClient(this.root, this.shareName);
         await vscode.env.clipboard.writeText(shareClient.url);
         ext.outputChannel.show();
-        ext.outputChannel.appendLine(`Share URL copied to clipboard: ${shareClient.url}`);
+        ext.outputChannel.appendLog(`Share URL copied to clipboard: ${shareClient.url}`);
     }
 
     public async deleteTreeItemImpl(): Promise<void> {
@@ -127,7 +127,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
         if (!suppressLogs) {
             ext.outputChannel.show();
-            ext.outputChannel.appendLine(`Uploading ${sourceFilePath} as ${destDisplayPath}`);
+            ext.outputChannel.appendLog(`Uploading ${sourceFilePath} as ${destDisplayPath}`);
         }
 
         const fileSize: number = (await fse.stat(sourceFilePath)).size;
@@ -151,7 +151,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         }
 
         if (!suppressLogs) {
-            ext.outputChannel.appendLine(`Successfully uploaded ${destDisplayPath}.`);
+            ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);
         }
     }
 }

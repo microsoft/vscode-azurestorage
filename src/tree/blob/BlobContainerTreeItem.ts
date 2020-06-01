@@ -169,7 +169,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let url: string = containerClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
-        ext.outputChannel.appendLine(`Container URL copied to clipboard: ${url}`);
+        ext.outputChannel.appendLog(`Container URL copied to clipboard: ${url}`);
     }
 
     // This is the public entrypoint for azureStorage.uploadBlockBlob
@@ -293,7 +293,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 }
             }
 
-            ext.outputChannel.appendLine(`Deploying to static website ${this.root.storageAccountName}/${this.container.name}`);
+            ext.outputChannel.appendLog(`Deploying to static website ${this.root.storageAccountName}/${this.container.name}`);
 
             // Find source files
             let filePathsWithAzureSeparator: string[] = await listFilePathsWithAzureSeparator(sourceFolderPath, '.{git,vscode}/**');
@@ -314,12 +314,12 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 throw new Error(`Could not obtain the primary web endpoint for ${this.root.storageAccountName}`);
             }
 
-            ext.outputChannel.appendLine(`Deployment to static website complete. Primary web endpoint is ${webEndpoint}`);
+            ext.outputChannel.appendLog(`Deployment to static website complete. Primary web endpoint is ${webEndpoint}`);
 
             return webEndpoint;
         } catch (error) {
             if (parseError(error).isUserCancelledError) {
-                ext.outputChannel.appendLine("Deployment canceled.");
+                ext.outputChannel.appendLog("Deployment canceled.");
             }
             throw error;
         }
@@ -358,7 +358,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         for (let blobIndex of blobsToDelete.keys()) {
             let blob: azureStorageBlob.BlobItem = blobsToDelete[blobIndex];
             try {
-                ext.outputChannel.appendLine(`Deleting blob "${blob.name}"...`);
+                ext.outputChannel.appendLog(`Deleting blob "${blob.name}"...`);
                 let response: azureStorageBlob.BlobDeleteResponse = await containerClient.deleteBlob(blob.name);
                 if (cancellationToken.isCancellationRequested) {
                     throw new UserCancelledError();
@@ -387,7 +387,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
         if (!suppressLogs) {
             ext.outputChannel.show();
-            ext.outputChannel.appendLine(`Uploading ${filePath} as ${blobFriendlyPath}`);
+            ext.outputChannel.appendLog(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
@@ -401,7 +401,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         await blockBlobClient.uploadFile(filePath, options);
 
         if (!suppressLogs) {
-            ext.outputChannel.appendLine(`Successfully uploaded ${blobFriendlyPath}.`);
+            ext.outputChannel.appendLog(`Successfully uploaded ${blobFriendlyPath}.`);
         }
     }
 

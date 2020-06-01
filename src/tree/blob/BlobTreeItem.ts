@@ -54,7 +54,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         const url = blobClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
-        ext.outputChannel.appendLine(`Blob URL copied to clipboard: ${url}`);
+        ext.outputChannel.appendLog(`Blob URL copied to clipboard: ${url}`);
     }
 
     public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {
@@ -98,7 +98,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
             const totalBytes: number = (await blockBlobClient.getProperties()).contentLength || 1;
 
             ext.outputChannel.show();
-            ext.outputChannel.appendLine(`Downloading ${this.blobName} to ${uri.fsPath}...`);
+            ext.outputChannel.appendLog(`Downloading ${this.blobName} to ${uri.fsPath}...`);
 
             await window.withProgress({ title: `Downloading ${this.blobName}`, location: vscode.ProgressLocation.Notification }, async (notificationProgress) => {
                 const transferProgress: TransferProgress = new TransferProgress(totalBytes, this.blobName);
@@ -107,7 +107,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
                 });
             });
 
-            ext.outputChannel.appendLine(`Successfully downloaded ${linkablePath}.`);
+            ext.outputChannel.appendLog(`Successfully downloaded ${linkablePath}.`);
         }
     }
 

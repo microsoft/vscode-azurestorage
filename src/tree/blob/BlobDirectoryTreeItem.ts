@@ -80,7 +80,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
             let errors: boolean = await this.deleteFolder(context);
 
             if (errors) {
-                ext.outputChannel.appendLine('Please refresh the viewlet to see the changes made.');
+                ext.outputChannel.appendLog('Please refresh the viewlet to see the changes made.');
 
                 const viewOutput: vscode.MessageItem = { title: 'View Errors' };
                 const errorMessage: string = `Errors occurred when deleting "${this.dirName}".`;
@@ -111,7 +111,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
                     try {
                         await child.deleteTreeItemImpl(<ISuppressMessageContext>{ ...context, suppressMessage: true });
                     } catch (error) {
-                        ext.outputChannel.appendLine(`Cannot delete ${child.blobPath}. ${parseError(error).message}`);
+                        ext.outputChannel.appendLog(`Cannot delete ${child.blobPath}. ${parseError(error).message}`);
                         errors = true;
                     }
                 } else if (child instanceof BlobDirectoryTreeItem) {
