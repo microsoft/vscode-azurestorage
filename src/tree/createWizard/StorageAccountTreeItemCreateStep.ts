@@ -2,10 +2,10 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-
-import StorageManagementClient from "azure-arm-storage";
+import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccount } from "azure-arm-storage/lib/models";
 import { AzureWizardExecuteStep, createAzureClient, IStorageAccountWizardContext } from "vscode-azureextensionui";
+import { getStorageManagementClient, ifStack } from '../../utils/environmentUtils';
 import { nonNull, StorageAccountWrapper } from "../../utils/storageWrappers";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { SubscriptionTreeItem } from "../SubscriptionTreeItem";
@@ -24,7 +24,13 @@ export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<ISt
     }
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {
-        const storageManagementClient = createAzureClient(this.parent.root, StorageManagementClient);
+        let storageManagementClient: StorageManagementClient;
+        if (ifStack()) {
+            // tslint:disable-next-line: no-unsafe-any
+            storageManagementClient = createAzureClient(this.parent.root, getStorageManagementClient());
+        } else {
+            storageManagementClient = createAzureClient(this.parent.root, StorageManagementClient);
+        }
         wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.parent, new StorageAccountWrapper(<StorageAccount>nonNull(wizardContext.storageAccount)), storageManagementClient);
     }
 

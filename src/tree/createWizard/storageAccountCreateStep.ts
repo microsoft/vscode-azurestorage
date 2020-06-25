@@ -2,11 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-
 import { StorageManagementClient } from 'azure-arm-storage';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient, INewStorageAccountDefaults, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
+import { getStorageManagementClient, ifStack } from '../../utils/environmentUtils';
 
 export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> implements StorageAccountCreateStep<T> {
     public priority: number = 130;
@@ -27,7 +27,13 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation}" with sku "${newSkuName}"...`;
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
-        const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
+        let storageClient: StorageManagementClient;
+        if (ifStack()) {
+            // tslint:disable-next-line: no-unsafe-any
+            storageClient = createAzureClient(wizardContext, getStorageManagementClient());
+        } else {
+            storageClient = createAzureClient(wizardContext, StorageManagementClient);
+        }
         wizardContext.storageAccount = await storageClient.storageAccounts.create(
             // tslint:disable-next-line:no-non-null-assertion
             wizardContext.resourceGroup!.name!,

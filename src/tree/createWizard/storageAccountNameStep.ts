@@ -2,15 +2,20 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-
 import { StorageManagementClient } from 'azure-arm-storage';
 import { CheckNameAvailabilityResult } from 'azure-arm-storage/lib/models';
 import { AzureNameStep, createAzureClient, IStorageAccountWizardContext, ResourceGroupListStep, resourceGroupNamingRules, storageAccountNamingRules } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
-
+import { getStorageManagementClient, ifStack } from '../../utils/environmentUtils';
 export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
     public async prompt(wizardContext: T): Promise<void> {
-        const client: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
+        let client: StorageManagementClient;
+        if (ifStack()) {
+            // tslint:disable-next-line: no-unsafe-any
+            client = createAzureClient(wizardContext, getStorageManagementClient());
+        } else {
+            client = createAzureClient(wizardContext, StorageManagementClient);
+        }
 
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
         wizardContext.newStorageAccountName = (await ext.ui.showInputBox({

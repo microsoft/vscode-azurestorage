@@ -2,9 +2,8 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-
 import { ResourceManagementClient } from 'azure-arm-resource';
-import StorageManagementClient from 'azure-arm-storage';
+import { StorageManagementClient } from 'azure-arm-storage';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
 import { AzExtTreeDataProvider, AzureAccountTreeItem, createAzureClient, ext } from '../../extension.bundle';
@@ -21,7 +20,13 @@ suiteSetup(async function (this: Mocha.Context): Promise<void> {
         await testAccount.signIn();
         ext.azureAccountTreeItem = new AzureAccountTreeItem(testAccount);
         ext.tree = new AzExtTreeDataProvider(ext.azureAccountTreeItem, 'azureStorage.loadMore');
+        // if (ifStack()) {
+        //     webSiteClient = createAzureClient(testAccount.getSubscriptionContext(), getStorageManagementClient());
+        // } else {
+        // webSiteClient = createAzureClient(testAccount.getSubscriptionContext(), StorageManagementClient);
+        // }
         webSiteClient = createAzureClient(testAccount.getSubscriptionContext(), StorageManagementClient);
+
     }
 });
 
