@@ -181,16 +181,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 canSelectMany: false,
                 defaultUri: lastUploadFolder,
                 filters: {
-                    "Text files": [
-                        'csv',
-                        'json',
-                        'log',
-                        'md',
-                        'rtf',
-                        'txt',
-                        'text',
-                        'xml',
-                    ],
                     "All files": ['*']
                 },
                 openLabel: "Upload"
@@ -204,7 +194,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             await this.checkCanUpload(context, filePath);
 
             let blobPath = await vscode.window.showInputBox({
-                prompt: 'Enter a name for the uploaded block blob (may include a path)',
+                prompt: 'Enter a name for the uploaded file (may include a path)',
                 value: path.basename(filePath),
                 validateInput: BlobContainerTreeItem.validateBlobName
             });
