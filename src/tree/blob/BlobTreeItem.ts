@@ -14,7 +14,7 @@ import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from "../../TransferProgress";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
-import { Limits } from "../../utils/limits";
+import { askOpenInStorageExplorer } from "../../utils/limits";
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 
@@ -118,16 +118,10 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         let props: BlobGetPropertiesResponse = await client.getProperties();
 
         context.telemetry.measurements.blobDownloadSize = props.contentLength;
-        if (Number(props.contentLength) > Limits.maxUploadDownloadSizeBytes) {
-            context.telemetry.properties.blobTooLargeForDownload = 'true';
-            message = `Please use Storage Explorer for blobs larger than ${Limits.maxUploadDownloadSizeMB}MB.`;
-        } else if (props.blobType && !props.blobType.toLocaleLowerCase().startsWith("block")) {
+        if (props.blobType && !props.blobType.toLocaleLowerCase().startsWith("block")) {
             context.telemetry.properties.invalidBlobTypeForDownload = 'true';
             message = `Please use Storage Explorer for blobs of type '${props.blobType}'.`;
-        }
-
-        if (message) {
-            await Limits.askOpenInStorageExplorer(context, message, this.root.storageAccountId, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
+            await askOpenInStorageExplorer(context, message, this.root.storageAccountId, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
         }
     }
 }
