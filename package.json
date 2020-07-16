@@ -210,7 +210,7 @@
             },
             {
                 "command": "azureStorage.uploadBlockBlob",
-                "title": "Upload Block Blob...",
+                "title": "Upload File...",
                 "category": "Azure Storage"
             },
             {
