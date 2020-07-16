@@ -146,7 +146,7 @@
             },
             {
                 "command": "azureStorage.deployStaticWebsite",
-                "title": "Deploy to Static Website...",
+                "title": "Deploy to Static Website via Azure Storage...",
                 "category": "Azure Storage",
                 "icon": {
                     "light": "resources/light/Deploy.svg",
