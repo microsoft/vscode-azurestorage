@@ -80,6 +80,9 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             }
 
             const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });
+            if (treeItem.root.isEmulated) {
+                wizardContext.openBehavior = 'OpenInNewWindow';
+            }
             const wizard: AzureWizard<IOpenInFileExplorerWizardContext> = new AzureWizard(wizardContext, {
                 promptSteps: [new OpenBehaviorStep()],
                 executeSteps: [new OpenTreeItemStep()]
