@@ -12,6 +12,7 @@ import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
+import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
@@ -99,9 +100,13 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         AzureStorageFS.fireDeleteEvent(this);
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingFileContext> & IFileShareCreateChildContext): Promise<AzExtTreeItem> {
         let child: AzExtTreeItem;
-        if (context.childType === FileTreeItem.contextValue) {
+        if (context.remoteFilePath && context.localFilePath) {
+            context.showCreatingTreeItem(context.remoteFilePath);
+            await this.uploadLocalFile(context.localFilePath, context.remoteFilePath);
+            child = new FileTreeItem(this, context.remoteFilePath, '', this.shareName);
+        } else if (context.childType === FileTreeItem.contextValue) {
             child = await askAndCreateEmptyTextFile(this, '', this.shareName, context);
         } else {
             child = await askAndCreateChildDirectory(this, '', this.shareName, context);

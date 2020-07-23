@@ -14,7 +14,7 @@ export namespace Limits {
     export const maxUploadDownloadSizeBytes = maxUploadDownloadSizeMB * 1000 * 1000;
 
     export async function askOpenInStorageExplorer(context: IActionContext, errorMessage: string, resourceId: string, subscriptionId: string, resourceType: ResourceType, resourceName: string): Promise<void> {
-        const message = "Open container in Storage Explorer";
+        const message = "Open resource in Storage Explorer";
         window.showErrorMessage(errorMessage, message).then(async result => {
             if (result === message) {
                 context.telemetry.properties.openInStorageExplorer = 'true';

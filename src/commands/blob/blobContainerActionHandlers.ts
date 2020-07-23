@@ -15,7 +15,6 @@ import { BlobTreeItem } from '../../tree/blob/BlobTreeItem';
 import { IBlobContainerCreateChildContext, showBlobPathInputBox } from '../../utils/blobUtils';
 import { localize } from '../../utils/localize';
 import { deleteNode } from '../commonTreeCommands';
-import { uploadBlockBlob } from '../uploadFile';
 
 export function registerBlobContainerActionHandlers(): void {
     registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
@@ -43,7 +42,6 @@ export function registerBlobContainerActionHandlers(): void {
         const childTreeItem: BlobTreeItem = <BlobTreeItem>await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobTreeItem.contextValue, childName: blobPath });
         await vscode.commands.executeCommand("azureStorage.editBlob", childTreeItem);
     });
-    registerCommand("azureStorage.uploadBlockBlob", uploadBlockBlob);
 }
 
 async function openBlobContainerInStorageExplorer(_context: IActionContext, treeItem: BlobContainerTreeItem): Promise<void> {
