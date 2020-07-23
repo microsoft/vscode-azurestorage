@@ -15,10 +15,9 @@ import { AzureStorageFS } from '../../AzureStorageFS';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
-import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, doesBlobExist, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { listFilePathsWithAzureSeparator } from '../../utils/fs';
-import { Limits } from '../../utils/limits';
 import { uploadFiles } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -26,8 +25,6 @@ import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerGroupTreeItem } from "./BlobContainerGroupTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobTreeItem } from './BlobTreeItem';
-
-let lastUploadFolder: Uri;
 
 export enum ChildType {
     newBlockBlob,
@@ -170,62 +167,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLog(`Container URL copied to clipboard: ${url}`);
-    }
-
-    // This is the public entrypoint for azureStorage.uploadBlockBlob
-    public async uploadBlockBlob(context: IActionContext): Promise<void> {
-        let uris = await vscode.window.showOpenDialog(
-            <vscode.OpenDialogOptions>{
-                canSelectFiles: true,
-                canSelectFolders: false,
-                canSelectMany: false,
-                defaultUri: lastUploadFolder,
-                filters: {
-                    "All files": ['*']
-                },
-                openLabel: "Upload"
-            }
-        );
-        if (uris && uris.length) {
-            let uri = uris[0];
-            lastUploadFolder = uri;
-            let filePath = uri.fsPath;
-
-            await this.checkCanUpload(context, filePath);
-
-            let blobPath = await vscode.window.showInputBox({
-                prompt: 'Enter a name for the uploaded file (may include a path)',
-                value: path.basename(filePath),
-                validateInput: BlobContainerTreeItem.validateBlobName
-            });
-            if (blobPath) {
-                if (await doesBlobExist(this, blobPath)) {
-                    const result = await vscode.window.showWarningMessage(
-                        `A blob with the name "${blobPath}" already exists. Do you want to overwrite it?`,
-                        { modal: true },
-                        DialogResponses.yes, DialogResponses.cancel);
-                    if (result !== DialogResponses.yes) {
-                        throw new UserCancelledError();
-                    }
-
-                    let blobId = `${this.fullId}/${blobPath}`;
-                    try {
-                        let blobTreeItem = await this.treeDataProvider.findTreeItem(blobId, context);
-                        if (blobTreeItem) {
-                            // A treeItem for this blob already exists, no need to do anything with the tree, just upload
-                            await this.uploadLocalFile(filePath, blobPath);
-                            return;
-                        }
-                    } catch (err) {
-                        // https://github.com/Microsoft/vscode-azuretools/issues/85
-                    }
-                }
-
-                await this.createChild(<IExistingBlobContext>{ ...context, blobPath, filePath });
-            }
-        }
-
-        throw new UserCancelledError();
     }
 
     public async deployStaticWebsite(context: IActionContext, sourceFolderPath: string): Promise<void> {
@@ -407,20 +348,5 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
 
         return undefined;
-    }
-
-    private async checkCanUpload(context: IActionContext, localPath: string): Promise<void> {
-        let size = (await fse.stat(localPath)).size;
-        context.telemetry.measurements.blockBlobUploadSize = size;
-        if (size > Limits.maxUploadDownloadSizeBytes) {
-            context.telemetry.properties.blockBlobTooLargeForUpload = 'true';
-            await Limits.askOpenInStorageExplorer(
-                context,
-                `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
-                this.root.storageAccountId,
-                this.root.subscriptionId,
-                'Azure.BlobContainer',
-                this.container.name);
-        }
     }
 }
