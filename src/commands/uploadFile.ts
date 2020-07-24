@@ -3,20 +3,29 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fse from 'fs-extra';
-import * as path from 'path';
-import * as vscode from 'vscode';
-import { DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
-import { BlobContainerTreeItem, IExistingBlobContext } from '../tree/blob/BlobContainerTreeItem';
-import { doesBlobExist } from '../utils/blobUtils';
-import { Limits } from '../utils/limits';
+import { stat } from "fs-extra";
+import { basename, dirname } from "path";
+import { OpenDialogOptions, Uri, window } from "vscode";
+import { DialogResponses, IActionContext } from "vscode-azureextensionui";
+import { ext } from "../extensionVariables";
+import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
+import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
+import { doesBlobExist } from "../utils/blobUtils";
+import { doesFileExist } from "../utils/fileUtils";
+import { Limits } from "../utils/limits";
+import { localize } from "../utils/localize";
+import { validateFileName } from "../utils/validateNames";
 
-let lastUploadFolder: vscode.Uri;
+let lastUploadFolder: Uri;
 
-// This is the public entrypoint for azureStorage.uploadBlockBlob
-export async function uploadBlockBlob(context: IActionContext, treeItem: BlobContainerTreeItem): Promise<void> {
-    let uris = await vscode.window.showOpenDialog(
-        <vscode.OpenDialogOptions>{
+export interface IExistingFileContext extends IActionContext {
+    localFilePath: string;
+    remoteFilePath: string;
+}
+
+export async function uploadFile(context: IActionContext, treeItem: BlobContainerTreeItem | FileShareTreeItem): Promise<void> {
+    const uris: Uri[] | undefined = await window.showOpenDialog(
+        <OpenDialogOptions>{
             canSelectFiles: true,
             canSelectFolders: false,
             canSelectMany: false,
@@ -28,33 +37,32 @@ export async function uploadBlockBlob(context: IActionContext, treeItem: BlobCon
         }
     );
     if (uris && uris.length) {
-        let uri = uris[0];
+        const uri: Uri = uris[0];
         lastUploadFolder = uri;
-        let filePath = uri.fsPath;
+        const localFilePath: string = uri.fsPath;
 
-        await checkCanUpload(context, treeItem, filePath);
+        await checkCanUpload(context, treeItem, localFilePath);
 
-        let blobPath = await vscode.window.showInputBox({
-            prompt: 'Enter a name for the uploaded file (may include a path)',
-            value: path.basename(filePath),
-            validateInput: BlobContainerTreeItem.validateBlobName
+        const remoteFilePath = await window.showInputBox({
+            prompt: localize('enterNameForFile', 'Enter a name for the uploaded file'),
+            value: basename(localFilePath),
+            validateInput: treeItem instanceof BlobContainerTreeItem ? BlobContainerTreeItem.validateBlobName : validateFileName
         });
-        if (blobPath) {
-            if (await doesBlobExist(treeItem, blobPath)) {
-                const result = await vscode.window.showWarningMessage(
-                    `A blob with the name "${blobPath}" already exists. Do you want to overwrite it?`,
+        if (remoteFilePath) {
+            if (treeItem instanceof BlobContainerTreeItem ? await doesBlobExist(treeItem, remoteFilePath) : await doesFileExist(basename(remoteFilePath), treeItem, dirname(remoteFilePath), treeItem.shareName)) {
+                await ext.ui.showWarningMessage(
+                    localize('fileAlreadyExists', `A file with the name "${remoteFilePath}" already exists. Do you want to overwrite it?`),
                     { modal: true },
-                    DialogResponses.yes, DialogResponses.cancel);
-                if (result !== DialogResponses.yes) {
-                    throw new UserCancelledError();
-                }
+                    DialogResponses.yes,
+                    DialogResponses.cancel
+                );
 
-                let blobId = `${treeItem.fullId}/${blobPath}`;
+                const id: string = `${treeItem.fullId}/${remoteFilePath}`;
                 try {
-                    let blobTreeItem = await treeItem.treeDataProvider.findTreeItem(blobId, context);
-                    if (blobTreeItem) {
-                        // A treeItem for this blob already exists, no need to do anything with the tree, just upload
-                        await treeItem.uploadLocalFile(filePath, blobPath);
+                    const result = await treeItem.treeDataProvider.findTreeItem(id, context);
+                    if (result) {
+                        // A treeItem for this file already exists, no need to do anything with the tree, just upload
+                        await treeItem.uploadLocalFile(localFilePath, remoteFilePath);
                         return;
                     }
                 } catch (err) {
@@ -62,24 +70,22 @@ export async function uploadBlockBlob(context: IActionContext, treeItem: BlobCon
                 }
             }
 
-            await treeItem.createChild(<IExistingBlobContext>{ ...context, blobPath, filePath });
+            await treeItem.createChild(<IExistingFileContext>{ ...context, remoteFilePath, localFilePath });
         }
     }
-
-    throw new UserCancelledError();
 }
 
-async function checkCanUpload(context: IActionContext, treeItem: BlobContainerTreeItem, localPath: string): Promise<void> {
-    let size = (await fse.stat(localPath)).size;
-    context.telemetry.measurements.blockBlobUploadSize = size;
+async function checkCanUpload(context: IActionContext, treeItem: BlobContainerTreeItem | FileShareTreeItem, localPath: string): Promise<void> {
+    const size = (await stat(localPath)).size;
+    context.telemetry.measurements.fileUploadSize = size;
     if (size > Limits.maxUploadDownloadSizeBytes) {
-        context.telemetry.properties.blockBlobTooLargeForUpload = 'true';
+        context.telemetry.properties.fileTooLargeForUpload = 'true';
         await Limits.askOpenInStorageExplorer(
             context,
             `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
             treeItem.root.storageAccountId,
             treeItem.root.subscriptionId,
-            'Azure.BlobContainer',
-            treeItem.container.name);
+            treeItem instanceof BlobContainerTreeItem ? 'Azure.BlobContainer' : 'Azure.FileShare',
+            treeItem instanceof BlobContainerTreeItem ? treeItem.container.name : treeItem.shareName);
     }
 }

@@ -51,7 +51,7 @@
         "onCommand:azureStorage.createBlobContainer",
         "onCommand:azureStorage.deleteBlobContainer",
         "onCommand:azureStorage.createBlockBlob",
-        "onCommand:azureStorage.uploadBlockBlob",
+        "onCommand:azureStorage.uploadFile",
         "onCommand:azureStorage.deleteBlob",
         "onCommand:azureStorage.downloadBlob",
         "onCommand:azureStorage.createFileShare",
@@ -209,7 +209,7 @@
                 "category": "Azure Storage"
             },
             {
-                "command": "azureStorage.uploadBlockBlob",
+                "command": "azureStorage.uploadFile",
                 "title": "Upload File...",
                 "category": "Azure Storage"
             },
@@ -453,7 +453,7 @@
                     "group": "2_create@1"
                 },
                 {
-                    "command": "azureStorage.uploadBlockBlob",
+                    "command": "azureStorage.uploadFile",
                     "when": "view == azureStorage && viewItem == azureBlobContainer",
                     "group": "2_create@2"
                 },
@@ -533,6 +533,11 @@
                     "command": "azureStorage.createDirectory",
                     "when": "view == azureStorage && viewItem == azureFileShare",
                     "group": "2_create@2"
+                },
+                {
+                    "command": "azureStorage.uploadFile",
+                    "when": "view == azureStorage && viewItem == azureFileShare",
+                    "group": "2_create@3"
                 },
                 {
                     "command": "azureStorage.createGpv2Account",
@@ -679,7 +684,7 @@
                     "when": "never"
                 },
                 {
-                    "command": "azureStorage.uploadBlockBlob",
+                    "command": "azureStorage.uploadFile",
                     "when": "never"
                 },
                 {

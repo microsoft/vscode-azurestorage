@@ -12,6 +12,7 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
+import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
@@ -29,11 +30,6 @@ import { BlobTreeItem } from './BlobTreeItem';
 export enum ChildType {
     newBlockBlob,
     uploadedBlob
-}
-
-export interface IExistingBlobContext extends IActionContext {
-    filePath: string;
-    blobPath: string;
 }
 
 export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
@@ -145,12 +141,12 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         AzureStorageFS.fireDeleteEvent(this);
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingFileContext> & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
         let child: AzExtTreeItem;
-        if (context.blobPath && context.filePath) {
-            context.showCreatingTreeItem(context.blobPath);
-            await this.uploadLocalFile(context.filePath, context.blobPath);
-            child = new BlobTreeItem(this, context.blobPath, this.container);
+        if (context.remoteFilePath && context.localFilePath) {
+            context.showCreatingTreeItem(context.remoteFilePath);
+            await this.uploadLocalFile(context.localFilePath, context.remoteFilePath);
+            child = new BlobTreeItem(this, context.remoteFilePath, this.container);
         } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
             child = new BlobDirectoryTreeItem(this, context.childName, this.container);
         } else {

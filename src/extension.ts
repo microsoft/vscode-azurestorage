@@ -30,6 +30,7 @@ import { emulatorTimeoutMS as startEmulatorDebounce, EmulatorType, startEmulator
 import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
+import { uploadFile } from './commands/uploadFile';
 import { uploadToAzureStorage } from './commands/uploadToAzureStorage';
 import { ext } from './extensionVariables';
 import { AzureAccountTreeItem } from './tree/AzureAccountTreeItem';
@@ -135,6 +136,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         });
     });
     registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
+    registerCommand("azureStorage.uploadFile", uploadFile);
     registerCommand("azureStorage.attachStorageAccount", async () => {
         await ext.attachedStorageAccountsTreeItem.attachWithConnectionString();
     });

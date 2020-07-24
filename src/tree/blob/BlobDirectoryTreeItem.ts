@@ -12,7 +12,7 @@ import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { IStorageRoot } from "../IStorageRoot";
-import { BlobContainerTreeItem, IExistingBlobContext } from "./BlobContainerTreeItem";
+import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 
 export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
@@ -63,7 +63,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return children;
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingBlobContext> & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
         let child: AzExtTreeItem;
         if (context.childType === BlobTreeItem.contextValue) {
             child = await createChildAsNewBlockBlob(this, context);
