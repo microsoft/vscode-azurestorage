@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { stat } from "fs-extra";
-import { basename } from "path";
+import { basename, dirname } from "path";
 import { OpenDialogOptions, Uri, window } from "vscode";
 import { DialogResponses, IActionContext } from "vscode-azureextensionui";
+import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { doesBlobExist } from "../utils/blobUtils";
@@ -48,8 +49,8 @@ export async function uploadFile(context: IActionContext, treeItem: BlobContaine
             validateInput: treeItem instanceof BlobContainerTreeItem ? BlobContainerTreeItem.validateBlobName : validateFileName
         });
         if (remoteFilePath) {
-            if (treeItem instanceof BlobContainerTreeItem ? await doesBlobExist(treeItem, remoteFilePath) : await doesFileExist(remoteFilePath, treeItem, '', treeItem.shareName)) {
-                await window.showWarningMessage(
+            if (treeItem instanceof BlobContainerTreeItem ? await doesBlobExist(treeItem, remoteFilePath) : await doesFileExist(basename(remoteFilePath), treeItem, dirname(remoteFilePath), treeItem.shareName)) {
+                await ext.ui.showWarningMessage(
                     localize('fileAlreadyExists', `A file with the name "${remoteFilePath}" already exists. Do you want to overwrite it?`),
                     { modal: true },
                     DialogResponses.yes,

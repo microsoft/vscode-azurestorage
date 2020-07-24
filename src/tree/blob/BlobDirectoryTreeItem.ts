@@ -8,7 +8,6 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { IExistingFileContext } from "../../commands/uploadFile";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
@@ -64,7 +63,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return children;
     }
 
-    public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingFileContext> & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
+    public async createChildImpl(context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {
         let child: AzExtTreeItem;
         if (context.childType === BlobTreeItem.contextValue) {
             child = await createChildAsNewBlockBlob(this, context);
