@@ -8,8 +8,6 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccountKey } from 'azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
-// tslint:disable-next-line:no-require-imports
-import opn = require('opn');
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, MessageItem, Uri, window } from 'vscode';
@@ -18,6 +16,7 @@ import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
+import { openUrl } from '../utils/openUrl';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { BlobContainerTreeItem } from "./blob/BlobContainerTreeItem";
@@ -313,7 +312,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
         let endpoint = this.getPrimaryWebEndpoint();
         if (endpoint) {
-            await opn(endpoint);
+            await openUrl(endpoint);
         } else {
             throw new Error(`Could not retrieve the primary web endpoint for ${this.label}`);
         }
