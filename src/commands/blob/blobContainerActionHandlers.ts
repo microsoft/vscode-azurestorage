@@ -12,7 +12,7 @@ import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageEx
 import { BlobContainerTreeItem } from '../../tree/blob/BlobContainerTreeItem';
 import { BlobDirectoryTreeItem } from '../../tree/blob/BlobDirectoryTreeItem';
 import { BlobTreeItem } from '../../tree/blob/BlobTreeItem';
-import { IBlobContainerCreateChildContext, showBlobPathInputBox } from '../../utils/blobUtils';
+import { getBlobPath, IBlobContainerCreateChildContext } from '../../utils/blobUtils';
 import { localize } from '../../utils/localize';
 import { deleteNode } from '../commonTreeCommands';
 
@@ -21,7 +21,7 @@ export function registerBlobContainerActionHandlers(): void {
     registerCommand("azureStorage.editBlob", async (_context: IActionContext, treeItem: BlobTreeItem) => AzureStorageFS.showEditor(treeItem), 250);
     registerCommand("azureStorage.deleteBlobContainer", async (context: IActionContext, treeItem?: BlobContainerTreeItem) => await deleteNode(context, BlobContainerTreeItem.contextValue, treeItem));
     registerCommand("azureStorage.createBlockBlob", async (context: IActionContext, parent: BlobContainerTreeItem) => {
-        const blobPath: string = await showBlobPathInputBox(parent);
+        const blobPath: string = await getBlobPath(parent);
         const dirNames: string[] = blobPath.includes('/') ? path.dirname(blobPath).split('/') : [];
         let dirParentTreeItem: BlobDirectoryTreeItem | BlobContainerTreeItem = parent;
 
