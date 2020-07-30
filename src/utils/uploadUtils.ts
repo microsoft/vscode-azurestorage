@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { DialogResponses, parseError, TelemetryProperties } from "vscode-azureextensionui";
+import { parseError, TelemetryProperties } from "vscode-azureextensionui";
 import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
@@ -47,9 +47,8 @@ export async function uploadFiles(
 
 export async function warnFileAlreadyExists(filePath: string): Promise<void> {
     await ext.ui.showWarningMessage(
-        localize('fileAlreadyExists', `A file with the name "${filePath}" already exists. Do you want to overwrite it?`),
+        localize('fileAlreadyExists', `A file with the name "${filePath}" already exists.`),
         { modal: true },
-        DialogResponses.yes,
-        DialogResponses.cancel
+        { title: localize('overwrite', 'Overwrite') }
     );
 }
