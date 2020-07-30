@@ -44,3 +44,11 @@ export async function uploadFiles(
 
     ext.outputChannel.appendLog(localize('finishedUpload', 'Uploaded to "{0}".', destTreeItem.label));
 }
+
+export async function warnFileAlreadyExists(filePath: string): Promise<void> {
+    await ext.ui.showWarningMessage(
+        localize('fileAlreadyExists', `A file with the name "${filePath}" already exists.`),
+        { modal: true },
+        { title: localize('overwrite', 'Overwrite') }
+    );
+}
