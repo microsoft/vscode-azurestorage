@@ -155,9 +155,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
                 return new azureStorageBlob.BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
             },
-            createFileService: () => {
-                return azureStorage.createFileService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.file).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
-            },
             createShareServiceClient: () => {
                 const credential = new azureStorageShare.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
                 return new azureStorageShare.ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);

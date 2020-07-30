@@ -15,7 +15,6 @@ export interface IStorageRoot extends ISubscriptionContext {
     isEmulated: boolean;
     primaryEndpoints?: Endpoints;
     createBlobServiceClient(): azureStorageBlob.BlobServiceClient;
-    createFileService(): azureStorage.FileService;
     createShareServiceClient(): azureStorageShare.ShareServiceClient;
     createQueueService(): azureStorage.QueueService;
     createTableService(): azureStorage.TableService;

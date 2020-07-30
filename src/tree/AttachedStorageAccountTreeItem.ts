@@ -121,10 +121,6 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         return azureStorageBlob.BlobServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
-    public createFileService(): azureStorage.FileService {
-        return new azureStorage.FileService(this._connectionString);
-    }
-
     public createShareServiceClient(): azureStorageShare.ShareServiceClient {
         return azureStorageShare.ShareServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }

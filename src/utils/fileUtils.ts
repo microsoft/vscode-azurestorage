@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageShare from '@azure/storage-file-share';
-import { FileService } from 'azure-storage';
 import * as mime from 'mime';
 import { ProgressLocation, window } from "vscode";
 import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from "vscode-azureextensionui";
@@ -79,29 +78,14 @@ export async function createFile(directoryPath: string, name: string, shareName:
 }
 
 export async function updateFileFromText(directoryPath: string, name: string, shareName: string, root: IStorageRoot, text: string | Buffer): Promise<void> {
-    // `ShareFileClient.uploadData` in @azure/storage-file-share hangs indefinitely if the buffer length is zero
-    // And there isn't an SDK function to clear the contents of a file (clearRange doesn't update contentLength)
-    // So revert to the old SDK here
-    // https://github.com/Azure/azure-sdk-for-js/issues/6904
-
-    const fileService: FileService = root.createFileService();
-    let options: FileService.CreateFileRequestOptions = await getExistingCreateOptionsDeprecated(directoryPath, name, shareName, root);
-
+    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
+    let options: azureStorageShare.FileParallelUploadOptions = await getExistingCreateOptions(directoryPath, name, shareName, root);
     // tslint:disable: strict-boolean-expressions
     options = options || {};
-    options.contentSettings = options.contentSettings || {};
-    options.contentSettings.contentType = options.contentSettings.contentType || mime.getType(name) || undefined;
+    options.fileHttpHeaders = options.fileHttpHeaders || {};
+    options.fileHttpHeaders.fileContentType = options.fileHttpHeaders.fileContentType || mime.getType(name) || undefined;
     // tslint:enable: strict-boolean-expressions
-
-    return new Promise((resolve, reject) => {
-        fileService.createFileFromText(shareName, directoryPath, name, text, options, (err?: Error) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
+    await fileClient.uploadData(Buffer.from(text), options);
 }
 
 export async function deleteFile(directory: string, name: string, share: string, root: IStorageRoot): Promise<void> {
@@ -123,38 +107,4 @@ export async function getExistingCreateOptions(directoryPath: string, name: stri
     options.fileHttpHeaders.fileContentType = propertiesResult.contentType;
     options.metadata = propertiesResult.metadata;
     return options;
-}
-
-// Gets existing create options using the `azure-storage` SDK
-async function getExistingCreateOptionsDeprecated(directoryPath: string, name: string, shareName: string, root: IStorageRoot): Promise<FileService.CreateFileRequestOptions> {
-    const fileService = root.createFileService();
-    const propertiesResult: FileService.FileResult = await new Promise((resolve, reject) => {
-        fileService.getFileProperties(shareName, directoryPath, name, (err?: Error, result?: FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
-
-    if (propertiesResult.contentSettings) {
-        // Don't allow the existing MD5 hash to be used for the updated file
-        propertiesResult.contentSettings.contentMD5 = '';
-    }
-
-    const metadataResult: FileService.FileResult = await new Promise((resolve, reject) => {
-        fileService.getFileMetadata(shareName, directoryPath, name, (err?: Error, result?: FileService.FileResult) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    });
-
-    return {
-        contentSettings: propertiesResult.contentSettings,
-        metadata: metadataResult.metadata
-    };
 }
