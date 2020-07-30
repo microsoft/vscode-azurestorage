@@ -57,7 +57,7 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
 
 // Currently only supports creating block blobs
 export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
-    let blobPath: string = context.childName || await showBlobPathInputBox(parent);
+    let blobPath: string = context.childName || await getBlobPath(parent);
 
     return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(blobPath);
@@ -107,8 +107,9 @@ export async function getExistingProperties(parent: BlobTreeItem | BlobContainer
     return undefined;
 }
 
-export async function showBlobPathInputBox(parent: BlobContainerTreeItem | BlobDirectoryTreeItem): Promise<string> {
+export async function getBlobPath(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, value?: string): Promise<string> {
     return await ext.ui.showInputBox({
+        value,
         placeHolder: localize('enterNameForNewBlockBlob', 'Enter a name for the new block blob'),
         validateInput: async (name: string) => {
             let nameError = BlobContainerTreeItem.validateBlobName(name);
