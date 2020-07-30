@@ -146,14 +146,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             },
             onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
         };
-
-        if (fileSize) {
-            await fileClient.uploadFile(sourceFilePath, options);
-        } else {
-            // uploadFile hangs indefinately if the source file size is zero, so create an empty file
-            // Related: https://github.com/Azure/azure-sdk-for-js/issues/6904
-            await fileClient.create(0, options);
-        }
+        await fileClient.uploadFile(sourceFilePath, options);
 
         if (!suppressLogs) {
             ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);
