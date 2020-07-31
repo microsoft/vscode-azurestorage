@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment } from 'ms-rest-azure';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, ISubscriptionContext, parseError } from "vscode-azureextensionui";
@@ -194,31 +192,31 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
 export class AttachedAccountRoot implements ISubscriptionContext {
     private _error: Error = new Error(localize('cannotRetrieveAzureSubscriptionInfoForAttachedAccount', 'Cannot retrieve Azure subscription information for an attached account.'));
 
-    public get credentials(): ServiceClientCredentials {
+    public get credentials(): never {
         throw this._error;
     }
 
-    public get subscriptionDisplayName(): string {
+    public get subscriptionDisplayName(): never {
         throw this._error;
     }
 
-    public get subscriptionId(): string {
+    public get subscriptionId(): never {
         throw this._error;
     }
 
-    public get subscriptionPath(): string {
+    public get subscriptionPath(): never {
         throw this._error;
     }
 
-    public get tenantId(): string {
+    public get tenantId(): never {
         throw this._error;
     }
 
-    public get userId(): string {
+    public get userId(): never {
         throw this._error;
     }
 
-    public get environment(): AzureEnvironment {
+    public get environment(): never {
         throw this._error;
     }
 }

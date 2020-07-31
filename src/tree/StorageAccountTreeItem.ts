@@ -3,10 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
-import { StorageManagementClient } from 'azure-arm-storage';
-import { StorageAccountKey } from 'azure-arm-storage/lib/models';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -169,9 +168,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     async getConnectionString(): Promise<string> {
-        // https://github.com/Azure/azure-sdk-for-node/issues/4706
-        const storageEndpointSuffix: string = this.root.environment.storageEndpointSuffix.charAt(0) === '.' ? this.root.environment.storageEndpointSuffix.substr(1) : this.root.environment.storageEndpointSuffix;
-        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${storageEndpointSuffix}`;
+        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${nonNullProp(this.root.environment, 'storageEndpointSuffix')}`;
     }
 
     async getKeys(): Promise<StorageAccountKeyWrapper[]> {
@@ -179,7 +176,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         let resourceGroupName = parsedId.resourceGroups;
         let keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
         // tslint:disable-next-line:strict-boolean-expressions
-        return (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
+        return (keyResult.keys || <StorageManagementModels.StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
     }
 
     parseAzureResourceId(resourceId: string): { [key: string]: string } {
