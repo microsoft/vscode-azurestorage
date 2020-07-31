@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ResourceManagementClient } from 'azure-arm-resource';
-import StorageManagementClient from 'azure-arm-storage';
+import { ResourceManagementClient } from '@azure/arm-resources';
+import { StorageManagementClient } from '@azure/arm-storage';
 import * as vscode from 'vscode';
 import { TestAzureAccount } from 'vscode-azureextensiondev';
 import { AzExtTreeDataProvider, AzureAccountTreeItem, createAzureClient, ext } from '../../extension.bundle';
@@ -37,7 +37,7 @@ suiteTeardown(async function (this: Mocha.Context): Promise<void> {
 
 export async function beginDeleteResourceGroup(resourceGroup: string): Promise<void> {
     const client: ResourceManagementClient = createAzureClient(testAccount.getSubscriptionContext(), ResourceManagementClient);
-    if (await client.resourceGroups.checkExistence(resourceGroup)) {
+    if ((await client.resourceGroups.checkExistence(resourceGroup)).body) {
         console.log(`Started delete of resource group "${resourceGroup}"...`);
         await client.resourceGroups.beginDeleteMethod(resourceGroup);
         console.log(`Successfully started delete of resource group "${resourceGroup}".`);

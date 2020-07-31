@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { StorageManagementModels } from '@azure/arm-storage';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as assert from 'assert';
-import { BlobContainer, StorageAccount } from 'azure-arm-storage/lib/models';
 import { createQueueService, createTableService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
 import * as vscode from 'vscode';
 import { DialogResponses, getRandomHexString } from '../../extension.bundle';
@@ -49,7 +49,7 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
         await testUserInput.runWithInputs([resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.createGpv2Account');
         });
-        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
+        const createdAccount: StorageManagementModels.StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
         assert.ok(createdAccount);
     });
 
@@ -60,7 +60,7 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
         await testUserInput.runWithInputs([accountNameAdvanced, '$(plus) Create new resource group', resourceNameAdvanced, 'Yes', 'index.html', 'index.html', 'East US'], async () => {
             await vscode.commands.executeCommand('azureStorage.createGpv2AccountAdvanced');
         });
-        const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceNameAdvanced, accountNameAdvanced);
+        const createdAccount: StorageManagementModels.StorageAccount = await client.storageAccounts.getProperties(resourceNameAdvanced, accountNameAdvanced);
         assert.ok(createdAccount);
     });
 
@@ -76,7 +76,7 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
         await testUserInput.runWithInputs([attachedRegex, resourceName, containerName], async () => {
             await vscode.commands.executeCommand('azureStorage.createBlobContainer');
         });
-        const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName);
+        const createdContainer: StorageManagementModels.BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName);
         assert.ok(createdContainer);
     });
 
@@ -174,7 +174,7 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
         if (!(await containerClient.exists())) {
             await containerClient.create();
         }
-        const createdContainer: BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName1);
+        const createdContainer: StorageManagementModels.BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName1);
         assert.ok(createdContainer);
     }
 
@@ -197,7 +197,7 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
 
 // Validate the storage account exists or not based on its resource group name and account name
 async function validateAccountExists(resourceGroupName: string, accountName: string): Promise<void> {
-    const createdAccount: StorageAccount = await client.storageAccounts.getProperties(resourceGroupName, accountName);
+    const createdAccount: StorageManagementModels.StorageAccount = await client.storageAccounts.getProperties(resourceGroupName, accountName);
     assert.ok(createdAccount);
 }
 
@@ -232,7 +232,7 @@ async function getConnectionString(storageAccountName: string): Promise<string> 
     return vscode.env.clipboard.readText();
 }
 
-async function assertThrowsAsync(fn: { (): Promise<StorageAccount>; (): void; }, regExp: RegExp): Promise<void> {
+async function assertThrowsAsync(fn: { (): Promise<StorageManagementModels.StorageAccount>; (): void; }, regExp: RegExp): Promise<void> {
     let f = () => { return undefined; };
     try {
         await fn();

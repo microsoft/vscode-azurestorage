@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementClient } from 'azure-arm-storage';
-import { StorageAccount } from 'azure-arm-storage/lib/models';
+import { StorageManagementClient } from '@azure/arm-storage';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
@@ -29,10 +28,8 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         return this.createTreeItemsWithErrorHandling(
             accounts,
             'invalidStorageAccount',
-            async (sa: StorageAccount) => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
-            (sa: StorageAccount) => {
-                return sa.name;
-            }
+            async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
+            sa => sa.name
         );
     }
 
