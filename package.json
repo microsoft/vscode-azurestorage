@@ -804,6 +804,7 @@
         "webpack-cli": "^3.1.2"
     },
     "dependencies": {
+        "@azure-tools/azcopy-node": "1.0.0",
         "@azure/storage-blob": "^12.1.1",
         "@azure/storage-file-share": "^12.1.1",
         "@types/mime": "^2.0.1",

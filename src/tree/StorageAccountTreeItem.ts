@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
+import { AccountSASPermissions, AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import { StorageManagementClient } from 'azure-arm-storage';
 import { StorageAccountKey } from 'azure-arm-storage/lib/models';
@@ -37,6 +38,7 @@ export type WebsiteHostingStatus = {
 };
 
 type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
+const threeDaysInMS: number = 1000 * 60 * 60 * 24 * 3;
 
 export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public key: StorageAccountKeyWrapper;
@@ -150,6 +152,18 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             storageAccountId: this.storageAccount.id,
             isEmulated: false,
             primaryEndpoints: this.storageAccount.primaryEndpoints,
+            generateSasToken: () => {
+                const accountSASSignatureValues: AccountSASSignatureValues = {
+                    expiresOn: new Date(new Date().getTime() + threeDaysInMS),
+                    permissions: AccountSASPermissions.parse('rwl'), // read, write, list
+                    services: 'bf', // blob, file
+                    resourceTypes: 'o', // object
+                };
+                return generateAccountSASQueryParameters(
+                    accountSASSignatureValues,
+                    new StorageSharedKeyCredential(this.storageAccount.name, this.key.value)
+                ).toString();
+            },
             createBlobServiceClient: () => {
                 const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
                 return new azureStorageBlob.BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);

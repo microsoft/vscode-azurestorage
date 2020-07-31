@@ -3,15 +3,14 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { stat } from "fs-extra";
 import { basename, dirname } from "path";
 import { OpenDialogOptions, Uri, window } from "vscode";
-import { IActionContext } from "vscode-azureextensionui";
+import { IActionContext, IParsedError, parseError } from "vscode-azureextensionui";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
+import { shouldUseAzCopy } from "../utils/azCopyUtils";
 import { doesBlobExist } from "../utils/blobUtils";
 import { doesFileExist } from "../utils/fileUtils";
-import { Limits } from "../utils/limits";
 import { localize } from "../utils/localize";
 import { warnFileAlreadyExists } from "../utils/uploadUtils";
 import { validateFileName } from "../utils/validateNames";
@@ -40,9 +39,6 @@ export async function uploadFile(context: IActionContext, treeItem: BlobContaine
         const uri: Uri = uris[0];
         lastUploadFolder = uri;
         const localFilePath: string = uri.fsPath;
-
-        await checkCanUpload(context, treeItem, localFilePath);
-
         const remoteFilePath = await window.showInputBox({
             prompt: localize('enterNameForFile', 'Enter a name for the uploaded file'),
             value: basename(localFilePath),
@@ -56,30 +52,20 @@ export async function uploadFile(context: IActionContext, treeItem: BlobContaine
                     const result = await treeItem.treeDataProvider.findTreeItem(id, context);
                     if (result) {
                         // A treeItem for this file already exists, no need to do anything with the tree, just upload
-                        await treeItem.uploadLocalFile(localFilePath, remoteFilePath);
+                        await treeItem.uploadLocalFile(localFilePath, remoteFilePath, await shouldUseAzCopy(context, localFilePath));
                         return;
                     }
                 } catch (err) {
+                    const parsedError: IParsedError = parseError(err);
+                    if (parsedError.message === 'AzCopy Transfer Failed') {
+                        throw err;
+                    }
+
                     // https://github.com/Microsoft/vscode-azuretools/issues/85
                 }
             }
 
             await treeItem.createChild(<IExistingFileContext>{ ...context, remoteFilePath, localFilePath });
         }
-    }
-}
-
-async function checkCanUpload(context: IActionContext, treeItem: BlobContainerTreeItem | FileShareTreeItem, localPath: string): Promise<void> {
-    const size = (await stat(localPath)).size;
-    context.telemetry.measurements.fileUploadSize = size;
-    if (size > Limits.maxUploadDownloadSizeBytes) {
-        context.telemetry.properties.fileTooLargeForUpload = 'true';
-        await Limits.askOpenInStorageExplorer(
-            context,
-            `Please use Storage Explorer to upload files larger than ${Limits.maxUploadDownloadSizeMB}MB.`,
-            treeItem.root.storageAccountId,
-            treeItem.root.subscriptionId,
-            treeItem instanceof BlobContainerTreeItem ? 'Azure.BlobContainer' : 'Azure.FileShare',
-            treeItem instanceof BlobContainerTreeItem ? treeItem.container.name : treeItem.shareName);
     }
 }

@@ -34,7 +34,7 @@ export async function uploadFiles(
         ext.outputChannel.appendLog(localize('uploadingFile', 'Uploading "{0}" to "{1}"...', sourceFilePath, destTreeItem.label));
 
         try {
-            await destTreeItem.uploadLocalFile(sourceFilePath, destFilePath, true /* suppressLogs */);
+            await destTreeItem.uploadLocalFile(sourceFilePath, destFilePath, false /* useAzCopy */, true /* suppressLogs */);
         } catch (error) {
             throw new Error(`Error uploading "${sourceFilePath}": ${parseError(error).message} `);
         }

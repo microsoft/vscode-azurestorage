@@ -22,3 +22,5 @@ export const emulatorConnectionString: string = 'UseDevelopmentStorage=true;';
 export function getResourcesPath(): string {
     return ext.context.asAbsolutePath('resources');
 }
+
+export const azcopy: string = 'azcopy';

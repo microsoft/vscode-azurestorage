@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import { TransferProgressEvent } from '@azure/core-http';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as fse from 'fs-extra';
@@ -16,6 +17,7 @@ import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
+import { azCopyBlobTransfer, createAzCopyDestination, createAzCopyLocalSource, shouldUseAzCopy } from '../../utils/azCopyUtils';
 import { createBlobContainerClient, createBlockBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { listFilePathsWithAzureSeparator } from '../../utils/fs';
@@ -145,7 +147,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let child: AzExtTreeItem;
         if (context.remoteFilePath && context.localFilePath) {
             context.showCreatingTreeItem(context.remoteFilePath);
-            await this.uploadLocalFile(context.localFilePath, context.remoteFilePath);
+            await this.uploadLocalFile(context.localFilePath, context.remoteFilePath, await shouldUseAzCopy(context, context.localFilePath));
             child = new BlobTreeItem(this, context.remoteFilePath, this.container);
         } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
             child = new BlobDirectoryTreeItem(this, context.childName, this.container);
@@ -305,27 +307,32 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
-        const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
-        const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(this.root, this.container.name, blobPath);
-
+    public async uploadLocalFile(filePath: string, blobPath: string, useAzCopy: boolean = false, suppressLogs: boolean = false): Promise<void> {
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
+        const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
+        const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
 
         if (!suppressLogs) {
             ext.outputChannel.show();
             ext.outputChannel.appendLog(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
-        const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
-        const options: azureStorageBlob.BlockBlobParallelUploadOptions = {
-            blobHTTPHeaders: {
-                // tslint:disable-next-line: strict-boolean-expressions
-                blobContentType: mime.getType(blobPath) || undefined
-            },
-            onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
-        };
-        await blockBlobClient.uploadFile(filePath, options);
+        if (useAzCopy) {
+            const src: ILocalLocation = createAzCopyLocalSource(filePath);
+            const dst: IRemoteSasLocation = createAzCopyDestination(this, blobPath);
+            await azCopyBlobTransfer(src, dst, transferProgress);
+        } else {
+            const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(this.root, this.container.name, blobPath);
+            const options: azureStorageBlob.BlockBlobParallelUploadOptions = {
+                blobHTTPHeaders: {
+                    // tslint:disable-next-line: strict-boolean-expressions
+                    blobContentType: mime.getType(blobPath) || undefined
+                },
+                onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
+            };
+            await blockBlobClient.uploadFile(filePath, options);
+        }
 
         if (!suppressLogs) {
             ext.outputChannel.appendLog(`Successfully uploaded ${blobFriendlyPath}.`);
