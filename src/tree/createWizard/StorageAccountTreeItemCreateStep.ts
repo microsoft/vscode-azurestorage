@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import StorageManagementClient from "azure-arm-storage";
-import { StorageAccount } from "azure-arm-storage/lib/models";
+import { StorageManagementClient } from '@azure/arm-storage';
 import { AzureWizardExecuteStep, createAzureClient, IStorageAccountWizardContext } from "vscode-azureextensionui";
-import { nonNull, StorageAccountWrapper } from "../../utils/storageWrappers";
+import { nonNullProp } from '../../utils/nonNull';
+import { StorageAccountWrapper } from "../../utils/storageWrappers";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { SubscriptionTreeItem } from "../SubscriptionTreeItem";
 
@@ -25,7 +25,7 @@ export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<ISt
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {
         const storageManagementClient = createAzureClient(this.parent.root, StorageManagementClient);
-        wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.parent, new StorageAccountWrapper(<StorageAccount>nonNull(wizardContext.storageAccount)), storageManagementClient);
+        wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.parent, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')), storageManagementClient);
     }
 
     public shouldExecute(): boolean {

@@ -15,7 +15,7 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
 
     public async execute(context: IOpenInFileExplorerWizardContext): Promise<void> {
         // tslint:disable-next-line:strict-boolean-expressions
-        const openFolders: WorkspaceFolder[] = workspace.workspaceFolders || [];
+        const openFolders: readonly WorkspaceFolder[] = workspace.workspaceFolders || [];
         if (context.openBehavior === 'AddToWorkspace' && openFolders.length === 0) {
             // no point in adding to an empty workspace
             context.openBehavior = 'OpenInCurrentWindow';

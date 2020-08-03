@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementClient } from 'azure-arm-storage';
+import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient, INewStorageAccountDefaults, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
@@ -23,7 +23,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         const newLocation: string = wizardContext.location!.name!;
         // tslint:disable-next-line:no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
-        const newSkuName: string = `${this._defaults.performance}_${this._defaults.replication}`;
+        const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
         const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation}" with sku "${newSkuName}"...`;
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
