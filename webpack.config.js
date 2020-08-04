@@ -18,7 +18,17 @@ let DEBUG_WEBPACK = !!process.env.DEBUG_WEBPACK;
 let config = dev.getDefaultWebpackConfig({
     projectRoot: __dirname,
     verbosity: DEBUG_WEBPACK ? 'debug' : 'normal',
-    externals: { './getCoreNodeModule': 'commonjs getCoreNodeModule' },
+    externals: {
+        './getCoreNodeModule': 'commonjs getCoreNodeModule',
+
+        // @azure-tools/azcopy-node
+        '@azure-tools/azcopy-darwin': true,
+        '@azure-tools/azcopy-linux': true,
+        '@azure-tools/azcopy-win32': true,
+        '@azure-tools/azcopy-win64': true,
+        '@storage-explorer/macos-keychain': true,
+        'keytar': true
+    },
     plugins: [
         new CopyWebpackPlugin([
             { from: './out/src/utils/getCoreNodeModule.js', to: 'node_modules' }
