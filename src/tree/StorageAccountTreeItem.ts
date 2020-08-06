@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage1';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
@@ -13,6 +14,7 @@ import { commands, MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, AzureWizard, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
+import { ifStack } from '../utils/environmentUtils';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -126,7 +128,13 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
-            let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
+            let storageManagementClient: StorageManagementClient;
+            let isAzureStack: boolean = ifStack();
+            if (isAzureStack) {
+                storageManagementClient = createAzureClient(this.root, StorageManagementClient1);
+            } else {
+                storageManagementClient = createAzureClient(this.root, StorageManagementClient);
+            }
             let parsedId = this.parseAzureResourceId(this.storageAccount.id);
             let resourceGroupName = parsedId.resourceGroups;
 

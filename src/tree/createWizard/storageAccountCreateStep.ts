@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage1';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient, INewStorageAccountDefaults, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
+import { ifStack } from '../../utils/environmentUtils';
 
 export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> implements StorageAccountCreateStep<T> {
     public priority: number = 130;
@@ -27,7 +29,13 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation}" with sku "${newSkuName}"...`;
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
-        const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
+        let storageClient: StorageManagementClient;
+        let isAzureStack: boolean = ifStack();
+        if (isAzureStack) {
+            storageClient = createAzureClient(wizardContext, StorageManagementClient1);
+        } else {
+            storageClient = createAzureClient(wizardContext, StorageManagementClient);
+        }
         wizardContext.storageAccount = await storageClient.storageAccounts.create(
             // tslint:disable-next-line:no-non-null-assertion
             wizardContext.resourceGroup!.name!,

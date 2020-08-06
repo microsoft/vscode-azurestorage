@@ -4,12 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage1';
 import { AzureNameStep, createAzureClient, IStorageAccountWizardContext, ResourceGroupListStep, resourceGroupNamingRules, storageAccountNamingRules } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
+import { ifStack } from '../../utils/environmentUtils';
 
 export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
     public async prompt(wizardContext: T): Promise<void> {
-        const client: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
+        let client: StorageManagementClient;
+        let isAzureStack: boolean = ifStack();
+        if (isAzureStack) {
+            client = createAzureClient(wizardContext, StorageManagementClient1);
+        } else {
+            client = createAzureClient(wizardContext, StorageManagementClient);
+        }
 
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
         wizardContext.newStorageAccountName = (await ext.ui.showInputBox({

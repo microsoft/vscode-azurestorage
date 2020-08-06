@@ -805,8 +805,9 @@
     },
     "dependencies": {
         "@azure/arm-resources": "^3.0.0",
-        "@azure/arm-storage": "^15.0.0",
-        "@azure/storage-blob": "^12.1.1",
+        "@azure/arm-storage1": "https://sdkautomation.blob.core.windows.net/sdkautomation-pipeline/Azure/azure-rest-api-specs/10334/azure-sdk-for-js/Azure/azure-sdk-for-js/@azure/arm-storage/azure-arm-storage-15.0.0.tgz",
+        "@azure/arm-storage": "npm:@azure/arm-storage@^15.0.0",
+        "@azure/storage-blob": "12.0.2",
         "@azure/storage-file-share": "^12.1.1",
         "@types/mime": "^2.0.1",
         "azure-storage": "^2.10.0",

@@ -4,7 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient } from '@azure/arm-storage';
+import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage1';
 import { AzureWizardExecuteStep, createAzureClient, IStorageAccountWizardContext } from "vscode-azureextensionui";
+import { ifStack } from '../../utils/environmentUtils';
 import { nonNullProp } from '../../utils/nonNull';
 import { StorageAccountWrapper } from "../../utils/storageWrappers";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -24,7 +26,13 @@ export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<ISt
     }
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {
-        const storageManagementClient = createAzureClient(this.parent.root, StorageManagementClient);
+        let storageManagementClient: StorageManagementClient;
+        let isAzureStack: boolean = ifStack();
+        if (isAzureStack) {
+            storageManagementClient = createAzureClient(this.parent.root, StorageManagementClient1);
+        } else {
+            storageManagementClient = createAzureClient(this.parent.root, StorageManagementClient);
+        }
         wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.parent, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')), storageManagementClient);
     }
 
