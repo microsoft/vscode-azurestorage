@@ -128,7 +128,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
-            let storageManagementClient: StorageManagementClient;
+            let storageManagementClient;
             let isAzureStack: boolean = ifStack();
             if (isAzureStack) {
                 storageManagementClient = createAzureClient(this.root, StorageManagementClient1);

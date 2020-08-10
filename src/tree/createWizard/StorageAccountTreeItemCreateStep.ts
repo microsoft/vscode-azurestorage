@@ -26,7 +26,7 @@ export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<ISt
     }
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {
-        let storageManagementClient: StorageManagementClient;
+        let storageManagementClient;
         let isAzureStack: boolean = ifStack();
         if (isAzureStack) {
             storageManagementClient = createAzureClient(this.parent.root, StorageManagementClient1);

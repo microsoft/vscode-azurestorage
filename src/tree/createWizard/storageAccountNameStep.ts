@@ -11,7 +11,7 @@ import { ifStack } from '../../utils/environmentUtils';
 
 export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
     public async prompt(wizardContext: T): Promise<void> {
-        let client: StorageManagementClient;
+        let client;
         let isAzureStack: boolean = ifStack();
         if (isAzureStack) {
             client = createAzureClient(wizardContext, StorageManagementClient1);

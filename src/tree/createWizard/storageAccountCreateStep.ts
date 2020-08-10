@@ -29,7 +29,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation}" with sku "${newSkuName}"...`;
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
-        let storageClient: StorageManagementClient;
+        let storageClient;
         let isAzureStack: boolean = ifStack();
         if (isAzureStack) {
             storageClient = createAzureClient(wizardContext, StorageManagementClient1);

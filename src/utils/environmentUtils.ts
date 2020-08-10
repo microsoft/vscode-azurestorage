@@ -17,7 +17,8 @@ interface IJsonObject {
 }
 export function ifStack(): boolean {
     if (environmentType === "unknown") {
-        const settingsPath = path.join(<string>process.env.APPDATA, 'Code - Insiders', 'User', 'settings.json');
+        const vscodetype = 'Code - Insiders';
+        const settingsPath = path.join(<string>process.env.APPDATA, vscodetype, 'User', 'settings.json');
         let isStack: string = "";
         try {
             // tslint:disable-next-line: non-literal-require

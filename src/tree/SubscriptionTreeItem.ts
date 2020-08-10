@@ -26,7 +26,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         let isAzureStack: boolean = ifStack();
-        let storageManagementClient: StorageManagementClient;
+        let storageManagementClient;
         if (isAzureStack) {
             await getEnvironment(this.root);
             storageManagementClient = createAzureClient(this.root, StorageManagementClient1);
@@ -37,8 +37,8 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         return this.createTreeItemsWithErrorHandling(
             accounts,
             'invalidStorageAccount',
-            async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
-            sa => sa.name
+            async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa as any), storageManagementClient),
+            sa => (sa as any).name
         );
     }
 
