@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient } from '@azure/arm-storage';
-import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage1';
+import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage-profile-2019-03-01-hybrid';
 import { AzureWizardExecuteStep, createAzureClient, IStorageAccountWizardContext } from "vscode-azureextensionui";
 import { ifStack } from '../../utils/environmentUtils';
 import { nonNullProp } from '../../utils/nonNull';

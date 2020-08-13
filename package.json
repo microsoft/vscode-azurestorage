@@ -805,7 +805,7 @@
     },
     "dependencies": {
         "@azure/arm-resources": "^3.0.0",
-        "@azure/arm-storage1": "https://sdkautomation.blob.core.windows.net/sdkautomation-pipeline/Azure/azure-rest-api-specs/10334/azure-sdk-for-js/Azure/azure-sdk-for-js/@azure/arm-storage/azure-arm-storage-15.0.0.tgz",
+        "@azure/arm-storage-profile-2019-03-01-hybrid": "^1.0.0",
         "@azure/arm-storage": "npm:@azure/arm-storage@^15.0.0",
         "@azure/storage-blob": "12.0.2",
         "@azure/storage-file-share": "^12.1.1",

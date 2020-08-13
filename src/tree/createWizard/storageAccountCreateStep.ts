@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage1';
+import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage-profile-2019-03-01-hybrid';
 import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient, INewStorageAccountDefaults, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';

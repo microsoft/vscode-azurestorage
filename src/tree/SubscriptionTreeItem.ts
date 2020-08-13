@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient } from '@azure/arm-storage';
-import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage1';
+import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage-profile-2019-03-01-hybrid';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage1';
+import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage-profile-2019-03-01-hybrid';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
