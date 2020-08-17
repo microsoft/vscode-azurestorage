@@ -37,7 +37,6 @@ export type WebsiteHostingStatus = {
 };
 
 type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
-const threeDaysInMS: number = 1000 * 60 * 60 * 24 * 3;
 
 export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public key: StorageAccountKeyWrapper;
@@ -151,12 +150,12 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             storageAccountId: this.storageAccount.id,
             isEmulated: false,
             primaryEndpoints: this.storageAccount.primaryEndpoints,
-            generateSasToken: () => {
+            generateSasToken: (expiresOn: Date, permissions: string, services: string, resourceTypes: string) => {
                 const accountSASSignatureValues: AccountSASSignatureValues = {
-                    expiresOn: new Date(new Date().getTime() + threeDaysInMS),
-                    permissions: AccountSASPermissions.parse('rwl'), // read, write, list
-                    services: 'bf', // blob, file
-                    resourceTypes: 'o', // object
+                    expiresOn,
+                    permissions: AccountSASPermissions.parse(permissions),
+                    services,
+                    resourceTypes
                 };
                 return generateAccountSASQueryParameters(
                     accountSASSignatureValues,

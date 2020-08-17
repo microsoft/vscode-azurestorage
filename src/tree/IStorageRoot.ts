@@ -14,7 +14,7 @@ export interface IStorageRoot extends ISubscriptionContext {
     storageAccountId: string;
     isEmulated: boolean;
     primaryEndpoints?: StorageManagementModels.Endpoints;
-    generateSasToken(): string;
+    generateSasToken(expiresOn: Date, permissions: string, services: string, resourceTypes: string): string;
     createBlobServiceClient(): azureStorageBlob.BlobServiceClient;
     createShareServiceClient(): azureStorageShare.ShareServiceClient;
     createQueueService(): azureStorage.QueueService;

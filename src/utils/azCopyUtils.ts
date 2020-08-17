@@ -20,6 +20,8 @@ import { Limits } from "./limits";
 import { localize } from "./localize";
 import { openUrl } from "./openUrl";
 
+const threeDaysInMS: number = 1000 * 60 * 60 * 24 * 3;
+
 export async function shouldUseAzCopy(context: IActionContext, localPath: string): Promise<boolean> {
     const size: number = (await stat(localPath)).size;
     context.telemetry.measurements.fileTransferSize = size;
@@ -42,7 +44,12 @@ export function createAzCopyDestination(treeItem: BlobContainerTreeItem | FileSh
         resourceUri = shareClient.url;
     }
 
-    const sasToken: string = treeItem.root.generateSasToken();
+    const sasToken: string = treeItem.root.generateSasToken(
+        new Date(new Date().getTime() + threeDaysInMS),
+        'rwl', // read, write, list
+        'bf', // blob, file
+        'o', // object
+    );
     // Ensure path begins with '/' to transfer properly
     const path: string = destinationPath[0] === '/' ? destinationPath : `/${destinationPath}`;
     return { type: "RemoteSas", sasToken, resourceUri, path, useWildCard: false };
