@@ -812,6 +812,7 @@
         "azure-storage": "^2.10.0",
         "fs-extra": "^8.0.0",
         "glob": "^7.1.2",
+        "json-stream": "^1.0.0",
         "mime": "^2.4.4",
         "opn": "^5.3.0",
         "vscode-azureextensionui": "^0.34.0",
