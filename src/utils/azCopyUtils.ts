@@ -7,7 +7,7 @@ import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions
 import { ContainerClient } from "@azure/storage-blob";
 import { ShareClient } from "@azure/storage-file-share";
 import { stat } from "fs-extra";
-import { MessageItem, Progress } from "vscode";
+import { MessageItem } from "vscode";
 import { callWithTelemetryAndErrorHandling, IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { TransferProgress } from "../TransferProgress";
@@ -59,13 +59,8 @@ export async function azCopyBlobTransfer(
     src: ILocalLocation,
     dst: IRemoteSasLocation,
     transferProgress: TransferProgress,
-    notificationProgress?: Progress<{
-        message?: string | undefined;
-        increment?: number | undefined;
-    }>,
-    throwIfCanceled?: () => void
 ): Promise<void> {
-    await azCopyTransfer(src, dst, transferProgress, 'LocalBlob', notificationProgress, throwIfCanceled);
+    await azCopyTransfer(src, dst, transferProgress, 'LocalBlob');
 }
 
 async function azCopyTransfer(
@@ -73,16 +68,11 @@ async function azCopyTransfer(
     dst: IRemoteSasLocation,
     transferProgress: TransferProgress,
     fromTo: FromToOption,
-    notificationProgress?: Progress<{
-        message?: string | undefined;
-        increment?: number | undefined;
-    }>,
-    throwIfCanceled?: () => void,
 ): Promise<void> {
     await validateAzCopyInstalled();
     const copyClient: AzCopyClient = new AzCopyClient({ exe: ext.azCopyExePath });
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true };
-    let jobId: string = await startAndWaitForCopy(copyClient, src, dst, copyOptions, transferProgress, notificationProgress, throwIfCanceled);
+    let jobId: string = await startAndWaitForCopy(copyClient, src, dst, copyOptions, transferProgress);
     let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus === 'Failed') {
         throw new Error(localize('azCopyTransferFailed', `AzCopy Transfer Failed${finalTransferStatus?.ErrorMsg ? `: ${finalTransferStatus.ErrorMsg}` : ''}`));
@@ -95,28 +85,15 @@ async function startAndWaitForCopy(
     dst: AzCopyLocation,
     options: ICopyOptions,
     transferProgress: TransferProgress,
-    notificationProgress?: Progress<{
-        message?: string | undefined;
-        increment?: number | undefined;
-    }>,
-    throwIfCanceled?: () => void
 ): Promise<string> {
     let jobId: string = await copyClient.copy(src, dst, options);
     let status: TransferStatus | undefined;
     let finishedWork: number;
     while (!status || status.StatusType !== 'EndOfJob') {
-        if (!!throwIfCanceled) {
-            throwIfCanceled();
-        }
-
         status = (await copyClient.getJobInfo(jobId)).latestStatus;
         // tslint:disable-next-line: strict-boolean-expressions
         finishedWork = status && (src.useWildCard ? status.TransfersCompleted : status.BytesOverWire) || 0;
-
         transferProgress.reportToOutputWindow(finishedWork);
-        if (!!notificationProgress) {
-            transferProgress.reportToNotification(finishedWork, notificationProgress);
-        }
 
         // tslint:disable-next-line: no-string-based-set-timeout
         await new Promise((resolve, _reject) => setTimeout(resolve, 1000));
