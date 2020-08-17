@@ -5,7 +5,7 @@
 
 import { basename, dirname } from "path";
 import { OpenDialogOptions, Uri, window } from "vscode";
-import { IActionContext, IParsedError, parseError } from "vscode-azureextensionui";
+import { IActionContext } from "vscode-azureextensionui";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { shouldUseAzCopy } from "../utils/azCopyUtils";
@@ -48,20 +48,11 @@ export async function uploadFile(context: IActionContext, treeItem: BlobContaine
             if (treeItem instanceof BlobContainerTreeItem ? await doesBlobExist(treeItem, remoteFilePath) : await doesFileExist(basename(remoteFilePath), treeItem, dirname(remoteFilePath), treeItem.shareName)) {
                 await warnFileAlreadyExists(remoteFilePath);
                 const id: string = `${treeItem.fullId}/${remoteFilePath}`;
-                try {
-                    const result = await treeItem.treeDataProvider.findTreeItem(id, context);
-                    if (result) {
-                        // A treeItem for this file already exists, no need to do anything with the tree, just upload
-                        await treeItem.uploadLocalFile(localFilePath, remoteFilePath, await shouldUseAzCopy(context, localFilePath));
-                        return;
-                    }
-                } catch (err) {
-                    const parsedError: IParsedError = parseError(err);
-                    if (parsedError.message === 'AzCopy Transfer Failed') {
-                        throw err;
-                    }
-
-                    // https://github.com/Microsoft/vscode-azuretools/issues/85
+                const result = await treeItem.treeDataProvider.findTreeItem(id, context);
+                if (result) {
+                    // A treeItem for this file already exists, no need to do anything with the tree, just upload
+                    await treeItem.uploadLocalFile(localFilePath, remoteFilePath, await shouldUseAzCopy(context, localFilePath));
+                    return;
                 }
             }
 
