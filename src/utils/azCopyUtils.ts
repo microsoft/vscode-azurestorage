@@ -15,6 +15,7 @@ import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { createBlobContainerClient } from "./blobUtils";
 import { cpUtils } from "./cpUtils";
+import { delay } from "./delay";
 import { createShareClient } from "./fileUtils";
 import { Limits } from "./limits";
 import { localize } from "./localize";
@@ -94,9 +95,7 @@ async function startAndWaitForCopy(
         // tslint:disable-next-line: strict-boolean-expressions
         finishedWork = status && (src.useWildCard ? status.TransfersCompleted : status.BytesOverWire) || 0;
         transferProgress.reportToOutputWindow(finishedWork);
-
-        // tslint:disable-next-line: no-string-based-set-timeout
-        await new Promise((resolve, _reject) => setTimeout(resolve, 1000));
+        await delay(1000);
     }
 
     return jobId;
