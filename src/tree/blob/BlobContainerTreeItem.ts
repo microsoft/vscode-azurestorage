@@ -13,7 +13,7 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
-import { IExistingFileContext } from '../../commands/uploadFile';
+import { IExistingFileContext, IUploadLocalFileOptions } from '../../commands/uploadFile';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
@@ -147,7 +147,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let child: AzExtTreeItem;
         if (context.remoteFilePath && context.localFilePath) {
             context.showCreatingTreeItem(context.remoteFilePath);
-            await this.uploadLocalFile(context.localFilePath, context.remoteFilePath, await shouldUseAzCopy(context, context.localFilePath));
+            await this.uploadLocalFile(context.localFilePath, context.remoteFilePath, { useAzCopy: await shouldUseAzCopy(context, context.localFilePath) });
             child = new BlobTreeItem(this, context.remoteFilePath, this.container);
         } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
             child = new BlobDirectoryTreeItem(this, context.childName, this.container);
@@ -307,18 +307,18 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(filePath: string, blobPath: string, useAzCopy: boolean = false, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(filePath: string, blobPath: string, uploadOptions?: IUploadLocalFileOptions): Promise<void> {
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
 
-        if (!suppressLogs) {
+        if (!uploadOptions?.suppressLogs) {
             ext.outputChannel.show();
             ext.outputChannel.appendLog(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
-        if (useAzCopy) {
+        if (uploadOptions?.useAzCopy) {
             const src: ILocalLocation = createAzCopyLocalSource(filePath);
             const dst: IRemoteSasLocation = createAzCopyDestination(this, blobPath);
             await azCopyBlobTransfer(src, dst, transferProgress);
@@ -329,12 +329,12 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                     // tslint:disable-next-line: strict-boolean-expressions
                     blobContentType: mime.getType(blobPath) || undefined
                 },
-                onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
+                onProgress: uploadOptions?.suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
             };
             await blockBlobClient.uploadFile(filePath, options);
         }
 
-        if (!suppressLogs) {
+        if (!uploadOptions?.suppressLogs) {
             ext.outputChannel.appendLog(`Successfully uploaded ${blobFriendlyPath}.`);
         }
     }

@@ -12,7 +12,7 @@ import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { IExistingFileContext } from '../../commands/uploadFile';
+import { IExistingFileContext, IUploadLocalFileOptions } from '../../commands/uploadFile';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
@@ -115,7 +115,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return child;
     }
 
-    public async uploadLocalFile(sourceFilePath: string, destFilePath: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(sourceFilePath: string, destFilePath: string, uploadOptions?: IUploadLocalFileOptions): Promise<void> {
         const destDisplayPath: string = `${this.shareName}/${destFilePath}`;
         const parentDirectoryPath: string = path.dirname(destFilePath);
         const parentDirectories: string[] = parentDirectoryPath.split('/');
@@ -130,7 +130,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }
         }
 
-        if (!suppressLogs) {
+        if (!uploadOptions?.suppressLogs) {
             ext.outputChannel.show();
             ext.outputChannel.appendLog(`Uploading ${sourceFilePath} as ${destDisplayPath}`);
         }
@@ -144,11 +144,11 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
                 // tslint:disable-next-line: strict-boolean-expressions
                 fileContentType: mime.getType(destFilePath) || undefined
             },
-            onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
+            onProgress: uploadOptions?.suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
         };
         await fileClient.uploadFile(sourceFilePath, options);
 
-        if (!suppressLogs) {
+        if (!uploadOptions?.suppressLogs) {
             ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);
         }
     }

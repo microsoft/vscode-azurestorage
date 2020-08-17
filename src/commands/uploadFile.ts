@@ -22,6 +22,11 @@ export interface IExistingFileContext extends IActionContext {
     remoteFilePath: string;
 }
 
+export interface IUploadLocalFileOptions {
+    useAzCopy?: boolean;
+    suppressLogs?: boolean;
+}
+
 export async function uploadFile(context: IActionContext, treeItem: BlobContainerTreeItem | FileShareTreeItem): Promise<void> {
     const uris: Uri[] | undefined = await window.showOpenDialog(
         <OpenDialogOptions>{
@@ -51,7 +56,7 @@ export async function uploadFile(context: IActionContext, treeItem: BlobContaine
                 const result = await treeItem.treeDataProvider.findTreeItem(id, context);
                 if (result) {
                     // A treeItem for this file already exists, no need to do anything with the tree, just upload
-                    await treeItem.uploadLocalFile(localFilePath, remoteFilePath, await shouldUseAzCopy(context, localFilePath));
+                    await treeItem.uploadLocalFile(localFilePath, remoteFilePath, { useAzCopy: await shouldUseAzCopy(context, localFilePath) });
                     return;
                 }
             }
