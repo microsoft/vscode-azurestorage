@@ -20,7 +20,7 @@
 x64/
 x86/
 bld/
-[Bb]in/
+/[Bb]in/
 [Oo]bj/
 [Ll]og/
 
@@ -290,9 +290,9 @@ __pycache__/
 
 # VS Code Extension Development
 out
-node_modules
+/node_modules
 *.vsix
-dist
+/dist
 *.zip
 
 # Artifacts from running vscode extension tests

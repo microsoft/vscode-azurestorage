@@ -7,19 +7,18 @@ import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions
 import { ContainerClient } from "@azure/storage-blob";
 import { ShareClient } from "@azure/storage-file-share";
 import { stat } from "fs-extra";
-import { MessageItem } from "vscode";
-import { callWithTelemetryAndErrorHandling, IActionContext, UserCancelledError } from "vscode-azureextensionui";
-import { ext } from "../extensionVariables";
+import { platform } from "os";
+import { join } from "path";
+import { IActionContext } from "vscode-azureextensionui";
+import { getResourcesPath } from "../constants";
 import { TransferProgress } from "../TransferProgress";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { createBlobContainerClient } from "./blobUtils";
-import { cpUtils } from "./cpUtils";
 import { delay } from "./delay";
 import { createShareClient } from "./fileUtils";
 import { Limits } from "./limits";
 import { localize } from "./localize";
-import { openUrl } from "./openUrl";
 
 const threeDaysInMS: number = 1000 * 60 * 60 * 24 * 3;
 
@@ -70,8 +69,8 @@ async function azCopyTransfer(
     transferProgress: TransferProgress,
     fromTo: FromToOption,
 ): Promise<void> {
-    await validateAzCopyInstalled();
-    const copyClient: AzCopyClient = new AzCopyClient({ exe: ext.azCopyExePath });
+    const exe: string = getAzCopyExePath();
+    const copyClient: AzCopyClient = new AzCopyClient({ exe });
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true };
     let jobId: string = await startAndWaitForCopy(copyClient, src, dst, copyOptions, transferProgress);
     let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
@@ -101,29 +100,15 @@ async function startAndWaitForCopy(
     return jobId;
 }
 
-async function validateAzCopyInstalled(): Promise<void> {
-    await callWithTelemetryAndErrorHandling('azureStorage.validateAzCopyInstalled', async (context: IActionContext) => {
-        context.errorHandling.suppressDisplay = true;
-        if (!(await azCopyInstalled())) {
-            const message: string = localize('azCopyRequired', 'AzCopy is required for multiple file transfers and transfers >{0}MB.', Limits.maxUploadDownloadSizeMB);
-            const download: MessageItem = { title: localize('downloadAzCopy', 'Download AzCopy') };
-            const input: MessageItem | undefined = await ext.ui.showWarningMessage(message, { modal: true }, download);
-            context.telemetry.properties.dialogResult = input.title;
-            if (input === download) {
-                await openUrl('https://aka.ms/AA963mk');
-                // tslint:disable-next-line: no-floating-promises
-                ext.ui.showWarningMessage('Be sure to add "azcopy" to your path after downloading.');
-            }
-        }
-        throw new UserCancelledError();
-    });
-}
-
-async function azCopyInstalled(): Promise<boolean> {
-    try {
-        await cpUtils.executeCommand(undefined, undefined, ext.azCopyExePath, '--version');
-        return true;
-    } catch (error) {
-        return false;
+function getAzCopyExePath(): string {
+    const nodeModulesPath: string = join(getResourcesPath(), 'azCopy', 'node_modules', '@azure-tools');
+    if (platform() === "win32") {
+        return (process.arch.toLowerCase() === "x64" || process.env.hasOwnProperty("PROCESSOR_ARCHITEW6432")) ?
+            join(nodeModulesPath, 'azcopy-win64', 'dist', 'bin', 'azcopy_windows_amd64.exe') :
+            join(nodeModulesPath, 'azcopy-win32', 'dist', 'bin', 'azcopy_windows_amd86.exe');
+    } else if (platform() === "darwin") {
+        return join(nodeModulesPath, 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64');
+    } else {
+        return join(nodeModulesPath, 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64');
     }
 }
