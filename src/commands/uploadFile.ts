@@ -8,7 +8,6 @@ import { OpenDialogOptions, Uri, window } from "vscode";
 import { IActionContext } from "vscode-azureextensionui";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
-import { shouldUseAzCopy } from "../utils/azCopyUtils";
 import { doesBlobExist } from "../utils/blobUtils";
 import { doesFileExist } from "../utils/fileUtils";
 import { localize } from "../utils/localize";
@@ -20,11 +19,6 @@ let lastUploadFolder: Uri;
 export interface IExistingFileContext extends IActionContext {
     localFilePath: string;
     remoteFilePath: string;
-}
-
-export interface IUploadLocalFileOptions {
-    useAzCopy?: boolean;
-    suppressLogs?: boolean;
 }
 
 export async function uploadFile(context: IActionContext, treeItem: BlobContainerTreeItem | FileShareTreeItem): Promise<void> {
@@ -56,7 +50,7 @@ export async function uploadFile(context: IActionContext, treeItem: BlobContaine
                 const result = await treeItem.treeDataProvider.findTreeItem(id, context);
                 if (result) {
                     // A treeItem for this file already exists, no need to do anything with the tree, just upload
-                    await treeItem.uploadLocalFile(localFilePath, remoteFilePath, { useAzCopy: await shouldUseAzCopy(context, localFilePath) });
+                    await treeItem.uploadLocalFile(localFilePath, remoteFilePath);
                     return;
                 }
             }

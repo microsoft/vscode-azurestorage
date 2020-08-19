@@ -6,10 +6,8 @@
 import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
 import { ContainerClient } from "@azure/storage-blob";
 import { ShareClient } from "@azure/storage-file-share";
-import { stat } from "fs-extra";
 import { platform } from "os";
 import { join } from "path";
-import { IActionContext } from "vscode-azureextensionui";
 import { getResourcesPath } from "../constants";
 import { TransferProgress } from "../TransferProgress";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
@@ -17,18 +15,9 @@ import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { createBlobContainerClient } from "./blobUtils";
 import { delay } from "./delay";
 import { createShareClient } from "./fileUtils";
-import { Limits } from "./limits";
 import { localize } from "./localize";
 
 const threeDaysInMS: number = 1000 * 60 * 60 * 24 * 3;
-
-export async function shouldUseAzCopy(context: IActionContext, localPath: string): Promise<boolean> {
-    const size: number = (await stat(localPath)).size;
-    context.telemetry.measurements.fileTransferSize = size;
-    const useAzCopy: boolean = size > Limits.maxUploadDownloadSizeBytes;
-    context.telemetry.properties.azCopyTransfer = useAzCopy ? 'true' : 'false';
-    return useAzCopy;
-}
 
 export function createAzCopyLocalSource(sourcePath: string): ILocalLocation {
     return { type: "Local", path: sourcePath, useWildCard: false };
