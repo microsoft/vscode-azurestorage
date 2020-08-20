@@ -28,7 +28,7 @@ export function createAzCopyDestination(treeItem: BlobContainerTreeItem | FileSh
     }
 
     const sasToken: string = treeItem.root.generateSasToken(
-        new Date(new Date().getTime() + threeDaysInMS),
+        new Date(Date.now() + threeDaysInMS),
         'rwl', // read, write, list
         'bf', // blob, file
         'o', // object
