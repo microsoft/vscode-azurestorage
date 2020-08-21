@@ -33,7 +33,7 @@ async function azCopyTransfer(
     let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
         // tslint:disable-next-line: strict-boolean-expressions
-        let message: string = localize('azCopyTransfer', `AzCopy Transfer: "${finalTransferStatus?.JobStatus || 'Failed'}".`);
+        let message: string = localize('azCopyTransfer', 'AzCopy Transfer: "{0}".', finalTransferStatus?.JobStatus || 'Failed');
         message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
         if (finalTransferStatus?.JobStatus === 'CompletedWithSkipped') {
