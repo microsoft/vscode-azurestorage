@@ -307,11 +307,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     public async uploadLocalFile(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
-        // tslint:disable-next-line: strict-boolean-expressions
-        const totalBytes: number = (await fse.stat(filePath)).size || 1;
-        const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
-
         if (!suppressLogs) {
             ext.outputChannel.show();
             ext.outputChannel.appendLog(`Uploading ${filePath} as ${blobFriendlyPath}`);
@@ -319,6 +315,9 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
         const src: ILocalLocation = createAzCopyLocalSource(filePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, blobPath);
+        // tslint:disable-next-line: strict-boolean-expressions
+        const totalBytes: number = (await fse.stat(filePath)).size || 1;
+        const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
         await azCopyBlobTransfer(src, dst, transferProgress);
 
         if (!suppressLogs) {
