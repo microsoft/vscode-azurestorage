@@ -6,6 +6,7 @@
 import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
 import * as os from "os";
 import { join } from "path";
+import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
 import { getResourcesPath } from "../../constants";
 import { ext } from '../../extensionVariables';
 import { TransferProgress } from "../../TransferProgress";
@@ -17,10 +18,13 @@ export async function azCopyBlobTransfer(
     dst: IRemoteSasLocation,
     transferProgress: TransferProgress,
 ): Promise<void> {
-    await azCopyTransfer(src, dst, transferProgress, 'LocalBlob');
+    await callWithTelemetryAndErrorHandling('azCopyBlobTransfer', async (context: IActionContext) => {
+        await azCopyTransfer(context, src, dst, transferProgress, 'LocalBlob');
+    });
 }
 
 async function azCopyTransfer(
+    context: IActionContext,
     src: ILocalLocation,
     dst: IRemoteSasLocation,
     transferProgress: TransferProgress,
@@ -31,6 +35,7 @@ async function azCopyTransfer(
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true };
     let jobId: string = await startAndWaitForCopy(copyClient, src, dst, copyOptions, transferProgress);
     let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
+    context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
         // tslint:disable-next-line: strict-boolean-expressions
         let message: string = localize('azCopyTransfer', 'AzCopy Transfer: "{0}".', finalTransferStatus?.JobStatus || 'Failed');
