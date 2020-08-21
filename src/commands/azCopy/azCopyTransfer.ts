@@ -7,6 +7,7 @@ import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions
 import { platform } from "os";
 import { join } from "path";
 import { getResourcesPath } from "../../constants";
+import { ext } from '../../extensionVariables';
 import { TransferProgress } from "../../TransferProgress";
 import { delay } from "../../utils/delay";
 import { localize } from "../../utils/localize";
@@ -30,8 +31,17 @@ async function azCopyTransfer(
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true };
     let jobId: string = await startAndWaitForCopy(copyClient, src, dst, copyOptions, transferProgress);
     let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
-    if (!finalTransferStatus || finalTransferStatus.JobStatus === 'Failed') {
-        throw new Error(localize('azCopyTransferFailed', `AzCopy Transfer Failed${finalTransferStatus?.ErrorMsg ? `: ${finalTransferStatus.ErrorMsg}` : ''}`));
+    if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
+        // tslint:disable-next-line: strict-boolean-expressions
+        let message: string = localize('azCopyTransfer', `AzCopy Transfer: "${finalTransferStatus?.JobStatus || 'Failed'}".`);
+        message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
+
+        if (finalTransferStatus?.JobStatus === 'CompletedWithSkipped') {
+            // tslint:disable-next-line: no-floating-promises
+            ext.ui.showWarningMessage(message);
+        } else {
+            throw new Error(message);
+        }
     }
 }
 
