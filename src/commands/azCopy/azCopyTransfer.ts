@@ -7,7 +7,6 @@ import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions
 import * as os from "os";
 import { join } from "path";
 import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
-import { getResourcesPath } from "../../constants";
 import { ext } from '../../extensionVariables';
 import { TransferProgress } from "../../TransferProgress";
 import { delay } from "../../utils/delay";
@@ -101,8 +100,8 @@ function getAzCopyExePath(platform: NodeJS.Platform): string {
         throw new RangeError(localize('unexpectedPlatform', 'Unexpected platform "{0}"', platform));
     }
 
-    const nodeModulesPath: string = join(getResourcesPath(), 'azCopy', 'node_modules', '@azure-tools');
-    let exePath: string = join(nodeModulesPath, `azcopy-${operatingSystem}`, 'dist', 'bin', `azcopy_${isWindows ? 'windows' : operatingSystem}_amd${bitness}`);
+    const nodeModulesPath: string = ext.context.asAbsolutePath('node_modules');
+    let exePath: string = join(nodeModulesPath, '@azure-tools', `azcopy-${operatingSystem}`, 'dist', 'bin', `azcopy_${isWindows ? 'windows' : operatingSystem}_amd${bitness}`);
     if (isWindows) {
         exePath += '.exe';
     }

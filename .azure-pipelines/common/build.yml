@@ -1,4 +1,9 @@
 steps:
+- script: |
+    npm install --force
+    sudo chmod u+x node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64 \
+      node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64
+
 - task: NodeTool@0
   displayName: 'Use Node 12.x'
   inputs:
