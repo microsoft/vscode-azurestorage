@@ -58,7 +58,7 @@ async function startAndWaitForCopy(
     while (!status || status.StatusType !== 'EndOfJob') {
         status = (await copyClient.getJobInfo(jobId)).latestStatus;
         // tslint:disable-next-line: strict-boolean-expressions
-        finishedWork = status && (src.useWildCard ? status.TransfersCompleted : status.BytesOverWire) || 0;
+        finishedWork = status?.BytesOverWire || 0;
         transferProgress.reportToOutputWindow(finishedWork);
         await delay(1000);
     }
