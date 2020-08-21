@@ -34,6 +34,17 @@ async function azCopyTransfer(
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
         // tslint:disable-next-line: strict-boolean-expressions
         let message: string = localize('azCopyTransfer', 'AzCopy Transfer: "{0}".', finalTransferStatus?.JobStatus || 'Failed');
+        if (finalTransferStatus?.FailedTransfers || finalTransferStatus?.SkippedTransfers) {
+            message += localize('checkOutputWindow', ' Check the output window for a list of incomplete transfers.');
+
+            if (finalTransferStatus.FailedTransfers) {
+                ext.outputChannel.appendLog(localize('failedTransfers', 'Failed transfers: {0}', finalTransferStatus.FailedTransfers.join(', ')));
+            }
+            if (finalTransferStatus.SkippedTransfers) {
+                ext.outputChannel.appendLog(localize('skippedTransfers', 'Skipped transfers: {0}', finalTransferStatus.SkippedTransfers.join(', ')));
+            }
+
+        }
         message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
         if (finalTransferStatus?.JobStatus === 'CompletedWithSkipped') {
