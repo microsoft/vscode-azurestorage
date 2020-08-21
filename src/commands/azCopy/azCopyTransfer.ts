@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
-import { platform } from "os";
+import * as os from "os";
 import { join } from "path";
 import { getResourcesPath } from "../../constants";
 import { ext } from '../../extensionVariables';
@@ -26,7 +26,7 @@ async function azCopyTransfer(
     transferProgress: TransferProgress,
     fromTo: FromToOption,
 ): Promise<void> {
-    const exe: string = getAzCopyExePath();
+    const exe: string = getAzCopyExePath(os.platform());
     const copyClient: AzCopyClient = new AzCopyClient({ exe });
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true };
     let jobId: string = await startAndWaitForCopy(copyClient, src, dst, copyOptions, transferProgress);
@@ -77,25 +77,27 @@ async function startAndWaitForCopy(
     return jobId;
 }
 
-function getAzCopyExePath(): string {
-    if (platform() === 'win32') {
-        return (process.arch.toLowerCase() === 'x64' || process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432')) ?
-            getOsSpecificAzCopyExePath('win64', '64') :
-            getOsSpecificAzCopyExePath('win32', '86');
-    } else if (platform() === 'darwin') {
-        return getOsSpecificAzCopyExePath('darwin', '64');
+function getAzCopyExePath(platform: NodeJS.Platform): string {
+    let operatingSystem: 'win32' | 'win64' | 'darwin' | 'linux';
+    let bitness: '64' | '86';
+    const isWindows: boolean = platform === 'win32';
+    if (isWindows) {
+        if (process.arch.toLowerCase() === 'x64' || process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432')) {
+            operatingSystem = 'win64';
+            bitness = '64';
+        } else {
+            operatingSystem = 'win32';
+            bitness = '86';
+        }
+    } else if (platform === 'darwin' || platform === 'linux') {
+        operatingSystem = platform;
+        bitness = '64';
     } else {
-        return getOsSpecificAzCopyExePath('linux', '64');
+        throw new RangeError(localize('unexpectedPlatform', 'Unexpected platform "{0}"', platform));
     }
-}
 
-function getOsSpecificAzCopyExePath(
-    os: 'win32' | 'win64' | 'darwin' | 'linux',
-    bitness: '64' | '86'
-): string {
     const nodeModulesPath: string = join(getResourcesPath(), 'azCopy', 'node_modules', '@azure-tools');
-    const isWindows: boolean = os.startsWith('win');
-    let exePath: string = join(nodeModulesPath, `azcopy-${os}`, 'dist', 'bin', `azcopy_${isWindows ? 'windows' : os}_amd${bitness}`);
+    let exePath: string = join(nodeModulesPath, `azcopy-${operatingSystem}`, 'dist', 'bin', `azcopy_${isWindows ? 'windows' : operatingSystem}_amd${bitness}`);
     if (isWindows) {
         exePath += '.exe';
     }
