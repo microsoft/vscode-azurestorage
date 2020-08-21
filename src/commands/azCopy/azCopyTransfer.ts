@@ -67,14 +67,26 @@ async function startAndWaitForCopy(
 }
 
 function getAzCopyExePath(): string {
-    const nodeModulesPath: string = join(getResourcesPath(), 'azCopy', 'node_modules', '@azure-tools');
-    if (platform() === "win32") {
-        return (process.arch.toLowerCase() === "x64" || process.env.hasOwnProperty("PROCESSOR_ARCHITEW6432")) ?
-            join(nodeModulesPath, 'azcopy-win64', 'dist', 'bin', 'azcopy_windows_amd64.exe') :
-            join(nodeModulesPath, 'azcopy-win32', 'dist', 'bin', 'azcopy_windows_amd86.exe');
-    } else if (platform() === "darwin") {
-        return join(nodeModulesPath, 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64');
+    if (platform() === 'win32') {
+        return (process.arch.toLowerCase() === 'x64' || process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432')) ?
+            getOsSpecificAzCopyExePath('win64', '64') :
+            getOsSpecificAzCopyExePath('win32', '86');
+    } else if (platform() === 'darwin') {
+        return getOsSpecificAzCopyExePath('darwin', '64');
     } else {
-        return join(nodeModulesPath, 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64');
+        return getOsSpecificAzCopyExePath('linux', '64');
     }
+}
+
+function getOsSpecificAzCopyExePath(
+    os: 'win32' | 'win64' | 'darwin' | 'linux',
+    bitness: '64' | '86'
+): string {
+    const nodeModulesPath: string = join(getResourcesPath(), 'azCopy', 'node_modules', '@azure-tools');
+    const isWindows: boolean = os.startsWith('win');
+    let exePath: string = join(nodeModulesPath, `azcopy-${os}`, 'dist', 'bin', `azcopy_${isWindows ? 'windows' : os}_amd${bitness}`);
+    if (isWindows) {
+        exePath += '.exe';
+    }
+    return exePath;
 }
