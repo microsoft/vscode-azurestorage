@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
+import { pathExists } from 'fs-extra';
 import * as os from "os";
 import { join } from "path";
 import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
@@ -18,6 +19,7 @@ export async function azCopyBlobTransfer(
     transferProgress: TransferProgress,
 ): Promise<void> {
     await callWithTelemetryAndErrorHandling('azCopyBlobTransfer', async (context: IActionContext) => {
+        context.errorHandling.rethrow = true;
         await azCopyTransfer(context, src, dst, transferProgress, 'LocalBlob');
     });
 }
@@ -29,7 +31,7 @@ async function azCopyTransfer(
     transferProgress: TransferProgress,
     fromTo: FromToOption,
 ): Promise<void> {
-    const exe: string = getAzCopyExePath(os.platform());
+    const exe: string = await getAzCopyExePath(os.platform());
     const copyClient: AzCopyClient = new AzCopyClient({ exe });
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true };
     let jobId: string = await startAndWaitForCopy(copyClient, src, dst, copyOptions, transferProgress);
@@ -47,7 +49,6 @@ async function azCopyTransfer(
             if (finalTransferStatus.SkippedTransfers) {
                 ext.outputChannel.appendLog(localize('skippedTransfers', 'Skipped transfers: {0}', finalTransferStatus.SkippedTransfers.join(', ')));
             }
-
         }
         message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
@@ -81,7 +82,7 @@ async function startAndWaitForCopy(
     return jobId;
 }
 
-function getAzCopyExePath(platform: NodeJS.Platform): string {
+async function getAzCopyExePath(platform: NodeJS.Platform): Promise<string> {
     let operatingSystem: 'win32' | 'win64' | 'darwin' | 'linux';
     let bitness: '64' | '86';
     const isWindows: boolean = platform === 'win32';
@@ -100,10 +101,18 @@ function getAzCopyExePath(platform: NodeJS.Platform): string {
         throw new RangeError(localize('unexpectedPlatform', 'Unexpected platform "{0}"', platform));
     }
 
-    const nodeModulesPath: string = ext.context.asAbsolutePath('node_modules');
-    let exePath: string = join(nodeModulesPath, '@azure-tools', `azcopy-${operatingSystem}`, 'dist', 'bin', `azcopy_${isWindows ? 'windows' : operatingSystem}_amd${bitness}`);
-    if (isWindows) {
-        exePath += '.exe';
+    const webpackParentPath: string = join(ext.context.asAbsolutePath('dist'), 'node_modules');
+    const debugParentPath: string = ext.context.asAbsolutePath('node_modules');
+    const parentPathsToTry: string[] = [webpackParentPath, debugParentPath];
+    for (const parentPath of parentPathsToTry) {
+        let exePath: string = join(parentPath, '@azure-tools', `azcopy-${operatingSystem}`, 'dist', 'bin', `azcopy_${isWindows ? 'windows' : operatingSystem}_amd${bitness}`);
+        if (isWindows) {
+            exePath += '.exe';
+        }
+        if (await pathExists(exePath)) {
+            return exePath;
+        }
     }
-    return exePath;
+
+    throw new Error(localize('azCopyExeNotFound', 'AzCopy executable not found'));
 }

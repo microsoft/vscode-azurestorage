@@ -20,6 +20,7 @@ import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { listFilePathsWithAzureSeparator } from '../../utils/fs';
+import { localize } from '../../utils/localize';
 import { uploadFiles } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -318,7 +319,12 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
-        await azCopyBlobTransfer(src, dst, transferProgress);
+        try {
+            await azCopyBlobTransfer(src, dst, transferProgress);
+        } catch {
+            ext.outputChannel.appendLog(localize('couldNotUpload', 'Could not upload file "{0}"', filePath));
+            return;
+        }
 
         if (!suppressLogs) {
             ext.outputChannel.appendLog(`Successfully uploaded ${blobFriendlyPath}.`);

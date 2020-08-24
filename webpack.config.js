@@ -18,6 +18,15 @@ let DEBUG_WEBPACK = !!process.env.DEBUG_WEBPACK;
 let config = dev.getDefaultWebpackConfig({
     projectRoot: __dirname,
     verbosity: DEBUG_WEBPACK ? 'debug' : 'normal',
+    externalNodeModules: [
+        // Modules that we can't easily webpack for some reason.
+        // These and their dependencies will be copied into node_modules rather than placed in the bundle
+        // Keep this list small, because all the sub-dependencies will also be excluded
+        "@azure-tools/azcopy-darwin",
+        "@azure-tools/azcopy-linux",
+        "@azure-tools/azcopy-win32",
+        "@azure-tools/azcopy-win64"
+    ],
     externals: {
         './getCoreNodeModule': 'commonjs getCoreNodeModule',
         '@storage-explorer/macos-keychain': true,
