@@ -767,7 +767,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run webpack-prod",
-        "postinstall": "chmod u+x node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64 node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64",
+        "postinstall": "scripts/postinstall.sh",
         "build": "tsc",
         "compile": "tsc -watch",
         "package": "vsce package",
@@ -806,10 +806,6 @@
     },
     "dependencies": {
         "@azure-tools/azcopy-node": "1.0.0",
-        "@azure-tools/azcopy-darwin": "10.5.0",
-        "@azure-tools/azcopy-linux": "10.5.0",
-        "@azure-tools/azcopy-win32": "10.5.0",
-        "@azure-tools/azcopy-win64": "10.5.0",
         "@azure/arm-resources": "^3.0.0",
         "@azure/arm-storage": "^15.0.0",
         "@azure/storage-blob": "^12.1.1",
