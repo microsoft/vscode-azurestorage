@@ -54,7 +54,7 @@ async function azCopyTransfer(
         }
         message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
-        if (finalTransferStatus?.JobStatus === 'CompletedWithSkipped') {
+        if (finalTransferStatus?.JobStatus && /CompletedWith*/gi.test(finalTransferStatus.JobStatus)) {
             // tslint:disable-next-line: no-floating-promises
             ext.ui.showWarningMessage(message);
         } else {
