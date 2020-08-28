@@ -23,5 +23,6 @@ export namespace ext {
     export let azureAccountTreeItem: AzureAccountTreeItem;
     export let attachedStorageAccountsTreeItem: AttachedStorageAccountsTreeItem;
     export let azureStorageFS: AzureStorageFS;
+    export let azCopyExePath: string = 'azcopy';
     export const prefix: string = 'azureStorage';
 }

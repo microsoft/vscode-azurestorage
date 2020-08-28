@@ -768,6 +768,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run webpack-prod",
+        "postinstall": "gulp setAzCopyExePermissions",
         "build": "tsc",
         "cleanReadme": "gulp cleanReadme",
         "compile": "tsc -watch",
@@ -806,6 +807,7 @@
         "webpack-cli": "^3.1.2"
     },
     "dependencies": {
+        "@azure-tools/azcopy-node": "1.0.0",
         "@azure/arm-resources": "^3.0.0",
         "@azure/arm-storage": "^15.0.0",
         "@azure/storage-blob": "^12.1.1",

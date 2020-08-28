@@ -5,6 +5,7 @@
 
 // tslint:disable:no-unsafe-any
 
+import * as cp from 'child_process';
 import * as fse from 'fs-extra';
 import * as gulp from 'gulp';
 import * as path from 'path';
@@ -26,7 +27,16 @@ async function cleanReadme(): Promise<void> {
     await fse.writeFile(readmePath, data);
 }
 
+async function setAzCopyExePermissions(): Promise<void> {
+    if (process.platform === 'darwin') {
+        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
+    } else if (process.platform === 'linux') {
+        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`);
+    }
+}
+
 exports['webpack-dev'] = gulp.series(prepareForWebpack, () => gulp_webpack('development'));
 exports['webpack-prod'] = gulp.series(prepareForWebpack, () => gulp_webpack('production'));
 exports.preTest = gulp_installAzureAccount;
 exports.cleanReadme = cleanReadme;
+exports.setAzCopyExePermissions = setAzCopyExePermissions;
