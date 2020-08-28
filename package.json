@@ -767,7 +767,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run webpack-prod",
-        "postinstall": "chmod u+x node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64 node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64 || :",
+        "postinstall": "gulp setAzCopyExePermissions",
         "build": "tsc",
         "compile": "tsc -watch",
         "package": "vsce package",
