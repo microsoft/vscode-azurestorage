@@ -20,6 +20,13 @@ async function prepareForWebpack(): Promise<void> {
     await fse.writeFile(mainJsPath, contents);
 }
 
+async function cleanReadme(): Promise<void> {
+    const readmePath: string = path.join(__dirname, 'README.md');
+    let data: string = (await fse.readFile(readmePath)).toString();
+    data = data.replace(/<!-- region exclude-from-marketplace -->.*?<!-- endregion exclude-from-marketplace -->/gis, '');
+    await fse.writeFile(readmePath, data);
+}
+
 async function setAzCopyExePermissions(): Promise<void> {
     if (process.platform === 'darwin') {
         cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
@@ -31,4 +38,5 @@ async function setAzCopyExePermissions(): Promise<void> {
 exports['webpack-dev'] = gulp.series(prepareForWebpack, () => gulp_webpack('development'));
 exports['webpack-prod'] = gulp.series(prepareForWebpack, () => gulp_webpack('production'));
 exports.preTest = gulp_installAzureAccount;
+exports.cleanReadme = cleanReadme;
 exports.setAzCopyExePermissions = setAzCopyExePermissions;

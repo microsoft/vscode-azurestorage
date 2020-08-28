@@ -8,6 +8,12 @@ steps:
       node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64
 
 - task: Npm@1
+  displayName: 'cleanReadme'
+  inputs:
+    command: custom
+    customCommand: run cleanReadme
+
+- task: Npm@1
   displayName: 'Package'
   inputs:
     command: custom

@@ -741,7 +741,8 @@
             {
                 "command": "workbench.view.extension.azure",
                 "key": "ctrl+shift+a",
-                "mac": "cmd+shift+a"
+                "mac": "cmd+shift+a",
+                "linux": "shift+alt+a"
             }
         ],
         "configuration": {
@@ -769,6 +770,7 @@
         "vscode:prepublish": "npm run webpack-prod",
         "postinstall": "gulp setAzCopyExePermissions",
         "build": "tsc",
+        "cleanReadme": "gulp cleanReadme",
         "compile": "tsc -watch",
         "package": "vsce package",
         "lint": "tslint --project tsconfig.json -t verbose",

@@ -272,7 +272,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         wizardContext.enableStaticWebsite = true;
         const wizard: AzureWizard<IStaticWebsiteConfigWizardContext> = new AzureWizard(wizardContext, {
             promptSteps: [new StaticWebsiteIndexDocumentStep(oldStatus.indexDocument), new StaticWebsiteErrorDocument404Step(oldStatus.errorDocument404Path)],
-            executeSteps: [new StaticWebsiteConfigureStep(this, oldStatus.enabled)]
+            executeSteps: [new StaticWebsiteConfigureStep(this, oldStatus.enabled)],
+            title: localize('configureStaticWebsite', 'Configure static website'),
         });
         await wizard.prompt();
         await wizard.execute();

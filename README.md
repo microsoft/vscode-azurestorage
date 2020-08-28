@@ -1,6 +1,10 @@
 # Azure Storage for Visual Studio Code (Preview)
 
+<!-- region exclude-from-marketplace -->
+
 [![Version](https://vsmarketplacebadge.apphb.com/version/ms-azuretools.vscode-azurestorage.svg)](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestorage) [![Installs](https://vsmarketplacebadge.apphb.com/installs-short/ms-azuretools.vscode-azurestorage.svg)](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestorage) [![Build Status](https://dev.azure.com/ms-azuretools/AzCode/_apis/build/status/vscode-azurestorage)](https://dev.azure.com/ms-azuretools/AzCode/_build/latest?definitionId=6)
+
+<!-- endregion exclude-from-marketplace -->
 
 Azure Storage is a Microsoft-managed service providing cloud storage that is highly available, secure, durable, scalable, and redundant. Use the extension to deploy static websites and Single Page Apps (SPAs) and browse Azure Blob Containers, File Shares, Tables, and Queues.
 
@@ -58,6 +62,7 @@ Use these configuration settings to customize the Azure Storage extension.
 * `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing a warning dialog on File file save.
 * `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing a warning dialog on Blob file save.
 
+<!-- region exclude-from-marketplace -->
 
 ## Contributing
 
@@ -78,6 +83,8 @@ Before we can accept your pull request you will need to sign a **Contribution Li
 ## Code of Conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+<!-- endregion exclude-from-marketplace -->
 
 ## Telemetry
 
