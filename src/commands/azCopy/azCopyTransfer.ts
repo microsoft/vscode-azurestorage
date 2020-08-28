@@ -21,6 +21,16 @@ export async function azCopyBlobTransfer(
     });
 }
 
+export async function azCopyFileTransfer(
+    src: ILocalLocation,
+    dst: IRemoteSasLocation,
+    transferProgress: TransferProgress,
+): Promise<void> {
+    await callWithTelemetryAndErrorHandling('azCopyFileTransfer', async (context: IActionContext) => {
+        await azCopyTransfer(context, src, dst, transferProgress, 'LocalFile');
+    });
+}
+
 async function azCopyTransfer(
     context: IActionContext,
     src: ILocalLocation,

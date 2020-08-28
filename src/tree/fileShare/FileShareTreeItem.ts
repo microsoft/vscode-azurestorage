@@ -3,21 +3,22 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { TransferProgressEvent } from '@azure/core-http';
+import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as fse from 'fs-extra';
-import * as mime from 'mime';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
+import { createAzCopyDestination, createAzCopyLocalSource } from '../../commands/azCopy/azCopyLocations';
+import { azCopyFileTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile, createDirectoryClient, createFileClient, createShareClient } from '../../utils/fileUtils';
+import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './DirectoryTreeItem';
@@ -136,17 +137,11 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         }
 
         const fileSize: number = (await fse.stat(sourceFilePath)).size;
-        const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.root, this.shareName, parentDirectoryPath, path.basename(destFilePath));
         // tslint:disable-next-line: strict-boolean-expressions
         const transferProgress: TransferProgress = new TransferProgress(fileSize || 1, destFilePath);
-        const options: azureStorageShare.FileParallelUploadOptions = {
-            fileHttpHeaders: {
-                // tslint:disable-next-line: strict-boolean-expressions
-                fileContentType: mime.getType(destFilePath) || undefined
-            },
-            onProgress: suppressLogs ? undefined : (transferProgressEvent: TransferProgressEvent) => transferProgress.reportToOutputWindow(transferProgressEvent.loadedBytes)
-        };
-        await fileClient.uploadFile(sourceFilePath, options);
+        const src: ILocalLocation = createAzCopyLocalSource(sourceFilePath);
+        const dst: IRemoteSasLocation = createAzCopyDestination(this, destFilePath);
+        await azCopyFileTransfer(src, dst, transferProgress);
 
         if (!suppressLogs) {
             ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);
