@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
-import { ContainerClient } from "@azure/storage-blob";
+import { AccountSASPermissions, AccountSASSignatureValues, ContainerClient } from "@azure/storage-blob";
 import { ShareClient } from "@azure/storage-file-share";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
@@ -27,12 +27,13 @@ export function createAzCopyDestination(treeItem: BlobContainerTreeItem | FileSh
         resourceUri = shareClient.url;
     }
 
-    const sasToken: string = treeItem.root.generateSasToken(
-        new Date(Date.now() + threeDaysInMS),
-        'rwl', // read, write, list
-        'bf', // blob, file
-        'o', // object
-    );
+    const accountSASSignatureValues: AccountSASSignatureValues = {
+        expiresOn: new Date(Date.now() + threeDaysInMS),
+        permissions: AccountSASPermissions.parse('rwl'), // read, write, list
+        services: 'bf', // blob, file
+        resourceTypes: 'o' // object
+    };
+    const sasToken: string = treeItem.root.generateSasToken(accountSASSignatureValues);
     // Ensure path begins with '/' to transfer properly
     const path: string = destinationPath[0] === '/' ? destinationPath : `/${destinationPath}`;
     return { type: "RemoteSas", sasToken, resourceUri, path, useWildCard: false };

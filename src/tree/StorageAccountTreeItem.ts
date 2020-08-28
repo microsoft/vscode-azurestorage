@@ -5,7 +5,7 @@
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import * as azureStorageBlob from '@azure/storage-blob';
-import { AccountSASPermissions, AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
@@ -150,13 +150,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             storageAccountId: this.storageAccount.id,
             isEmulated: false,
             primaryEndpoints: this.storageAccount.primaryEndpoints,
-            generateSasToken: (expiresOn: Date, permissions: string, services: string, resourceTypes: string) => {
-                const accountSASSignatureValues: AccountSASSignatureValues = {
-                    expiresOn,
-                    permissions: AccountSASPermissions.parse(permissions),
-                    services,
-                    resourceTypes
-                };
+            generateSasToken: (accountSASSignatureValues: AccountSASSignatureValues) => {
                 return generateAccountSASQueryParameters(
                     accountSASSignatureValues,
                     new StorageSharedKeyCredential(this.storageAccount.name, this.key.value)

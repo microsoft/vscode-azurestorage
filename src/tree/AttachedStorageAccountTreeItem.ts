@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
-import { AccountSASPermissions, AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
@@ -119,17 +119,11 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         throw new Error(localize('cannotRetrieveStorageAccountIdForAttachedAccount', 'Cannot retrieve storage account id for an attached account.'));
     }
 
-    public generateSasToken(expiresOn: Date, permissions: string, services: string, resourceTypes: string): string {
+    public generateSasToken(accountSASSignatureValues: AccountSASSignatureValues): string {
         const key: string | undefined = this._connectionString === emulatorConnectionString ? emulatorKey : getPropertyFromConnectionString(this._connectionString, 'AccountKey');
         if (!key) {
             throw new Error(localize('noKeyConnectionString', 'Could not parse key from connection string'));
         }
-        const accountSASSignatureValues: AccountSASSignatureValues = {
-            expiresOn,
-            permissions: AccountSASPermissions.parse(permissions),
-            services,
-            resourceTypes
-        };
         return generateAccountSASQueryParameters(
             accountSASSignatureValues,
             new StorageSharedKeyCredential(this.storageAccountName, key)
