@@ -12,6 +12,7 @@ import { ext } from '../extensionVariables';
 import { KeyTar, tryGetKeyTar } from '../utils/keytar';
 import { localize } from '../utils/localize';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
+import { getPropertyFromConnectionString } from './getPropertyFromConnectionString';
 import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 import { SubscriptionTreeItem } from './SubscriptionTreeItem';
 
@@ -73,7 +74,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
             validateInput: (value: string): string | undefined => this.validateConnectionString(value)
         });
 
-        let accountName: string = this.getPropertyFromConnectionString(connectionString, 'AccountName') || emulatorAccountName;
+        let accountName: string = getPropertyFromConnectionString(connectionString, 'AccountName') || emulatorAccountName;
 
         await this.attachAccount(await this.createTreeItem(connectionString, accountName));
         await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
@@ -129,7 +130,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
             const accounts: IPersistedAccount[] = <IPersistedAccount[]>JSON.parse(value);
             await Promise.all(accounts.map(async account => {
                 connectionString = <string>(this._keytar && await this._keytar.getPassword(this._serviceName, account.fullId));
-                let accountName: string | undefined = this.getPropertyFromConnectionString(connectionString, 'AccountName');
+                let accountName: string | undefined = getPropertyFromConnectionString(connectionString, 'AccountName');
 
                 if (accountName) {
                     persistedAccounts.push(await this.createTreeItem(connectionString, accountName));
@@ -156,13 +157,6 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
         }
 
         await ext.context.globalState.update(this._serviceName, JSON.stringify(value));
-    }
-
-    private getPropertyFromConnectionString(connectionString: string, property: string): string | undefined {
-        const regexp: RegExp = new RegExp(`(?:^|;)\\s*${property}=([^;]+)(?:;|$)`, 'i');
-        // tslint:disable-next-line: strict-boolean-expressions
-        const match: RegExpMatchArray | undefined = connectionString.match(regexp) || undefined;
-        return match && match[1];
     }
 
     private validateConnectionString(connectionString: string): string | undefined {

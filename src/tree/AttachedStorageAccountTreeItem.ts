@@ -4,16 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
+import { AccountSASPermissions, AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
-import { emulatorAccountName, getResourcesPath } from '../constants';
+import { emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
 import { localize } from '../utils/localize';
 import { AttachedAccountRoot } from './AttachedStorageAccountsTreeItem';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
+import { getPropertyFromConnectionString } from './getPropertyFromConnectionString';
 import { IStorageRoot } from './IStorageRoot';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTreeItem';
@@ -117,8 +119,21 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         throw new Error(localize('cannotRetrieveStorageAccountIdForAttachedAccount', 'Cannot retrieve storage account id for an attached account.'));
     }
 
-    public generateSasToken(): string {
-        throw new Error(localize('cantGenerateSasToken', 'Cannot generate SAS token for an attached account.'));
+    public generateSasToken(expiresOn: Date, permissions: string, services: string, resourceTypes: string): string {
+        const key: string | undefined = this._connectionString === emulatorConnectionString ? emulatorKey : getPropertyFromConnectionString(this._connectionString, 'AccountKey');
+        if (!key) {
+            throw new Error(localize('noKeyConnectionString', 'Could not parse key from connection string'));
+        }
+        const accountSASSignatureValues: AccountSASSignatureValues = {
+            expiresOn,
+            permissions: AccountSASPermissions.parse(permissions),
+            services,
+            resourceTypes
+        };
+        return generateAccountSASQueryParameters(
+            accountSASSignatureValues,
+            new StorageSharedKeyCredential(this.storageAccountName, key)
+        ).toString();
     }
 
     public createBlobServiceClient(): azureStorageBlob.BlobServiceClient {
