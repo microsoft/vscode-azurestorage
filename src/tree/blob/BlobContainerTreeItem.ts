@@ -176,7 +176,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 title: `Deploying to ${this.friendlyContainerName} from ${sourceFolderPath}`,
 
             },
-            async (notificationProgress, cancellationToken) => await this.deployStaticWebsiteCore(context, context.telemetry.properties, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken),
+            async (notificationProgress, cancellationToken) => await this.deployStaticWebsiteCore(context, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken),
         );
 
         let browseWebsite: vscode.MessageItem = { title: "Browse to website" };
@@ -202,7 +202,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     // tslint:disable-next-line: max-func-body-length
     private async deployStaticWebsiteCore(
         context: IActionContext,
-        properties: TelemetryProperties,
         sourceFolderPath: string,
         destBlobFolder: string,
         notificationProgress: vscode.Progress<{ message?: string, increment?: number }>,
@@ -218,7 +217,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 let deleteAndDeploy: vscode.MessageItem = { title: 'Delete and Deploy' };
                 const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteAndDeploy, DialogResponses.cancel);
                 if (result !== deleteAndDeploy) {
-                    properties.cancelStep = 'AreYouSureYouWantToDeleteExistingBlobs';
+                    context.telemetry.properties.cancelStep = 'AreYouSureYouWantToDeleteExistingBlobs';
                     throw new UserCancelledError();
                 }
             }
@@ -230,14 +229,14 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
             // Delete existing blobs (if requested)
             let transferProgress = new TransferProgress(blobsToDelete.length, 'Deleting');
-            await this.deleteBlobs(blobsToDelete, transferProgress, notificationProgress, cancellationToken, properties);
+            await this.deleteBlobs(blobsToDelete, transferProgress, notificationProgress, cancellationToken, context.telemetry.properties);
 
             // Reset notification progress. Otherwise the progress bar will remain full when uploading blobs
             notificationProgress.report({ increment: -1 });
 
             // Upload files as blobs
             transferProgress = new TransferProgress(filePathsWithAzureSeparator.length, 'Uploading');
-            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, filePathsWithAzureSeparator, properties, transferProgress, notificationProgress, cancellationToken);
+            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, filePathsWithAzureSeparator, context.telemetry.properties, transferProgress, notificationProgress, cancellationToken);
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
