@@ -105,7 +105,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         let child: AzExtTreeItem;
         if (context.remoteFilePath && context.localFilePath) {
             context.showCreatingTreeItem(context.remoteFilePath);
-            await this.uploadLocalFile(context.localFilePath, context.remoteFilePath);
+            await this.uploadLocalFile(context, context.localFilePath, context.remoteFilePath);
             child = new FileTreeItem(this, context.remoteFilePath, '', this.shareName);
         } else if (context.childType === FileTreeItem.contextValue) {
             child = await askAndCreateEmptyTextFile(this, '', this.shareName, context);
@@ -116,7 +116,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return child;
     }
 
-    public async uploadLocalFile(sourceFilePath: string, destFilePath: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath: string, suppressLogs: boolean = false): Promise<void> {
         const destDisplayPath: string = `${this.shareName}/${destFilePath}`;
         const parentDirectoryPath: string = path.dirname(destFilePath);
         const parentDirectories: string[] = parentDirectoryPath.split('/');
@@ -141,7 +141,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         const transferProgress: TransferProgress = new TransferProgress(fileSize || 1, destFilePath);
         const src: ILocalLocation = createAzCopyLocalSource(sourceFilePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, destFilePath);
-        await azCopyFileTransfer(src, dst, transferProgress);
+        await azCopyFileTransfer(context, src, dst, transferProgress);
 
         if (!suppressLogs) {
             ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);

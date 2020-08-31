@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { parseError, TelemetryProperties } from "vscode-azureextensionui";
+import { IActionContext, parseError, TelemetryProperties } from "vscode-azureextensionui";
 import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
@@ -14,6 +14,7 @@ import { throwIfCanceled } from './errorUtils';
 import { localize } from './localize';
 
 export async function uploadFiles(
+    context: IActionContext,
     destTreeItem: BlobContainerTreeItem | FileShareTreeItem,
     sourceFolder: string,
     destFolder: string,
@@ -34,7 +35,7 @@ export async function uploadFiles(
         ext.outputChannel.appendLog(localize('uploadingFile', 'Uploading "{0}" to "{1}"...', sourceFilePath, destTreeItem.label));
 
         try {
-            await destTreeItem.uploadLocalFile(sourceFilePath, destFilePath, true /* suppressLogs */);
+            await destTreeItem.uploadLocalFile(context, sourceFilePath, destFilePath, true /* suppressLogs */);
         } catch (error) {
             throw new Error(`Error uploading "${sourceFilePath}": ${parseError(error).message} `);
         }

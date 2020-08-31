@@ -147,7 +147,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let child: AzExtTreeItem;
         if (context.remoteFilePath && context.localFilePath) {
             context.showCreatingTreeItem(context.remoteFilePath);
-            await this.uploadLocalFile(context.localFilePath, context.remoteFilePath);
+            await this.uploadLocalFile(context, context.localFilePath, context.remoteFilePath);
             child = new BlobTreeItem(this, context.remoteFilePath, this.container);
         } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
             child = new BlobDirectoryTreeItem(this, context.childName, this.container);
@@ -176,7 +176,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 title: `Deploying to ${this.friendlyContainerName} from ${sourceFolderPath}`,
 
             },
-            async (notificationProgress, cancellationToken) => await this.deployStaticWebsiteCore(context.telemetry.properties, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken),
+            async (notificationProgress, cancellationToken) => await this.deployStaticWebsiteCore(context, context.telemetry.properties, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken),
         );
 
         let browseWebsite: vscode.MessageItem = { title: "Browse to website" };
@@ -201,6 +201,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
      */
     // tslint:disable-next-line: max-func-body-length
     private async deployStaticWebsiteCore(
+        context: IActionContext,
         properties: TelemetryProperties,
         sourceFolderPath: string,
         destBlobFolder: string,
@@ -236,7 +237,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
             // Upload files as blobs
             transferProgress = new TransferProgress(filePathsWithAzureSeparator.length, 'Uploading');
-            await uploadFiles(this, sourceFolderPath, destBlobFolder, filePathsWithAzureSeparator, properties, transferProgress, notificationProgress, cancellationToken);
+            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, filePathsWithAzureSeparator, properties, transferProgress, notificationProgress, cancellationToken);
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
@@ -307,7 +308,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         if (!suppressLogs) {
             ext.outputChannel.show();
@@ -320,7 +321,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
         try {
-            await azCopyBlobTransfer(src, dst, transferProgress);
+            await azCopyBlobTransfer(context, src, dst, transferProgress);
         } catch {
             ext.outputChannel.appendLog(localize('couldNotUpload', 'Could not upload file "{0}"', filePath));
             return;
