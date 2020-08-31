@@ -50,7 +50,7 @@ export async function uploadFile(context: IActionContext, treeItem: BlobContaine
                 const result = await treeItem.treeDataProvider.findTreeItem(id, context);
                 if (result) {
                     // A treeItem for this file already exists, no need to do anything with the tree, just upload
-                    await treeItem.uploadLocalFile(localFilePath, remoteFilePath);
+                    await treeItem.uploadLocalFile(context, localFilePath, remoteFilePath);
                     return;
                 }
             }

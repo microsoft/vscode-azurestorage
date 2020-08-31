@@ -58,6 +58,6 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
 
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title: `Uploading to ${destinationName} from ${parentDirectory}` }, async (notificationProgress, cancellationToken) => {
         const transferProgress = new TransferProgress(filePathsToUpload.length);
-        await uploadFiles(treeItem, parentDirectory, '', filePathsToUpload, actionContext.telemetry.properties, transferProgress, notificationProgress, cancellationToken);
+        await uploadFiles(actionContext, treeItem, parentDirectory, '', filePathsToUpload, actionContext.telemetry.properties, transferProgress, notificationProgress, cancellationToken);
     });
 }

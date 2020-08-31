@@ -4,21 +4,30 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
-import { callWithTelemetryAndErrorHandling, IActionContext } from "vscode-azureextensionui";
+import { IActionContext } from "vscode-azureextensionui";
 import { ext } from '../../extensionVariables';
 import { TransferProgress } from "../../TransferProgress";
 import { delay } from "../../utils/delay";
 import { localize } from "../../utils/localize";
 
 export async function azCopyBlobTransfer(
+    context: IActionContext,
     src: ILocalLocation,
     dst: IRemoteSasLocation,
     transferProgress: TransferProgress,
 ): Promise<void> {
-    await callWithTelemetryAndErrorHandling('azCopyBlobTransfer', async (context: IActionContext) => {
-        context.errorHandling.rethrow = true;
-        await azCopyTransfer(context, src, dst, transferProgress, 'LocalBlob');
-    });
+    context.errorHandling.rethrow = true;
+    await azCopyTransfer(context, src, dst, transferProgress, 'LocalBlob');
+}
+
+export async function azCopyFileTransfer(
+    context: IActionContext,
+    src: ILocalLocation,
+    dst: IRemoteSasLocation,
+    transferProgress: TransferProgress,
+): Promise<void> {
+    context.errorHandling.rethrow = true;
+    await azCopyTransfer(context, src, dst, transferProgress, 'LocalFile');
 }
 
 async function azCopyTransfer(
