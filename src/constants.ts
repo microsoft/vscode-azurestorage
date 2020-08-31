@@ -18,6 +18,7 @@ export const extensionPrefix: string = 'azureStorage';
 
 export const emulatorAccountName: string = 'devstoreaccount1';
 export const emulatorConnectionString: string = 'UseDevelopmentStorage=true;';
+export const emulatorKey: string = 'Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';
 
 export function getResourcesPath(): string {
     return ext.context.asAbsolutePath('resources');

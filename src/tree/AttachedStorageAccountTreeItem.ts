@@ -4,12 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
+import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
-import { emulatorAccountName, getResourcesPath } from '../constants';
+import { emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
+import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
 import { localize } from '../utils/localize';
 import { AttachedAccountRoot } from './AttachedStorageAccountsTreeItem';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
@@ -117,8 +119,15 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         throw new Error(localize('cannotRetrieveStorageAccountIdForAttachedAccount', 'Cannot retrieve storage account id for an attached account.'));
     }
 
-    public generateSasToken(): string {
-        throw new Error(localize('cantGenerateSasToken', 'Cannot generate SAS token for an attached account.'));
+    public generateSasToken(accountSASSignatureValues: AccountSASSignatureValues): string {
+        const key: string | undefined = this._connectionString === emulatorConnectionString ? emulatorKey : getPropertyFromConnectionString(this._connectionString, 'AccountKey');
+        if (!key) {
+            throw new Error(localize('noKeyConnectionString', 'Could not parse key from connection string'));
+        }
+        return generateAccountSASQueryParameters(
+            accountSASSignatureValues,
+            new StorageSharedKeyCredential(this.storageAccountName, key)
+        ).toString();
     }
 
     public createBlobServiceClient(): azureStorageBlob.BlobServiceClient {
