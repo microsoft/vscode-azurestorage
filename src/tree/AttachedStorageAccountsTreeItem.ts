@@ -9,10 +9,10 @@ import { Uri } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, ISubscriptionContext, parseError } from "vscode-azureextensionui";
 import { emulatorAccountName, emulatorConnectionString, getResourcesPath } from '../constants';
 import { ext } from '../extensionVariables';
+import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
 import { KeyTar, tryGetKeyTar } from '../utils/keytar';
 import { localize } from '../utils/localize';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
-import { getPropertyFromConnectionString } from './getPropertyFromConnectionString';
 import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 import { SubscriptionTreeItem } from './SubscriptionTreeItem';
 
