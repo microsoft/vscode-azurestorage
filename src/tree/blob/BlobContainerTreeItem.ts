@@ -12,14 +12,14 @@ import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { createAzCopyDestination, createAzCopyLocalSource } from '../../commands/azCopy/azCopyLocations';
-import { azCopyBlobTransfer } from '../../commands/azCopy/azCopyTransfer';
+import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
-import { listFilePathsWithAzureSeparator } from '../../utils/fs';
+import { getNumResourcesInDirectory } from '../../utils/fs';
 import { localize } from '../../utils/localize';
 import { uploadFiles } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
@@ -224,9 +224,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
             ext.outputChannel.appendLog(`Deploying to static website ${this.root.storageAccountName}/${this.container.name}`);
 
-            // Find source files
-            let filePathsWithAzureSeparator: string[] = await listFilePathsWithAzureSeparator(sourceFolderPath, '.{git,vscode}/**');
-
             // Delete existing blobs (if requested)
             let transferProgress = new TransferProgress(blobsToDelete.length, 'Deleting');
             await this.deleteBlobs(blobsToDelete, transferProgress, notificationProgress, cancellationToken, context.telemetry.properties);
@@ -235,8 +232,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             notificationProgress.report({ increment: -1 });
 
             // Upload files as blobs
-            transferProgress = new TransferProgress(filePathsWithAzureSeparator.length, 'Uploading');
-            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, filePathsWithAzureSeparator, context.telemetry.properties, transferProgress, notificationProgress, cancellationToken);
+            transferProgress = new TransferProgress(await getNumResourcesInDirectory(sourceFolderPath), 'Uploading');
+            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, transferProgress, notificationProgress, cancellationToken);
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
@@ -320,7 +317,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
         try {
-            await azCopyBlobTransfer(context, src, dst, transferProgress);
+            await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress);
         } catch {
             ext.outputChannel.appendLog(localize('couldNotUpload', 'Could not upload file "{0}"', filePath));
             return;

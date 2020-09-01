@@ -6,6 +6,7 @@
 import { ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 import { AccountSASPermissions, AccountSASSignatureValues, ContainerClient } from "@azure/storage-blob";
 import { ShareClient } from "@azure/storage-file-share";
+import { sep } from "path";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { createBlobContainerClient } from "../../utils/blobUtils";
@@ -15,6 +16,13 @@ const threeDaysInMS: number = 1000 * 60 * 60 * 24 * 3;
 
 export function createAzCopyLocalSource(sourcePath: string): ILocalLocation {
     return { type: "Local", path: sourcePath, useWildCard: false };
+}
+
+export function createAzCopyLocalDirectorySource(path: string): ILocalLocation & { isDirectory?: boolean } {
+    if (!path.endsWith(sep)) {
+        path += sep;
+    }
+    return { type: "Local", path, useWildCard: true, isDirectory: true };
 }
 
 export function createAzCopyDestination(treeItem: BlobContainerTreeItem | FileShareTreeItem, destinationPath: string): IRemoteSasLocation {
