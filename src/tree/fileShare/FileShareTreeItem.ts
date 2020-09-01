@@ -12,7 +12,7 @@ import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { createAzCopyDestination, createAzCopyLocalSource } from '../../commands/azCopy/azCopyLocations';
-import { azCopyFileTransfer } from '../../commands/azCopy/azCopyTransfer';
+import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
@@ -141,7 +141,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         const transferProgress: TransferProgress = new TransferProgress(fileSize || 1, destFilePath);
         const src: ILocalLocation = createAzCopyLocalSource(sourceFilePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, destFilePath);
-        await azCopyFileTransfer(context, src, dst, transferProgress);
+        await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress);
 
         if (!suppressLogs) {
             ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);
