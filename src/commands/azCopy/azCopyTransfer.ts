@@ -12,9 +12,11 @@ import { delay } from "../../utils/delay";
 import { throwIfCanceled } from "../../utils/errorUtils";
 import { localize } from "../../utils/localize";
 
+export type AzCopyTransferType = 'LocalBlob' | 'LocalFile';
+
 export async function azCopyTransfer(
     context: IActionContext,
-    transferType: 'LocalBlob' | 'LocalFile',
+    transferType: AzCopyTransferType,
     src: ILocalLocation & { isDirectory?: boolean },
     dst: IRemoteSasLocation,
     transferProgress: TransferProgress,

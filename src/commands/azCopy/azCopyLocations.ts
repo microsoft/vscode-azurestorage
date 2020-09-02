@@ -13,16 +13,18 @@ import { createBlobContainerClient } from "../../utils/blobUtils";
 import { createShareClient } from "../../utils/fileUtils";
 
 const threeDaysInMS: number = 1000 * 60 * 60 * 24 * 3;
+let localLocationType: 'Local';
+let remoteSasLocationType: 'RemoteSas';
 
 export function createAzCopyLocalSource(sourcePath: string): ILocalLocation {
-    return { type: "Local", path: sourcePath, useWildCard: false };
+    return { type: localLocationType, path: sourcePath, useWildCard: false };
 }
 
-export function createAzCopyLocalDirectorySource(path: string): ILocalLocation & { isDirectory?: boolean } {
+export function createAzCopyLocalDirectorySource(path: string): ILocalLocation & { isDirectory: true } {
     if (!path.endsWith(sep)) {
         path += sep;
     }
-    return { type: "Local", path, useWildCard: true, isDirectory: true };
+    return { type: localLocationType, path, useWildCard: true, isDirectory: true };
 }
 
 export function createAzCopyDestination(treeItem: BlobContainerTreeItem | FileShareTreeItem, destinationPath: string): IRemoteSasLocation {
@@ -44,5 +46,5 @@ export function createAzCopyDestination(treeItem: BlobContainerTreeItem | FileSh
     const sasToken: string = treeItem.root.generateSasToken(accountSASSignatureValues);
     // Ensure path begins with '/' to transfer properly
     const path: string = destinationPath[0] === '/' ? destinationPath : `/${destinationPath}`;
-    return { type: "RemoteSas", sasToken, resourceUri, path, useWildCard: false };
+    return { type: remoteSasLocationType, sasToken, resourceUri, path, useWildCard: false };
 }

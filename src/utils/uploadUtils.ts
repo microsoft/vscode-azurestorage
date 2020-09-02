@@ -7,7 +7,7 @@ import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as vscode from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
 import { createAzCopyDestination, createAzCopyLocalDirectorySource } from '../commands/azCopy/azCopyLocations';
-import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
+import { azCopyTransfer, AzCopyTransferType } from '../commands/azCopy/azCopyTransfer';
 import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
@@ -28,7 +28,7 @@ export async function uploadFiles(
 ): Promise<void> {
     const src: ILocalLocation & { isDirectory?: boolean } = createAzCopyLocalDirectorySource(sourceFolder);
     const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destFolder);
-    let transferType: 'LocalBlob' | 'LocalFile';
+    let transferType: AzCopyTransferType;
     if (destTreeItem instanceof BlobContainerTreeItem) {
         transferType = 'LocalBlob';
     } else {
