@@ -30,6 +30,8 @@ export async function azCopyTransfer(
     let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
+        ext.outputChannel.appendLog(localize('couldNotUpload', 'Could not upload "{0}"', src.path));
+
         // tslint:disable-next-line: strict-boolean-expressions
         let message: string = localize('azCopyTransfer', 'AzCopy Transfer: "{0}".', finalTransferStatus?.JobStatus || 'Failed');
         if (finalTransferStatus?.FailedTransfers?.length || finalTransferStatus?.SkippedTransfers?.length) {
