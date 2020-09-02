@@ -30,22 +30,31 @@ export async function uploadFiles(
     cancellationToken: vscode.CancellationToken,
     messagePrefix?: string,
     countFoldersAsResources?: boolean,
+    suppressLogsAndPrompts?: boolean
 ): Promise<void> {
-    const destFolder: string = basename(sourcePath);
-    let fromTo: FromToOption;
-    if (destTreeItem instanceof BlobContainerTreeItem) {
-        destPath = destPath !== undefined ? destPath : await getBlobPath(destTreeItem, destFolder);
-        fromTo = 'LocalBlob';
-    } else {
-        destPath = destPath !== undefined ? destPath : await getFileName(destTreeItem, dirname(sourcePath), destTreeItem.shareName, destFolder);
-        fromTo = 'LocalFile';
+    if (destPath === undefined) {
+        const destFolder: string = basename(sourcePath);
+
+        if (suppressLogsAndPrompts) {
+            destPath = destFolder;
+        } else if (destTreeItem instanceof BlobContainerTreeItem) {
+            destPath = await getBlobPath(destTreeItem, destFolder);
+        } else {
+            destPath = await getFileName(destTreeItem, dirname(sourcePath), destTreeItem.shareName, destFolder);
+        }
     }
+
+    const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
     const src: ILocalLocation = createAzCopyLocalSource(sourcePath, true);
     const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destPath);
     const totalWork: number = await getNumResourcesInDirectory(sourcePath, countFoldersAsResources);
     const transferProgress: TransferProgress = new TransferProgress(totalWork, messagePrefix);
+
+    if (!suppressLogsAndPrompts) {
+        ext.outputChannel.appendLog(localize('uploading', 'Uploading "{0}" to "{1}"', sourcePath, destTreeItem.label));
+    }
+
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
-    ext.outputChannel.appendLog(localize('finishedUpload', 'Uploaded to "{0}".', destTreeItem.label));
 }
 
 export async function warnFileAlreadyExists(filePath: string): Promise<void> {

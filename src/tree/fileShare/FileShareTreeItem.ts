@@ -117,16 +117,27 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return child;
     }
 
-    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath?: string, suppressLogs: boolean = false): Promise<void> {
-        let destFolder: string = path.basename(sourceFilePath);
-        destFilePath = destFilePath !== undefined ? destFilePath : await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFolder);
-        if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
-            await warnFileAlreadyExists(destFilePath);
+    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath?: string, suppressLogsAndPrompts: boolean = false): Promise<void> {
+        if (destFilePath === undefined) {
+            const destFolder: string = path.basename(sourceFilePath);
+
+            if (suppressLogsAndPrompts) {
+                destFilePath = destFolder;
+            } else {
+                destFilePath = await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFolder);
+            }
         }
 
         const destDisplayPath: string = `${this.shareName}/${destFilePath}`;
         const parentDirectoryPath: string = path.dirname(destFilePath);
         const parentDirectories: string[] = parentDirectoryPath.split('/');
+
+        if (!suppressLogsAndPrompts) {
+            if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
+                await warnFileAlreadyExists(destFilePath);
+            }
+            ext.outputChannel.appendLog(`Uploading ${sourceFilePath} as ${destDisplayPath}`);
+        }
 
         // Ensure parent directories exist before creating child files
         let partialParentDirectoryPath: string = '';
@@ -138,11 +149,6 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }
         }
 
-        if (!suppressLogs) {
-            ext.outputChannel.show();
-            ext.outputChannel.appendLog(`Uploading ${sourceFilePath} as ${destDisplayPath}`);
-        }
-
         const fileSize: number = (await fse.stat(sourceFilePath)).size;
         // tslint:disable-next-line: strict-boolean-expressions
         const transferProgress: TransferProgress = new TransferProgress(fileSize || 1, destFilePath);
@@ -150,7 +156,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         const dst: IRemoteSasLocation = createAzCopyDestination(this, destFilePath);
         await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress);
 
-        if (!suppressLogs) {
+        if (!suppressLogsAndPrompts) {
             ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);
         }
     }

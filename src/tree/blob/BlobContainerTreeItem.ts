@@ -302,16 +302,22 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath?: string, suppressLogs: boolean = false): Promise<void> {
-        const destFolder: string = path.basename(filePath);
-        blobPath = blobPath !== undefined ? blobPath : await getBlobPath(this, destFolder);
-        if (await doesBlobExist(this, blobPath)) {
-            await warnFileAlreadyExists(blobPath);
+    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath?: string, suppressLogsAndPrompts: boolean = false): Promise<void> {
+        if (blobPath === undefined) {
+            const destFolder: string = path.basename(filePath);
+
+            if (suppressLogsAndPrompts) {
+                blobPath = destFolder;
+            } else {
+                blobPath = await getBlobPath(this, destFolder);
+            }
         }
 
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
-        if (!suppressLogs) {
-            ext.outputChannel.show();
+        if (!suppressLogsAndPrompts) {
+            if (await doesBlobExist(this, blobPath)) {
+                await warnFileAlreadyExists(blobPath);
+            }
             ext.outputChannel.appendLog(`Uploading ${filePath} as ${blobFriendlyPath}`);
         }
 
@@ -327,7 +333,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             return;
         }
 
-        if (!suppressLogs) {
+        if (!suppressLogsAndPrompts) {
             ext.outputChannel.appendLog(`Successfully uploaded ${blobFriendlyPath}.`);
         }
     }

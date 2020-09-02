@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fse from 'fs-extra';
+import { basename } from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -11,40 +12,58 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { localize } from '../utils/localize';
 import { uploadFiles } from '../utils/uploadUtils';
-import { selectWorkspaceItem } from '../utils/workspaceUtils';
+import { selectWorkspaceItems } from '../utils/workspaceUtils';
 
 export async function uploadToAzureStorage(actionContext: IActionContext, target?: vscode.Uri): Promise<void> {
-    let resourcePath: string;
+    let resourceUris: vscode.Uri[];
     if (target) {
         if (target.scheme === 'azurestorage') {
             throw new Error(localize('cannotUploadToAzureFromAzureResource', 'Cannot upload to Azure from an Azure resource.'));
         }
 
-        resourcePath = target.fsPath;
+        resourceUris = [vscode.Uri.file(target.fsPath)];
     } else {
-        resourcePath = await selectWorkspaceItem(
+        resourceUris = await selectWorkspaceItems(
             ext.ui,
-            localize('selectResourceToUpload', 'Select resource to upload'),
+            localize('selectResourceToUpload', 'Select resources to upload'),
             {
                 canSelectFiles: true,
                 canSelectFolders: true,
-                canSelectMany: false,
+                canSelectMany: true,
                 defaultUri: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri : undefined,
                 openLabel: localize('select', 'Select')
             });
     }
 
-    let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
-    const title: string = localize('uploading', 'Uploading to "{0}" from "{1}"', treeItem.label, resourcePath);
-    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
-        if ((await fse.stat(resourcePath)).isDirectory()) {
-            const message: string = localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath);
-            await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
+    const multiResourceUpload: boolean = resourceUris.length > 1;
+    if (multiResourceUpload) {
+        await showUploadWarning(localize('uploadWillOverwrite', 'Uploading multiple files/folders will overwrite any existing resources with the same name.'));
+    }
 
-            // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
-            await uploadFiles(actionContext, treeItem, resourcePath, undefined, notificationProgress, cancellationToken, undefined, treeItem instanceof FileShareTreeItem);
-        } else {
-            await treeItem.uploadLocalFile(actionContext, resourcePath);
+    let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
+    const title: string = localize('uploading', 'Uploading resources to "{0}"', treeItem.label);
+    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
+        for (const resourceUri of resourceUris) {
+            const resourcePath: string = resourceUri.path;
+            if ((await fse.stat(resourcePath)).isDirectory()) {
+                if (!multiResourceUpload) {
+                    const message: string = localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath);
+                    await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
+                }
+
+                // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
+                await uploadFiles(actionContext, treeItem, resourcePath, undefined, notificationProgress, cancellationToken, basename(resourcePath), treeItem instanceof FileShareTreeItem, multiResourceUpload);
+            } else {
+                await treeItem.uploadLocalFile(actionContext, resourcePath, undefined, multiResourceUpload);
+            }
         }
     });
+
+    const success: string = localize('successfullyUploaded', 'Successfully uploaded to "{0}"', treeItem.label);
+    ext.outputChannel.appendLog(success);
+    vscode.window.showInformationMessage(success);
+}
+
+async function showUploadWarning(message: string): Promise<void> {
+    await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
 }

@@ -13,7 +13,7 @@ export function getSingleRootWorkspace(): vscode.WorkspaceFolder | undefined {
     return vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1 ? vscode.workspace.workspaceFolders[0] : undefined;
 }
 
-export async function selectWorkspaceItem(ui: IAzureUserInput, placeHolder: string, options: vscode.OpenDialogOptions, getSubPath?: (f: vscode.WorkspaceFolder) => string | undefined | Promise<string | undefined>): Promise<string> {
+export async function selectWorkspaceItems(ui: IAzureUserInput, placeHolder: string, options: vscode.OpenDialogOptions, getSubPath?: (f: vscode.WorkspaceFolder) => string | undefined | Promise<string | undefined>): Promise<vscode.Uri[]> {
     let folder: IAzureQuickPickItem<string | undefined> | undefined;
     if (vscode.workspace.workspaceFolders) {
         const folderPicks: IAzureQuickPickItem<string | undefined>[] = await Promise.all(vscode.workspace.workspaceFolders.map(async (f: vscode.WorkspaceFolder) => {
@@ -30,5 +30,9 @@ export async function selectWorkspaceItem(ui: IAzureUserInput, placeHolder: stri
         folder = await ui.showQuickPick(folderPicks, { placeHolder });
     }
 
-    return folder && folder.data ? folder.data : (await ui.showOpenDialog(options))[0].fsPath;
+    if (folder && folder.data) {
+        return [vscode.Uri.file(folder.data)];
+    } else {
+        return await ui.showOpenDialog(options);
+    }
 }
