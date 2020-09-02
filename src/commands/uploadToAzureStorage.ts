@@ -35,12 +35,13 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
     }
 
     let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
-    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title: `Uploading to ${treeItem.label} from ${resourcePath}` }, async (notificationProgress, cancellationToken) => {
+    const title: string = localize('uploading', 'Uploading to "{0}" from "{1}"', treeItem.label, resourcePath);
+    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         if ((await fse.stat(resourcePath)).isDirectory()) {
             const message: string = localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath);
             await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
 
-            // AzCopy recognizes folders as a resource when uploading to file shares. So only count folders in that case
+            // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
             await uploadFiles(actionContext, treeItem, resourcePath, undefined, notificationProgress, cancellationToken, undefined, treeItem instanceof FileShareTreeItem);
         } else {
             await treeItem.uploadLocalFile(actionContext, resourcePath);
