@@ -20,11 +20,11 @@ export function createAzCopyLocalSource(sourcePath: string): ILocalLocation {
     return { type: localLocationType, path: sourcePath, useWildCard: false };
 }
 
-export function createAzCopyLocalDirectorySource(path: string): ILocalLocation & { isDirectory: true } {
+export function createAzCopyLocalDirectorySource(path: string): ILocalLocation {
     if (!path.endsWith(sep)) {
         path += sep;
     }
-    return { type: localLocationType, path, useWildCard: true, isDirectory: true };
+    return { type: localLocationType, path, useWildCard: true };
 }
 
 export function createAzCopyDestination(treeItem: BlobContainerTreeItem | FileShareTreeItem, destinationPath: string): IRemoteSasLocation {

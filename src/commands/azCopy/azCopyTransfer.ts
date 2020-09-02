@@ -17,7 +17,7 @@ export type AzCopyTransferType = 'LocalBlob' | 'LocalFile';
 export async function azCopyTransfer(
     context: IActionContext,
     transferType: AzCopyTransferType,
-    src: ILocalLocation & { isDirectory?: boolean },
+    src: ILocalLocation,
     dst: IRemoteSasLocation,
     transferProgress: TransferProgress,
     notificationProgress?: Progress<{
@@ -65,7 +65,7 @@ export async function azCopyTransfer(
 async function startAndWaitForCopy(
     context: IActionContext,
     copyClient: IAzCopyClient,
-    src: AzCopyLocation & { isDirectory?: boolean },
+    src: AzCopyLocation,
     dst: AzCopyLocation,
     options: ICopyOptions,
     transferProgress: TransferProgress,
@@ -81,7 +81,8 @@ async function startAndWaitForCopy(
     while (!status || status.StatusType !== 'EndOfJob') {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'startAndWaitForCopy');
         status = (await copyClient.getJobInfo(jobId)).latestStatus;
-        if (src.isDirectory) {
+        if (src.useWildCard) {
+            // Directory transfers always have `useWildCard` set
             // tslint:disable: strict-boolean-expressions
             finishedWork = status?.TransfersCompleted || 0;
         } else {

@@ -26,7 +26,7 @@ export async function uploadFiles(
     }>,
     cancellationToken: vscode.CancellationToken
 ): Promise<void> {
-    const src: ILocalLocation & { isDirectory?: boolean } = createAzCopyLocalDirectorySource(sourceFolder);
+    const src: ILocalLocation = createAzCopyLocalDirectorySource(sourceFolder);
     const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destFolder);
     let transferType: AzCopyTransferType;
     if (destTreeItem instanceof BlobContainerTreeItem) {
