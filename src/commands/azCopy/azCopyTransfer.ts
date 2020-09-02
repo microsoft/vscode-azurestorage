@@ -4,42 +4,30 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
+import { CancellationToken, Progress } from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
 import { ext } from '../../extensionVariables';
 import { TransferProgress } from "../../TransferProgress";
 import { delay } from "../../utils/delay";
+import { throwIfCanceled } from "../../utils/errorUtils";
 import { localize } from "../../utils/localize";
 
-export async function azCopyBlobTransfer(
+export async function azCopyTransfer(
     context: IActionContext,
-    src: ILocalLocation,
-    dst: IRemoteSasLocation,
-    transferProgress: TransferProgress,
-): Promise<void> {
-    context.errorHandling.rethrow = true;
-    await azCopyTransfer(context, src, dst, transferProgress, 'LocalBlob');
-}
-
-export async function azCopyFileTransfer(
-    context: IActionContext,
-    src: ILocalLocation,
-    dst: IRemoteSasLocation,
-    transferProgress: TransferProgress,
-): Promise<void> {
-    context.errorHandling.rethrow = true;
-    await azCopyTransfer(context, src, dst, transferProgress, 'LocalFile');
-}
-
-async function azCopyTransfer(
-    context: IActionContext,
-    src: ILocalLocation,
-    dst: IRemoteSasLocation,
-    transferProgress: TransferProgress,
     fromTo: FromToOption,
+    src: ILocalLocation,
+    dst: IRemoteSasLocation,
+    transferProgress: TransferProgress,
+    notificationProgress?: Progress<{
+        message?: string | undefined;
+        increment?: number | undefined;
+    }>,
+    cancellationToken?: CancellationToken
 ): Promise<void> {
+    context.errorHandling.rethrow = true;
     const copyClient: AzCopyClient = new AzCopyClient();
-    const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true };
-    let jobId: string = await startAndWaitForCopy(copyClient, src, dst, copyOptions, transferProgress);
+    const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true, excludePath: '.git;.vscode' };
+    let jobId: string = await startAndWaitForCopy(context, copyClient, src, dst, copyOptions, transferProgress, notificationProgress, cancellationToken);
     let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
@@ -73,20 +61,32 @@ async function azCopyTransfer(
 }
 
 async function startAndWaitForCopy(
+    context: IActionContext,
     copyClient: IAzCopyClient,
     src: AzCopyLocation,
     dst: AzCopyLocation,
     options: ICopyOptions,
     transferProgress: TransferProgress,
+    notificationProgress?: Progress<{
+        message?: string | undefined;
+        increment?: number | undefined;
+    }>,
+    cancellationToken?: CancellationToken
 ): Promise<string> {
     let jobId: string = await copyClient.copy(src, dst, options);
     let status: TransferStatus | undefined;
     let finishedWork: number;
     while (!status || status.StatusType !== 'EndOfJob') {
+        throwIfCanceled(cancellationToken, context.telemetry.properties, 'startAndWaitForCopy');
         status = (await copyClient.getJobInfo(jobId)).latestStatus;
+
+        // Directory transfers always have `useWildCard` set
         // tslint:disable-next-line: strict-boolean-expressions
-        finishedWork = status?.BytesOverWire || 0;
+        finishedWork = (src.useWildCard ? status?.TransfersCompleted : status?.BytesOverWire) || 0;
         transferProgress.reportToOutputWindow(finishedWork);
+        if (!!notificationProgress) {
+            transferProgress.reportToNotification(finishedWork, notificationProgress);
+        }
         await delay(1000);
     }
 

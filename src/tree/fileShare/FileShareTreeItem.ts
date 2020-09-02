@@ -12,13 +12,14 @@ import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { createAzCopyDestination, createAzCopyLocalSource } from '../../commands/azCopy/azCopyLocations';
-import { azCopyFileTransfer } from '../../commands/azCopy/azCopyTransfer';
+import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
+import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient, doesFileExist, getFileName } from '../../utils/fileUtils';
+import { warnFileAlreadyExists } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './DirectoryTreeItem';
@@ -116,7 +117,13 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return child;
     }
 
-    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath?: string, suppressLogs: boolean = false): Promise<void> {
+        let destFolder: string = path.basename(sourceFilePath);
+        destFilePath = destFilePath !== undefined ? destFilePath : await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFolder);
+        if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
+            await warnFileAlreadyExists(destFilePath);
+        }
+
         const destDisplayPath: string = `${this.shareName}/${destFilePath}`;
         const parentDirectoryPath: string = path.dirname(destFilePath);
         const parentDirectories: string[] = parentDirectoryPath.split('/');
@@ -141,7 +148,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         const transferProgress: TransferProgress = new TransferProgress(fileSize || 1, destFilePath);
         const src: ILocalLocation = createAzCopyLocalSource(sourceFilePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, destFilePath);
-        await azCopyFileTransfer(context, src, dst, transferProgress);
+        await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress);
 
         if (!suppressLogs) {
             ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);

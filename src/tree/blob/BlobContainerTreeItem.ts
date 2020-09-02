@@ -12,16 +12,15 @@ import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { createAzCopyDestination, createAzCopyLocalSource } from '../../commands/azCopy/azCopyLocations';
-import { azCopyBlobTransfer } from '../../commands/azCopy/azCopyTransfer';
+import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
-import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { createBlobContainerClient, createChildAsNewBlockBlob, doesBlobExist, getBlobPath, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
-import { listFilePathsWithAzureSeparator } from '../../utils/fs';
 import { localize } from '../../utils/localize';
-import { uploadFiles } from '../../utils/uploadUtils';
+import { uploadFiles, warnFileAlreadyExists } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -224,9 +223,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
             ext.outputChannel.appendLog(`Deploying to static website ${this.root.storageAccountName}/${this.container.name}`);
 
-            // Find source files
-            let filePathsWithAzureSeparator: string[] = await listFilePathsWithAzureSeparator(sourceFolderPath, '.{git,vscode}/**');
-
             // Delete existing blobs (if requested)
             let transferProgress = new TransferProgress(blobsToDelete.length, 'Deleting');
             await this.deleteBlobs(blobsToDelete, transferProgress, notificationProgress, cancellationToken, context.telemetry.properties);
@@ -235,8 +231,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             notificationProgress.report({ increment: -1 });
 
             // Upload files as blobs
-            transferProgress = new TransferProgress(filePathsWithAzureSeparator.length, 'Uploading');
-            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, filePathsWithAzureSeparator, context.telemetry.properties, transferProgress, notificationProgress, cancellationToken);
+            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading', false);
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
@@ -307,7 +302,13 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath?: string, suppressLogs: boolean = false): Promise<void> {
+        const destFolder: string = path.basename(filePath);
+        blobPath = blobPath !== undefined ? blobPath : await getBlobPath(this, destFolder);
+        if (await doesBlobExist(this, blobPath)) {
+            await warnFileAlreadyExists(blobPath);
+        }
+
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         if (!suppressLogs) {
             ext.outputChannel.show();
@@ -320,7 +321,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
         try {
-            await azCopyBlobTransfer(context, src, dst, transferProgress);
+            await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress);
         } catch {
             ext.outputChannel.appendLog(localize('couldNotUpload', 'Could not upload file "{0}"', filePath));
             return;
