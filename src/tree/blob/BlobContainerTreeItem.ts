@@ -17,11 +17,10 @@ import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
-import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { createBlobContainerClient, createChildAsNewBlockBlob, doesBlobExist, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
-import { getNumResourcesInDirectory } from '../../utils/fs';
 import { localize } from '../../utils/localize';
-import { uploadFiles } from '../../utils/uploadUtils';
+import { uploadFiles, warnFileAlreadyExists } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -232,8 +231,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             notificationProgress.report({ increment: -1 });
 
             // Upload files as blobs
-            transferProgress = new TransferProgress(await getNumResourcesInDirectory(sourceFolderPath), 'Uploading');
-            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, transferProgress, notificationProgress, cancellationToken);
+            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading', false);
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
@@ -305,6 +303,10 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string, suppressLogs: boolean = false): Promise<void> {
+        if (await doesBlobExist(this, blobPath)) {
+            await warnFileAlreadyExists(blobPath);
+        }
+
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         if (!suppressLogs) {
             ext.outputChannel.show();

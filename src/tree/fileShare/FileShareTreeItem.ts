@@ -18,7 +18,8 @@ import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
+import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient, doesFileExist } from '../../utils/fileUtils';
+import { warnFileAlreadyExists } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './DirectoryTreeItem';
@@ -117,6 +118,10 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     }
 
     public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath: string, suppressLogs: boolean = false): Promise<void> {
+        if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
+            await warnFileAlreadyExists(destFilePath);
+        }
+
         const destDisplayPath: string = `${this.shareName}/${destFilePath}`;
         const parentDirectoryPath: string = path.dirname(destFilePath);
         const parentDirectories: string[] = parentDirectoryPath.split('/');

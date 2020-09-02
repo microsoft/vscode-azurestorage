@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzCopyClient, AzCopyLocation, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
+import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
 import { CancellationToken, Progress } from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
 import { ext } from '../../extensionVariables';
@@ -12,11 +12,9 @@ import { delay } from "../../utils/delay";
 import { throwIfCanceled } from "../../utils/errorUtils";
 import { localize } from "../../utils/localize";
 
-export type AzCopyTransferType = 'LocalBlob' | 'LocalFile';
-
 export async function azCopyTransfer(
     context: IActionContext,
-    transferType: AzCopyTransferType,
+    fromTo: FromToOption,
     src: ILocalLocation,
     dst: IRemoteSasLocation,
     transferProgress: TransferProgress,
@@ -28,7 +26,7 @@ export async function azCopyTransfer(
 ): Promise<void> {
     context.errorHandling.rethrow = true;
     const copyClient: AzCopyClient = new AzCopyClient();
-    const copyOptions: ICopyOptions = { fromTo: transferType, overwriteExisting: "true", recursive: true, followSymLinks: true, excludePath: '.git;.vscode' };
+    const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true, excludePath: '.git;.vscode' };
     let jobId: string = await startAndWaitForCopy(context, copyClient, src, dst, copyOptions, transferProgress, notificationProgress, cancellationToken);
     let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
@@ -81,8 +79,9 @@ async function startAndWaitForCopy(
     while (!status || status.StatusType !== 'EndOfJob') {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'startAndWaitForCopy');
         status = (await copyClient.getJobInfo(jobId)).latestStatus;
+
+        // Directory transfers always have `useWildCard` set
         if (src.useWildCard) {
-            // Directory transfers always have `useWildCard` set
             // tslint:disable: strict-boolean-expressions
             finishedWork = status?.TransfersCompleted || 0;
         } else {

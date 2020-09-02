@@ -3,11 +3,12 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
+import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
+import * as readdirp from 'readdirp';
 import * as vscode from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
-import { createAzCopyDestination, createAzCopyLocalDirectorySource } from '../commands/azCopy/azCopyLocations';
-import { azCopyTransfer, AzCopyTransferType } from '../commands/azCopy/azCopyTransfer';
+import { createAzCopyDestination, createAzCopyLocalSource } from '../commands/azCopy/azCopyLocations';
+import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
 import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
@@ -19,22 +20,25 @@ export async function uploadFiles(
     destTreeItem: BlobContainerTreeItem | FileShareTreeItem,
     sourceFolder: string,
     destFolder: string,
-    transferProgress: TransferProgress,
     notificationProgress: vscode.Progress<{
         message?: string | undefined;
         increment?: number | undefined;
     }>,
-    cancellationToken: vscode.CancellationToken
+    cancellationToken: vscode.CancellationToken,
+    messagePrefix?: string,
+    countFoldersAsResources?: boolean,
 ): Promise<void> {
-    const src: ILocalLocation = createAzCopyLocalDirectorySource(sourceFolder);
+    const src: ILocalLocation = createAzCopyLocalSource(sourceFolder, true);
     const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destFolder);
-    let transferType: AzCopyTransferType;
+    let fromTo: FromToOption;
     if (destTreeItem instanceof BlobContainerTreeItem) {
-        transferType = 'LocalBlob';
+        fromTo = 'LocalBlob';
     } else {
-        transferType = 'LocalFile';
+        fromTo = 'LocalFile';
     }
-    await azCopyTransfer(context, transferType, src, dst, transferProgress, notificationProgress, cancellationToken);
+    const totalWork: number = await getNumResourcesInDirectory(sourceFolder, countFoldersAsResources);
+    const transferProgress: TransferProgress = new TransferProgress(totalWork, messagePrefix);
+    await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
     ext.outputChannel.appendLog(localize('finishedUpload', 'Uploaded to "{0}".', destTreeItem.label));
 }
 
@@ -44,4 +48,13 @@ export async function warnFileAlreadyExists(filePath: string): Promise<void> {
         { modal: true },
         { title: localize('overwrite', 'Overwrite') }
     );
+}
+
+async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {
+    const options: readdirp.ReaddirpOptions = {
+        directoryFilter: ['!.git', '!.vscode'],
+        type: countFolders ? 'files_directories' : 'files'
+    };
+    const resources: readdirp.EntryInfo[] = await readdirp.promise(directoryPath, options);
+    return resources.length;
 }

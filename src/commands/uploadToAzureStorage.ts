@@ -8,14 +8,12 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
-import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
-import { doesBlobExist, getBlobPath } from '../utils/blobUtils';
-import { doesFileExist, getFileName } from '../utils/fileUtils';
-import { getNumResourcesInDirectory } from '../utils/fs';
+import { getBlobPath } from '../utils/blobUtils';
+import { getFileName } from '../utils/fileUtils';
 import { localize } from '../utils/localize';
-import { uploadFiles, warnFileAlreadyExists } from '../utils/uploadUtils';
+import { uploadFiles } from '../utils/uploadUtils';
 import { selectWorkspaceItem } from '../utils/workspaceUtils';
 
 export async function uploadToAzureStorage(actionContext: IActionContext, target?: vscode.Uri): Promise<void> {
@@ -56,13 +54,8 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
             await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
 
             // AzCopy recognizes folders as a resource when uploading to file shares. So only count folders in that case
-            const numResources: number = await getNumResourcesInDirectory(resourcePath, treeItem instanceof FileShareTreeItem);
-            const transferProgress = new TransferProgress(numResources);
-            await uploadFiles(actionContext, treeItem, resourcePath, destinationPath, transferProgress, notificationProgress, cancellationToken);
+            await uploadFiles(actionContext, treeItem, resourcePath, destinationPath, notificationProgress, cancellationToken, undefined, treeItem instanceof FileShareTreeItem);
         } else {
-            if (treeItem instanceof BlobContainerTreeItem ? await doesBlobExist(treeItem, destinationPath) : await doesFileExist(path.basename(destinationPath), treeItem, path.dirname(destinationPath), treeItem.shareName)) {
-                await warnFileAlreadyExists(destinationPath);
-            }
             await treeItem.uploadLocalFile(actionContext, resourcePath, destinationPath);
         }
     });
