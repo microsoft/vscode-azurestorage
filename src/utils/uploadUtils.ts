@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
+import { basename, dirname } from 'path';
 import * as readdirp from 'readdirp';
 import * as vscode from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
@@ -13,13 +14,15 @@ import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
+import { getBlobPath } from './blobUtils';
+import { getFileName } from './fileUtils';
 import { localize } from './localize';
 
 export async function uploadFiles(
     context: IActionContext,
     destTreeItem: BlobContainerTreeItem | FileShareTreeItem,
-    sourceFolder: string,
-    destFolder: string,
+    sourcePath: string,
+    destPath: string | undefined,
     notificationProgress: vscode.Progress<{
         message?: string | undefined;
         increment?: number | undefined;
@@ -28,15 +31,18 @@ export async function uploadFiles(
     messagePrefix?: string,
     countFoldersAsResources?: boolean,
 ): Promise<void> {
-    const src: ILocalLocation = createAzCopyLocalSource(sourceFolder, true);
-    const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destFolder);
+    const destFolder: string = basename(sourcePath);
     let fromTo: FromToOption;
     if (destTreeItem instanceof BlobContainerTreeItem) {
+        destPath = destPath !== undefined ? destPath : await getBlobPath(destTreeItem, destFolder);
         fromTo = 'LocalBlob';
     } else {
+        destPath = destPath !== undefined ? destPath : await getFileName(destTreeItem, dirname(sourcePath), destTreeItem.shareName, destFolder);
         fromTo = 'LocalFile';
     }
-    const totalWork: number = await getNumResourcesInDirectory(sourceFolder, countFoldersAsResources);
+    const src: ILocalLocation = createAzCopyLocalSource(sourcePath, true);
+    const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destPath);
+    const totalWork: number = await getNumResourcesInDirectory(sourcePath, countFoldersAsResources);
     const transferProgress: TransferProgress = new TransferProgress(totalWork, messagePrefix);
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
     ext.outputChannel.appendLog(localize('finishedUpload', 'Uploaded to "{0}".', destTreeItem.label));

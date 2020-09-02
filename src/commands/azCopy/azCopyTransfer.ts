@@ -81,13 +81,8 @@ async function startAndWaitForCopy(
         status = (await copyClient.getJobInfo(jobId)).latestStatus;
 
         // Directory transfers always have `useWildCard` set
-        if (src.useWildCard) {
-            // tslint:disable: strict-boolean-expressions
-            finishedWork = status?.TransfersCompleted || 0;
-        } else {
-            finishedWork = status?.BytesOverWire || 0;
-            // tslint:enable: strict-boolean-expressions
-        }
+        // tslint:disable-next-line: strict-boolean-expressions
+        finishedWork = (src.useWildCard ? status?.TransfersCompleted : status?.BytesOverWire) || 0;
         transferProgress.reportToOutputWindow(finishedWork);
         if (!!notificationProgress) {
             transferProgress.reportToNotification(finishedWork, notificationProgress);

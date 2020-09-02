@@ -4,14 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as fse from 'fs-extra';
-import * as path from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
-import { getBlobPath } from '../utils/blobUtils';
-import { getFileName } from '../utils/fileUtils';
 import { localize } from '../utils/localize';
 import { uploadFiles } from '../utils/uploadUtils';
 import { selectWorkspaceItem } from '../utils/workspaceUtils';
@@ -38,25 +35,15 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
     }
 
     let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
-    let destinationName: string;
-    let destinationPath: string = path.basename(resourcePath);
-    if (treeItem instanceof BlobContainerTreeItem) {
-        destinationName = treeItem.container.name;
-        destinationPath = await getBlobPath(treeItem, destinationPath);
-    } else {
-        destinationName = treeItem.shareName;
-        destinationPath = await getFileName(treeItem, path.dirname(resourcePath), treeItem.shareName, destinationPath);
-    }
-
-    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title: `Uploading to ${destinationName} from ${resourcePath}` }, async (notificationProgress, cancellationToken) => {
+    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title: `Uploading to ${treeItem.label} from ${resourcePath}` }, async (notificationProgress, cancellationToken) => {
         if ((await fse.stat(resourcePath)).isDirectory()) {
             const message: string = localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath);
             await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
 
             // AzCopy recognizes folders as a resource when uploading to file shares. So only count folders in that case
-            await uploadFiles(actionContext, treeItem, resourcePath, destinationPath, notificationProgress, cancellationToken, undefined, treeItem instanceof FileShareTreeItem);
+            await uploadFiles(actionContext, treeItem, resourcePath, undefined, notificationProgress, cancellationToken, undefined, treeItem instanceof FileShareTreeItem);
         } else {
-            await treeItem.uploadLocalFile(actionContext, resourcePath, destinationPath);
+            await treeItem.uploadLocalFile(actionContext, resourcePath);
         }
     });
 }

@@ -18,7 +18,7 @@ import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient, doesFileExist } from '../../utils/fileUtils';
+import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient, doesFileExist, getFileName } from '../../utils/fileUtils';
 import { warnFileAlreadyExists } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -117,7 +117,9 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return child;
     }
 
-    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath?: string, suppressLogs: boolean = false): Promise<void> {
+        let destFolder: string = path.basename(sourceFilePath);
+        destFilePath = destFilePath !== undefined ? destFilePath : await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFolder);
         if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
             await warnFileAlreadyExists(destFilePath);
         }
