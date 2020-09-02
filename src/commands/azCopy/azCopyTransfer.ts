@@ -24,7 +24,6 @@ export async function azCopyTransfer(
     }>,
     cancellationToken?: CancellationToken
 ): Promise<void> {
-    context.errorHandling.rethrow = true;
     const copyClient: AzCopyClient = new AzCopyClient();
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true, excludePath: '.git;.vscode' };
     let jobId: string = await startAndWaitForCopy(context, copyClient, src, dst, copyOptions, transferProgress, notificationProgress, cancellationToken);
@@ -33,16 +32,16 @@ export async function azCopyTransfer(
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
         // tslint:disable-next-line: strict-boolean-expressions
         let message: string = localize('azCopyTransfer', 'AzCopy Transfer: "{0}".', finalTransferStatus?.JobStatus || 'Failed');
-        if (finalTransferStatus?.FailedTransfers || finalTransferStatus?.SkippedTransfers) {
+        if (finalTransferStatus?.FailedTransfers?.length || finalTransferStatus?.SkippedTransfers?.length) {
             message += localize('checkOutputWindow', ' Check the output window for a list of incomplete transfers.');
 
-            if (finalTransferStatus.FailedTransfers) {
+            if (finalTransferStatus.FailedTransfers?.length) {
                 ext.outputChannel.appendLog(localize('failedTransfers', 'Failed transfers:'));
                 for (let failedTransfer of finalTransferStatus.FailedTransfers) {
                     ext.outputChannel.appendLog(`\t${failedTransfer.Dst}`);
                 }
             }
-            if (finalTransferStatus.SkippedTransfers) {
+            if (finalTransferStatus.SkippedTransfers?.length) {
                 ext.outputChannel.appendLog(localize('skippedTransfers', 'Skipped transfers:'));
                 for (let skippedTransfer of finalTransferStatus.SkippedTransfers) {
                     ext.outputChannel.appendLog(`\t${skippedTransfer.Dst}`);
