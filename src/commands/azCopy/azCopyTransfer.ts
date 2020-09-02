@@ -47,6 +47,9 @@ export async function azCopyTransfer(
                     ext.outputChannel.appendLog(`\t${skippedTransfer.Dst}`);
                 }
             }
+        } else {
+            // Add an additional error log since we don't have any more info about the failure
+            ext.outputChannel.appendLog(localize('couldNotUpload', 'Could not upload "{0}"', src.path));
         }
         message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
