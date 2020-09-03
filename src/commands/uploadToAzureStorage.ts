@@ -12,7 +12,6 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { localize } from '../utils/localize';
 import { uploadFiles } from '../utils/uploadUtils';
-import { selectWorkspaceItems } from '../utils/workspaceUtils';
 
 export async function uploadToAzureStorage(actionContext: IActionContext, target?: vscode.Uri): Promise<void> {
     let resourceUris: vscode.Uri[];
@@ -23,16 +22,13 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
 
         resourceUris = [vscode.Uri.file(target.fsPath)];
     } else {
-        resourceUris = await selectWorkspaceItems(
-            ext.ui,
-            localize('selectResourceToUpload', 'Select resources to upload'),
-            {
-                canSelectFiles: true,
-                canSelectFolders: true,
-                canSelectMany: true,
-                defaultUri: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri : undefined,
-                openLabel: localize('select', 'Select')
-            });
+        resourceUris = await ext.ui.showOpenDialog({
+            canSelectFiles: true,
+            canSelectFolders: true,
+            canSelectMany: true,
+            defaultUri: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri : undefined,
+            openLabel: localize('select', 'Select')
+        });
     }
 
     const multiResourceUpload: boolean = resourceUris.length > 1;
