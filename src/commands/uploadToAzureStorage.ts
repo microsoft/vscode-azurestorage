@@ -35,7 +35,8 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
     }
 
     let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
-    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title: getUploadingMessage(treeItem.label, resourcePath) }, async (notificationProgress, cancellationToken) => {
+    const uploading: string = getUploadingMessage(treeItem.label, resourcePath);
+    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title: uploading }, async (notificationProgress, cancellationToken) => {
         if ((await fse.stat(resourcePath)).isDirectory()) {
             const message: string = localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath);
             await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
