@@ -33,14 +33,14 @@ export async function uploadFiles(
     suppressLogsAndPrompts?: boolean
 ): Promise<void> {
     if (destPath === undefined) {
-        const destFolder: string = basename(sourcePath);
+        const fileName: string = basename(sourcePath);
 
         if (suppressLogsAndPrompts) {
-            destPath = destFolder;
+            destPath = fileName;
         } else if (destTreeItem instanceof BlobContainerTreeItem) {
-            destPath = await getBlobPath(destTreeItem, destFolder);
+            destPath = await getBlobPath(destTreeItem, fileName);
         } else {
-            destPath = await getFileName(destTreeItem, dirname(sourcePath), destTreeItem.shareName, destFolder);
+            destPath = await getFileName(destTreeItem, dirname(sourcePath), destTreeItem.shareName, fileName);
         }
     }
 
@@ -63,6 +63,10 @@ export async function warnFileAlreadyExists(filePath: string): Promise<void> {
         { modal: true },
         { title: localize('overwrite', 'Overwrite') }
     );
+}
+
+export function getUploadingMessage(treeItemLabel: string, sourcePath: string): string {
+    return localize('uploading', 'Uploading to "{0}" from "{1}"', treeItemLabel, sourcePath);
 }
 
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {

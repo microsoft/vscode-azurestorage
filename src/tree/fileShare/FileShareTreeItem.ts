@@ -19,7 +19,7 @@ import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient, doesFileExist, getFileName } from '../../utils/fileUtils';
-import { warnFileAlreadyExists } from '../../utils/uploadUtils';
+import { getUploadingMessage, warnFileAlreadyExists } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './DirectoryTreeItem';
@@ -136,7 +136,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
                 await warnFileAlreadyExists(destFilePath);
             }
-            ext.outputChannel.appendLog(`Uploading ${sourceFilePath} as ${destDisplayPath}`);
+            ext.outputChannel.appendLog(getUploadingMessage(this.label, sourceFilePath));
         }
 
         // Ensure parent directories exist before creating child files
