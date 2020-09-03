@@ -40,7 +40,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
     const title: string = localize('uploading', 'Uploading resources to "{0}"', treeItem.label);
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const resourceUri of resourceUris) {
-            const resourcePath: string = resourceUri.path;
+            const resourcePath: string = resourceUri.fsPath;
             if ((await fse.stat(resourcePath)).isDirectory()) {
                 if (!multiResourceUpload) {
                     await showUploadWarning(localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath));
