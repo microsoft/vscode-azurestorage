@@ -47,8 +47,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
             const resourcePath: string = resourceUri.path;
             if ((await fse.stat(resourcePath)).isDirectory()) {
                 if (!multiResourceUpload) {
-                    const message: string = localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath);
-                    await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
+                    await showUploadWarning(localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath));
                 }
 
                 // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
