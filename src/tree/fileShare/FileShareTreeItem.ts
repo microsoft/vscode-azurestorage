@@ -141,7 +141,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
         if (!suppressLogs) {
             ext.outputChannel.show();
-            uploadingMessage = uploadingMessage || localize('uploadingFile', 'Uploading {0} as {1}', sourceFilePath, destDisplayPath);
+            uploadingMessage = uploadingMessage || localize('uploadingFile', 'Uploading "{0}" as "{1}"', sourceFilePath, destDisplayPath);
             ext.outputChannel.appendLog(uploadingMessage);
         }
 

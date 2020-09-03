@@ -312,7 +312,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         if (!suppressLogs) {
             ext.outputChannel.show();
-            uploadingMessage = uploadingMessage || localize('uploadingBlob', 'Uploading {0} as {1}', filePath, blobFriendlyPath);
+            uploadingMessage = uploadingMessage || localize('uploadingBlob', 'Uploading "{0}" as "{1}"', filePath, blobFriendlyPath);
             ext.outputChannel.appendLog(uploadingMessage);
         }
 
