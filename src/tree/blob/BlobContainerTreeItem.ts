@@ -304,12 +304,12 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public async uploadLocalFile(context: IActionContext, filePath: string, blobPath?: string, suppressLogsAndPrompts: boolean = false): Promise<void> {
         if (blobPath === undefined) {
-            const destFolder: string = path.basename(filePath);
+            const fileName: string = path.basename(filePath);
 
             if (suppressLogsAndPrompts) {
-                blobPath = destFolder;
+                blobPath = fileName;
             } else {
-                blobPath = await getBlobPath(this, destFolder);
+                blobPath = await getBlobPath(this, fileName);
             }
         }
 
