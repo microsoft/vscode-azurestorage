@@ -19,7 +19,7 @@ import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, doesBlobExist, getBlobPath, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
-import { uploadFiles, warnFileAlreadyExists } from '../../utils/uploadUtils';
+import { getUploadingMessage, uploadFiles, warnFileAlreadyExists } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -311,7 +311,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         if (!suppressLogs) {
             ext.outputChannel.show();
-            ext.outputChannel.appendLog(`Uploading ${filePath} as ${blobFriendlyPath}`);
+            ext.outputChannel.appendLog(getUploadingMessage(this.label, filePath));
         }
 
         const src: ILocalLocation = createAzCopyLocalSource(filePath);

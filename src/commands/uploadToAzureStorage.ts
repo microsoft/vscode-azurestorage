@@ -10,7 +10,7 @@ import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { localize } from '../utils/localize';
-import { uploadFiles } from '../utils/uploadUtils';
+import { getUploadingMessage, uploadFiles } from '../utils/uploadUtils';
 import { selectWorkspaceItem } from '../utils/workspaceUtils';
 
 export async function uploadToAzureStorage(actionContext: IActionContext, target?: vscode.Uri): Promise<void> {
@@ -35,7 +35,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
     }
 
     let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
-    const uploading: string = localize('uploading', 'Uploading to "{0}" from "{1}"', treeItem.label, resourcePath);
+    const uploading: string = getUploadingMessage(treeItem.label, resourcePath);
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title: uploading }, async (notificationProgress, cancellationToken) => {
         if ((await fse.stat(resourcePath)).isDirectory()) {
             const message: string = localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath);
