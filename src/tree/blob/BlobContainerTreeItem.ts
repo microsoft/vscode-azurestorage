@@ -19,8 +19,7 @@ import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, doesBlobExist, getBlobPath, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
-import { localize } from '../../utils/localize';
-import { uploadFiles, warnFileAlreadyExists } from '../../utils/uploadUtils';
+import { getUploadingMessage, uploadFiles, warnFileAlreadyExists } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -302,7 +301,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath?: string, uploadingMessage?: string, suppressLogs: boolean = false): Promise<void> {
+    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath?: string, suppressLogs: boolean = false): Promise<void> {
         const destFolder: string = path.basename(filePath);
         blobPath = blobPath !== undefined ? blobPath : await getBlobPath(this, destFolder);
         if (await doesBlobExist(this, blobPath)) {
@@ -312,8 +311,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
         if (!suppressLogs) {
             ext.outputChannel.show();
-            uploadingMessage = uploadingMessage || localize('uploadingBlob', 'Uploading "{0}" as "{1}"', filePath, blobFriendlyPath);
-            ext.outputChannel.appendLog(uploadingMessage);
+            ext.outputChannel.appendLog(getUploadingMessage(this.label, filePath));
         }
 
         const src: ILocalLocation = createAzCopyLocalSource(filePath);

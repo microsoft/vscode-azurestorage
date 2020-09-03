@@ -56,6 +56,10 @@ export async function warnFileAlreadyExists(filePath: string): Promise<void> {
     );
 }
 
+export function getUploadingMessage(treeItemLabel: string, sourcePath: string): string {
+    return localize('uploading', 'Uploading to "{0}" from "{1}"', treeItemLabel, sourcePath);
+}
+
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {
     const options: readdirp.ReaddirpOptions = {
         directoryFilter: ['!.git', '!.vscode'],
