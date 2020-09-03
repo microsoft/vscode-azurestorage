@@ -40,8 +40,10 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
             const message: string = localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath);
             await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
 
+            ext.outputChannel.appendLog(uploading);
             // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
             await uploadFiles(actionContext, treeItem, resourcePath, undefined, notificationProgress, cancellationToken, undefined, treeItem instanceof FileShareTreeItem);
+            ext.outputChannel.appendLog(localize('success', 'Successfully uploaded to "{0}".', treeItem.label));
         } else {
             await treeItem.uploadLocalFile(actionContext, resourcePath);
         }
