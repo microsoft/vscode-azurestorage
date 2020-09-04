@@ -117,27 +117,23 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return child;
     }
 
-    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath?: string, suppressLogsAndPrompts: boolean = false): Promise<void> {
+    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath?: string, suppressPrompts: boolean = false): Promise<void> {
         if (destFilePath === undefined) {
             const destFolder: string = path.basename(sourceFilePath);
 
-            if (suppressLogsAndPrompts) {
+            if (suppressPrompts) {
                 destFilePath = destFolder;
             } else {
                 destFilePath = await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFolder);
+                if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
+                    await warnFileAlreadyExists(destFilePath);
+                }
             }
         }
 
-        const destDisplayPath: string = `${this.shareName}/${destFilePath}`;
         const parentDirectoryPath: string = path.dirname(destFilePath);
         const parentDirectories: string[] = parentDirectoryPath.split('/');
-
-        if (!suppressLogsAndPrompts) {
-            if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
-                await warnFileAlreadyExists(destFilePath);
-            }
-            ext.outputChannel.appendLog(getUploadingMessage(this.label, sourceFilePath));
-        }
+        ext.outputChannel.appendLog(getUploadingMessage(sourceFilePath, this.label));
 
         // Ensure parent directories exist before creating child files
         let partialParentDirectoryPath: string = '';
@@ -155,10 +151,6 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         const src: ILocalLocation = createAzCopyLocalSource(sourceFilePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, destFilePath);
         await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress);
-
-        if (!suppressLogsAndPrompts) {
-            ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);
-        }
     }
 }
 

@@ -30,12 +30,12 @@ export async function uploadFiles(
     cancellationToken: vscode.CancellationToken,
     messagePrefix?: string,
     countFoldersAsResources?: boolean,
-    suppressLogsAndPrompts?: boolean
+    suppressPrompts?: boolean
 ): Promise<void> {
     if (destPath === undefined) {
         const fileName: string = basename(sourcePath);
 
-        if (suppressLogsAndPrompts) {
+        if (suppressPrompts) {
             destPath = fileName;
         } else if (destTreeItem instanceof BlobContainerTreeItem) {
             destPath = await getBlobPath(destTreeItem, fileName);
@@ -49,11 +49,7 @@ export async function uploadFiles(
     const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destPath);
     const totalWork: number = await getNumResourcesInDirectory(sourcePath, countFoldersAsResources);
     const transferProgress: TransferProgress = new TransferProgress(totalWork, messagePrefix);
-
-    if (!suppressLogsAndPrompts) {
-        ext.outputChannel.appendLog(localize('uploading', 'Uploading "{0}" to "{1}"', sourcePath, destTreeItem.label));
-    }
-
+    ext.outputChannel.appendLog(getUploadingMessage(sourcePath, destTreeItem.label));
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
 }
 
@@ -65,8 +61,8 @@ export async function warnFileAlreadyExists(filePath: string): Promise<void> {
     );
 }
 
-export function getUploadingMessage(treeItemLabel: string, sourcePath: string): string {
-    return localize('uploading', 'Uploading to "{0}" from "{1}"', treeItemLabel, sourcePath);
+export function getUploadingMessage(sourcePath: string, treeItemLabel: string): string {
+    return localize('uploading', 'Uploading "{0}" to "{1}"', sourcePath, treeItemLabel);
 }
 
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {

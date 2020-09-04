@@ -37,24 +37,19 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
     }
 
     let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
-    let uploading: string = multiResourceUpload ?
+    const title: string = multiResourceUpload ?
         localize('uploadingTo', 'Uploading to "{0}"', treeItem.label) :
-        getUploadingMessage(treeItem.label, resourceUris[0].fsPath);
-    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title: uploading }, async (notificationProgress, cancellationToken) => {
+        getUploadingMessage(resourceUris[0].fsPath, treeItem.label);
+    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const resourceUri of resourceUris) {
             const resourcePath: string = resourceUri.fsPath;
             if ((await fse.stat(resourcePath)).isDirectory()) {
                 if (!multiResourceUpload) {
                     await showUploadWarning(localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath));
-                    ext.outputChannel.appendLog(uploading);
                 }
 
                 // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
                 await uploadFiles(actionContext, treeItem, resourcePath, undefined, notificationProgress, cancellationToken, basename(resourcePath), treeItem instanceof FileShareTreeItem, multiResourceUpload);
-
-                if (!multiResourceUpload) {
-                    ext.outputChannel.appendLog(localize('success', 'Successfully uploaded to "{0}".', treeItem.label));
-                }
             } else {
                 await treeItem.uploadLocalFile(actionContext, resourcePath, undefined, multiResourceUpload);
             }
