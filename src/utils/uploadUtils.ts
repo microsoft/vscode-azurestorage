@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
-import { basename, dirname } from 'path';
 import * as readdirp from 'readdirp';
 import * as vscode from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
@@ -14,15 +13,15 @@ import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
-import { getBlobPath } from './blobUtils';
-import { getFileName } from './fileUtils';
 import { localize } from './localize';
 
-export async function uploadFiles(
+export const upload: string = localize('upload', 'Upload');
+
+export async function uploadLocalFolder(
     context: IActionContext,
     destTreeItem: BlobContainerTreeItem | FileShareTreeItem,
     sourcePath: string,
-    destPath: string | undefined,
+    destPath: string,
     notificationProgress: vscode.Progress<{
         message?: string | undefined;
         increment?: number | undefined;
@@ -30,20 +29,7 @@ export async function uploadFiles(
     cancellationToken: vscode.CancellationToken,
     messagePrefix?: string,
     countFoldersAsResources?: boolean,
-    suppressPrompts?: boolean
 ): Promise<void> {
-    if (destPath === undefined) {
-        const fileName: string = basename(sourcePath);
-
-        if (suppressPrompts) {
-            destPath = fileName;
-        } else if (destTreeItem instanceof BlobContainerTreeItem) {
-            destPath = await getBlobPath(destTreeItem, fileName);
-        } else {
-            destPath = await getFileName(destTreeItem, dirname(sourcePath), destTreeItem.shareName, fileName);
-        }
-    }
-
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
     const src: ILocalLocation = createAzCopyLocalSource(sourcePath, true);
     const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destPath);
@@ -51,14 +37,6 @@ export async function uploadFiles(
     const transferProgress: TransferProgress = new TransferProgress(totalWork, messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessage(sourcePath, destTreeItem.label));
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
-}
-
-export async function warnFileAlreadyExists(filePath: string): Promise<void> {
-    await ext.ui.showWarningMessage(
-        localize('fileAlreadyExists', `A file with the name "${filePath}" already exists.`),
-        { modal: true },
-        { title: localize('overwrite', 'Overwrite') }
-    );
 }
 
 export function getUploadingMessage(sourcePath: string, treeItemLabel: string): string {

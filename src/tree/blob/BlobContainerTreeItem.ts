@@ -17,9 +17,9 @@ import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
-import { createBlobContainerClient, createChildAsNewBlockBlob, doesBlobExist, getBlobPath, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
-import { getUploadingMessage, uploadFiles, warnFileAlreadyExists } from '../../utils/uploadUtils';
+import { getUploadingMessage, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -230,7 +230,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             notificationProgress.report({ increment: -1 });
 
             // Upload files as blobs
-            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading', false);
+            await uploadLocalFolder(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading', false);
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
@@ -301,14 +301,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string, suppressPrompts: boolean = false): Promise<void> {
-        if (!suppressPrompts) {
-            blobPath = blobPath !== undefined ? blobPath : await getBlobPath(this, blobPath);
-            if (await doesBlobExist(this, blobPath)) {
-                await warnFileAlreadyExists(blobPath);
-            }
-        }
-
+    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string): Promise<void> {
         ext.outputChannel.appendLog(getUploadingMessage(filePath, this.label));
         const src: ILocalLocation = createAzCopyLocalSource(filePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, blobPath);

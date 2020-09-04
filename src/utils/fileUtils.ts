@@ -47,12 +47,15 @@ export async function getFileName(parent: AzureParentTreeItem<IStorageRoot>, dir
         value,
         placeHolder: 'Enter a name for the new file',
         validateInput: async (name: string) => {
+            if (await doesFileExist(name, parent, directoryPath, shareName)) {
+                return "A file with this path and name already exists";
+            }
+
             let nameError = validateFileName(name);
             if (nameError) {
                 return nameError;
-            } else if (await doesFileExist(name, parent, directoryPath, shareName)) {
-                return "A file with this path and name already exists";
             }
+
             return undefined;
         }
     });
