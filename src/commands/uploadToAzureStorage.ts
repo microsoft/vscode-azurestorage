@@ -10,6 +10,7 @@ import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
+import { throwIfCanceled } from '../utils/errorUtils';
 import { localize } from '../utils/localize';
 import { getUploadingMessage, uploadFiles } from '../utils/uploadUtils';
 
@@ -44,6 +45,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
         getUploadingMessage(resourceUris[0].fsPath, treeItem.label);
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const resourceUri of resourceUris) {
+            throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
             const resourcePath: string = resourceUri.fsPath;
             if ((await fse.stat(resourcePath)).isDirectory()) {
                 if (!multiResourceUpload) {
