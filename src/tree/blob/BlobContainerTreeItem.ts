@@ -301,17 +301,11 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath?: string, suppressPrompts: boolean = false): Promise<void> {
-        if (blobPath === undefined) {
-            const fileName: string = path.basename(filePath);
-
-            if (suppressPrompts) {
-                blobPath = fileName;
-            } else {
-                blobPath = await getBlobPath(this, fileName);
-                if (await doesBlobExist(this, blobPath)) {
-                    await warnFileAlreadyExists(blobPath);
-                }
+    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string, suppressPrompts: boolean = false): Promise<void> {
+        if (!suppressPrompts) {
+            blobPath = await getBlobPath(this, blobPath);
+            if (await doesBlobExist(this, blobPath)) {
+                await warnFileAlreadyExists(blobPath);
             }
         }
 

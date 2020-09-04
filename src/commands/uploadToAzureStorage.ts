@@ -53,7 +53,8 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
                 // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
                 await uploadFiles(actionContext, treeItem, resourcePath, undefined, notificationProgress, cancellationToken, basename(resourcePath), treeItem instanceof FileShareTreeItem, multiResourceUpload);
             } else {
-                await treeItem.uploadLocalFile(actionContext, resourcePath, undefined, multiResourceUpload);
+                const destPath: string = basename(resourcePath);
+                await treeItem.uploadLocalFile(actionContext, resourcePath, destPath, multiResourceUpload);
             }
         }
     });

@@ -117,17 +117,11 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return child;
     }
 
-    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath?: string, suppressPrompts: boolean = false): Promise<void> {
-        if (destFilePath === undefined) {
-            const destFolder: string = path.basename(sourceFilePath);
-
-            if (suppressPrompts) {
-                destFilePath = destFolder;
-            } else {
-                destFilePath = await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFolder);
-                if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
-                    await warnFileAlreadyExists(destFilePath);
-                }
+    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath: string, suppressPrompts: boolean = false): Promise<void> {
+        if (!suppressPrompts) {
+            destFilePath = await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFilePath);
+            if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
+                await warnFileAlreadyExists(destFilePath);
             }
         }
 
