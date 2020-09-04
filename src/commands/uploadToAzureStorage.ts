@@ -31,6 +31,8 @@ export async function uploadToAzureStorage(actionContext: IActionContext, target
         });
     }
 
+    // AzCopy works by uploading either single files or entire folders.
+    // So uploading multiple resources only happens if we're uploading more than one file/folder.
     const multiResourceUpload: boolean = resourceUris.length > 1;
     if (multiResourceUpload) {
         await showUploadWarning(localize('uploadWillOverwrite', 'Uploading multiple files/folders will overwrite any existing resources with the same name.'));
