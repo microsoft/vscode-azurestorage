@@ -303,7 +303,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string, suppressPrompts: boolean = false): Promise<void> {
         if (!suppressPrompts) {
-            blobPath = await getBlobPath(this, blobPath);
+            blobPath = blobPath !== undefined ? blobPath : await getBlobPath(this, blobPath);
             if (await doesBlobExist(this, blobPath)) {
                 await warnFileAlreadyExists(blobPath);
             }

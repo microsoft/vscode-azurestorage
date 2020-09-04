@@ -119,7 +119,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath: string, suppressPrompts: boolean = false): Promise<void> {
         if (!suppressPrompts) {
-            destFilePath = await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFilePath);
+            destFilePath = destFilePath !== undefined ? destFilePath : await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFilePath);
             if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
                 await warnFileAlreadyExists(destFilePath);
             }
