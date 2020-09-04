@@ -301,29 +301,21 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath?: string, suppressLogs: boolean = false): Promise<void> {
-        const destFolder: string = path.basename(filePath);
-        blobPath = blobPath !== undefined ? blobPath : await getBlobPath(this, destFolder);
-        if (await doesBlobExist(this, blobPath)) {
-            await warnFileAlreadyExists(blobPath);
+    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string, suppressPrompts: boolean = false): Promise<void> {
+        if (!suppressPrompts) {
+            blobPath = blobPath !== undefined ? blobPath : await getBlobPath(this, blobPath);
+            if (await doesBlobExist(this, blobPath)) {
+                await warnFileAlreadyExists(blobPath);
+            }
         }
 
-        const blobFriendlyPath: string = `${this.friendlyContainerName}/${blobPath}`;
-        if (!suppressLogs) {
-            ext.outputChannel.show();
-            ext.outputChannel.appendLog(getUploadingMessage(this.label, filePath));
-        }
-
+        ext.outputChannel.appendLog(getUploadingMessage(filePath, this.label));
         const src: ILocalLocation = createAzCopyLocalSource(filePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, blobPath);
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
         await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress);
-
-        if (!suppressLogs) {
-            ext.outputChannel.appendLog(`Successfully uploaded ${blobFriendlyPath}.`);
-        }
     }
 
     public static validateBlobName(name: string): string | undefined | null {

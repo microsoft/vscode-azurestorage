@@ -30,20 +30,26 @@ export async function uploadFiles(
     cancellationToken: vscode.CancellationToken,
     messagePrefix?: string,
     countFoldersAsResources?: boolean,
+    suppressPrompts?: boolean
 ): Promise<void> {
-    const destFolder: string = basename(sourcePath);
-    let fromTo: FromToOption;
-    if (destTreeItem instanceof BlobContainerTreeItem) {
-        destPath = destPath !== undefined ? destPath : await getBlobPath(destTreeItem, destFolder);
-        fromTo = 'LocalBlob';
-    } else {
-        destPath = destPath !== undefined ? destPath : await getFileName(destTreeItem, dirname(sourcePath), destTreeItem.shareName, destFolder);
-        fromTo = 'LocalFile';
+    if (destPath === undefined) {
+        const fileName: string = basename(sourcePath);
+
+        if (suppressPrompts) {
+            destPath = fileName;
+        } else if (destTreeItem instanceof BlobContainerTreeItem) {
+            destPath = await getBlobPath(destTreeItem, fileName);
+        } else {
+            destPath = await getFileName(destTreeItem, dirname(sourcePath), destTreeItem.shareName, fileName);
+        }
     }
+
+    const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
     const src: ILocalLocation = createAzCopyLocalSource(sourcePath, true);
     const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destPath);
     const totalWork: number = await getNumResourcesInDirectory(sourcePath, countFoldersAsResources);
     const transferProgress: TransferProgress = new TransferProgress(totalWork, messagePrefix);
+    ext.outputChannel.appendLog(getUploadingMessage(sourcePath, destTreeItem.label));
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
 }
 
@@ -55,8 +61,8 @@ export async function warnFileAlreadyExists(filePath: string): Promise<void> {
     );
 }
 
-export function getUploadingMessage(treeItemLabel: string, sourcePath: string): string {
-    return localize('uploading', 'Uploading to "{0}" from "{1}"', treeItemLabel, sourcePath);
+export function getUploadingMessage(sourcePath: string, treeItemLabel: string): string {
+    return localize('uploading', 'Uploading "{0}" to "{1}"', sourcePath, treeItemLabel);
 }
 
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {

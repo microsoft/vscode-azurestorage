@@ -117,16 +117,17 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return child;
     }
 
-    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath?: string, suppressLogs: boolean = false): Promise<void> {
-        let destFolder: string = path.basename(sourceFilePath);
-        destFilePath = destFilePath !== undefined ? destFilePath : await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFolder);
-        if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
-            await warnFileAlreadyExists(destFilePath);
+    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath: string, suppressPrompts: boolean = false): Promise<void> {
+        if (!suppressPrompts) {
+            destFilePath = destFilePath !== undefined ? destFilePath : await getFileName(this, path.dirname(sourceFilePath), this.shareName, destFilePath);
+            if (await doesFileExist(path.basename(destFilePath), this, path.dirname(destFilePath), this.shareName)) {
+                await warnFileAlreadyExists(destFilePath);
+            }
         }
 
-        const destDisplayPath: string = `${this.shareName}/${destFilePath}`;
         const parentDirectoryPath: string = path.dirname(destFilePath);
         const parentDirectories: string[] = parentDirectoryPath.split('/');
+        ext.outputChannel.appendLog(getUploadingMessage(sourceFilePath, this.label));
 
         // Ensure parent directories exist before creating child files
         let partialParentDirectoryPath: string = '';
@@ -138,21 +139,12 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }
         }
 
-        if (!suppressLogs) {
-            ext.outputChannel.show();
-            ext.outputChannel.appendLog(getUploadingMessage(this.label, sourceFilePath));
-        }
-
         const fileSize: number = (await fse.stat(sourceFilePath)).size;
         // tslint:disable-next-line: strict-boolean-expressions
         const transferProgress: TransferProgress = new TransferProgress(fileSize || 1, destFilePath);
         const src: ILocalLocation = createAzCopyLocalSource(sourceFilePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, destFilePath);
         await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress);
-
-        if (!suppressLogs) {
-            ext.outputChannel.appendLog(`Successfully uploaded ${destDisplayPath}.`);
-        }
     }
 }
 
