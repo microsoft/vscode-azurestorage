@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
 import { createAzCopyDestination, createAzCopyLocalSource } from '../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
+import { NotificationProgress } from '../constants';
 import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
@@ -22,10 +23,7 @@ export async function uploadLocalFolder(
     destTreeItem: BlobContainerTreeItem | FileShareTreeItem,
     sourcePath: string,
     destPath: string,
-    notificationProgress: vscode.Progress<{
-        message?: string | undefined;
-        increment?: number | undefined;
-    }>,
+    notificationProgress: NotificationProgress,
     cancellationToken: vscode.CancellationToken,
     messagePrefix?: string,
     countFoldersAsResources?: boolean,
@@ -44,7 +42,11 @@ export function getUploadingMessage(treeItemLabel: string): string {
 }
 
 export function getUploadingMessageWithSource(sourcePath: string, treeItemLabel: string): string {
-    return localize('uploadingFromTo', 'Uploading "{0}" to "{1}"', sourcePath, treeItemLabel);
+    return localize('uploadingFromTo', 'Uploading from "{0}" to "{1}"', sourcePath, treeItemLabel);
+}
+
+export async function showUploadWarning(message: string): Promise<void> {
+    await ext.ui.showWarningMessage(message, { modal: true }, { title: upload });
 }
 
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {

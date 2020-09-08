@@ -6,29 +6,23 @@
 import { basename } from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
+import { NotificationProgress } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { getBlobPath } from '../utils/blobUtils';
 import { getFileName } from '../utils/fileUtils';
 import { localize } from '../utils/localize';
-import { getUploadingMessageWithSource, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { getUploadingMessageWithSource, showUploadWarning, upload, uploadLocalFolder } from '../utils/uploadUtils';
 
 export async function uploadFolder(
     actionContext: IActionContext,
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
     uri?: vscode.Uri,
-    notificationProgress?: vscode.Progress<{
-        message?: string | undefined;
-        increment?: number | undefined;
-    }>,
+    notificationProgress?: NotificationProgress,
     cancellationToken?: vscode.CancellationToken,
     suppressPrompts?: boolean
 ): Promise<void> {
-    if (uri?.scheme === 'azurestorage') {
-        throw new Error(localize('cannotUploadToAzureFromAzureResource', 'Cannot upload to Azure from an Azure resource.'));
-    }
-
     // tslint:disable: strict-boolean-expressions
     uri = uri || (await ext.ui.showOpenDialog({
         canSelectFiles: false,
@@ -47,7 +41,7 @@ export async function uploadFolder(
         destPath = treeItem instanceof BlobContainerTreeItem ?
             await getBlobPath(treeItem, destPath) :
             await getFileName(treeItem, '', treeItem.shareName, destPath);
-        await showUploadWarning(localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', sourcePath));
+        await showUploadWarning(localize('uploadingWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', sourcePath));
     }
 
     if (notificationProgress && cancellationToken) {
@@ -60,8 +54,4 @@ export async function uploadFolder(
             await uploadLocalFolder(actionContext, treeItem!, sourcePath, destPath, newNotificationProgress, newCancellationToken, destPath, treeItem instanceof FileShareTreeItem);
         });
     }
-}
-
-async function showUploadWarning(message: string): Promise<void> {
-    await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
 }

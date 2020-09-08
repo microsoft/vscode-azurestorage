@@ -14,7 +14,7 @@ import { AzureStorageFS } from '../../AzureStorageFS';
 import { createAzCopyDestination, createAzCopyLocalSource } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFile';
-import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
+import { getResourcesPath, NotificationProgress, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
@@ -202,7 +202,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         context: IActionContext,
         sourceFolderPath: string,
         destBlobFolder: string,
-        notificationProgress: vscode.Progress<{ message?: string, increment?: number }>,
+        notificationProgress: NotificationProgress,
         cancellationToken: vscode.CancellationToken
     ): Promise<string> {
         try {
@@ -270,10 +270,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private async deleteBlobs(
         blobsToDelete: azureStorageBlob.BlobItem[],
         transferProgress: TransferProgress,
-        notificationProgress: vscode.Progress<{
-            message?: string | undefined;
-            increment?: number | undefined;
-        }>,
+        notificationProgress: NotificationProgress,
         cancellationToken: vscode.CancellationToken,
         properties: TelemetryProperties,
     ): Promise<void> {
@@ -305,10 +302,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         context: IActionContext,
         filePath: string,
         blobPath: string,
-        notificationProgress?: vscode.Progress<{
-            message?: string | undefined;
-            increment?: number | undefined;
-        }>,
+        notificationProgress?: NotificationProgress,
         cancellationToken?: vscode.CancellationToken
     ): Promise<void> {
         ext.outputChannel.appendLog(getUploadingMessageWithSource(filePath, this.label));

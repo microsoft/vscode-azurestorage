@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
+import { NotificationProgress } from './constants';
 import { ext } from './extensionVariables';
 
 export class TransferProgress {
@@ -18,13 +18,7 @@ export class TransferProgress {
         private readonly updateTimerMs: number = 200
     ) { }
 
-    public reportToNotification(
-        finishedWork: number,
-        notificationProgress: vscode.Progress<{
-            message?: string | undefined;
-            increment?: number | undefined;
-        }>
-    ): void {
+    public reportToNotification(finishedWork: number, notificationProgress: NotificationProgress): void {
         // This function may be called very frequently. Calls made to notificationProgress.report too rapidly result in incremental
         // progress not displaying in the notification window. So debounce calls to notificationProgress.report
         if (this.lastUpdated + this.updateTimerMs < Date.now()) {

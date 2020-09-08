@@ -14,7 +14,7 @@ import { AzureStorageFS } from "../../AzureStorageFS";
 import { createAzCopyDestination, createAzCopyLocalSource } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFile';
-import { getResourcesPath } from "../../constants";
+import { getResourcesPath, NotificationProgress } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
@@ -121,10 +121,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         context: IActionContext,
         sourceFilePath: string,
         destFilePath: string,
-        notificationProgress?: vscode.Progress<{
-            message?: string | undefined;
-            increment?: number | undefined;
-        }>,
+        notificationProgress?: NotificationProgress,
         cancellationToken?: vscode.CancellationToken
     ): Promise<void> {
         const parentDirectoryPath: string = path.dirname(destFilePath);

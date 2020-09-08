@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
-import { Progress, window } from "vscode";
+import { window } from "vscode";
 import { AzureWizardExecuteStep } from "vscode-azureextensionui";
+import { NotificationProgress } from '../../constants';
 import { ext } from '../../extensionVariables';
 import { localize } from '../../utils/localize';
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -23,7 +24,7 @@ export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageA
         this.previouslyEnabled = previouslyEnabled;
     }
 
-    public async execute(wizardContext: IStorageAccountTreeItemCreateContext & IStaticWebsiteConfigWizardContext, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async execute(wizardContext: IStorageAccountTreeItemCreateContext & IStaticWebsiteConfigWizardContext, progress: NotificationProgress): Promise<void> {
         // tslint:disable-next-line: strict-boolean-expressions
         this.accountTreeItem = this.accountTreeItem || wizardContext.accountTreeItem;
 
