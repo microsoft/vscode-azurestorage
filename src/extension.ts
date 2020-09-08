@@ -31,7 +31,8 @@ import { registerStorageAccountActionHandlers } from './commands/storageAccountA
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
 import { uploadFiles } from './commands/uploadFile';
-import { uploadFolder } from './commands/uploadToAzureStorage';
+import { uploadFolder } from './commands/uploadFolder';
+import { uploadToAzureStorage } from './commands/uploadToAzureStorage';
 import { ext } from './extensionVariables';
 import { AzureAccountTreeItem } from './tree/AzureAccountTreeItem';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
@@ -137,6 +138,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     });
     registerCommand("azureStorage.uploadFolder", uploadFolder);
     registerCommand("azureStorage.uploadFiles", uploadFiles);
+    registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
     registerCommand("azureStorage.attachStorageAccount", async () => {
         await ext.attachedStorageAccountsTreeItem.attachWithConnectionString();
     });

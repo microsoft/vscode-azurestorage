@@ -19,7 +19,7 @@ import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
-import { getUploadingMessage } from '../../utils/uploadUtils';
+import { getUploadingMessageWithSource } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { DirectoryTreeItem } from './DirectoryTreeItem';
@@ -117,11 +117,20 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         return child;
     }
 
-    public async uploadLocalFile(context: IActionContext, sourceFilePath: string, destFilePath: string): Promise<void> {
+    public async uploadLocalFile(
+        context: IActionContext,
+        sourceFilePath: string,
+        destFilePath: string,
+        notificationProgress?: vscode.Progress<{
+            message?: string | undefined;
+            increment?: number | undefined;
+        }>,
+        cancellationToken?: vscode.CancellationToken
+    ): Promise<void> {
         const parentDirectoryPath: string = path.dirname(destFilePath);
         const parentDirectories: string[] = parentDirectoryPath.split('/');
 
-        ext.outputChannel.appendLog(getUploadingMessage(sourceFilePath, this.label));
+        ext.outputChannel.appendLog(getUploadingMessageWithSource(sourceFilePath, this.label));
 
         // Ensure parent directories exist before creating child files
         let partialParentDirectoryPath: string = '';
@@ -138,7 +147,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         const transferProgress: TransferProgress = new TransferProgress(fileSize || 1, destFilePath);
         const src: ILocalLocation = createAzCopyLocalSource(sourceFilePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, destFilePath);
-        await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress);
+        await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress, notificationProgress, cancellationToken);
     }
 }
 

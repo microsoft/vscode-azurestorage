@@ -19,7 +19,7 @@ import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
-import { getUploadingMessage, uploadLocalFolder } from '../../utils/uploadUtils';
+import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -301,14 +301,23 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string): Promise<void> {
-        ext.outputChannel.appendLog(getUploadingMessage(filePath, this.label));
+    public async uploadLocalFile(
+        context: IActionContext,
+        filePath: string,
+        blobPath: string,
+        notificationProgress?: vscode.Progress<{
+            message?: string | undefined;
+            increment?: number | undefined;
+        }>,
+        cancellationToken?: vscode.CancellationToken
+    ): Promise<void> {
+        ext.outputChannel.appendLog(getUploadingMessageWithSource(filePath, this.label));
         const src: ILocalLocation = createAzCopyLocalSource(filePath);
         const dst: IRemoteSasLocation = createAzCopyDestination(this, blobPath);
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
-        await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress);
+        await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress, notificationProgress, cancellationToken);
     }
 
     public static validateBlobName(name: string): string | undefined | null {

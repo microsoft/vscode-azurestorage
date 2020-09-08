@@ -4,14 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { basename } from "path";
-import { Uri, window } from "vscode";
+import { CancellationToken, Progress, ProgressLocation, Uri, window } from "vscode";
 import { IActionContext } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { getBlobPath } from "../utils/blobUtils";
+import { throwIfCanceled } from "../utils/errorUtils";
 import { getFileName } from "../utils/fileUtils";
-import { upload } from "../utils/uploadUtils";
+import { getUploadingMessage, upload } from "../utils/uploadUtils";
 
 let lastUriUpload: Uri;
 
@@ -20,29 +21,58 @@ export interface IExistingFileContext extends IActionContext {
     remoteFilePath: string;
 }
 
-export async function uploadFiles(context: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem, uris?: Uri[]): Promise<void> {
-    if (!uris) {
-        uris = await window.showOpenDialog(
-            {
-                canSelectFiles: true,
-                canSelectFolders: false,
-                canSelectMany: true,
-                defaultUri: lastUriUpload,
-                filters: {
-                    "All files": ['*']
-                },
-                openLabel: upload
-            }
-        );
-    }
+export async function uploadFiles(
+    context: IActionContext,
+    treeItem?: BlobContainerTreeItem | FileShareTreeItem,
+    uris?: Uri[],
+    notificationProgress?: Progress<{
+        message?: string | undefined;
+        increment?: number | undefined;
+    }>,
+    cancellationToken?: CancellationToken
+): Promise<void> {
+    uris = uris || await window.showOpenDialog(
+        {
+            canSelectFiles: true,
+            canSelectFolders: false,
+            canSelectMany: true,
+            defaultUri: lastUriUpload,
+            filters: {
+                "All files": ['*']
+            },
+            openLabel: upload
+        }
+    );
 
-    if (!(treeItem instanceof BlobContainerTreeItem) && !(treeItem instanceof FileShareTreeItem)) {
-        treeItem = <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
-    }
+    // tslint:disable-next-line: strict-boolean-expressions
+    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
 
+    if (notificationProgress && cancellationToken) {
+        await uploadFilesHelper(context, treeItem, uris, notificationProgress, cancellationToken);
+    } else {
+        const title: string = getUploadingMessage(treeItem.label);
+        await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
+            // tslint:disable-next-line:no-non-null-assertion
+            await uploadFilesHelper(context, treeItem!, uris, newNotificationProgress, newCancellationToken);
+        });
+    }
+}
+
+async function uploadFilesHelper(
+    context: IActionContext,
+    treeItem: BlobContainerTreeItem | FileShareTreeItem,
+    uris?: Uri[],
+    notificationProgress?: Progress<{
+        message?: string | undefined;
+        increment?: number | undefined;
+    }>,
+    cancellationToken?: CancellationToken
+): Promise<void> {
     if (uris && uris.length) {
         lastUriUpload = uris[0];
         for (const uri of uris) {
+            throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
+
             const localFilePath: string = uri.fsPath;
             let remoteFilePath: string | undefined = basename(localFilePath);
 
@@ -58,7 +88,7 @@ export async function uploadFiles(context: IActionContext, treeItem?: BlobContai
                 const result = await treeItem.treeDataProvider.findTreeItem(id, context);
                 if (result) {
                     // A treeItem for this file already exists, no need to do anything with the tree, just upload
-                    await treeItem.uploadLocalFile(context, localFilePath, remoteFilePath);
+                    await treeItem.uploadLocalFile(context, localFilePath, remoteFilePath, notificationProgress, cancellationToken);
                     continue;
                 }
                 await treeItem.createChild(<IExistingFileContext>{ ...context, remoteFilePath, localFilePath });
