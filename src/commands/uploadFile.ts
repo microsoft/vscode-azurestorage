@@ -15,7 +15,7 @@ import { throwIfCanceled } from "../utils/errorUtils";
 import { getFileName } from "../utils/fileUtils";
 import { getUploadingMessage, upload } from "../utils/uploadUtils";
 
-let lastUriUpload: Uri;
+let lastUriUpload: Uri | undefined;
 
 export interface IExistingFileContext extends IActionContext {
     localFilePath: string;
@@ -66,30 +66,26 @@ async function uploadFilesHelper(
     cancellationToken: CancellationToken,
     suppressPrompts: boolean
 ): Promise<void> {
-    if (uris.length) {
-        lastUriUpload = uris[0];
-        for (const uri of uris) {
-            throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
+    lastUriUpload = uris[0];
+    for (const uri of uris) {
+        throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
 
-            const localFilePath: string = uri.fsPath;
-            let remoteFilePath: string = basename(localFilePath);
+        const localFilePath: string = uri.fsPath;
+        let remoteFilePath: string = basename(localFilePath);
 
-            if (!suppressPrompts) {
-                remoteFilePath = treeItem instanceof BlobContainerTreeItem ?
-                    await getBlobPath(treeItem, remoteFilePath) :
-                    await getFileName(treeItem, '', treeItem.shareName, remoteFilePath);
-            }
+        if (!suppressPrompts) {
+            remoteFilePath = treeItem instanceof BlobContainerTreeItem ?
+                await getBlobPath(treeItem, remoteFilePath) :
+                await getFileName(treeItem, '', treeItem.shareName, remoteFilePath);
+        }
 
-            if (remoteFilePath) {
-                const id: string = `${treeItem.fullId}/${remoteFilePath}`;
-                const result = await treeItem.treeDataProvider.findTreeItem(id, context);
-                if (result) {
-                    // A treeItem for this file already exists, no need to do anything with the tree, just upload
-                    await treeItem.uploadLocalFile(context, localFilePath, remoteFilePath, notificationProgress, cancellationToken);
-                } else {
-                    await treeItem.createChild(<IExistingFileContext>{ ...context, remoteFilePath, localFilePath });
-                }
-            }
+        const id: string = `${treeItem.fullId}/${remoteFilePath}`;
+        const result = await treeItem.treeDataProvider.findTreeItem(id, context);
+        if (result) {
+            // A treeItem for this file already exists, no need to do anything with the tree, just upload
+            await treeItem.uploadLocalFile(context, localFilePath, remoteFilePath, notificationProgress, cancellationToken);
+        } else {
+            await treeItem.createChild(<IExistingFileContext>{ ...context, remoteFilePath, localFilePath });
         }
     }
 }
