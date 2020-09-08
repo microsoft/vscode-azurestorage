@@ -136,8 +136,8 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await accountTreeItem.browseStaticWebsite();
         });
     });
-    registerCommand("azureStorage.uploadFolder", uploadFolder);
     registerCommand("azureStorage.uploadFiles", uploadFiles);
+    registerCommand("azureStorage.uploadFolder", uploadFolder);
     registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
     registerCommand("azureStorage.attachStorageAccount", async () => {
         await ext.attachedStorageAccountsTreeItem.attachWithConnectionString();

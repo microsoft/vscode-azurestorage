@@ -51,8 +51,8 @@
         "onCommand:azureStorage.createBlobContainer",
         "onCommand:azureStorage.deleteBlobContainer",
         "onCommand:azureStorage.createBlockBlob",
-        "onCommand:azureStorage.uploadFolder",
         "onCommand:azureStorage.uploadFiles",
+        "onCommand:azureStorage.uploadFolder",
         "onCommand:azureStorage.deleteBlob",
         "onCommand:azureStorage.downloadBlob",
         "onCommand:azureStorage.createFileShare",
@@ -210,13 +210,13 @@
                 "category": "Azure Storage"
             },
             {
-                "command": "azureStorage.uploadFolder",
-                "title": "Upload Folder...",
+                "command": "azureStorage.uploadFiles",
+                "title": "Upload Files...",
                 "category": "Azure Storage"
             },
             {
-                "command": "azureStorage.uploadFiles",
-                "title": "Upload Files...",
+                "command": "azureStorage.uploadFolder",
+                "title": "Upload Folder...",
                 "category": "Azure Storage"
             },
             {
