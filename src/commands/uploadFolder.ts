@@ -51,11 +51,11 @@ export async function uploadFolder(
     }
 
     if (notificationProgress && cancellationToken) {
+        // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
         await uploadLocalFolder(actionContext, treeItem, sourcePath, destPath, notificationProgress, cancellationToken, destPath, treeItem instanceof FileShareTreeItem);
     } else {
         const title: string = getUploadingMessageWithSource(sourcePath, treeItem.label);
         await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-            // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
             // tslint:disable-next-line:no-non-null-assertion
             await uploadLocalFolder(actionContext, treeItem!, sourcePath, destPath, newNotificationProgress, newCancellationToken, destPath, treeItem instanceof FileShareTreeItem);
         });
