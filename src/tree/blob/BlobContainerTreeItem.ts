@@ -11,7 +11,7 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
-import { createAzCopyDestination, createAzCopyLocalSource } from '../../commands/azCopy/azCopyLocations';
+import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFile';
 import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
@@ -310,8 +310,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
 
         ext.outputChannel.appendLog(getUploadingMessage(filePath, this.label));
-        const src: ILocalLocation = createAzCopyLocalSource(filePath);
-        const dst: IRemoteSasLocation = createAzCopyDestination(this, blobPath);
+        const src: ILocalLocation = createAzCopyLocalLocation(filePath);
+        const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, blobPath);
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);

@@ -1,8 +1,9 @@
 /*
-  *  Copyright (c) Microsoft Corporation. All rights reserved.
-  *  Licensed under the MIT License. See License.md in the project root for license information.
-  **/
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.md in the project root for license information.
+**/
 
+import { ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 import * as azureStorageBlob from "@azure/storage-blob";
 import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
 import * as path from 'path';
@@ -10,11 +11,14 @@ import * as vscode from 'vscode';
 import { MessageItem, SaveDialogOptions, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
+import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from "../../commands/azCopy/azCopyLocations";
+import { azCopyTransfer } from "../../commands/azCopy/azCopyTransfer";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from "../../TransferProgress";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
 import { Limits } from "../../utils/limits";
+import { localize } from "../../utils/localize";
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 
@@ -96,15 +100,14 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
 
             // tslint:disable-next-line: strict-boolean-expressions
             const totalBytes: number = (await blockBlobClient.getProperties()).contentLength || 1;
+            const transferProgress: TransferProgress = new TransferProgress(totalBytes, this.blobName);
+            const src: IRemoteSasLocation = createAzCopyRemoteLocation(this, this.blobPath);
+            const dst: ILocalLocation = createAzCopyLocalLocation(uri.path);
 
-            ext.outputChannel.show();
-            ext.outputChannel.appendLog(`Downloading ${this.blobName} to ${uri.fsPath}...`);
-
-            await window.withProgress({ title: `Downloading ${this.blobName}`, location: vscode.ProgressLocation.Notification }, async (notificationProgress) => {
-                const transferProgress: TransferProgress = new TransferProgress(totalBytes, this.blobName);
-                await blockBlobClient.downloadToFile(uri.fsPath, undefined, undefined, {
-                    onProgress: (transferProgressEvent) => transferProgress.reportToNotification(transferProgressEvent.loadedBytes, notificationProgress)
-                });
+            const title: string = localize('downloadingTo', 'Downloading {0} to {1}...', this.blobName, uri.fsPath);
+            ext.outputChannel.appendLog(title);
+            await window.withProgress({ title, location: vscode.ProgressLocation.Notification }, async (notificationProgress, cancellationToken) => {
+                await azCopyTransfer(context, 'BlobLocal', src, dst, transferProgress, notificationProgress, cancellationToken);
             });
 
             ext.outputChannel.appendLog(`Successfully downloaded ${linkablePath}.`);

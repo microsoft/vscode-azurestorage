@@ -15,8 +15,8 @@ import { localize } from "../../utils/localize";
 export async function azCopyTransfer(
     context: IActionContext,
     fromTo: FromToOption,
-    src: ILocalLocation,
-    dst: IRemoteSasLocation,
+    src: ILocalLocation | IRemoteSasLocation,
+    dst: ILocalLocation | IRemoteSasLocation,
     transferProgress: TransferProgress,
     notificationProgress?: Progress<{
         message?: string | undefined;
@@ -25,7 +25,9 @@ export async function azCopyTransfer(
     cancellationToken?: CancellationToken
 ): Promise<void> {
     const copyClient: AzCopyClient = new AzCopyClient();
-    const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, followSymLinks: true, excludePath: '.git;.vscode' };
+    // `followSymLinks: true` causes downloads to fail (which is expected) but it currently doesn't work as expected for uploads: https://github.com/Azure/azure-storage-azcopy/issues/1174
+    // So it's omitted from `copyOptions` for now
+    const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, excludePath: '.git;.vscode' };
     let jobId: string = await startAndWaitForCopy(context, copyClient, src, dst, copyOptions, transferProgress, notificationProgress, cancellationToken);
     let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
@@ -49,7 +51,7 @@ export async function azCopyTransfer(
             }
         } else {
             // Add an additional error log since we don't have any more info about the failure
-            ext.outputChannel.appendLog(localize('couldNotUpload', 'Could not upload "{0}"', src.path));
+            ext.outputChannel.appendLog(localize('couldNotTransfer', 'Could not transfer "{0}"', src.path));
         }
         message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 

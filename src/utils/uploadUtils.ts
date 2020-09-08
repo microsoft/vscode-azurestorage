@@ -8,7 +8,7 @@ import { basename, dirname } from 'path';
 import * as readdirp from 'readdirp';
 import * as vscode from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
-import { createAzCopyDestination, createAzCopyLocalSource } from '../commands/azCopy/azCopyLocations';
+import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
 import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
@@ -45,8 +45,8 @@ export async function uploadFiles(
     }
 
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
-    const src: ILocalLocation = createAzCopyLocalSource(sourcePath, true);
-    const dst: IRemoteSasLocation = createAzCopyDestination(destTreeItem, destPath);
+    const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, true);
+    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(destTreeItem, destPath);
     const totalWork: number = await getNumResourcesInDirectory(sourcePath, countFoldersAsResources);
     const transferProgress: TransferProgress = new TransferProgress(totalWork, messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessage(sourcePath, destTreeItem.label));
