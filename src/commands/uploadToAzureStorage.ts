@@ -31,10 +31,14 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     }
 
     const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
+    const suppressPrompts: boolean = uris.length > 1;
+    if (suppressPrompts) {
+        // Suppressing prompts in `uploadFolder` and `uploadFile` means we need to prompt here
+        await showUploadWarning(localize('uploadingToWillOverwrite', 'Uploading to "{0}" will overwrite any existing resources with the same name.', treeItem.label));
+    }
+
     const title: string = getUploadingMessage(treeItem.label);
-    await showUploadWarning(localize('uploadingToWillOverwrite', 'Uploading to "{0}" will overwrite any existing resources with the same name.', treeItem.label));
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
-        const suppressPrompts: boolean = uris.length > 1;
         for (const folderUri of folderUris) {
             throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
             await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken, suppressPrompts);
