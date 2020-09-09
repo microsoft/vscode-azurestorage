@@ -3,19 +3,15 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 **/
 
-import { ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 import * as azureStorageBlob from "@azure/storage-blob";
 import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { MessageItem, SaveDialogOptions, Uri, window } from 'vscode';
+import { MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from "../../commands/azCopy/azCopyLocations";
-import { azCopyTransfer } from "../../commands/azCopy/azCopyTransfer";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { TransferProgress } from "../../TransferProgress";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
 import { askOpenInStorageExplorer } from "../../utils/limits";
 import { localize } from "../../utils/localize";
@@ -77,44 +73,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         AzureStorageFS.fireDeleteEvent(this);
     }
 
-    public async download(context: IActionContext): Promise<void> {
-        await this.checkCanDownload(context);
-
-        const extension = path.extname(this.blobName);
-        const filters = {
-            "All files": ['*']
-        };
-        if (extension) {
-            // This is needed to ensure the file extension is added in the Save dialog, since the filename will be displayed without it by default on Windows
-            filters[`*${extension}`] = [extension];
-        }
-
-        const uri: Uri | undefined = await window.showSaveDialog(<SaveDialogOptions>{
-            saveLabel: "Download",
-            filters,
-            defaultUri: Uri.file(this.blobName)
-        });
-        if (uri && uri.scheme === 'file') {
-            const linkablePath: Uri = Uri.file(uri.fsPath); // Allows CTRL+Click in Output panel
-            const blockBlobClient: BlockBlobClient = createBlockBlobClient(this.root, this.container.name, this.blobPath);
-
-            // tslint:disable-next-line: strict-boolean-expressions
-            const totalBytes: number = (await blockBlobClient.getProperties()).contentLength || 1;
-            const transferProgress: TransferProgress = new TransferProgress(totalBytes, this.blobName);
-            const src: IRemoteSasLocation = createAzCopyRemoteLocation(this, this.blobPath);
-            const dst: ILocalLocation = createAzCopyLocalLocation(uri.path);
-
-            const title: string = localize('downloadingTo', 'Downloading {0} to {1}...', this.blobName, uri.fsPath);
-            ext.outputChannel.appendLog(title);
-            await window.withProgress({ title, location: vscode.ProgressLocation.Notification }, async (notificationProgress, cancellationToken) => {
-                await azCopyTransfer(context, 'BlobLocal', src, dst, transferProgress, notificationProgress, cancellationToken);
-            });
-
-            ext.outputChannel.appendLog(`Successfully downloaded ${linkablePath}.`);
-        }
-    }
-
-    private async checkCanDownload(context: IActionContext): Promise<void> {
+    public async checkCanDownload(context: IActionContext): Promise<void> {
         const client: BlockBlobClient = createBlockBlobClient(this.root, this.container.name, this.blobPath);
         let props: BlobGetPropertiesResponse = await client.getProperties();
         context.telemetry.measurements.blobDownloadSize = props.contentLength;
