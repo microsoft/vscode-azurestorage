@@ -12,7 +12,7 @@ import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { throwIfCanceled } from '../utils/errorUtils';
 import { localize } from '../utils/localize';
 import { getUploadingMessage, showUploadWarning } from '../utils/uploadUtils';
-import { uploadFiles } from './uploadFile';
+import { uploadFiles } from './uploadFiles';
 import { uploadFolder } from './uploadFolder';
 
 export async function uploadToAzureStorage(actionContext: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
