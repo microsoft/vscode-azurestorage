@@ -15,9 +15,8 @@ import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from "../../com
 import { azCopyTransfer } from "../../commands/azCopy/azCopyTransfer";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { ResourceType } from "../../storageExplorerLauncher/ResourceType";
-import { storageExplorerLauncher } from "../../storageExplorerLauncher/storageExplorerLauncher";
 import { TransferProgress } from "../../TransferProgress";
+import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from '../ICopyUrl';
@@ -122,21 +121,8 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         if (props.blobType && !props.blobType.toLocaleLowerCase().startsWith("block")) {
             context.telemetry.properties.invalidBlobTypeForDownload = 'true';
             const message: string = localize('pleaseUseSE', 'Please use Storage Explorer for blobs of type "{0}".', props.blobType);
-            await this.askOpenInStorageExplorer(context, message, this.root.storageAccountId, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
+            await askOpenInStorageExplorer(context, message, this.root.storageAccountId, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
         }
-    }
-
-    private async askOpenInStorageExplorer(context: IActionContext, errorMessage: string, resourceId: string, subscriptionId: string, resourceType: ResourceType, resourceName: string): Promise<void> {
-        const message: string = localize("openInSE", "Open resource in Storage Explorer");
-        window.showErrorMessage(errorMessage, message).then(async result => {
-            if (result === message) {
-                context.telemetry.properties.openInStorageExplorer = 'true';
-                await storageExplorerLauncher.openResource(resourceId, subscriptionId, resourceType, resourceName);
-            }
-        });
-
-        // Either way, throw canceled error
-        throw new UserCancelledError(message);
     }
 }
 
