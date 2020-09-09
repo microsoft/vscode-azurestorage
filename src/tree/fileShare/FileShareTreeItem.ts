@@ -13,7 +13,7 @@ import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, I
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { createAzCopyDestination, createAzCopyLocalSource } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
-import { IExistingFileContext } from '../../commands/uploadFile';
+import { IExistingFileContext } from '../../commands/uploadFiles';
 import { getResourcesPath, NotificationProgress } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';

@@ -30,7 +30,7 @@ import { emulatorTimeoutMS as startEmulatorDebounce, EmulatorType, startEmulator
 import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
-import { uploadFiles } from './commands/uploadFile';
+import { uploadFiles } from './commands/uploadFiles';
 import { uploadFolder } from './commands/uploadFolder';
 import { uploadToAzureStorage } from './commands/uploadToAzureStorage';
 import { ext } from './extensionVariables';
