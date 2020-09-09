@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { Progress } from 'vscode';
 import { ext } from './extensionVariables';
 
 export const staticWebsiteContainerName = '$web';
@@ -23,3 +24,8 @@ export const emulatorKey: string = 'Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6
 export function getResourcesPath(): string {
     return ext.context.asAbsolutePath('resources');
 }
+
+export type NotificationProgress = Progress<{
+    message?: string | undefined;
+    increment?: number | undefined;
+}>;

@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { Progress } from 'vscode';
 import { AzureWizardExecuteStep, createAzureClient, INewStorageAccountDefaults, IStorageAccountWizardContext } from 'vscode-azureextensionui';
+import { NotificationProgress } from '../../constants';
 import { ext } from '../../extensionVariables';
 
 export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> implements StorageAccountCreateStep<T> {
@@ -18,7 +18,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         this._defaults = defaults;
     }
 
-    public async execute(wizardContext: T, progress: Progress<{ message?: string; increment?: number }>): Promise<void> {
+    public async execute(wizardContext: T, progress: NotificationProgress): Promise<void> {
         // tslint:disable-next-line:no-non-null-assertion
         const newLocation: string = wizardContext.location!.name!;
         // tslint:disable-next-line:no-non-null-assertion
