@@ -3,8 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fse from 'fs-extra';
-import { basename } from 'path';
+import { stat } from 'fs-extra';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -12,60 +11,43 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { throwIfCanceled } from '../utils/errorUtils';
 import { localize } from '../utils/localize';
-import { getUploadingMessage, uploadFiles } from '../utils/uploadUtils';
+import { getUploadingMessage, showUploadWarning } from '../utils/uploadUtils';
+import { uploadFiles } from './uploadFile';
+import { uploadFolder } from './uploadFolder';
 
-export async function uploadToAzureStorage(actionContext: IActionContext, target?: vscode.Uri): Promise<void> {
-    let resourceUris: vscode.Uri[];
-    if (target) {
-        if (target.scheme === 'azurestorage') {
+export async function uploadToAzureStorage(actionContext: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
+    const folderUris: vscode.Uri[] = [];
+    const fileUris: vscode.Uri[] = [];
+    for (const uri of uris) {
+        if (uri.scheme === 'azurestorage') {
             throw new Error(localize('cannotUploadToAzureFromAzureResource', 'Cannot upload to Azure from an Azure resource.'));
         }
 
-        resourceUris = [vscode.Uri.file(target.fsPath)];
-    } else {
-        resourceUris = await ext.ui.showOpenDialog({
-            canSelectFiles: true,
-            canSelectFolders: true,
-            canSelectMany: true,
-            defaultUri: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri : undefined,
-            openLabel: localize('select', 'Select')
-        });
-    }
-
-    // AzCopy works by uploading either single files or entire folders.
-    // So uploading multiple resources only happens if we're uploading more than one file/folder.
-    const multiResourceUpload: boolean = resourceUris.length > 1;
-    if (multiResourceUpload) {
-        await showUploadWarning(localize('uploadWillOverwrite', 'Uploading multiple files/folders will overwrite any existing resources with the same name.'));
-    }
-
-    let treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
-    const title: string = multiResourceUpload ?
-        localize('uploadingTo', 'Uploading to "{0}"', treeItem.label) :
-        getUploadingMessage(resourceUris[0].fsPath, treeItem.label);
-    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
-        for (const resourceUri of resourceUris) {
-            throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
-            const resourcePath: string = resourceUri.fsPath;
-            if ((await fse.stat(resourcePath)).isDirectory()) {
-                if (!multiResourceUpload) {
-                    await showUploadWarning(localize('uploadWillOverwrite', 'Uploading "{0}" will overwrite any existing resources with the same name.', resourcePath));
-                }
-
-                // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
-                await uploadFiles(actionContext, treeItem, resourcePath, undefined, notificationProgress, cancellationToken, basename(resourcePath), treeItem instanceof FileShareTreeItem, multiResourceUpload);
-            } else {
-                const destPath: string = basename(resourcePath);
-                await treeItem.uploadLocalFile(actionContext, resourcePath, destPath, multiResourceUpload);
-            }
+        if ((await stat(uri.fsPath)).isDirectory()) {
+            folderUris.push(uri);
+        } else {
+            fileUris.push(uri);
         }
+    }
+
+    const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
+    const suppressPrompts: boolean = uris.length > 1;
+    if (suppressPrompts) {
+        // Suppressing prompts in `uploadFolder` and `uploadFile` means we need to prompt here
+        await showUploadWarning(localize('uploadingToWillOverwrite', 'Uploading to "{0}" will overwrite any existing resources with the same name.', treeItem.label));
+    }
+
+    const title: string = getUploadingMessage(treeItem.label);
+    await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
+        for (const folderUri of folderUris) {
+            throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
+            await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken, suppressPrompts);
+        }
+
+        await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken, suppressPrompts);
     });
 
     const success: string = localize('successfullyUploaded', 'Successfully uploaded to "{0}"', treeItem.label);
     ext.outputChannel.appendLog(success);
     vscode.window.showInformationMessage(success);
-}
-
-async function showUploadWarning(message: string): Promise<void> {
-    await ext.ui.showWarningMessage(message, { modal: true }, { title: localize('upload', 'Upload') });
 }

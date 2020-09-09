@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
-import { CancellationToken, Progress } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
+import { NotificationProgress } from "../../constants";
 import { ext } from '../../extensionVariables';
 import { TransferProgress } from "../../TransferProgress";
 import { delay } from "../../utils/delay";
@@ -18,10 +19,7 @@ export async function azCopyTransfer(
     src: ILocalLocation | IRemoteSasLocation,
     dst: ILocalLocation | IRemoteSasLocation,
     transferProgress: TransferProgress,
-    notificationProgress?: Progress<{
-        message?: string | undefined;
-        increment?: number | undefined;
-    }>,
+    notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken
 ): Promise<void> {
     const copyClient: AzCopyClient = new AzCopyClient();
@@ -71,10 +69,7 @@ async function startAndWaitForCopy(
     dst: AzCopyLocation,
     options: ICopyOptions,
     transferProgress: TransferProgress,
-    notificationProgress?: Progress<{
-        message?: string | undefined;
-        increment?: number | undefined;
-    }>,
+    notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken
 ): Promise<string> {
     let jobId: string = await copyClient.copy(src, dst, options);

@@ -14,12 +14,12 @@ import { AzureStorageFS } from '../../AzureStorageFS';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFile';
-import { getResourcesPath, staticWebsiteContainerName } from "../../constants";
+import { getResourcesPath, NotificationProgress, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
-import { createBlobContainerClient, createChildAsNewBlockBlob, doesBlobExist, getBlobPath, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
-import { getUploadingMessage, uploadFiles, warnFileAlreadyExists } from '../../utils/uploadUtils';
+import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -202,7 +202,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         context: IActionContext,
         sourceFolderPath: string,
         destBlobFolder: string,
-        notificationProgress: vscode.Progress<{ message?: string, increment?: number }>,
+        notificationProgress: NotificationProgress,
         cancellationToken: vscode.CancellationToken
     ): Promise<string> {
         try {
@@ -230,7 +230,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             notificationProgress.report({ increment: -1 });
 
             // Upload files as blobs
-            await uploadFiles(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading', false);
+            await uploadLocalFolder(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading', false);
 
             let webEndpoint = this.getPrimaryWebEndpoint();
             if (!webEndpoint) {
@@ -270,10 +270,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private async deleteBlobs(
         blobsToDelete: azureStorageBlob.BlobItem[],
         transferProgress: TransferProgress,
-        notificationProgress: vscode.Progress<{
-            message?: string | undefined;
-            increment?: number | undefined;
-        }>,
+        notificationProgress: NotificationProgress,
         cancellationToken: vscode.CancellationToken,
         properties: TelemetryProperties,
     ): Promise<void> {
@@ -301,21 +298,20 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
     }
 
-    public async uploadLocalFile(context: IActionContext, filePath: string, blobPath: string, suppressPrompts: boolean = false): Promise<void> {
-        if (!suppressPrompts) {
-            blobPath = blobPath !== undefined ? blobPath : await getBlobPath(this, blobPath);
-            if (await doesBlobExist(this, blobPath)) {
-                await warnFileAlreadyExists(blobPath);
-            }
-        }
-
-        ext.outputChannel.appendLog(getUploadingMessage(filePath, this.label));
+    public async uploadLocalFile(
+        context: IActionContext,
+        filePath: string,
+        blobPath: string,
+        notificationProgress?: NotificationProgress,
+        cancellationToken?: vscode.CancellationToken
+    ): Promise<void> {
+        ext.outputChannel.appendLog(getUploadingMessageWithSource(filePath, this.label));
         const src: ILocalLocation = createAzCopyLocalLocation(filePath);
         const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, blobPath);
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
-        await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress);
+        await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress, notificationProgress, cancellationToken);
     }
 
     public static validateBlobName(name: string): string | undefined | null {
