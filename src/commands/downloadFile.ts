@@ -56,6 +56,9 @@ export async function downloadFile(
             await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
         });
         ext.outputChannel.appendLog(`Successfully downloaded ${linkablePath}.`);
+    } else {
+        context.errorHandling.suppressReportIssue = true;
+        throw new Error(localize('downloadDest', 'Download destination scheme cannot be "{0}". Only "file" scheme is supported.', uri.scheme));
     }
 }
 
