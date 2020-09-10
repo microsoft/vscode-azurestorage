@@ -23,7 +23,7 @@ import { localize } from './localize';
 export const upload: string = localize('upload', 'Upload');
 
 /**
- * Tracks whether or not to overwrite resources wile uploading.
+ * Tracks whether or not to overwrite resources while uploading.
  *
  * Stored as an object to make use of pass by reference.
  */
