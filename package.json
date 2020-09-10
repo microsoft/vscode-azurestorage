@@ -54,7 +54,7 @@
         "onCommand:azureStorage.uploadFiles",
         "onCommand:azureStorage.uploadFolder",
         "onCommand:azureStorage.deleteBlob",
-        "onCommand:azureStorage.downloadBlob",
+        "onCommand:azureStorage.downloadFile",
         "onCommand:azureStorage.createFileShare",
         "onCommand:azureStorage.deleteFileShare",
         "onCommand:azureStorage.deleteStorageAccount",
@@ -225,7 +225,7 @@
                 "category": "Azure Storage"
             },
             {
-                "command": "azureStorage.downloadBlob",
+                "command": "azureStorage.downloadFile",
                 "title": "Download...",
                 "category": "Azure Storage"
             },
@@ -509,7 +509,7 @@
                     "when": "view == azureStorage && viewItem == azureBlob"
                 },
                 {
-                    "command": "azureStorage.downloadBlob",
+                    "command": "azureStorage.downloadFile",
                     "when": "view == azureStorage && viewItem == azureBlob",
                     "group": "3_download"
                 },
@@ -587,6 +587,11 @@
                 },
                 {
                     "$comment": "========= azureFile =========",
+                    "command": "azureStorage.downloadFile",
+                    "when": "view == azureStorage && viewItem == azureFile",
+                    "group": "3_download"
+                },
+                {
                     "command": "azureStorage.copyUrl",
                     "when": "view == azureStorage && viewItem == azureFile",
                     "group": "5_cutcopypaste"
@@ -704,7 +709,7 @@
                     "when": "never"
                 },
                 {
-                    "command": "azureStorage.downloadBlob",
+                    "command": "azureStorage.downloadFile",
                     "when": "never"
                 },
                 {

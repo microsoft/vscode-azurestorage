@@ -10,6 +10,7 @@ import { sep } from "path";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { BlobTreeItem } from "../../tree/blob/BlobTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
+import { FileTreeItem } from "../../tree/fileShare/FileTreeItem";
 import { createBlobContainerClient } from "../../utils/blobUtils";
 import { createShareClient } from "../../utils/fileUtils";
 
@@ -22,7 +23,7 @@ export function createAzCopyLocalLocation(path: string, isFolder?: boolean): ILo
     return { type: 'Local', path, useWildCard: !!isFolder };
 }
 
-export function createAzCopyRemoteLocation(treeItem: BlobTreeItem | BlobContainerTreeItem | FileShareTreeItem, path: string): IRemoteSasLocation {
+export function createAzCopyRemoteLocation(treeItem: BlobTreeItem | BlobContainerTreeItem | FileTreeItem | FileShareTreeItem, path: string): IRemoteSasLocation {
     let resourceUri: string;
     if (treeItem instanceof BlobTreeItem || treeItem instanceof BlobContainerTreeItem) {
         const containerClient: ContainerClient = createBlobContainerClient(treeItem.root, treeItem.container.name);
