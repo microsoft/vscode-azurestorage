@@ -12,8 +12,8 @@ import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, Us
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
+import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
-import { askOpenInStorageExplorer } from "../../utils/limits";
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";

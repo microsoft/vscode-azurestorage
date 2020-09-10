@@ -1,7 +1,7 @@
-/*
-*  Copyright (c) Microsoft Corporation. All rights reserved.
-*  Licensed under the MIT License. See License.md in the project root for license information.
-**/
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.md in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 
 import { window } from "vscode";
 import { IActionContext, UserCancelledError } from "vscode-azureextensionui";
