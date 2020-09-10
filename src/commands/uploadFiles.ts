@@ -3,17 +3,14 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { basename } from "path";
 import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
 import { IActionContext } from "vscode-azureextensionui";
 import { NotificationProgress } from "../constants";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
-import { getBlobPath } from "../utils/blobUtils";
 import { throwIfCanceled } from "../utils/errorUtils";
-import { getFileName } from "../utils/fileUtils";
-import { getUploadingMessage, upload } from "../utils/uploadUtils";
+import { getRemoteResourceName, getUploadingMessage, OverwriteChoice, RemoteResourceNameMap, upload } from "../utils/uploadUtils";
 
 let lastUriUpload: Uri | undefined;
 
@@ -26,9 +23,9 @@ export async function uploadFiles(
     context: IActionContext,
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
     uris?: Uri[],
+    remoteResourceNameMap?: RemoteResourceNameMap,
     notificationProgress?: NotificationProgress,
-    cancellationToken?: CancellationToken,
-    suppressPrompts?: boolean
+    cancellationToken?: CancellationToken
 ): Promise<void> {
     // tslint:disable: strict-boolean-expressions
     uris = uris || await ext.ui.showOpenDialog(
@@ -45,15 +42,23 @@ export async function uploadFiles(
     );
 
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
-    // tslint:enable: strict-boolean-expressions
+    if (remoteResourceNameMap === undefined) {
+        remoteResourceNameMap = new Map();
+        let overwriteChoice: OverwriteChoice = { choice: undefined };
+        let remoteFileName: string;
+        for (const uri of uris) {
+            remoteFileName = await getRemoteResourceName(treeItem, uri, overwriteChoice);
+            remoteResourceNameMap.set(uri, remoteFileName);
+        }
+    }
 
     if (notificationProgress && cancellationToken) {
-        await uploadFilesHelper(context, treeItem, uris, notificationProgress, cancellationToken, !!suppressPrompts);
+        await uploadFilesHelper(context, treeItem, uris, remoteResourceNameMap, notificationProgress, cancellationToken);
     } else {
         const title: string = getUploadingMessage(treeItem.label);
         await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
             // tslint:disable-next-line: strict-boolean-expressions no-non-null-assertion
-            await uploadFilesHelper(context, treeItem!, uris || [], newNotificationProgress, newCancellationToken, !!suppressPrompts);
+            await uploadFilesHelper(context, treeItem!, uris || [], remoteResourceNameMap!, newNotificationProgress, newCancellationToken);
         });
     }
 }
@@ -62,23 +67,17 @@ async function uploadFilesHelper(
     context: IActionContext,
     treeItem: BlobContainerTreeItem | FileShareTreeItem,
     uris: Uri[],
+    remoteResourceNameMap: RemoteResourceNameMap,
     notificationProgress: NotificationProgress,
-    cancellationToken: CancellationToken,
-    suppressPrompts: boolean
+    cancellationToken: CancellationToken
 ): Promise<void> {
     lastUriUpload = uris[0];
     for (const uri of uris) {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
 
+        // tslint:disable-next-line:no-non-null-assertion
+        const remoteFilePath: string = remoteResourceNameMap.get(uri)!;
         const localFilePath: string = uri.fsPath;
-        let remoteFilePath: string = basename(localFilePath);
-
-        if (!suppressPrompts) {
-            remoteFilePath = treeItem instanceof BlobContainerTreeItem ?
-                await getBlobPath(treeItem, remoteFilePath) :
-                await getFileName(treeItem, '', treeItem.shareName, remoteFilePath);
-        }
-
         const id: string = `${treeItem.fullId}/${remoteFilePath}`;
         const result = await treeItem.treeDataProvider.findTreeItem(id, context);
         if (result) {

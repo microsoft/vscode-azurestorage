@@ -87,6 +87,22 @@ export async function doesBlobExist(treeItem: BlobContainerTreeItem | BlobDirect
     return blobClient.exists();
 }
 
+export async function doesBlobDirectoryExist(treeItem: BlobContainerTreeItem | BlobDirectoryTreeItem, blobDirectoryName: string): Promise<boolean> {
+    const sep: string = path.posix.sep;
+    if (!blobDirectoryName.endsWith(sep)) {
+        blobDirectoryName = `${blobDirectoryName}${sep}`;
+    }
+
+    const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(treeItem.root, treeItem.container.name);
+    const prefix: string | undefined = treeItem instanceof BlobDirectoryTreeItem ? treeItem.dirPath : undefined;
+    let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(sep, { prefix }).byPage();
+
+    // tslint:disable-next-line: no-unsafe-any
+    let responseValue: azureStorageBlob.ListBlobsHierarchySegmentResponse = (await response.next()).value;
+    const blobDirectoryNames: string[] | undefined = responseValue.segment.blobPrefixes?.map(value => value.name);
+    return !!blobDirectoryNames?.includes(blobDirectoryName);
+}
+
 export async function getExistingProperties(parent: BlobTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<azureStorageBlob.BlockBlobUploadOptions | undefined> {
     const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(parent.root, parent.container.name, blobPath);
     if (await blockBlobClient.exists()) {

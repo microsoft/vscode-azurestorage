@@ -11,17 +11,24 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { throwIfCanceled } from '../utils/errorUtils';
 import { localize } from '../utils/localize';
-import { getUploadingMessage, showUploadWarning } from '../utils/uploadUtils';
+import { getRemoteResourceName, getUploadingMessage, OverwriteChoice, RemoteResourceNameMap } from '../utils/uploadUtils';
 import { uploadFiles } from './uploadFiles';
 import { uploadFolder } from './uploadFolder';
 
 export async function uploadToAzureStorage(actionContext: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
+    const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
     const folderUris: vscode.Uri[] = [];
     const fileUris: vscode.Uri[] = [];
+    const remoteResourceNameMap: RemoteResourceNameMap = new Map();
+    let overwriteChoice: OverwriteChoice = { choice: undefined };
+    let remoteResourcePath: string;
     for (const uri of uris) {
         if (uri.scheme === 'azurestorage') {
             throw new Error(localize('cannotUploadToAzureFromAzureResource', 'Cannot upload to Azure from an Azure resource.'));
         }
+
+        remoteResourcePath = await getRemoteResourceName(treeItem, uri, overwriteChoice);
+        remoteResourceNameMap.set(uri, remoteResourcePath);
 
         if ((await stat(uri.fsPath)).isDirectory()) {
             folderUris.push(uri);
@@ -30,21 +37,15 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         }
     }
 
-    const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
-    const suppressPrompts: boolean = uris.length > 1;
-    if (suppressPrompts) {
-        // Suppressing prompts in `uploadFolder` and `uploadFile` means we need to prompt here
-        await showUploadWarning(localize('uploadingToWillOverwrite', 'Uploading to "{0}" will overwrite any existing resources with the same name.', treeItem.label));
-    }
-
     const title: string = getUploadingMessage(treeItem.label);
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const folderUri of folderUris) {
             throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
-            await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken, suppressPrompts);
+            // tslint:disable-next-line:no-non-null-assertion
+            await uploadFolder(actionContext, treeItem, folderUri, remoteResourceNameMap.get(folderUri)!, notificationProgress, cancellationToken);
         }
 
-        await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken, suppressPrompts);
+        await uploadFiles(actionContext, treeItem, fileUris, remoteResourceNameMap, notificationProgress, cancellationToken);
     });
 
     const success: string = localize('successfullyUploaded', 'Successfully uploaded to "{0}"', treeItem.label);
