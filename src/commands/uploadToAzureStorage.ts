@@ -47,6 +47,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken, suppressPrompts);
     });
 
+    await ext.tree.refresh(treeItem);
     const success: string = localize('successfullyUploaded', 'Successfully uploaded to "{0}"', treeItem.label);
     ext.outputChannel.appendLog(success);
     vscode.window.showInformationMessage(success);
