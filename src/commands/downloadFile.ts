@@ -43,7 +43,6 @@ export async function downloadFile(
 
     const uri: Uri = await getUriForDownload(remoteFileName);
     if (uri.scheme === 'file') {
-        const linkablePath: Uri = Uri.file(uri.fsPath); // Allows CTRL+Click in Output panel
         const src: IRemoteSasLocation = createAzCopyRemoteLocation(treeItem, remoteFilePath);
         const dst: ILocalLocation = createAzCopyLocalLocation(uri.path);
         // tslint:disable-next-line: strict-boolean-expressions
@@ -55,7 +54,7 @@ export async function downloadFile(
         await window.withProgress({ title, location: ProgressLocation.Notification }, async (notificationProgress, cancellationToken) => {
             await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
         });
-        ext.outputChannel.appendLog(`Successfully downloaded ${linkablePath}.`);
+        ext.outputChannel.appendLog(`Successfully downloaded ${uri}.`);
     } else {
         context.errorHandling.suppressReportIssue = true;
         throw new Error(localize('downloadDest', 'Download destination scheme cannot be "{0}". Only "file" scheme is supported.', uri.scheme));
