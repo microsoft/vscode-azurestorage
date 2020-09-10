@@ -44,7 +44,7 @@ export async function downloadFile(
     const uri: Uri = await getUriForDownload(remoteFileName);
     if (uri.scheme === 'file') {
         const src: IRemoteSasLocation = createAzCopyRemoteLocation(treeItem, remoteFilePath);
-        const dst: ILocalLocation = createAzCopyLocalLocation(uri.path);
+        const dst: ILocalLocation = createAzCopyLocalLocation(uri.fsPath);
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await storageClient.getProperties()).contentLength || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, remoteFileName);
