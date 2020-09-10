@@ -11,23 +11,25 @@ import { ProgressLocation, SaveDialogOptions, Uri, window } from "vscode";
 import { IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { TransferProgress } from "../TransferProgress";
+import { BlobDirectoryTreeItem } from "../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../tree/blob/BlobTreeItem";
+import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
 import { createBlockBlobClient } from "../utils/blobUtils";
 import { createFileClient } from "../utils/fileUtils";
 import { localize } from "../utils/localize";
-import { nonNullProp } from "../utils/nonNull";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from "./azCopy/azCopyLocations";
 import { azCopyTransfer } from "./azCopy/azCopyTransfer";
 
-export async function downloadFile(
+export async function download(
     context: IActionContext,
-    treeItem: BlobTreeItem | FileTreeItem,
+    treeItem: BlobTreeItem | BlobDirectoryTreeItem | FileTreeItem | DirectoryTreeItem,
 ): Promise<void> {
     let remoteFileName: string;
     let remoteFilePath: string;
     let fromTo: FromToOption;
-    let storageClient: BlockBlobClient | ShareFileClient;
+    let storageClient: BlockBlobClient | ShareFileClient | undefined;
+    let isDirectory: boolean;
     if (treeItem instanceof BlobTreeItem) {
         await treeItem.checkCanDownload(context);
 
@@ -35,20 +37,36 @@ export async function downloadFile(
         remoteFilePath = treeItem.blobPath;
         fromTo = 'BlobLocal';
         storageClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
-    } else {
+        isDirectory = false;
+    } else if (treeItem instanceof BlobDirectoryTreeItem) {
+        remoteFileName = treeItem.dirName;
+        remoteFilePath = treeItem.dirPath;
+        fromTo = 'BlobLocal';
+        isDirectory = true;
+    } else if (treeItem instanceof FileTreeItem) {
         remoteFileName = treeItem.fileName;
         remoteFilePath = join(treeItem.directoryPath, treeItem.fileName);
         fromTo = 'FileLocal';
         storageClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+        isDirectory = false;
+    } else {
+        remoteFileName = treeItem.directoryName;
+        remoteFilePath = join(treeItem.parentPath, treeItem.directoryName);
+        fromTo = 'FileLocal';
+        isDirectory = true;
     }
 
     const uri: Uri = await getUriForDownload(remoteFileName);
     if (uri.scheme === 'file') {
-        const src: IRemoteSasLocation = createAzCopyRemoteLocation(treeItem, remoteFilePath);
+        const src: IRemoteSasLocation = createAzCopyRemoteLocation(treeItem, remoteFilePath, isDirectory);
         const dst: ILocalLocation = createAzCopyLocalLocation(uri.fsPath);
-        // tslint:disable-next-line: strict-boolean-expressions
-        const totalBytes: number = nonNullProp(await storageClient.getProperties(), 'contentLength');
-        const transferProgress: TransferProgress = new TransferProgress(totalBytes, remoteFileName);
+
+        let totalWork: number | undefined;
+        if (storageClient) {
+            totalWork = (await storageClient.getProperties()).contentLength;
+        }
+
+        const transferProgress: TransferProgress = new TransferProgress(totalWork, remoteFileName);
         const title: string = localize('downloadingTo', 'Downloading from "{0}" to "{1}"...', remoteFileName, uri.fsPath);
 
         ext.outputChannel.appendLog(title);
