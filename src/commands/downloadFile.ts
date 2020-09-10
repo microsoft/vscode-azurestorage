@@ -16,6 +16,7 @@ import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
 import { createBlockBlobClient } from "../utils/blobUtils";
 import { createFileClient } from "../utils/fileUtils";
 import { localize } from "../utils/localize";
+import { nonNullProp } from "../utils/nonNull";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from "./azCopy/azCopyLocations";
 import { azCopyTransfer } from "./azCopy/azCopyTransfer";
 
@@ -46,7 +47,7 @@ export async function downloadFile(
         const src: IRemoteSasLocation = createAzCopyRemoteLocation(treeItem, remoteFilePath);
         const dst: ILocalLocation = createAzCopyLocalLocation(uri.fsPath);
         // tslint:disable-next-line: strict-boolean-expressions
-        const totalBytes: number = (await storageClient.getProperties()).contentLength || 1;
+        const totalBytes: number = nonNullProp(await storageClient.getProperties(), 'contentLength');
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, remoteFileName);
         const title: string = localize('downloadingTo', 'Downloading from "{0}" to "{1}"...', remoteFileName, uri.fsPath);
 
