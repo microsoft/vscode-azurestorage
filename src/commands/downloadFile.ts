@@ -48,13 +48,13 @@ export async function downloadFile(
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await storageClient.getProperties()).contentLength || 1;
         const transferProgress: TransferProgress = new TransferProgress(totalBytes, remoteFileName);
-        const title: string = localize('downloadingTo', 'Downloading {0} to {1}...', remoteFileName, uri.fsPath);
+        const title: string = localize('downloadingTo', 'Downloading from "{0}" to "{1}"...', remoteFileName, uri.fsPath);
 
         ext.outputChannel.appendLog(title);
         await window.withProgress({ title, location: ProgressLocation.Notification }, async (notificationProgress, cancellationToken) => {
             await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
         });
-        ext.outputChannel.appendLog(`Successfully downloaded ${uri}.`);
+        ext.outputChannel.appendLog(localize('successfullyDownloaded', 'Successfully downloaded "{0}".', uri.toString()));
     } else {
         context.errorHandling.suppressReportIssue = true;
         throw new Error(localize('downloadDest', 'Download destination scheme cannot be "{0}". Only "file" scheme is supported.', uri.scheme));
@@ -69,7 +69,7 @@ async function getUriForDownload(resourceName: string): Promise<Uri> {
         filters[`*${extension}`] = [extension];
     }
     const options: SaveDialogOptions = {
-        saveLabel: "Download",
+        saveLabel: localize('download', 'Download'),
         filters,
         defaultUri: Uri.file(resourceName)
     };
