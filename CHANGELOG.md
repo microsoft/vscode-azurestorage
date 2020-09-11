@@ -1,6 +1,19 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.10.0 - 2020-09-14
+### Added
+- File and folder transfers now use AzCopy for faster performance
+- Upload multiple files using the `Upload Files...` command
+- Upload folders using the `Upload Folder...` command
+
+### Changed
+- Removed the 4MB upload/download limit
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-azurestorage/issues?utf8=%E2%9C%93&q=is%3Aclosed+is%3Aissue+milestone%3A0.10.0+)
+
+
 ## 0.9.0 - 2020-03-13
 ### Added
 - Azure Storage Emulator support
