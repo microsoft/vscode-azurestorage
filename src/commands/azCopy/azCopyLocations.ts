@@ -26,8 +26,8 @@ export function createAzCopyLocalLocation(path: string, isFolder?: boolean): ILo
 }
 
 export function createAzCopyRemoteLocation(treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | FileTreeItem | DirectoryTreeItem | FileShareTreeItem, path: string, isFolder?: boolean): IRemoteSasLocation {
-    if (isFolder && !path.endsWith(sep)) {
-        path += sep;
+    if (isFolder && !path.endsWith('/')) {
+        path += '/';
     }
 
     let resourceUri: string;
