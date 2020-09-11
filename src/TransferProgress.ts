@@ -13,12 +13,14 @@ export class TransferProgress {
     private lastUpdated: number = Date.now();
 
     constructor(
-        private readonly totalWork: number,
+        public totalWork?: number,
         private readonly messagePrefix?: string,
         private readonly updateTimerMs: number = 200
     ) { }
 
-    public reportToNotification(finishedWork: number, notificationProgress: NotificationProgress): void {
+    public reportToNotification(finishedWork: number, notificationProgress: NotificationProgress, totalWork?: number): void {
+        this.totalWork = this.totalWork || totalWork;
+
         // This function may be called very frequently. Calls made to notificationProgress.report too rapidly result in incremental
         // progress not displaying in the notification window. So debounce calls to notificationProgress.report
         if (this.lastUpdated + this.updateTimerMs < Date.now()) {
@@ -30,7 +32,8 @@ export class TransferProgress {
         }
     }
 
-    public reportToOutputWindow(finishedWork: number): void {
+    public reportToOutputWindow(finishedWork: number, totalWork?: number): void {
+        this.totalWork = this.totalWork || totalWork;
         this.preReport(finishedWork);
         if (this.percentage !== this.lastPercentage) {
             ext.outputChannel.appendLog(this.message);
@@ -39,9 +42,12 @@ export class TransferProgress {
     }
 
     private preReport(finishedWork: number): void {
-        this.percentage = Math.trunc((finishedWork / this.totalWork) * 100);
-        const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
-        this.message = `${prefix}${finishedWork}/${this.totalWork} (${this.percentage}%)`;
+        if (this.totalWork) {
+            // Only update message if `totalWork` is valid
+            this.percentage = Math.trunc((finishedWork / this.totalWork) * 100);
+            const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
+            this.message = `${prefix}${finishedWork}/${this.totalWork} (${this.percentage}%)`;
+        }
     }
 
     private postReport(): void {
