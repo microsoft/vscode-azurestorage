@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { basename } from "path";
 import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
 import { IActionContext } from "vscode-azureextensionui";
 import { NotificationProgress } from "../constants";
@@ -11,7 +12,7 @@ import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
-import { getRemoteResourceName, getUploadingMessage, OverwriteChoice, RemoteResourceNameMap, upload } from "../utils/uploadUtils";
+import { getUploadingMessage, OverwriteChoice, shouldUploadUri, upload } from "../utils/uploadUtils";
 
 let lastUriUpload: Uri | undefined;
 
@@ -24,42 +25,46 @@ export async function uploadFiles(
     context: IActionContext,
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
     uris?: Uri[],
-    remoteResourceNameMap?: RemoteResourceNameMap,
     notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken
 ): Promise<void> {
-    // tslint:disable: strict-boolean-expressions
-    uris = uris || await ext.ui.showOpenDialog(
-        {
-            canSelectFiles: true,
-            canSelectFolders: false,
-            canSelectMany: true,
-            defaultUri: lastUriUpload,
-            filters: {
-                "All files": ['*']
-            },
-            openLabel: upload
-        }
-    );
+    let shouldCheckUris: boolean = false;
+    if (uris === undefined) {
+        // tslint:disable: strict-boolean-expressions
+        uris = await ext.ui.showOpenDialog(
+            {
+                canSelectFiles: true,
+                canSelectFolders: false,
+                canSelectMany: true,
+                defaultUri: lastUriUpload,
+                filters: {
+                    "All files": ['*']
+                },
+                openLabel: upload
+            }
+        );
+        shouldCheckUris = true;
+    }
 
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
-    if (remoteResourceNameMap === undefined) {
-        remoteResourceNameMap = new Map();
-        let overwriteChoice: OverwriteChoice = { choice: undefined };
-        let remoteFileName: string;
+    let urisToUpload: Uri[] = [];
+    if (shouldCheckUris) {
+        let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
-            remoteFileName = await getRemoteResourceName(treeItem, uri, overwriteChoice);
-            remoteResourceNameMap.set(uri, remoteFileName);
+            if (await shouldUploadUri(treeItem, uri, overwriteChoice)) {
+                urisToUpload.push(uri);
+            }
         }
+    } else {
+        urisToUpload = uris;
     }
 
     if (notificationProgress && cancellationToken) {
-        await uploadFilesHelper(context, treeItem, uris, remoteResourceNameMap, notificationProgress, cancellationToken);
+        await uploadFilesHelper(context, treeItem, urisToUpload, notificationProgress, cancellationToken);
     } else {
         const title: string = getUploadingMessage(treeItem.label);
         await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-            // tslint:disable-next-line: strict-boolean-expressions
-            await uploadFilesHelper(context, nonNullValue(treeItem), uris || [], nonNullValue(remoteResourceNameMap), newNotificationProgress, newCancellationToken);
+            await uploadFilesHelper(context, nonNullValue(treeItem), urisToUpload, newNotificationProgress, newCancellationToken);
         });
     }
 }
@@ -68,7 +73,6 @@ async function uploadFilesHelper(
     context: IActionContext,
     treeItem: BlobContainerTreeItem | FileShareTreeItem,
     uris: Uri[],
-    remoteResourceNameMap: RemoteResourceNameMap,
     notificationProgress: NotificationProgress,
     cancellationToken: CancellationToken
 ): Promise<void> {
@@ -76,8 +80,8 @@ async function uploadFilesHelper(
     for (const uri of uris) {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
 
-        const remoteFilePath: string = nonNullValue(remoteResourceNameMap.get(uri));
         const localFilePath: string = uri.fsPath;
+        const remoteFilePath: string = basename(localFilePath);
         const id: string = `${treeItem.fullId}/${remoteFilePath}`;
         const result = await treeItem.treeDataProvider.findTreeItem(id, context);
         if (result) {

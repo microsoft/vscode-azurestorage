@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { basename } from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { NotificationProgress } from '../constants';
@@ -10,28 +11,37 @@ import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { nonNullValue } from '../utils/nonNull';
-import { getRemoteResourceName, getUploadingMessageWithSource, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { getUploadingMessageWithSource, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
 
 export async function uploadFolder(
     actionContext: IActionContext,
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
     uri?: vscode.Uri,
-    destPath?: string,
     notificationProgress?: NotificationProgress,
     cancellationToken?: vscode.CancellationToken,
 ): Promise<void> {
-    // tslint:disable: strict-boolean-expressions
-    uri = uri || (await ext.ui.showOpenDialog({
-        canSelectFiles: false,
-        canSelectFolders: true,
-        canSelectMany: false,
-        defaultUri: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri : undefined,
-        openLabel: upload
-    }))[0];
+    let shouldCheckUri: boolean = false;
+    if (uri === undefined) {
+        // tslint:disable: strict-boolean-expressions
+        uri = (await ext.ui.showOpenDialog({
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            defaultUri: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri : undefined,
+            openLabel: upload
+        }))[0];
+        shouldCheckUri = true;
+    }
 
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
-    destPath = destPath || await getRemoteResourceName(treeItem, uri, { choice: undefined });
+
+    if (shouldCheckUri && !(await shouldUploadUri(treeItem, uri, { choice: undefined }))) {
+        // Don't upload this folder
+        return;
+    }
+
     const sourcePath: string = uri.fsPath;
+    const destPath: string = basename(sourcePath);
 
     if (notificationProgress && cancellationToken) {
         // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case

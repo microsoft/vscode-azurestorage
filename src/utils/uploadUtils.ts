@@ -7,7 +7,7 @@ import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/a
 import { basename } from 'path';
 import * as readdirp from 'readdirp';
 import * as vscode from 'vscode';
-import { IActionContext } from "vscode-azureextensionui";
+import { DialogResponses, IActionContext } from "vscode-azureextensionui";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
 import { NotificationProgress } from '../constants';
@@ -15,24 +15,19 @@ import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
-import { doesBlobDirectoryExist, doesBlobExist, getBlobPath } from './blobUtils';
+import { doesBlobDirectoryExist, doesBlobExist } from './blobUtils';
 import { doesDirectoryExist } from './directoryUtils';
-import { doesFileExist, getFileName } from './fileUtils';
+import { doesFileExist } from './fileUtils';
 import { localize } from './localize';
 
 export const upload: string = localize('upload', 'Upload');
 
-/**
- * Tracks whether or not to overwrite resources while uploading.
- *
- * Stored as an object to make use of pass by reference.
- */
-export type OverwriteChoice = { choice: 'Yes to all' | 'Yes' | 'No to all' | 'No' | undefined };
-
-/**
- * Map of local URI to that resource's path in Azure.
- */
-export type RemoteResourceNameMap = Map<vscode.Uri, string>;
+export enum OverwriteChoice {
+    yesToAll,
+    yes,
+    noToAll,
+    no
+}
 
 export async function uploadLocalFolder(
     context: IActionContext,
@@ -70,41 +65,43 @@ export async function showUploadWarning(treeItem: BlobContainerTreeItem | FileSh
     }
 
     if (shouldWarn) {
-        const message: string = localize('resourceExists', 'A resource named "{0}" already exists. Do you want to overwrite it?', resourcePath);
+        const message: string = localize('resourceExists', 'A resource named "{0}" already exists. Do you want to upload and overwrite it?', resourcePath);
         const items = [
-            { title: 'Yes to all' },
-            { title: 'Yes' },
-            { title: 'No to all' },
-            { title: 'No' }
+            { title: localize('yesToAll', 'Yes to all'), data: OverwriteChoice.yesToAll },
+            { title: DialogResponses.yes.title, data: OverwriteChoice.yes },
+            { title: localize('noToAll', 'No to all'), data: OverwriteChoice.noToAll },
+            { title: DialogResponses.no.title, data: OverwriteChoice.no }
         ];
-        return <OverwriteChoice>{ choice: (await ext.ui.showWarningMessage(message, { modal: true }, ...items)).title };
+        return (await ext.ui.showWarningMessage(message, { modal: true }, ...items)).data;
     } else {
         // This resource doesn't exist so "overwriting" is OK
-        return { choice: 'Yes' };
+        return OverwriteChoice.yes;
     }
 }
 
-export async function getRemoteResourceName(treeItem: BlobContainerTreeItem | FileShareTreeItem, uri: vscode.Uri, overwriteChoice: OverwriteChoice): Promise<string> {
-    const localResourcePath: string = uri.fsPath;
-    const remoteResourceName: string = basename(localResourcePath);
-    if (overwriteChoice.choice !== 'Yes to all' && overwriteChoice.choice !== 'No to all') {
-        // Only prompt if the overwrite choice could change
-        overwriteChoice.choice = (await showUploadWarning(treeItem, remoteResourceName)).choice;
+// Pass `overwriteChoice` as an object to make use of pass by reference.
+export async function shouldUploadUri(treeItem: BlobContainerTreeItem | FileShareTreeItem, uri: vscode.Uri, overwriteChoice: { choice: OverwriteChoice | undefined }): Promise<boolean> {
+    if (overwriteChoice.choice === OverwriteChoice.noToAll) {
+        // No need to check if this resource exists. Don't upload
+        return false;
+    } else if (overwriteChoice.choice === OverwriteChoice.yesToAll) {
+        // Always upload
+        return true;
     }
 
-    switch (overwriteChoice.choice) {
-        case 'No':
-        case 'No to all':
-            // Prompt for a new remote resource name instead of overwriting
-            return treeItem instanceof BlobContainerTreeItem ?
-                await getBlobPath(treeItem, remoteResourceName) :
-                await getFileName(treeItem, '', treeItem.shareName, remoteResourceName);
+    const localResourcePath: string = uri.fsPath;
+    const remoteResourceName: string = basename(localResourcePath);
+    overwriteChoice.choice = await showUploadWarning(treeItem, remoteResourceName);
 
-        case 'Yes':
-        case 'Yes to all':
+    switch (overwriteChoice.choice) {
+        case OverwriteChoice.no:
+        case OverwriteChoice.noToAll:
+            return false;
+
+        case OverwriteChoice.yes:
+        case OverwriteChoice.yesToAll:
         default:
-            // Use the default remote resource name
-            return remoteResourceName;
+            return true;
     }
 }
 
