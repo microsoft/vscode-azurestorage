@@ -11,6 +11,7 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { throwIfCanceled } from '../utils/errorUtils';
 import { localize } from '../utils/localize';
+import { nonNullValue } from '../utils/nonNull';
 import { getRemoteResourceName, getUploadingMessage, OverwriteChoice, RemoteResourceNameMap } from '../utils/uploadUtils';
 import { uploadFiles } from './uploadFiles';
 import { uploadFolder } from './uploadFolder';
@@ -41,8 +42,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const folderUri of folderUris) {
             throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
-            // tslint:disable-next-line:no-non-null-assertion
-            await uploadFolder(actionContext, treeItem, folderUri, remoteResourceNameMap.get(folderUri)!, notificationProgress, cancellationToken);
+            await uploadFolder(actionContext, treeItem, folderUri, nonNullValue(remoteResourceNameMap.get(folderUri)), notificationProgress, cancellationToken);
         }
 
         await uploadFiles(actionContext, treeItem, fileUris, remoteResourceNameMap, notificationProgress, cancellationToken);

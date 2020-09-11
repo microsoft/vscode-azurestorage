@@ -10,6 +10,7 @@ import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { throwIfCanceled } from "../utils/errorUtils";
+import { nonNullValue } from "../utils/nonNull";
 import { getRemoteResourceName, getUploadingMessage, OverwriteChoice, RemoteResourceNameMap, upload } from "../utils/uploadUtils";
 
 let lastUriUpload: Uri | undefined;
@@ -57,8 +58,8 @@ export async function uploadFiles(
     } else {
         const title: string = getUploadingMessage(treeItem.label);
         await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-            // tslint:disable-next-line: strict-boolean-expressions no-non-null-assertion
-            await uploadFilesHelper(context, treeItem!, uris || [], remoteResourceNameMap!, newNotificationProgress, newCancellationToken);
+            // tslint:disable-next-line: strict-boolean-expressions
+            await uploadFilesHelper(context, nonNullValue(treeItem), uris || [], nonNullValue(remoteResourceNameMap), newNotificationProgress, newCancellationToken);
         });
     }
 }
@@ -75,8 +76,7 @@ async function uploadFilesHelper(
     for (const uri of uris) {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
 
-        // tslint:disable-next-line:no-non-null-assertion
-        const remoteFilePath: string = remoteResourceNameMap.get(uri)!;
+        const remoteFilePath: string = nonNullValue(remoteResourceNameMap.get(uri));
         const localFilePath: string = uri.fsPath;
         const id: string = `${treeItem.fullId}/${remoteFilePath}`;
         const result = await treeItem.treeDataProvider.findTreeItem(id, context);

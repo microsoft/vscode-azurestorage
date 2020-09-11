@@ -9,6 +9,7 @@ import { NotificationProgress } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
+import { nonNullValue } from '../utils/nonNull';
 import { getRemoteResourceName, getUploadingMessageWithSource, upload, uploadLocalFolder } from '../utils/uploadUtils';
 
 export async function uploadFolder(
@@ -38,8 +39,7 @@ export async function uploadFolder(
     } else {
         const title: string = getUploadingMessageWithSource(sourcePath, treeItem.label);
         await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-            // tslint:disable-next-line:no-non-null-assertion
-            await uploadLocalFolder(actionContext, treeItem!, sourcePath, destPath!, newNotificationProgress, newCancellationToken, destPath, treeItem instanceof FileShareTreeItem);
+            await uploadLocalFolder(actionContext, nonNullValue(treeItem), sourcePath, nonNullValue(destPath), newNotificationProgress, newCancellationToken, destPath, treeItem instanceof FileShareTreeItem);
         });
     }
 }
