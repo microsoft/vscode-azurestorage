@@ -90,7 +90,7 @@ export async function shouldUploadUri(treeItem: BlobContainerTreeItem | FileShar
     }
 
     const localResourcePath: string = uri.fsPath;
-    const remoteResourceName: string = basename(localResourcePath);
+    const remoteResourceName: string = convertLocalPathToRemotePath(localResourcePath);
     overwriteChoice.choice = await showUploadWarning(treeItem, remoteResourceName);
 
     switch (overwriteChoice.choice) {
@@ -105,6 +105,10 @@ export async function shouldUploadUri(treeItem: BlobContainerTreeItem | FileShar
     }
 }
 
+export function convertLocalPathToRemotePath(localPath: string): string {
+    return basename(localPath);
+}
+
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {
     const options: readdirp.ReaddirpOptions = {
         directoryFilter: ['!.git', '!.vscode'],
@@ -113,3 +117,4 @@ async function getNumResourcesInDirectory(directoryPath: string, countFolders?: 
     const resources: readdirp.EntryInfo[] = await readdirp.promise(directoryPath, options);
     return resources.length;
 }
+

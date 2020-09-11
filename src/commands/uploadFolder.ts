@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { basename } from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { NotificationProgress } from '../constants';
@@ -11,7 +10,7 @@ import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { nonNullValue } from '../utils/nonNull';
-import { getUploadingMessageWithSource, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { convertLocalPathToRemotePath, getUploadingMessageWithSource, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
 
 export async function uploadFolder(
     actionContext: IActionContext,
@@ -41,7 +40,7 @@ export async function uploadFolder(
     }
 
     const sourcePath: string = uri.fsPath;
-    const destPath: string = basename(sourcePath);
+    const destPath: string = convertLocalPathToRemotePath(sourcePath);
 
     if (notificationProgress && cancellationToken) {
         // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case

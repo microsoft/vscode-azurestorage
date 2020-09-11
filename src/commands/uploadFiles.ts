@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { basename } from "path";
 import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
 import { IActionContext } from "vscode-azureextensionui";
 import { NotificationProgress } from "../constants";
@@ -12,7 +11,7 @@ import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
-import { getUploadingMessage, OverwriteChoice, shouldUploadUri, upload } from "../utils/uploadUtils";
+import { convertLocalPathToRemotePath, getUploadingMessage, OverwriteChoice, shouldUploadUri, upload } from "../utils/uploadUtils";
 
 let lastUriUpload: Uri | undefined;
 
@@ -81,7 +80,7 @@ async function uploadFilesHelper(
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
 
         const localFilePath: string = uri.fsPath;
-        const remoteFilePath: string = basename(localFilePath);
+        const remoteFilePath: string = convertLocalPathToRemotePath(localFilePath);
         const id: string = `${treeItem.fullId}/${remoteFilePath}`;
         const result = await treeItem.treeDataProvider.findTreeItem(id, context);
         if (result) {
