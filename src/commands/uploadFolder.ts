@@ -21,7 +21,6 @@ export async function uploadFolder(
 ): Promise<void> {
     let shouldCheckUri: boolean = false;
     if (uri === undefined) {
-        // tslint:disable: strict-boolean-expressions
         uri = (await ext.ui.showOpenDialog({
             canSelectFiles: false,
             canSelectFolders: true,
@@ -32,6 +31,7 @@ export async function uploadFolder(
         shouldCheckUri = true;
     }
 
+    // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
 
     if (shouldCheckUri && !(await shouldUploadUri(treeItem, uri, { choice: undefined }))) {
