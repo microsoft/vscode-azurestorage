@@ -94,12 +94,19 @@ export async function doesBlobDirectoryExist(treeItem: BlobContainerTreeItem | B
     }
 
     const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(treeItem.root, treeItem.container.name);
+    const response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(sep, { prefix: blobDirectoryName }).byPage({ maxPageSize: 1 });
 
-    // tslint:disable-next-line: await-promise
-    for await (let _ of containerClient.listBlobsByHierarchy(sep, { prefix: blobDirectoryName })) {
-        // Blobs exist under this directory so the directory exists
-        return true;
+    // tslint:disable-next-line: no-unsafe-any
+    let responseValue: azureStorageBlob.ListBlobsHierarchySegmentResponse | undefined = (await response.next()).value;
+    while (responseValue) {
+        if (responseValue.segment.blobItems.length || responseValue.segment.blobPrefixes?.length) {
+            return true;
+        }
+
+        // tslint:disable-next-line: no-unsafe-any
+        responseValue = (await response.next()).value;
     }
+
     return false;
 }
 
