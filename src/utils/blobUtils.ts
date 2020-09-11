@@ -87,6 +87,24 @@ export async function doesBlobExist(treeItem: BlobContainerTreeItem | BlobDirect
     return blobClient.exists();
 }
 
+export async function doesBlobDirectoryExist(treeItem: BlobContainerTreeItem | BlobDirectoryTreeItem, blobDirectoryName: string): Promise<boolean> {
+    const sep: string = path.posix.sep;
+    if (!blobDirectoryName.endsWith(sep)) {
+        blobDirectoryName = `${blobDirectoryName}${sep}`;
+    }
+
+    const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(treeItem.root, treeItem.container.name);
+    const response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(sep, { prefix: blobDirectoryName }).byPage({ maxPageSize: 1 });
+
+    for await (const responseValue of response) {
+        if (responseValue.segment.blobItems.length || responseValue.segment.blobPrefixes?.length) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 export async function getExistingProperties(parent: BlobTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<azureStorageBlob.BlockBlobUploadOptions | undefined> {
     const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(parent.root, parent.container.name, blobPath);
     if (await blockBlobClient.exists()) {
