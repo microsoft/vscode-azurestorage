@@ -29,7 +29,6 @@ export async function uploadFiles(
 ): Promise<void> {
     let shouldCheckUris: boolean = false;
     if (uris === undefined) {
-        // tslint:disable: strict-boolean-expressions
         uris = await ext.ui.showOpenDialog(
             {
                 canSelectFiles: true,
@@ -45,6 +44,7 @@ export async function uploadFiles(
         shouldCheckUris = true;
     }
 
+    // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     let urisToUpload: Uri[] = [];
     if (shouldCheckUris) {
