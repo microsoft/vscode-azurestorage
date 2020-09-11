@@ -6,7 +6,7 @@
 import { ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 import { AccountSASPermissions, AccountSASSignatureValues, ContainerClient } from "@azure/storage-blob";
 import { ShareClient } from "@azure/storage-file-share";
-import { sep } from "path";
+import { posix, sep } from "path";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { BlobDirectoryTreeItem } from "../../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../../tree/blob/BlobTreeItem";
@@ -26,8 +26,8 @@ export function createAzCopyLocalLocation(path: string, isFolder?: boolean): ILo
 }
 
 export function createAzCopyRemoteLocation(treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | FileTreeItem | DirectoryTreeItem | FileShareTreeItem, path: string, isFolder?: boolean): IRemoteSasLocation {
-    if (isFolder && !path.endsWith(sep)) {
-        path += sep;
+    if (isFolder && !path.endsWith(posix.sep)) {
+        path += posix.sep;
     }
 
     let resourceUri: string;
@@ -47,6 +47,6 @@ export function createAzCopyRemoteLocation(treeItem: BlobTreeItem | BlobDirector
     };
     const sasToken: string = treeItem.root.generateSasToken(accountSASSignatureValues);
     // Ensure path begins with '/' to transfer properly
-    path = path[0] === '/' ? path : `/${path}`;
+    path = path[0] === posix.sep ? path : `${posix.sep}${path}`;
     return { type: 'RemoteSas', sasToken, resourceUri, path, useWildCard: !!isFolder };
 }
