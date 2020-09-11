@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
-## 0.10.0 - 2020-09-11
+## 0.10.0 - 2020-09-14
 ### Added
 - File and folder transfers now use AzCopy for faster performance
 - Upload multiple files using the `Upload Files...` command
