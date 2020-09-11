@@ -94,12 +94,11 @@ export async function doesBlobDirectoryExist(treeItem: BlobContainerTreeItem | B
     }
 
     const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(treeItem.root, treeItem.container.name);
-    const prefix: string | undefined = treeItem instanceof BlobDirectoryTreeItem ? treeItem.dirPath : undefined;
+
     // tslint:disable-next-line: await-promise
-    for await (const item of containerClient.listBlobsByHierarchy(sep, { prefix })) {
-        if (item.kind === "prefix" && item.name === blobDirectoryName) {
-            return true;
-        }
+    for await (let _ of containerClient.listBlobsByHierarchy(sep, { prefix: blobDirectoryName })) {
+        // Blobs exist under this directory so the directory exists
+        return true;
     }
     return false;
 }
