@@ -117,4 +117,3 @@ async function getNumResourcesInDirectory(directoryPath: string, countFolders?: 
     const resources: readdirp.EntryInfo[] = await readdirp.promise(directoryPath, options);
     return resources.length;
 }
-
