@@ -8,7 +8,7 @@ import { ext } from './extensionVariables';
 
 export class TransferProgress {
     private message: string = '';
-    private percentage: number | undefined;
+    private percentage: number = 0;
     private lastPercentage: number = 0;
     private lastUpdated: number = Date.now();
 
@@ -25,7 +25,7 @@ export class TransferProgress {
         // progress not displaying in the notification window. So debounce calls to notificationProgress.report
         if (this.lastUpdated + this.updateTimerMs < Date.now()) {
             this.preReport(finishedWork);
-            if (this.percentage && this.percentage !== this.lastPercentage) {
+            if (this.percentage !== this.lastPercentage) {
                 notificationProgress.report({ message: this.message, increment: this.percentage - this.lastPercentage });
             }
             this.postReport();
@@ -43,17 +43,15 @@ export class TransferProgress {
 
     private preReport(finishedWork: number): void {
         if (this.totalWork) {
+            // Only update message if `totalWork` is valid
             this.percentage = Math.trunc((finishedWork / this.totalWork) * 100);
+            const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
+            this.message = `${prefix}${finishedWork}/${this.totalWork} (${this.percentage}%)`;
         }
-        const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
-        // tslint:disable-next-line: strict-boolean-expressions
-        this.message = `${prefix}${finishedWork}/${this.totalWork || '?'} (${this.percentage || '?'}%)`;
     }
 
     private postReport(): void {
-        if (this.percentage) {
-            this.lastPercentage = this.percentage;
-        }
+        this.lastPercentage = this.percentage;
         this.lastUpdated = Date.now();
     }
 }
