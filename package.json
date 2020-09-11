@@ -54,7 +54,7 @@
         "onCommand:azureStorage.uploadFiles",
         "onCommand:azureStorage.uploadFolder",
         "onCommand:azureStorage.deleteBlob",
-        "onCommand:azureStorage.downloadFile",
+        "onCommand:azureStorage.download",
         "onCommand:azureStorage.createFileShare",
         "onCommand:azureStorage.deleteFileShare",
         "onCommand:azureStorage.deleteStorageAccount",
@@ -225,7 +225,7 @@
                 "category": "Azure Storage"
             },
             {
-                "command": "azureStorage.downloadFile",
+                "command": "azureStorage.download",
                 "title": "Download...",
                 "category": "Azure Storage"
             },
@@ -509,8 +509,13 @@
                     "when": "view == azureStorage && viewItem == azureBlob"
                 },
                 {
-                    "command": "azureStorage.downloadFile",
+                    "command": "azureStorage.download",
                     "when": "view == azureStorage && viewItem == azureBlob",
+                    "group": "3_download"
+                },
+                {
+                    "command": "azureStorage.download",
+                    "when": "view == azureStorage && viewItem == azureBlobDirectory",
                     "group": "3_download"
                 },
                 {
@@ -587,7 +592,7 @@
                 },
                 {
                     "$comment": "========= azureFile =========",
-                    "command": "azureStorage.downloadFile",
+                    "command": "azureStorage.download",
                     "when": "view == azureStorage && viewItem == azureFile",
                     "group": "3_download"
                 },
@@ -606,6 +611,11 @@
                     "command": "azureStorage.createFile",
                     "when": "view == azureStorage && viewItem == azureFileShareDirectory",
                     "group": "2_create@1"
+                },
+                {
+                    "command": "azureStorage.download",
+                    "when": "view == azureStorage && viewItem == azureFileShareDirectory",
+                    "group": "3_download"
                 },
                 {
                     "command": "azureStorage.createSubdirectory",
@@ -709,7 +719,7 @@
                     "when": "never"
                 },
                 {
-                    "command": "azureStorage.downloadFile",
+                    "command": "azureStorage.download",
                     "when": "never"
                 },
                 {

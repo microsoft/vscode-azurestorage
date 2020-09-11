@@ -75,16 +75,23 @@ async function startAndWaitForCopy(
     let jobId: string = await copyClient.copy(src, dst, options);
     let status: TransferStatus | undefined;
     let finishedWork: number;
+    let totalWork: number | undefined;
     while (!status || status.StatusType !== 'EndOfJob') {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'startAndWaitForCopy');
         status = (await copyClient.getJobInfo(jobId)).latestStatus;
 
+        // tslint:disable: strict-boolean-expressions
         // Directory transfers always have `useWildCard` set
-        // tslint:disable-next-line: strict-boolean-expressions
+        totalWork = (src.useWildCard ? status?.TotalTransfers : status?.TotalBytesEnumerated) || undefined;
         finishedWork = (src.useWildCard ? status?.TransfersCompleted : status?.BytesOverWire) || 0;
-        transferProgress.reportToOutputWindow(finishedWork);
-        if (!!notificationProgress) {
-            transferProgress.reportToNotification(finishedWork, notificationProgress);
+        // tslint:enable: strict-boolean-expressions
+
+        if (totalWork || transferProgress.totalWork) {
+            // Only report progress if we have `totalWork`
+            transferProgress.reportToOutputWindow(finishedWork, totalWork);
+            if (!!notificationProgress) {
+                transferProgress.reportToNotification(finishedWork, notificationProgress);
+            }
         }
         await delay(1000);
     }

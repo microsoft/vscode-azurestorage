@@ -8,7 +8,9 @@ import { AccountSASPermissions, AccountSASSignatureValues, ContainerClient } fro
 import { ShareClient } from "@azure/storage-file-share";
 import { sep } from "path";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
+import { BlobDirectoryTreeItem } from "../../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../../tree/blob/BlobTreeItem";
+import { DirectoryTreeItem } from "../../tree/fileShare/DirectoryTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "../../tree/fileShare/FileTreeItem";
 import { createBlobContainerClient } from "../../utils/blobUtils";
@@ -23,9 +25,13 @@ export function createAzCopyLocalLocation(path: string, isFolder?: boolean): ILo
     return { type: 'Local', path, useWildCard: !!isFolder };
 }
 
-export function createAzCopyRemoteLocation(treeItem: BlobTreeItem | BlobContainerTreeItem | FileTreeItem | FileShareTreeItem, path: string): IRemoteSasLocation {
+export function createAzCopyRemoteLocation(treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | FileTreeItem | DirectoryTreeItem | FileShareTreeItem, path: string, isFolder?: boolean): IRemoteSasLocation {
+    if (isFolder && !path.endsWith(sep)) {
+        path += sep;
+    }
+
     let resourceUri: string;
-    if (treeItem instanceof BlobTreeItem || treeItem instanceof BlobContainerTreeItem) {
+    if (treeItem instanceof BlobTreeItem || treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem) {
         const containerClient: ContainerClient = createBlobContainerClient(treeItem.root, treeItem.container.name);
         resourceUri = containerClient.url;
     } else {
@@ -37,10 +43,10 @@ export function createAzCopyRemoteLocation(treeItem: BlobTreeItem | BlobContaine
         expiresOn: new Date(Date.now() + threeDaysInMS),
         permissions: AccountSASPermissions.parse('rwl'), // read, write, list
         services: 'bf', // blob, file
-        resourceTypes: 'o' // object
+        resourceTypes: 'co' // container, object
     };
     const sasToken: string = treeItem.root.generateSasToken(accountSASSignatureValues);
     // Ensure path begins with '/' to transfer properly
     path = path[0] === '/' ? path : `/${path}`;
-    return { type: 'RemoteSas', sasToken, resourceUri, path, useWildCard: false };
+    return { type: 'RemoteSas', sasToken, resourceUri, path, useWildCard: !!isFolder };
 }
