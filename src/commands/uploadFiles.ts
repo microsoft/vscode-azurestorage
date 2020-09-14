@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { stat } from "fs-extra";
 import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
 import { IActionContext } from "vscode-azureextensionui";
 import { NotificationProgress } from "../constants";
@@ -50,7 +51,8 @@ export async function uploadFiles(
     if (shouldCheckUris) {
         let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
-            if (await shouldUploadUri(treeItem, uri, overwriteChoice)) {
+            if (!(await stat(uri.fsPath)).isDirectory() && await shouldUploadUri(treeItem, uri, overwriteChoice)) {
+                // Don't allow directories to sneak in https://github.com/microsoft/vscode-azurestorage/issues/803
                 urisToUpload.push(uri);
             }
         }
