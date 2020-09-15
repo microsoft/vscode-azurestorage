@@ -134,7 +134,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                     mustBeWebsiteCapable: true,
                     configureWebsite: false
                 });
-            await accountTreeItem.browseStaticWebsite();
+            await accountTreeItem.browseStaticWebsite(actionContext);
         });
     });
     registerCommand("azureStorage.uploadFiles", uploadFiles);
