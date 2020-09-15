@@ -35,6 +35,11 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         }
     }
 
+    if (!folderUris.length && !fileUris.length) {
+        // No URIs to upload
+        return;
+    }
+
     const title: string = getUploadingMessage(treeItem.label);
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const folderUri of folderUris) {

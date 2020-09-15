@@ -60,6 +60,11 @@ export async function uploadFiles(
         urisToUpload = uris;
     }
 
+    if (!urisToUpload.length) {
+        // No URIs to upload
+        return;
+    }
+
     if (notificationProgress && cancellationToken) {
         await uploadFilesHelper(context, treeItem, urisToUpload, notificationProgress, cancellationToken);
     } else {
