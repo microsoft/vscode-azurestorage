@@ -55,7 +55,7 @@ export async function selectStorageAccountTreeItemForCommand(
 
     if (options.mustBeWebsiteCapable) {
         let hostingStatus = await accountTreeItem.getActualWebsiteHostingStatus();
-        await accountTreeItem.ensureHostingCapable(hostingStatus);
+        await accountTreeItem.ensureHostingCapable(context, hostingStatus);
 
         if (options.configureWebsite && !hostingStatus.enabled) {
             context.telemetry.properties.cancelStep = 'StorageAccountWebSiteNotEnabled';

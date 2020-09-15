@@ -289,13 +289,13 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
     }
 
-    public async browseStaticWebsite(): Promise<void> {
+    public async browseStaticWebsite(context: IActionContext): Promise<void> {
         const configure: MessageItem = {
             title: "Configure website hosting"
         };
 
         let hostingStatus = await this.getActualWebsiteHostingStatus();
-        await this.ensureHostingCapable(hostingStatus);
+        await this.ensureHostingCapable(context, hostingStatus);
 
         if (!hostingStatus.enabled) {
             let msg = "Static website hosting is not enabled for this storage account.";
@@ -323,7 +323,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
     }
 
-    public async ensureHostingCapable(hostingStatus: WebsiteHostingStatus): Promise<void> {
+    public async ensureHostingCapable(context: IActionContext, hostingStatus: WebsiteHostingStatus): Promise<void> {
         if (!hostingStatus.capable) {
             // Doesn't support static website hosting. Try to narrow it down.
             let accountType: StorageTypes | undefined;
@@ -333,10 +333,11 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 // Ignore errors
             }
             if (accountType !== 'StorageV2') {
-                throw new Error("Only general purpose V2 storage accounts support static website hosting.");
+                context.errorHandling.suppressReportIssue = true;
+                throw new Error(localize('onlyGeneralPurposeV2', 'Only general purpose V2 storage accounts support static website hosting.'));
             }
 
-            throw new Error("This storage account does not support static website hosting.");
+            throw new Error(localize('doesntSupportHosting', 'This storage account does not support static website hosting.'));
         }
     }
 }
