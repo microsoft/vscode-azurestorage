@@ -43,7 +43,7 @@ export async function uploadLocalFolder(
     const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, true);
     const dst: IRemoteSasLocation = createAzCopyRemoteLocation(destTreeItem, destPath);
     const totalWork: number = await getNumResourcesInDirectory(sourcePath, countFoldersAsResources);
-    const transferProgress: TransferProgress = new TransferProgress(totalWork, messagePrefix, 'files');
+    const transferProgress: TransferProgress = new TransferProgress('files', totalWork, messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
 }
