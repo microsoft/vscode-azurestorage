@@ -310,7 +310,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, blobPath);
         // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
-        const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath);
+        const transferProgress: TransferProgress = new TransferProgress(totalBytes, blobPath, 'bytes');
         await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress, notificationProgress, cancellationToken);
     }
 

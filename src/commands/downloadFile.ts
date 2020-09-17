@@ -66,7 +66,7 @@ export async function download(
             totalWork = (await storageClient.getProperties()).contentLength;
         }
 
-        const transferProgress: TransferProgress = new TransferProgress(totalWork, remoteFileName);
+        const transferProgress: TransferProgress = new TransferProgress(totalWork, remoteFileName, 'bytes');
         const title: string = localize('downloadingTo', 'Downloading from "{0}" to "{1}"...', remoteFileName, uri.fsPath);
 
         ext.outputChannel.appendLog(title);

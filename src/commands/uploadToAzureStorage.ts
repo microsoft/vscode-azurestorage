@@ -51,7 +51,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     });
 
     await ext.tree.refresh(treeItem);
-    const complete: string = localize('uploadComplete', 'Upload to "{0}" is complete', treeItem.label);
+    const complete: string = localize('uploadComplete', 'Upload to "{0}" is complete.', treeItem.label);
     ext.outputChannel.appendLog(complete);
     vscode.window.showInformationMessage(complete);
 }
