@@ -51,4 +51,6 @@ export async function uploadFolder(
             await uploadLocalFolder(actionContext, nonNullValue(treeItem), sourcePath, nonNullValue(destPath), newNotificationProgress, newCancellationToken, destPath, treeItem instanceof FileShareTreeItem);
         });
     }
+
+    await ext.tree.refresh(treeItem);
 }
