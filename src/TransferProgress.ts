@@ -48,7 +48,7 @@ export class TransferProgress {
             this.percentage = Math.trunc((finishedWork / this.totalWork) * 100);
             const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
             // tslint:disable-next-line: strict-boolean-expressions
-            const units = this.units || '';
+            const units: string = this.units || '';
             this.message = `${prefix}${finishedWork}/${this.totalWork} ${units} (${this.percentage}%)`;
         }
     }
