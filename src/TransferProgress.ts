@@ -13,6 +13,7 @@ export class TransferProgress {
     private lastUpdated: number = Date.now();
 
     constructor(
+        private readonly units: 'bytes' | 'files' | 'blobs',
         public totalWork?: number,
         private readonly messagePrefix?: string,
         private readonly updateTimerMs: number = 200
@@ -46,7 +47,7 @@ export class TransferProgress {
             // Only update message if `totalWork` is valid
             this.percentage = Math.trunc((finishedWork / this.totalWork) * 100);
             const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
-            this.message = `${prefix}${finishedWork}/${this.totalWork} (${this.percentage}%)`;
+            this.message = `${prefix}${finishedWork}/${this.totalWork} ${this.units} (${this.percentage}%)`;
         }
     }
 
