@@ -5,12 +5,12 @@
 
 import { stat } from "fs-extra";
 import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
-import { IActionContext } from "vscode-azureextensionui";
+import { IActionContext, IParsedError, parseError } from "vscode-azureextensionui";
 import { NotificationProgress } from "../constants";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
-import { throwIfCanceled } from "../utils/errorUtils";
+import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
 import { convertLocalPathToRemotePath, getUploadingMessage, OverwriteChoice, shouldUploadUri, upload } from "../utils/uploadUtils";
 
@@ -27,8 +27,8 @@ export async function uploadFiles(
     uris?: Uri[],
     notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken
-): Promise<void> {
-    let shouldCheckUris: boolean = false;
+): Promise<IParsedError[]> {
+    const calledFromUploadToAzureStorage: boolean = uris !== undefined;
     if (uris === undefined) {
         uris = await ext.ui.showOpenDialog(
             {
@@ -42,13 +42,12 @@ export async function uploadFiles(
                 openLabel: upload
             }
         );
-        shouldCheckUris = true;
     }
 
     // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     let urisToUpload: Uri[] = [];
-    if (shouldCheckUris) {
+    if (!calledFromUploadToAzureStorage) {
         let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
             if (!(await stat(uri.fsPath)).isDirectory() && await shouldUploadUri(treeItem, uri, overwriteChoice)) {
@@ -61,16 +60,16 @@ export async function uploadFiles(
     }
 
     if (!urisToUpload.length) {
-        // No URIs to upload
-        return;
+        // No URIs to upload and no errors to report
+        return [];
     }
 
     if (notificationProgress && cancellationToken) {
-        await uploadFilesHelper(context, treeItem, urisToUpload, notificationProgress, cancellationToken);
+        return await uploadFilesHelper(context, treeItem, urisToUpload, notificationProgress, cancellationToken, calledFromUploadToAzureStorage);
     } else {
         const title: string = getUploadingMessage(treeItem.label);
-        await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-            await uploadFilesHelper(context, nonNullValue(treeItem), urisToUpload, newNotificationProgress, newCancellationToken);
+        return await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
+            return await uploadFilesHelper(context, nonNullValue(treeItem), urisToUpload, newNotificationProgress, newCancellationToken, calledFromUploadToAzureStorage);
         });
     }
 }
@@ -80,9 +79,11 @@ async function uploadFilesHelper(
     treeItem: BlobContainerTreeItem | FileShareTreeItem,
     uris: Uri[],
     notificationProgress: NotificationProgress,
-    cancellationToken: CancellationToken
-): Promise<void> {
+    cancellationToken: CancellationToken,
+    calledFromUploadToAzureStorage: boolean
+): Promise<IParsedError[]> {
     lastUriUpload = uris[0];
+    const errors: IParsedError[] = [];
     for (const uri of uris) {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
 
@@ -90,11 +91,32 @@ async function uploadFilesHelper(
         const remoteFilePath: string = convertLocalPathToRemotePath(localFilePath);
         const id: string = `${treeItem.fullId}/${remoteFilePath}`;
         const result = await treeItem.treeDataProvider.findTreeItem(id, context);
-        if (result) {
-            // A treeItem for this file already exists, no need to do anything with the tree, just upload
-            await treeItem.uploadLocalFile(context, localFilePath, remoteFilePath, notificationProgress, cancellationToken);
-        } else {
-            await treeItem.createChild(<IExistingFileContext>{ ...context, remoteFilePath, localFilePath });
+        try {
+            if (result) {
+                // A treeItem for this file already exists, no need to do anything with the tree, just upload
+                await treeItem.uploadLocalFile(context, localFilePath, remoteFilePath, notificationProgress, cancellationToken);
+            } else {
+                await treeItem.createChild(<IExistingFileContext>{ ...context, remoteFilePath, localFilePath });
+            }
+        } catch (error) {
+            const parsedError: IParsedError = parseError(error);
+            if (isAzCopyError(parsedError)) {
+                errors.push(parsedError);
+            } else {
+                throw error;
+            }
         }
+    }
+
+    if (calledFromUploadToAzureStorage) {
+        // `uploadToAzureStorage` will deal with any errors
+        return errors;
+    } else if (errors.length === 1) {
+        throw errors[0];
+    } else if (errors.length > 1) {
+        throw new Error(multipleAzCopyErrorsMessage);
+    } else {
+        // No errors
+        return [];
     }
 }

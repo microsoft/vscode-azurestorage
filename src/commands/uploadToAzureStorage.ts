@@ -5,11 +5,11 @@
 
 import { stat } from 'fs-extra';
 import * as vscode from 'vscode';
-import { IActionContext } from 'vscode-azureextensionui';
+import { IActionContext, IParsedError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
-import { throwIfCanceled } from '../utils/errorUtils';
+import { multipleAzCopyErrorsMessage, throwIfCanceled } from '../utils/errorUtils';
 import { localize } from '../utils/localize';
 import { getUploadingMessage, OverwriteChoice, shouldUploadUri } from '../utils/uploadUtils';
 import { uploadFiles } from './uploadFiles';
@@ -40,18 +40,26 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         return;
     }
 
+    const errors: IParsedError[] = [];
     const title: string = getUploadingMessage(treeItem.label);
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const folderUri of folderUris) {
             throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
-            await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken);
+            errors.push(...(await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken)));
         }
 
-        await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken);
+        errors.push(...(await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken)));
     });
 
+    if (errors.length === 1) {
+        throw errors[0];
+    } else if (errors.length > 1) {
+        throw new Error(multipleAzCopyErrorsMessage);
+    } else {
+        const complete: string = localize('uploadComplete', 'Upload to "{0}" is complete.', treeItem.label);
+        ext.outputChannel.appendLog(complete);
+        vscode.window.showInformationMessage(complete);
+    }
+
     await ext.tree.refresh(treeItem);
-    const complete: string = localize('uploadComplete', 'Upload to "{0}" is complete.', treeItem.label);
-    ext.outputChannel.appendLog(complete);
-    vscode.window.showInformationMessage(complete);
 }

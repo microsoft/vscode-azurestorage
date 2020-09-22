@@ -4,7 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { IParsedError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { localize } from './localize';
+
+export const multipleAzCopyErrorsMessage: string = localize('multipleAzCopyErrors', 'Multiple AzCopy errors occurred while uploading. Check the output window for more details.');
 
 export function throwIfCanceled(cancellationToken: vscode.CancellationToken | undefined, properties: TelemetryProperties | undefined, cancelStep: string): void {
     if (cancellationToken && cancellationToken.isCancellationRequested) {
@@ -13,4 +16,8 @@ export function throwIfCanceled(cancellationToken: vscode.CancellationToken | un
         }
         throw new UserCancelledError();
     }
+}
+
+export function isAzCopyError(parsedError: IParsedError): boolean {
+    return /azcopy/i.test(parsedError.message);
 }
