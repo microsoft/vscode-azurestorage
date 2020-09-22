@@ -118,7 +118,8 @@ export function convertLocalPathToRemotePath(localPath: string, destinationDirec
 
 export async function promptForDestinationDirectory(): Promise<string> {
     return await ext.ui.showInputBox({
-        prompt: localize('destinationDirectory', 'Enter the destination directory for this upload.')
+        value: posix.sep,
+        prompt: localize('destinationDirectory', 'Enter the destination directory for this upload.'),
     });
 }
 
