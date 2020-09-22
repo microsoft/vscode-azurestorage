@@ -12,7 +12,7 @@ import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
-import { convertLocalPathToRemotePath, getUploadingMessage, OverwriteChoice, shouldUploadUri, upload } from "../utils/uploadUtils";
+import { convertLocalPathToRemotePath, getUploadingMessage, OverwriteChoice, promptForDestinationDirectory, shouldUploadUri, upload } from "../utils/uploadUtils";
 
 let lastUriUpload: Uri | undefined;
 
@@ -26,7 +26,8 @@ export async function uploadFiles(
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
     uris?: Uri[],
     notificationProgress?: NotificationProgress,
-    cancellationToken?: CancellationToken
+    cancellationToken?: CancellationToken,
+    destinationDirectory?: string
 ): Promise<void> {
     let shouldCheckUris: boolean = false;
     if (uris === undefined) {
@@ -47,11 +48,12 @@ export async function uploadFiles(
 
     // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
+    destinationDirectory = destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory();
     let urisToUpload: Uri[] = [];
     if (shouldCheckUris) {
         let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
-            if (!(await stat(uri.fsPath)).isDirectory() && await shouldUploadUri(treeItem, uri, overwriteChoice)) {
+            if (!(await stat(uri.fsPath)).isDirectory() && await shouldUploadUri(treeItem, uri, overwriteChoice, destinationDirectory)) {
                 // Don't allow directories to sneak in https://github.com/microsoft/vscode-azurestorage/issues/803
                 urisToUpload.push(uri);
             }
@@ -66,11 +68,11 @@ export async function uploadFiles(
     }
 
     if (notificationProgress && cancellationToken) {
-        await uploadFilesHelper(context, treeItem, urisToUpload, notificationProgress, cancellationToken);
+        await uploadFilesHelper(context, treeItem, urisToUpload, notificationProgress, cancellationToken, destinationDirectory);
     } else {
         const title: string = getUploadingMessage(treeItem.label);
         await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-            await uploadFilesHelper(context, nonNullValue(treeItem), urisToUpload, newNotificationProgress, newCancellationToken);
+            await uploadFilesHelper(context, nonNullValue(treeItem), urisToUpload, newNotificationProgress, newCancellationToken, nonNullValue(destinationDirectory));
         });
     }
 }
@@ -80,14 +82,15 @@ async function uploadFilesHelper(
     treeItem: BlobContainerTreeItem | FileShareTreeItem,
     uris: Uri[],
     notificationProgress: NotificationProgress,
-    cancellationToken: CancellationToken
+    cancellationToken: CancellationToken,
+    destinationDirectory: string
 ): Promise<void> {
     lastUriUpload = uris[0];
     for (const uri of uris) {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
 
         const localFilePath: string = uri.fsPath;
-        const remoteFilePath: string = convertLocalPathToRemotePath(localFilePath);
+        const remoteFilePath: string = convertLocalPathToRemotePath(localFilePath, destinationDirectory);
         const id: string = `${treeItem.fullId}/${remoteFilePath}`;
         const result = await treeItem.treeDataProvider.findTreeItem(id, context);
         if (result) {

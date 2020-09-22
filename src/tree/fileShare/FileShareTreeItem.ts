@@ -132,10 +132,12 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         // Ensure parent directories exist before creating child files
         let partialParentDirectoryPath: string = '';
         for (let dir of parentDirectories) {
-            partialParentDirectoryPath += `${dir}/`;
-            if (!(await doesDirectoryExist(this, partialParentDirectoryPath, this.shareName))) {
-                const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, partialParentDirectoryPath);
-                await directoryClient.create();
+            if (!!dir) {
+                partialParentDirectoryPath += `${dir}/`;
+                if (!(await doesDirectoryExist(this, partialParentDirectoryPath, this.shareName))) {
+                    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, partialParentDirectoryPath);
+                    await directoryClient.create();
+                }
             }
         }
 

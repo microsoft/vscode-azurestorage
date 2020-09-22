@@ -11,12 +11,13 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { throwIfCanceled } from '../utils/errorUtils';
 import { localize } from '../utils/localize';
-import { getUploadingMessage, OverwriteChoice, shouldUploadUri } from '../utils/uploadUtils';
+import { getUploadingMessage, OverwriteChoice, promptForDestinationDirectory, shouldUploadUri } from '../utils/uploadUtils';
 import { uploadFiles } from './uploadFiles';
 import { uploadFolder } from './uploadFolder';
 
 export async function uploadToAzureStorage(actionContext: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
     const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
+    const destinationDirectory: string = await promptForDestinationDirectory();
     const folderUris: vscode.Uri[] = [];
     const fileUris: vscode.Uri[] = [];
     let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
@@ -26,7 +27,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
             throw new Error(localize('cannotUploadToAzureFromAzureResource', 'Cannot upload to Azure from an Azure resource.'));
         }
 
-        if (await shouldUploadUri(treeItem, uri, overwriteChoice)) {
+        if (await shouldUploadUri(treeItem, uri, overwriteChoice, destinationDirectory)) {
             if ((await stat(uri.fsPath)).isDirectory()) {
                 folderUris.push(uri);
             } else {
@@ -44,10 +45,10 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const folderUri of folderUris) {
             throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
-            await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken);
+            await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken, destinationDirectory);
         }
 
-        await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken);
+        await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken, destinationDirectory);
     });
 
     await ext.tree.refresh(treeItem);
