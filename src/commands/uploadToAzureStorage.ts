@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { stat } from 'fs-extra';
+import { dirname } from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
@@ -17,8 +18,9 @@ import { uploadFolder } from './uploadFolder';
 
 export async function uploadToAzureStorage(actionContext: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
     const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
+    let fileUris: vscode.Uri[] = [];
     const folderUris: vscode.Uri[] = [];
-    const fileUris: vscode.Uri[] = [];
+    const folderPathSet: Set<string> = new Set();
     let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
 
     for (const uri of uris) {
@@ -29,11 +31,20 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         if (await shouldUploadUri(treeItem, uri, overwriteChoice)) {
             if ((await stat(uri.fsPath)).isDirectory()) {
                 folderUris.push(uri);
+                folderPathSet.add(uri.fsPath);
             } else {
                 fileUris.push(uri);
             }
         }
     }
+
+    fileUris = fileUris.filter(fileUri => {
+        if (folderPathSet.has(dirname(fileUri.fsPath))) {
+            // This file's containing folder is already being uploaded. So don't upload this file.
+            return;
+        }
+        return fileUri;
+    });
 
     if (!folderUris.length && !fileUris.length) {
         // No URIs to upload
