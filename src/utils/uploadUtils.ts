@@ -122,6 +122,10 @@ export async function promptForDestinationDirectory(): Promise<string> {
     });
 }
 
+export async function getDestinationDirectory(destinationDirectory?: string): Promise<string> {
+    return destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory();
+}
+
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {
     const options: readdirp.ReaddirpOptions = {
         directoryFilter: ['!.git', '!.vscode'],

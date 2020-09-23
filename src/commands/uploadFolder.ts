@@ -10,7 +10,7 @@ import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { nonNullValue } from '../utils/nonNull';
-import { convertLocalPathToRemotePath, getUploadingMessageWithSource, promptForDestinationDirectory, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
 
 export async function uploadFolder(
     actionContext: IActionContext,
@@ -34,7 +34,7 @@ export async function uploadFolder(
 
     // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
-    destinationDirectory = destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory();
+    destinationDirectory = await getDestinationDirectory(destinationDirectory);
 
     if (shouldCheckUri && !(await shouldUploadUri(treeItem, uri, { choice: undefined }, destinationDirectory))) {
         // Don't upload this folder

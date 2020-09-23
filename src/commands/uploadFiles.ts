@@ -12,7 +12,7 @@ import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
-import { convertLocalPathToRemotePath, getUploadingMessage, OverwriteChoice, promptForDestinationDirectory, shouldUploadUri, upload } from "../utils/uploadUtils";
+import { convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, shouldUploadUri, upload } from "../utils/uploadUtils";
 
 let lastUriUpload: Uri | undefined;
 
@@ -48,7 +48,7 @@ export async function uploadFiles(
 
     // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
-    destinationDirectory = destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory();
+    destinationDirectory = await getDestinationDirectory(destinationDirectory);
     let urisToUpload: Uri[] = [];
     if (shouldCheckUris) {
         let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
