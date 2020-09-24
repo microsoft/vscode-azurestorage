@@ -11,7 +11,7 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { isAzCopyError } from '../utils/errorUtils';
 import { nonNullValue } from '../utils/nonNull';
-import { convertLocalPathToRemotePath, getUploadingMessageWithSource, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
 
 export async function uploadFolder(
     actionContext: IActionContext,
@@ -19,6 +19,7 @@ export async function uploadFolder(
     uri?: vscode.Uri,
     notificationProgress?: NotificationProgress,
     cancellationToken?: vscode.CancellationToken,
+    destinationDirectory?: string
 ): Promise<IParsedError[]> {
     const calledFromUploadToAzureStorage: boolean = uri !== undefined;
     if (uri === undefined) {
@@ -33,14 +34,15 @@ export async function uploadFolder(
 
     // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
+    destinationDirectory = await getDestinationDirectory(destinationDirectory);
 
-    if (!calledFromUploadToAzureStorage && !(await shouldUploadUri(treeItem, uri, { choice: undefined }))) {
+    if (!calledFromUploadToAzureStorage && !(await shouldUploadUri(treeItem, uri, { choice: undefined }, destinationDirectory))) {
         // Don't upload this folder
         return [];
     }
 
     const sourcePath: string = uri.fsPath;
-    const destPath: string = convertLocalPathToRemotePath(sourcePath);
+    const destPath: string = convertLocalPathToRemotePath(sourcePath, destinationDirectory);
 
     try {
         if (notificationProgress && cancellationToken) {

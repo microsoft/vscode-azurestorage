@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
-import { basename } from 'path';
+import { basename, dirname, posix } from 'path';
 import * as readdirp from 'readdirp';
 import * as vscode from 'vscode';
 import { DialogResponses, IActionContext } from "vscode-azureextensionui";
@@ -68,19 +68,19 @@ async function showDuplicateResourceWarning(resourceName: string): Promise<Overw
 }
 
 // Pass `overwriteChoice` as an object to make use of pass by reference.
-export async function shouldUploadUri(treeItem: BlobContainerTreeItem | FileShareTreeItem, uri: vscode.Uri, overwriteChoice: { choice: OverwriteChoice | undefined }): Promise<boolean> {
+export async function shouldUploadUri(treeItem: BlobContainerTreeItem | FileShareTreeItem, uri: vscode.Uri, overwriteChoice: { choice: OverwriteChoice | undefined }, destinationDirectory: string): Promise<boolean> {
     if (overwriteChoice.choice === OverwriteChoice.yesToAll) {
         // Always upload
         return true;
     }
 
     const localResourcePath: string = uri.fsPath;
-    const remoteResourceName: string = convertLocalPathToRemotePath(localResourcePath);
+    const remoteResourceName: string = convertLocalPathToRemotePath(localResourcePath, destinationDirectory);
     let resourceExists: boolean;
     if (treeItem instanceof BlobContainerTreeItem) {
         resourceExists = await doesBlobExist(treeItem, remoteResourceName) || await doesBlobDirectoryExist(treeItem, remoteResourceName);
     } else {
-        resourceExists = await doesFileExist(remoteResourceName, treeItem, '', treeItem.shareName) || await doesDirectoryExist(treeItem, remoteResourceName, treeItem.shareName);
+        resourceExists = await doesFileExist(basename(remoteResourceName), treeItem, dirname(remoteResourceName), treeItem.shareName) || await doesDirectoryExist(treeItem, remoteResourceName, treeItem.shareName);
     }
 
     if (resourceExists) {
@@ -106,8 +106,25 @@ export async function shouldUploadUri(treeItem: BlobContainerTreeItem | FileShar
     }
 }
 
-export function convertLocalPathToRemotePath(localPath: string): string {
-    return basename(localPath);
+export function convertLocalPathToRemotePath(localPath: string, destinationDirectory: string): string {
+    let path: string = posix.join(destinationDirectory, basename(localPath));
+    if (path.startsWith(posix.sep)) {
+        // `BlobClient` and `ShareFileClient` treat resource paths that start with "/" differently from those that don't. So remove the leading "/".
+        // This check is done after `posix.join()` because that function removes any duplicate slashes from the beginning of the path.
+        path = path.substr(1);
+    }
+    return path;
+}
+
+export async function promptForDestinationDirectory(): Promise<string> {
+    return await ext.ui.showInputBox({
+        value: posix.sep,
+        prompt: localize('destinationDirectory', 'Enter the destination directory for this upload.'),
+    });
+}
+
+export async function getDestinationDirectory(destinationDirectory?: string): Promise<string> {
+    return destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory();
 }
 
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {
