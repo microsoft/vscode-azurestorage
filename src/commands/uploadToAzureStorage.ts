@@ -19,7 +19,7 @@ import { uploadFolder } from './uploadFolder';
 export async function uploadToAzureStorage(actionContext: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
     const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
     let fileUris: vscode.Uri[] = [];
-    const folderUris: vscode.Uri[] = [];
+    let folderUris: vscode.Uri[] = [];
     const folderPathSet: Set<string> = new Set();
     let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
 
@@ -38,13 +38,9 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         }
     }
 
-    fileUris = fileUris.filter(fileUri => {
-        if (folderPathSet.has(dirname(fileUri.fsPath))) {
-            // This file's containing folder is already being uploaded. So don't upload this file.
-            return;
-        }
-        return fileUri;
-    });
+    // Only upload files and folders if their containing folder isn't already being uploaded.
+    fileUris = fileUris.filter(fileUri => !folderPathSet.has(dirname(fileUri.fsPath)));
+    folderUris = folderUris.filter(folderUri => !folderPathSet.has(dirname(folderUri.fsPath)));
 
     if (!folderUris.length && !fileUris.length) {
         // No URIs to upload
