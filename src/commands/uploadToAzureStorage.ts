@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { stat } from 'fs-extra';
-import { dirname } from 'path';
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { throwIfCanceled } from '../utils/errorUtils';
+import { isSubpath } from '../utils/fs';
 import { localize } from '../utils/localize';
 import { getUploadingMessage, OverwriteChoice, promptForDestinationDirectory, shouldUploadUri } from '../utils/uploadUtils';
 import { uploadFiles } from './uploadFiles';
@@ -21,7 +21,6 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     const destinationDirectory: string = await promptForDestinationDirectory();
     let fileUris: vscode.Uri[] = [];
     let folderUris: vscode.Uri[] = [];
-    const folderPathSet: Set<string> = new Set();
     let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
 
     for (const uri of uris) {
@@ -32,7 +31,6 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         if (await shouldUploadUri(treeItem, uri, overwriteChoice, destinationDirectory)) {
             if ((await stat(uri.fsPath)).isDirectory()) {
                 folderUris.push(uri);
-                folderPathSet.add(uri.fsPath);
             } else {
                 fileUris.push(uri);
             }
@@ -40,8 +38,23 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     }
 
     // Only upload files and folders if their containing folder isn't already being uploaded.
-    fileUris = fileUris.filter(fileUri => !folderPathSet.has(dirname(fileUri.fsPath)));
-    folderUris = folderUris.filter(folderUri => !folderPathSet.has(dirname(folderUri.fsPath)));
+    folderUris = folderUris.filter(folderUri => {
+        for (const parentFolderUri of folderUris) {
+            if (folderUri !== parentFolderUri && isSubpath(parentFolderUri.fsPath, folderUri.fsPath)) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    fileUris = fileUris.filter(fileUri => {
+        for (const folderUri of folderUris) {
+            if (isSubpath(folderUri.fsPath, fileUri.fsPath)) {
+                return false;
+            }
+        }
+        return true;
+    });
 
     if (!folderUris.length && !fileUris.length) {
         // No URIs to upload
