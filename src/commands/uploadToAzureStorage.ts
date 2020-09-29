@@ -10,6 +10,7 @@ import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { multipleAzCopyErrorsMessage, throwIfCanceled } from '../utils/errorUtils';
+import { isSubpath } from '../utils/fs';
 import { localize } from '../utils/localize';
 import { getUploadingMessage, OverwriteChoice, promptForDestinationDirectory, shouldUploadUri } from '../utils/uploadUtils';
 import { uploadFiles } from './uploadFiles';
@@ -18,8 +19,8 @@ import { uploadFolder } from './uploadFolder';
 export async function uploadToAzureStorage(actionContext: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
     const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
     const destinationDirectory: string = await promptForDestinationDirectory();
-    const folderUris: vscode.Uri[] = [];
-    const fileUris: vscode.Uri[] = [];
+    let fileUris: vscode.Uri[] = [];
+    let folderUris: vscode.Uri[] = [];
     let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
 
     for (const uri of uris) {
@@ -35,6 +36,25 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
             }
         }
     }
+
+    // Only upload files and folders if their containing folder isn't already being uploaded.
+    folderUris = folderUris.filter(folderUri => {
+        for (const parentFolderUri of folderUris) {
+            if (folderUri !== parentFolderUri && isSubpath(parentFolderUri.fsPath, folderUri.fsPath)) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    fileUris = fileUris.filter(fileUri => {
+        for (const folderUri of folderUris) {
+            if (isSubpath(folderUri.fsPath, fileUri.fsPath)) {
+                return false;
+            }
+        }
+        return true;
+    });
 
     if (!folderUris.length && !fileUris.length) {
         // No URIs to upload
