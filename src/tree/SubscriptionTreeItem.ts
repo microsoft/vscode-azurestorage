@@ -69,9 +69,8 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             wizardContext.newResourceGroupName = await wizardContext.relatedNameTask;
         }
 
-        await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
+        await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async () => {
             context.showCreatingTreeItem(nonNull(wizardContext.newStorageAccountName));
-            progress.report({ message: `Creating storage account '${wizardContext.newStorageAccountName}'` });
             await wizard.execute();
         });
 
