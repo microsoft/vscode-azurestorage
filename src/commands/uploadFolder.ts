@@ -12,6 +12,7 @@ import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { isAzCopyError } from '../utils/errorUtils';
 import { nonNullValue } from '../utils/nonNull';
 import { convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { IAzCopyResolution } from './azCopy/IAzCopyResolution';
 
 export async function uploadFolder(
     actionContext: IActionContext,
@@ -20,7 +21,8 @@ export async function uploadFolder(
     notificationProgress?: NotificationProgress,
     cancellationToken?: vscode.CancellationToken,
     destinationDirectory?: string
-): Promise<IParsedError[]> {
+): Promise<IAzCopyResolution> {
+    const calledFromUploadToAzureStorage: boolean = uri !== undefined;
     if (uri === undefined) {
         uri = (await ext.ui.showOpenDialog({
             canSelectFiles: false,
@@ -35,10 +37,10 @@ export async function uploadFolder(
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
 
-    const calledFromUploadToAzureStorage: boolean = uri !== undefined;
+    const resolution: IAzCopyResolution = { errors: [] };
     if (!calledFromUploadToAzureStorage && !(await shouldUploadUri(treeItem, uri, { choice: undefined }, destinationDirectory))) {
         // Don't upload this folder
-        return [];
+        return resolution;
     }
 
     const sourcePath: string = uri.fsPath;
@@ -58,12 +60,12 @@ export async function uploadFolder(
         const parsedError: IParsedError = parseError(error);
         if (calledFromUploadToAzureStorage && isAzCopyError(parsedError)) {
             // `uploadToAzureStorage` will deal with this error
-            return [parsedError];
+            resolution.errors.push(parsedError);
         } else {
             throw error;
         }
     }
 
     await ext.tree.refresh(treeItem);
-    return [];
+    return resolution;
 }

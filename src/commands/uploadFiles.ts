@@ -13,6 +13,7 @@ import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
 import { convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, shouldUploadUri, upload } from "../utils/uploadUtils";
+import { IAzCopyResolution } from "./azCopy/IAzCopyResolution";
 
 let lastUriUpload: Uri | undefined;
 
@@ -28,7 +29,8 @@ export async function uploadFiles(
     notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken,
     destinationDirectory?: string
-): Promise<IParsedError[]> {
+): Promise<IAzCopyResolution> {
+    const calledFromUploadToAzureStorage: boolean = uris !== undefined;
     if (uris === undefined) {
         uris = await ext.ui.showOpenDialog(
             {
@@ -48,7 +50,6 @@ export async function uploadFiles(
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
     let urisToUpload: Uri[] = [];
-    const calledFromUploadToAzureStorage: boolean = uris !== undefined;
     if (!calledFromUploadToAzureStorage) {
         let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
@@ -63,7 +64,7 @@ export async function uploadFiles(
 
     if (!urisToUpload.length) {
         // No URIs to upload and no errors to report
-        return [];
+        return { errors: [] };
     }
 
     if (notificationProgress && cancellationToken) {
@@ -84,9 +85,9 @@ async function uploadFilesHelper(
     cancellationToken: CancellationToken,
     destinationDirectory: string,
     calledFromUploadToAzureStorage: boolean
-): Promise<IParsedError[]> {
+): Promise<IAzCopyResolution> {
     lastUriUpload = uris[0];
-    const errors: IParsedError[] = [];
+    const resolution: IAzCopyResolution = { errors: [] };
     for (const uri of uris) {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');
 
@@ -104,22 +105,19 @@ async function uploadFilesHelper(
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             if (isAzCopyError(parsedError)) {
-                errors.push(parsedError);
+                resolution.errors.push(parsedError);
             } else {
                 throw error;
             }
         }
     }
 
-    if (calledFromUploadToAzureStorage) {
-        // `uploadToAzureStorage` will deal with any errors
-        return errors;
-    } else if (errors.length === 1) {
-        throw errors[0];
-    } else if (errors.length > 1) {
-        throw new Error(multipleAzCopyErrorsMessage);
+    if (calledFromUploadToAzureStorage || resolution.errors.length === 0) {
+        // No need to throw any errors from this function
+        return resolution;
+    } else if (resolution.errors.length === 1) {
+        throw resolution.errors[0];
     } else {
-        // No errors
-        return [];
+        throw new Error(multipleAzCopyErrorsMessage);
     }
 }

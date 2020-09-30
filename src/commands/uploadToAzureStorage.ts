@@ -66,10 +66,10 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const folderUri of folderUris) {
             throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
-            errors.push(...(await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken, destinationDirectory)));
+            errors.push(...(await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken, destinationDirectory)).errors);
         }
 
-        errors.push(...(await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken, destinationDirectory)));
+        errors.push(...(await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken, destinationDirectory)).errors);
     });
 
     if (errors.length === 1) {
