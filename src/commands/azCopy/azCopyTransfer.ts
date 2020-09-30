@@ -35,18 +35,14 @@ export async function azCopyTransfer(
         if (finalTransferStatus?.FailedTransfers?.length || finalTransferStatus?.SkippedTransfers?.length) {
             message += localize('checkOutputWindow', ' Check the output window for a list of incomplete transfers.');
 
-            // The optional "s" at the end of "transfer(s)"
-            let s: string;
             if (finalTransferStatus.FailedTransfers?.length) {
-                s = finalTransferStatus.FailedTransfers.length > 1 ? 's' : '';
-                ext.outputChannel.appendLog(localize('failedTransfers', 'Failed transfer{0}:', s));
+                ext.outputChannel.appendLog(localize('failedTransfers', 'Failed transfer(s):'));
                 for (let failedTransfer of finalTransferStatus.FailedTransfers) {
                     ext.outputChannel.appendLog(`\t${failedTransfer.Dst}`);
                 }
             }
             if (finalTransferStatus.SkippedTransfers?.length) {
-                s = finalTransferStatus.SkippedTransfers.length > 1 ? 's' : '';
-                ext.outputChannel.appendLog(localize('skippedTransfers', 'Skipped transfer{0}:', s));
+                ext.outputChannel.appendLog(localize('skippedTransfers', 'Skipped transfer(s):'));
                 for (let skippedTransfer of finalTransferStatus.SkippedTransfers) {
                     ext.outputChannel.appendLog(`\t${skippedTransfer.Dst}`);
                 }
