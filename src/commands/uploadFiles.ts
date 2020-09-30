@@ -29,7 +29,6 @@ export async function uploadFiles(
     cancellationToken?: CancellationToken,
     destinationDirectory?: string
 ): Promise<IParsedError[]> {
-    const calledFromUploadToAzureStorage: boolean = uris !== undefined;
     if (uris === undefined) {
         uris = await ext.ui.showOpenDialog(
             {
@@ -49,6 +48,7 @@ export async function uploadFiles(
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
     let urisToUpload: Uri[] = [];
+    const calledFromUploadToAzureStorage: boolean = uris !== undefined;
     if (!calledFromUploadToAzureStorage) {
         let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {

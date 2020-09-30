@@ -21,7 +21,6 @@ export async function uploadFolder(
     cancellationToken?: vscode.CancellationToken,
     destinationDirectory?: string
 ): Promise<IParsedError[]> {
-    const calledFromUploadToAzureStorage: boolean = uri !== undefined;
     if (uri === undefined) {
         uri = (await ext.ui.showOpenDialog({
             canSelectFiles: false,
@@ -36,6 +35,7 @@ export async function uploadFolder(
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
 
+    const calledFromUploadToAzureStorage: boolean = uri !== undefined;
     if (!calledFromUploadToAzureStorage && !(await shouldUploadUri(treeItem, uri, { choice: undefined }, destinationDirectory))) {
         // Don't upload this folder
         return [];
