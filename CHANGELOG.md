@@ -1,6 +1,13 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.10.1 - 2020-10-02
+### Added
+- Choose the destination directory when uploading resources
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-azurestorage/issues?utf8=%E2%9C%93&q=is%3Aclosed+is%3Aissue+milestone%3A0.10.1+)
+
 ## 0.10.0 - 2020-09-14
 ### Added
 - File and folder transfers now use AzCopy for faster performance
