@@ -4,13 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from 'vscode';
-import { IActionContext } from 'vscode-azureextensionui';
+import { IActionContext, IParsedError, parseError } from 'vscode-azureextensionui';
 import { NotificationProgress } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
+import { isAzCopyError } from '../utils/errorUtils';
 import { nonNullValue } from '../utils/nonNull';
 import { convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { IAzCopyResolution } from './azCopy/IAzCopyResolution';
 
 export async function uploadFolder(
     actionContext: IActionContext,
@@ -19,8 +21,8 @@ export async function uploadFolder(
     notificationProgress?: NotificationProgress,
     cancellationToken?: vscode.CancellationToken,
     destinationDirectory?: string
-): Promise<void> {
-    let shouldCheckUri: boolean = false;
+): Promise<IAzCopyResolution> {
+    const calledFromUploadToAzureStorage: boolean = uri !== undefined;
     if (uri === undefined) {
         uri = (await ext.ui.showOpenDialog({
             canSelectFiles: false,
@@ -29,30 +31,41 @@ export async function uploadFolder(
             defaultUri: vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 ? vscode.workspace.workspaceFolders[0].uri : undefined,
             openLabel: upload
         }))[0];
-        shouldCheckUri = true;
     }
 
     // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
 
-    if (shouldCheckUri && !(await shouldUploadUri(treeItem, uri, { choice: undefined }, destinationDirectory))) {
+    const resolution: IAzCopyResolution = { errors: [] };
+    if (!calledFromUploadToAzureStorage && !(await shouldUploadUri(treeItem, uri, { choice: undefined }, destinationDirectory))) {
         // Don't upload this folder
-        return;
+        return resolution;
     }
 
     const sourcePath: string = uri.fsPath;
     const destPath: string = convertLocalPathToRemotePath(sourcePath, destinationDirectory);
 
-    if (notificationProgress && cancellationToken) {
-        // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
-        await uploadLocalFolder(actionContext, treeItem, sourcePath, destPath, notificationProgress, cancellationToken, destPath, treeItem instanceof FileShareTreeItem);
-    } else {
-        const title: string = getUploadingMessageWithSource(sourcePath, treeItem.label);
-        await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-            await uploadLocalFolder(actionContext, nonNullValue(treeItem), sourcePath, nonNullValue(destPath), newNotificationProgress, newCancellationToken, destPath, treeItem instanceof FileShareTreeItem);
-        });
+    try {
+        if (notificationProgress && cancellationToken) {
+            // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
+            await uploadLocalFolder(actionContext, treeItem, sourcePath, destPath, notificationProgress, cancellationToken, destPath, treeItem instanceof FileShareTreeItem);
+        } else {
+            const title: string = getUploadingMessageWithSource(sourcePath, treeItem.label);
+            await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
+                await uploadLocalFolder(actionContext, nonNullValue(treeItem), sourcePath, nonNullValue(destPath), newNotificationProgress, newCancellationToken, destPath, treeItem instanceof FileShareTreeItem);
+            });
+        }
+    } catch (error) {
+        const parsedError: IParsedError = parseError(error);
+        if (calledFromUploadToAzureStorage && isAzCopyError(parsedError)) {
+            // `uploadToAzureStorage` will deal with this error
+            resolution.errors.push(parsedError);
+        } else {
+            throw error;
+        }
     }
 
     await ext.tree.refresh(treeItem);
+    return resolution;
 }
