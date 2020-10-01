@@ -5,9 +5,10 @@
 
 import * as vscode from 'vscode';
 import { IParsedError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { ext } from '../extensionVariables';
 import { localize } from './localize';
 
-export const multipleAzCopyErrorsMessage: string = localize('multipleAzCopyErrors', 'Multiple AzCopy errors occurred while uploading. Check the output window for more details.');
+export const multipleAzCopyErrorsMessage: string = localize('multipleAzCopyErrors', 'Multiple AzCopy errors occurred while uploading. Check the [output window](command:{0}) for more details.', `${ext.prefix}.showOutputChannel`);
 
 export function throwIfCanceled(cancellationToken: vscode.CancellationToken | undefined, properties: TelemetryProperties | undefined, cancelStep: string): void {
     if (cancellationToken && cancellationToken.isCancellationRequested) {
