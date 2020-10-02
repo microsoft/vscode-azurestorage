@@ -19,44 +19,56 @@ import { uploadFolder } from './uploadFolder';
 export async function uploadToAzureStorage(actionContext: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
     const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
     const destinationDirectory: string = await promptForDestinationDirectory();
-    let fileUris: vscode.Uri[] = [];
-    let folderUris: vscode.Uri[] = [];
-    let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+    const allFolderUris: vscode.Uri[] = [];
+    const allFileUris: vscode.Uri[] = [];
 
     for (const uri of uris) {
         if (uri.scheme === 'azurestorage') {
             throw new Error(localize('cannotUploadToAzureFromAzureResource', 'Cannot upload to Azure from an Azure resource.'));
         }
 
-        if (await shouldUploadUri(treeItem, uri, overwriteChoice, destinationDirectory)) {
-            if ((await stat(uri.fsPath)).isDirectory()) {
-                folderUris.push(uri);
-            } else {
-                fileUris.push(uri);
-            }
+        if ((await stat(uri.fsPath)).isDirectory()) {
+            allFolderUris.push(uri);
+        } else {
+            allFileUris.push(uri);
         }
     }
 
-    // Only upload files and folders if their containing folder isn't already being uploaded.
-    folderUris = folderUris.filter(folderUri => {
-        for (const parentFolderUri of folderUris) {
+    let hasParent: boolean;
+    let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+    const folderUrisToUpload: vscode.Uri[] = [];
+    const fileUrisToUpload: vscode.Uri[] = [];
+
+    // Only upload folders and files if their containing folder isn't already being uploaded.
+    for (const folderUri of allFolderUris) {
+        hasParent = false;
+        for (const parentFolderUri of allFolderUris) {
             if (folderUri !== parentFolderUri && isSubpath(parentFolderUri.fsPath, folderUri.fsPath)) {
-                return false;
+                hasParent = true;
+                break;
             }
         }
-        return true;
-    });
 
-    fileUris = fileUris.filter(fileUri => {
-        for (const folderUri of folderUris) {
+        if (!hasParent && await shouldUploadUri(treeItem, folderUri, overwriteChoice, destinationDirectory)) {
+            folderUrisToUpload.push(folderUri);
+        }
+    }
+
+    for (const fileUri of allFileUris) {
+        hasParent = false;
+        for (const folderUri of allFolderUris) {
             if (isSubpath(folderUri.fsPath, fileUri.fsPath)) {
-                return false;
+                hasParent = true;
+                break;
             }
         }
-        return true;
-    });
 
-    if (!folderUris.length && !fileUris.length) {
+        if (!hasParent && await shouldUploadUri(treeItem, fileUri, overwriteChoice, destinationDirectory)) {
+            fileUrisToUpload.push(fileUri);
+        }
+    }
+
+    if (!folderUrisToUpload.length && !fileUrisToUpload.length) {
         // No URIs to upload
         return;
     }
@@ -64,12 +76,12 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     const errors: IParsedError[] = [];
     const title: string = getUploadingMessage(treeItem.label);
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
-        for (const folderUri of folderUris) {
+        for (const folderUri of folderUrisToUpload) {
             throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
             errors.push(...(await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken, destinationDirectory)).errors);
         }
 
-        errors.push(...(await uploadFiles(actionContext, treeItem, fileUris, notificationProgress, cancellationToken, destinationDirectory)).errors);
+        errors.push(...(await uploadFiles(actionContext, treeItem, fileUrisToUpload, notificationProgress, cancellationToken, destinationDirectory)).errors);
     });
 
     if (errors.length === 1) {
