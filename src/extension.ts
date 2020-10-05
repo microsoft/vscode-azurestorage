@@ -123,7 +123,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                     mustBeWebsiteCapable: false,
                     configureWebsite: false
                 });
-            await accountTreeItem.disableStaticWebsite();
+            await accountTreeItem.disableStaticWebsite(actionContext);
         });
         registerCommand("azureStorage.createGpv2Account", createStorageAccount);
         registerCommand("azureStorage.createGpv2AccountAdvanced", createStorageAccountAdvanced);

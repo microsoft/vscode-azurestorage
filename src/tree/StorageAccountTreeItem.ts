@@ -273,8 +273,10 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         await wizard.execute();
     }
 
-    public async disableStaticWebsite(): Promise<void> {
+    public async disableStaticWebsite(context: IActionContext): Promise<void> {
         let websiteHostingStatus = await this.getActualWebsiteHostingStatus();
+        await this.ensureHostingCapable(context, websiteHostingStatus);
+
         if (!websiteHostingStatus.enabled) {
             window.showInformationMessage(`Account '${this.label}' does not currently have static website hosting enabled.`);
             return;
