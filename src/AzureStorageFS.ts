@@ -102,6 +102,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             context.telemetry.suppressIfSuccessful = true;
             let treeItem: AzureStorageDirectoryTreeItem = await this.lookupAsDirectory(uri, context);
 
+            // https://github.com/microsoft/vscode-azurestorage/issues/712
+            await treeItem.refresh();
+
             const loadingMessage: string = localize('loadingDir', 'Loading directory "{0}"...', treeItem.label);
             let children: AzExtTreeItem[] = await treeItem.loadAllChildren({ ...context, loadingMessage });
             let result: [string, vscode.FileType][] = [];
