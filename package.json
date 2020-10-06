@@ -514,14 +514,15 @@
                     "group": "3_download"
                 },
                 {
-                    "command": "azureStorage.download",
-                    "when": "view == azureStorage && viewItem == azureBlobDirectory",
-                    "group": "3_download"
-                },
-                {
                     "command": "azureStorage.copyUrl",
                     "when": "view == azureStorage && viewItem == azureBlob",
                     "group": "5_cutcopypaste"
+                },
+                {
+                    "$comment": "========= azureBlobDirectory =========",
+                    "command": "azureStorage.download",
+                    "when": "view == azureStorage && viewItem == azureBlobDirectory",
+                    "group": "3_download"
                 },
                 {
                     "command": "azureStorage.copyUrl",
