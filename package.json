@@ -225,6 +225,11 @@
                 "category": "Azure Storage"
             },
             {
+                "command": "azureStorage.deleteBlobDirectory",
+                "title": "Delete...",
+                "category": "Azure Storage"
+            },
+            {
                 "command": "azureStorage.download",
                 "title": "Download...",
                 "category": "Azure Storage"
@@ -506,7 +511,8 @@
                 {
                     "$comment": "========= azureBlob =========",
                     "command": "azureStorage.deleteBlob",
-                    "when": "view == azureStorage && viewItem == azureBlob"
+                    "when": "view == azureStorage && viewItem == azureBlob",
+                    "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.download",
@@ -520,6 +526,11 @@
                 },
                 {
                     "$comment": "========= azureBlobDirectory =========",
+                    "command": "azureStorage.deleteBlobDirectory",
+                    "when": "view == azureStorage && viewItem == azureBlobDirectory",
+                    "group": "7_modification"
+                },
+                {
                     "command": "azureStorage.download",
                     "when": "view == azureStorage && viewItem == azureBlobDirectory",
                     "group": "3_download"
