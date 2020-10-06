@@ -10,7 +10,7 @@ import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplCon
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
@@ -72,6 +72,14 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
         AzureStorageFS.fireCreateEvent(child);
         return child;
+    }
+
+    public async copyUrl(): Promise<void> {
+        const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.dirPath);
+        const url = blobClient.url;
+        await vscode.env.clipboard.writeText(url);
+        ext.outputChannel.show();
+        ext.outputChannel.appendLog(`Blob Directory URL copied to clipboard: ${url}`);
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {

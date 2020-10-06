@@ -524,6 +524,11 @@
                     "group": "5_cutcopypaste"
                 },
                 {
+                    "command": "azureStorage.copyUrl",
+                    "when": "view == azureStorage && viewItem == azureBlobDirectory",
+                    "group": "5_cutcopypaste"
+                },
+                {
                     "$comment": "========= azureFileShareGroup =========",
                     "command": "azureStorage.createFileShare",
                     "when": "view == azureStorage && viewItem == azureFileShareGroup",
