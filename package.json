@@ -736,6 +736,10 @@
                     "when": "never"
                 },
                 {
+                    "command": "azureStorage.deleteBlobDirectory",
+                    "when": "never"
+                },
+                {
                     "command": "azureStorage.download",
                     "when": "never"
                 },
