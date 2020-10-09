@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext, registerCommand } from "vscode-azureextensionui";
+import { BlobDirectoryTreeItem } from "../../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../../tree/blob/BlobTreeItem";
 
 export function registerBlobActionHandlers(): void {
     registerCommand("azureStorage.deleteBlob", async (context: IActionContext, treeItem: BlobTreeItem) => await treeItem.deleteTreeItem(context));
+    registerCommand("azureStorage.deleteBlobDirectory", async (context: IActionContext, treeItem: BlobDirectoryTreeItem) => await treeItem.deleteTreeItem(context));
 }

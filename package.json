@@ -225,6 +225,11 @@
                 "category": "Azure Storage"
             },
             {
+                "command": "azureStorage.deleteBlobDirectory",
+                "title": "Delete...",
+                "category": "Azure Storage"
+            },
+            {
                 "command": "azureStorage.download",
                 "title": "Download...",
                 "category": "Azure Storage"
@@ -506,12 +511,24 @@
                 {
                     "$comment": "========= azureBlob =========",
                     "command": "azureStorage.deleteBlob",
-                    "when": "view == azureStorage && viewItem == azureBlob"
+                    "when": "view == azureStorage && viewItem == azureBlob",
+                    "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.download",
                     "when": "view == azureStorage && viewItem == azureBlob",
                     "group": "3_download"
+                },
+                {
+                    "command": "azureStorage.copyUrl",
+                    "when": "view == azureStorage && viewItem == azureBlob",
+                    "group": "5_cutcopypaste"
+                },
+                {
+                    "$comment": "========= azureBlobDirectory =========",
+                    "command": "azureStorage.deleteBlobDirectory",
+                    "when": "view == azureStorage && viewItem == azureBlobDirectory",
+                    "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.download",
@@ -520,7 +537,7 @@
                 },
                 {
                     "command": "azureStorage.copyUrl",
-                    "when": "view == azureStorage && viewItem == azureBlob",
+                    "when": "view == azureStorage && viewItem == azureBlobDirectory",
                     "group": "5_cutcopypaste"
                 },
                 {
@@ -716,6 +733,10 @@
                 },
                 {
                     "command": "azureStorage.deleteBlob",
+                    "when": "never"
+                },
+                {
+                    "command": "azureStorage.deleteBlobDirectory",
                     "when": "never"
                 },
                 {
