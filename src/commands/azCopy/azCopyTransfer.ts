@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzCopyClient, AzCopyLocation, FromToOption, IAzCopyClient, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
+import { AzCopyClient, AzCopyLocation, FromToOption, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
+import { ExitJobStatus, ITransferStatus, ProgressJobStatus } from "@azure-tools/azcopy-node/dist/src/Output/TransferStatus";
 import { CancellationToken } from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
 import { NotificationProgress } from "../../constants";
@@ -12,6 +13,13 @@ import { TransferProgress } from "../../TransferProgress";
 import { delay } from "../../utils/delay";
 import { throwIfCanceled } from "../../utils/errorUtils";
 import { localize } from "../../utils/localize";
+
+interface ITransferLocation {
+    src: AzCopyLocation;
+    dst: AzCopyLocation;
+}
+
+type AzCopyTransferStatus = ITransferStatus<"Progress", ProgressJobStatus> | ITransferStatus<"EndOfJob", ExitJobStatus> | undefined;
 
 export async function azCopyTransfer(
     context: IActionContext,
@@ -22,12 +30,14 @@ export async function azCopyTransfer(
     notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken
 ): Promise<void> {
-    const copyClient: AzCopyClient = new AzCopyClient();
     // `followSymLinks: true` causes downloads to fail (which is expected) but it currently doesn't work as expected for uploads: https://github.com/Azure/azure-storage-azcopy/issues/1174
     // So it's omitted from `copyOptions` for now
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, excludePath: '.git;.vscode' };
-    let jobId: string = await startAndWaitForCopy(context, copyClient, src, dst, copyOptions, transferProgress, notificationProgress, cancellationToken);
-    let finalTransferStatus = (await copyClient.getJobInfo(jobId)).latestStatus;
+    const finalTransferStatus: AzCopyTransferStatus = await startAndWaitForTransfer(context, { src, dst }, copyOptions, transferProgress, notificationProgress, cancellationToken);
+    handleFinalTransferStatus(context, finalTransferStatus, src.path);
+}
+
+function handleFinalTransferStatus(context: IActionContext, finalTransferStatus: AzCopyTransferStatus, transferLabel: string): void {
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
         // tslint:disable-next-line: strict-boolean-expressions
@@ -49,7 +59,7 @@ export async function azCopyTransfer(
             }
         } else {
             // Add an additional error log since we don't have any more info about the failure
-            ext.outputChannel.appendLog(localize('couldNotTransfer', 'Could not transfer "{0}"', src.path));
+            ext.outputChannel.appendLog(localize('couldNotTransfer', 'Could not transfer "{0}"', transferLabel));
         }
         message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
@@ -61,29 +71,30 @@ export async function azCopyTransfer(
         }
     }
 }
-
-async function startAndWaitForCopy(
+async function startAndWaitForTransfer(
     context: IActionContext,
-    copyClient: IAzCopyClient,
-    src: AzCopyLocation,
-    dst: AzCopyLocation,
+    location: ITransferLocation,
     options: ICopyOptions,
     transferProgress: TransferProgress,
     notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken
-): Promise<string> {
-    let jobId: string = await copyClient.copy(src, dst, options);
+): Promise<AzCopyTransferStatus> {
+    const copyClient: AzCopyClient = new AzCopyClient();
+    const jobId: string = await copyClient.copy(location.src, location.dst, options);
+
+    // Directory transfers always have `useWildCard` set
+    const displayWorkAsTotalTransfers: boolean = location.src.useWildCard;
+
     let status: TransferStatus | undefined;
     let finishedWork: number;
     let totalWork: number | undefined;
     while (!status || status.StatusType !== 'EndOfJob') {
-        throwIfCanceled(cancellationToken, context.telemetry.properties, 'startAndWaitForCopy');
+        throwIfCanceled(cancellationToken, context.telemetry.properties, 'startAndWaitForTransfer');
         status = (await copyClient.getJobInfo(jobId)).latestStatus;
 
         // tslint:disable: strict-boolean-expressions
-        // Directory transfers always have `useWildCard` set
-        totalWork = (src.useWildCard ? status?.TotalTransfers : status?.TotalBytesEnumerated) || undefined;
-        finishedWork = (src.useWildCard ? status?.TransfersCompleted : status?.BytesOverWire) || 0;
+        totalWork = (displayWorkAsTotalTransfers ? status?.TotalTransfers : status?.TotalBytesEnumerated) || undefined;
+        finishedWork = (displayWorkAsTotalTransfers ? status?.TransfersCompleted : status?.BytesOverWire) || 0;
         // tslint:enable: strict-boolean-expressions
 
         if (totalWork || transferProgress.totalWork) {
@@ -96,5 +107,5 @@ async function startAndWaitForCopy(
         await delay(1000);
     }
 
-    return jobId;
+    return (await copyClient.getJobInfo(jobId)).latestStatus;
 }
