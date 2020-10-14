@@ -12,7 +12,7 @@ import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
-import { convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, shouldUploadUri, upload } from "../utils/uploadUtils";
+import { checkCanOverwrite, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, remoteResourceExists, upload } from "../utils/uploadUtils";
 import { IAzCopyResolution } from "./azCopy/IAzCopyResolution";
 
 let lastUriUpload: Uri | undefined;
@@ -50,10 +50,12 @@ export async function uploadFiles(
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
     let urisToUpload: Uri[] = [];
+    let destPath: string;
     if (!calledFromUploadToAzureStorage) {
         let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
-            if (!(await stat(uri.fsPath)).isDirectory() && await shouldUploadUri(treeItem, uri, overwriteChoice, destinationDirectory)) {
+            destPath = convertLocalPathToRemotePath(uri.fsPath, destinationDirectory);
+            if (!(await stat(uri.fsPath)).isDirectory() && await checkCanOverwrite(destPath, remoteResourceExists, overwriteChoice, treeItem)) {
                 // Don't allow directories to sneak in https://github.com/microsoft/vscode-azurestorage/issues/803
                 urisToUpload.push(uri);
             }

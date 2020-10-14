@@ -12,7 +12,7 @@ import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { multipleAzCopyErrorsMessage, throwIfCanceled } from '../utils/errorUtils';
 import { isSubpath } from '../utils/fs';
 import { localize } from '../utils/localize';
-import { getUploadingMessage, OverwriteChoice, promptForDestinationDirectory, shouldUploadUri } from '../utils/uploadUtils';
+import { checkCanOverwrite, convertLocalPathToRemotePath, getUploadingMessage, OverwriteChoice, promptForDestinationDirectory, remoteResourceExists } from '../utils/uploadUtils';
 import { uploadFiles } from './uploadFiles';
 import { uploadFolder } from './uploadFolder';
 
@@ -36,6 +36,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
 
     let hasParent: boolean;
     let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+    let destPath: string;
     const folderUrisToUpload: vscode.Uri[] = [];
     const fileUrisToUpload: vscode.Uri[] = [];
 
@@ -49,7 +50,8 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
             }
         }
 
-        if (!hasParent && await shouldUploadUri(treeItem, folderUri, overwriteChoice, destinationDirectory)) {
+        destPath = convertLocalPathToRemotePath(folderUri.fsPath, destinationDirectory);
+        if (!hasParent && await checkCanOverwrite(destPath, remoteResourceExists, overwriteChoice, treeItem)) {
             folderUrisToUpload.push(folderUri);
         }
     }
@@ -63,7 +65,8 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
             }
         }
 
-        if (!hasParent && await shouldUploadUri(treeItem, fileUri, overwriteChoice, destinationDirectory)) {
+        destPath = convertLocalPathToRemotePath(fileUri.fsPath, destinationDirectory);
+        if (!hasParent && await checkCanOverwrite(destPath, remoteResourceExists, overwriteChoice, treeItem)) {
             fileUrisToUpload.push(fileUri);
         }
     }

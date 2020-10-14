@@ -68,27 +68,23 @@ async function showDuplicateResourceWarning(resourceName: string): Promise<Overw
 }
 
 // Pass `overwriteChoice` as an object to make use of pass by reference.
-export async function shouldUploadUri(treeItem: BlobContainerTreeItem | FileShareTreeItem, uri: vscode.Uri, overwriteChoice: { choice: OverwriteChoice | undefined }, destinationDirectory: string): Promise<boolean> {
+export async function checkCanOverwrite(
+    destPath: string,
+    destPathExists: (destPath: string, destTreeItem?: BlobContainerTreeItem | FileShareTreeItem) => Promise<boolean>,
+    overwriteChoice: { choice: OverwriteChoice | undefined },
+    destTreeItem?: BlobContainerTreeItem | FileShareTreeItem
+): Promise<boolean> {
     if (overwriteChoice.choice === OverwriteChoice.yesToAll) {
-        // Always upload
+        // Always overwrite
         return true;
     }
 
-    const localResourcePath: string = uri.fsPath;
-    const remoteResourceName: string = convertLocalPathToRemotePath(localResourcePath, destinationDirectory);
-    let resourceExists: boolean;
-    if (treeItem instanceof BlobContainerTreeItem) {
-        resourceExists = await doesBlobExist(treeItem, remoteResourceName) || await doesBlobDirectoryExist(treeItem, remoteResourceName);
-    } else {
-        resourceExists = await doesFileExist(basename(remoteResourceName), treeItem, dirname(remoteResourceName), treeItem.shareName) || await doesDirectoryExist(treeItem, remoteResourceName, treeItem.shareName);
-    }
-
-    if (resourceExists) {
+    if (await destPathExists(destPath, destTreeItem)) {
         if (overwriteChoice.choice === OverwriteChoice.noToAll) {
-            // Resources that already exist shouldn't be uploaded
+            // Resources that already exist shouldn't be overwritten
             return false;
         } else {
-            overwriteChoice.choice = await showDuplicateResourceWarning(remoteResourceName);
+            overwriteChoice.choice = await showDuplicateResourceWarning(destPath);
             switch (overwriteChoice.choice) {
                 case OverwriteChoice.no:
                 case OverwriteChoice.noToAll:
@@ -101,7 +97,7 @@ export async function shouldUploadUri(treeItem: BlobContainerTreeItem | FileShar
             }
         }
     } else {
-        // This resource doesn't exist, so upload
+        // This resource doesn't exist yet, so overwriting is OK
         return true;
     }
 }
@@ -125,6 +121,16 @@ export async function promptForDestinationDirectory(): Promise<string> {
 
 export async function getDestinationDirectory(destinationDirectory?: string): Promise<string> {
     return destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory();
+}
+
+export async function remoteResourceExists(path: string, treeItem?: BlobContainerTreeItem | FileShareTreeItem): Promise<boolean> {
+    if (treeItem instanceof BlobContainerTreeItem) {
+        return await doesBlobExist(treeItem, path) || await doesBlobDirectoryExist(treeItem, path);
+    } else if (treeItem instanceof FileShareTreeItem) {
+        return await doesFileExist(basename(path), treeItem, dirname(path), treeItem.shareName) || await doesDirectoryExist(treeItem, path, treeItem.shareName);
+    } else {
+        throw new Error(localize('treeItemNotProvided', 'Cannot determine if remote resource exists. Tree item not provided.'));
+    }
 }
 
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {
