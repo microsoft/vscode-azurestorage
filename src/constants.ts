@@ -21,6 +21,9 @@ export const emulatorAccountName: string = 'devstoreaccount1';
 export const emulatorConnectionString: string = 'UseDevelopmentStorage=true;';
 export const emulatorKey: string = 'Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';
 
+export const maxRemoteFileEditSizeMB: number = 50;
+export const maxRemoteFileEditSizeBytes: number = maxRemoteFileEditSizeMB * 1024 * 1024;
+
 export function getResourcesPath(): string {
     return ext.context.asAbsolutePath('resources');
 }
