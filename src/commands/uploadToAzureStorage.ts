@@ -36,7 +36,6 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
 
     let hasParent: boolean;
     let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
-    let destPath: string;
     const folderUrisToUpload: vscode.Uri[] = [];
     const fileUrisToUpload: vscode.Uri[] = [];
 
@@ -50,7 +49,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
             }
         }
 
-        destPath = convertLocalPathToRemotePath(folderUri.fsPath, destinationDirectory);
+        const destPath: string = convertLocalPathToRemotePath(folderUri.fsPath, destinationDirectory);
         if (!hasParent && await checkCanOverwrite(destPath, remoteResourceExists, overwriteChoice, treeItem)) {
             folderUrisToUpload.push(folderUri);
         }
@@ -65,7 +64,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
             }
         }
 
-        destPath = convertLocalPathToRemotePath(fileUri.fsPath, destinationDirectory);
+        const destPath: string = convertLocalPathToRemotePath(fileUri.fsPath, destinationDirectory);
         if (!hasParent && await checkCanOverwrite(destPath, remoteResourceExists, overwriteChoice, treeItem)) {
             fileUrisToUpload.push(fileUri);
         }
