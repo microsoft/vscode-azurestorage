@@ -12,7 +12,7 @@ import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
-import { checkCanOverwrite, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, remoteResourceExists, upload } from "../utils/uploadUtils";
+import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, upload } from "../utils/uploadUtils";
 import { IAzCopyResolution } from "./azCopy/IAzCopyResolution";
 
 let lastUriUpload: Uri | undefined;
@@ -54,7 +54,7 @@ export async function uploadFiles(
         let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
             const destPath: string = convertLocalPathToRemotePath(uri.fsPath, destinationDirectory);
-            if (!(await stat(uri.fsPath)).isDirectory() && await checkCanOverwrite(destPath, remoteResourceExists, overwriteChoice, treeItem)) {
+            if (!(await stat(uri.fsPath)).isDirectory() && await checkCanUpload(destPath, overwriteChoice, treeItem)) {
                 // Don't allow directories to sneak in https://github.com/microsoft/vscode-azurestorage/issues/803
                 urisToUpload.push(uri);
             }

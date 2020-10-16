@@ -11,7 +11,7 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { isAzCopyError } from '../utils/errorUtils';
 import { nonNullValue } from '../utils/nonNull';
-import { checkCanOverwrite, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, remoteResourceExists, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, upload, uploadLocalFolder } from '../utils/uploadUtils';
 import { IAzCopyResolution } from './azCopy/IAzCopyResolution';
 
 export async function uploadFolder(
@@ -40,7 +40,7 @@ export async function uploadFolder(
     const sourcePath: string = uri.fsPath;
     const destPath: string = convertLocalPathToRemotePath(sourcePath, destinationDirectory);
     const resolution: IAzCopyResolution = { errors: [] };
-    if (!calledFromUploadToAzureStorage && !(await checkCanOverwrite(destPath, remoteResourceExists, { choice: undefined }, treeItem))) {
+    if (!calledFromUploadToAzureStorage && !(await checkCanUpload(destPath, { choice: undefined }, treeItem))) {
         // Don't upload this folder
         return resolution;
     }

@@ -70,16 +70,15 @@ async function showDuplicateResourceWarning(resourceName: string): Promise<Overw
 // Pass `overwriteChoice` as an object to make use of pass by reference.
 export async function checkCanOverwrite(
     destPath: string,
-    destPathExists: (destPath: string, destTreeItem?: BlobContainerTreeItem | FileShareTreeItem) => Promise<boolean>,
     overwriteChoice: { choice: OverwriteChoice | undefined },
-    destTreeItem?: BlobContainerTreeItem | FileShareTreeItem
+    destPathExists: () => Promise<boolean>
 ): Promise<boolean> {
     if (overwriteChoice.choice === OverwriteChoice.yesToAll) {
         // Always overwrite
         return true;
     }
 
-    if (await destPathExists(destPath, destTreeItem)) {
+    if (await destPathExists()) {
         if (overwriteChoice.choice === OverwriteChoice.noToAll) {
             // Resources that already exist shouldn't be overwritten
             return false;
@@ -102,6 +101,20 @@ export async function checkCanOverwrite(
     }
 }
 
+export async function checkCanUpload(
+    destPath: string,
+    overwriteChoice: { choice: OverwriteChoice | undefined },
+    treeItem: BlobContainerTreeItem | FileShareTreeItem
+): Promise<boolean> {
+    return await checkCanOverwrite(destPath, overwriteChoice, async () => {
+        if (treeItem instanceof BlobContainerTreeItem) {
+            return await doesBlobExist(treeItem, destPath) || await doesBlobDirectoryExist(treeItem, destPath);
+        } else {
+            return await doesFileExist(basename(destPath), treeItem, dirname(destPath), treeItem.shareName) || await doesDirectoryExist(treeItem, destPath, treeItem.shareName);
+        }
+    });
+}
+
 export function convertLocalPathToRemotePath(localPath: string, destinationDirectory: string): string {
     let path: string = posix.join(destinationDirectory, basename(localPath));
     if (path.startsWith(posix.sep)) {
@@ -121,16 +134,6 @@ export async function promptForDestinationDirectory(): Promise<string> {
 
 export async function getDestinationDirectory(destinationDirectory?: string): Promise<string> {
     return destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory();
-}
-
-export async function remoteResourceExists(path: string, treeItem?: BlobContainerTreeItem | FileShareTreeItem): Promise<boolean> {
-    if (treeItem instanceof BlobContainerTreeItem) {
-        return await doesBlobExist(treeItem, path) || await doesBlobDirectoryExist(treeItem, path);
-    } else if (treeItem instanceof FileShareTreeItem) {
-        return await doesFileExist(basename(path), treeItem, dirname(path), treeItem.shareName) || await doesDirectoryExist(treeItem, path, treeItem.shareName);
-    } else {
-        throw new Error(localize('treeItemNotProvided', 'Cannot determine if remote resource exists. Tree item not provided.'));
-    }
 }
 
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {
