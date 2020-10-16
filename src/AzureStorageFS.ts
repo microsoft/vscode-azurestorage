@@ -55,32 +55,30 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath)}?resourceId=${rootId}`);
     }
 
-    static async showEditor(treeItem: BlobTreeItem | FileTreeItem): Promise<void> {
-        return await callWithTelemetryAndErrorHandling('showEditor', async (context) => {
-            let client: BlockBlobClient | ShareFileClient;
-            if (treeItem instanceof BlobTreeItem) {
-                client = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
-            } else {
-                client = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
-            }
+    static async showEditor(context: IActionContext, treeItem: BlobTreeItem | FileTreeItem): Promise<void> {
+        let client: BlockBlobClient | ShareFileClient;
+        if (treeItem instanceof BlobTreeItem) {
+            client = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
+        } else {
+            client = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+        }
 
-            const uri = this.idToUri(treeItem.fullId);
-            const properties: BlobGetPropertiesResponse | FileGetPropertiesResponse = await client.getProperties();
-            if (properties.contentLength && properties.contentLength > maxRemoteFileEditSizeBytes) {
-                const downloadInstead: vscode.MessageItem = {
-                    title: localize('downloadInstead', 'Download file instead')
-                };
-                const message: string = localize('failedToOpen', 'Failed to open "{0}". Cannot edit remote files larger than {1}MB.', uri.fsPath, maxRemoteFileEditSizeMB);
-                const result: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(message, downloadInstead);
-                if (result === downloadInstead) {
-                    await download(context, treeItem);
-                }
-                throw new UserCancelledError(message);
+        const uri = this.idToUri(treeItem.fullId);
+        const properties: BlobGetPropertiesResponse | FileGetPropertiesResponse = await client.getProperties();
+        if (properties.contentLength && properties.contentLength > maxRemoteFileEditSizeBytes) {
+            const downloadInstead: vscode.MessageItem = {
+                title: localize('downloadInstead', 'Download file instead')
+            };
+            const message: string = localize('failedToOpen', 'Failed to open "{0}". Cannot edit remote files larger than {1}MB.', uri.fsPath, maxRemoteFileEditSizeMB);
+            const result: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(message, downloadInstead);
+            if (result === downloadInstead) {
+                await download(context, treeItem);
             }
+            throw new UserCancelledError(message);
+        }
 
-            let doc = await vscode.workspace.openTextDocument(uri);
-            await vscode.window.showTextDocument(doc, { preserveFocus: true, preview: false });
-        });
+        let doc = await vscode.workspace.openTextDocument(uri);
+        await vscode.window.showTextDocument(doc, { preserveFocus: true, preview: false });
     }
 
     public static fireDeleteEvent(node: AzExtTreeItem): void {
