@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as retry from 'p-retry';
 import * as vscode from "vscode";
-import { IActionContext, IParsedError, parseError, registerCommand } from 'vscode-azureextensionui';
+import { IActionContext, registerCommand } from 'vscode-azureextensionui';
 import { configurationSettingsKeys, extensionPrefix } from '../constants';
 import { ext } from '../extensionVariables';
 import { storageExplorerLauncher } from '../storageExplorerLauncher/storageExplorerLauncher';
@@ -12,6 +13,7 @@ import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { StorageAccountTreeItem } from '../tree/StorageAccountTreeItem';
 import { isPathEqual, isSubpath } from '../utils/fs';
 import { localize } from "../utils/localize";
+import { nonNullValue } from '../utils/nonNull';
 import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
 import { deleteNode } from './commonTreeCommands';
 import { selectStorageAccountTreeItemForCommand } from './selectStorageAccountNodeForCommand';
@@ -94,19 +96,18 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
 
     await runPreDeployTask(sourcePath, context);
 
-    let shouldRetry: boolean = false;
-    do {
-        try {
-            return destContainerTreeItem.deployStaticWebsite(context, sourcePath);
-        } catch (error) {
-            const parsedError: IParsedError = parseError(error);
-            if (/server failed to authenticate/i.test(parsedError.message)) {
-                shouldRetry = true;
-            } else {
-                throw error;
+    const retries: number = 4;
+    await retry(
+        async (currentAttempt) => {
+            context.telemetry.properties.deployAttempt = currentAttempt.toString();
+            if (currentAttempt > 1) {
+                const message: string = localize('retryingDeploy', 'Retrying deploy (Attempt {0}/{1})...', currentAttempt, retries + 1);
+                ext.outputChannel.appendLog(message);
             }
-        }
-    } while (shouldRetry);
+            await nonNullValue(destContainerTreeItem).deployStaticWebsite(context, nonNullValue(sourcePath));
+        },
+        { retries, minTimeout: 2 * 1000 }
+    );
 }
 
 async function runPreDeployTask(deployFsPath: string, context: IActionContext): Promise<void> {
