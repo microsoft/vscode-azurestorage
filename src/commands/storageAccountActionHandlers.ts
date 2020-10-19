@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as vscode from "vscode";
-import { IActionContext, registerCommand } from 'vscode-azureextensionui';
+import { IActionContext, IParsedError, parseError, registerCommand } from 'vscode-azureextensionui';
 import { configurationSettingsKeys, extensionPrefix } from '../constants';
 import { ext } from '../extensionVariables';
 import { storageExplorerLauncher } from '../storageExplorerLauncher/storageExplorerLauncher';
@@ -94,7 +94,19 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
 
     await runPreDeployTask(sourcePath, context);
 
-    return destContainerTreeItem.deployStaticWebsite(context, sourcePath);
+    let shouldRetry: boolean = false;
+    do {
+        try {
+            return destContainerTreeItem.deployStaticWebsite(context, sourcePath);
+        } catch (error) {
+            const parsedError: IParsedError = parseError(error);
+            if (/server failed to authenticate/i.test(parsedError.message)) {
+                shouldRetry = true;
+            } else {
+                throw error;
+            }
+        }
+    } while (shouldRetry);
 }
 
 async function runPreDeployTask(deployFsPath: string, context: IActionContext): Promise<void> {
