@@ -11,7 +11,7 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { isAzCopyError } from '../utils/errorUtils';
 import { nonNullValue } from '../utils/nonNull';
-import { convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, shouldUploadUri, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, upload, uploadLocalFolder } from '../utils/uploadUtils';
 import { IAzCopyResolution } from './azCopy/IAzCopyResolution';
 
 export async function uploadFolder(
@@ -37,14 +37,13 @@ export async function uploadFolder(
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
 
+    const sourcePath: string = uri.fsPath;
+    const destPath: string = convertLocalPathToRemotePath(sourcePath, destinationDirectory);
     const resolution: IAzCopyResolution = { errors: [] };
-    if (!calledFromUploadToAzureStorage && !(await shouldUploadUri(treeItem, uri, { choice: undefined }, destinationDirectory))) {
+    if (!calledFromUploadToAzureStorage && !(await checkCanUpload(destPath, { choice: undefined }, treeItem))) {
         // Don't upload this folder
         return resolution;
     }
-
-    const sourcePath: string = uri.fsPath;
-    const destPath: string = convertLocalPathToRemotePath(sourcePath, destinationDirectory);
 
     try {
         if (notificationProgress && cancellationToken) {
