@@ -7,7 +7,7 @@ import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/a
 import { basename, dirname, posix } from 'path';
 import * as readdirp from 'readdirp';
 import * as vscode from 'vscode';
-import { DialogResponses, IActionContext } from "vscode-azureextensionui";
+import { IActionContext } from "vscode-azureextensionui";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
 import { NotificationProgress } from '../constants';
@@ -16,6 +16,7 @@ import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { doesBlobDirectoryExist, doesBlobExist } from './blobUtils';
+import { checkCanOverwrite } from './checkCanOverwrite';
 import { doesDirectoryExist } from './directoryUtils';
 import { doesFileExist } from './fileUtils';
 import { localize } from './localize';
@@ -54,51 +55,6 @@ export function getUploadingMessage(treeItemLabel: string): string {
 
 export function getUploadingMessageWithSource(sourcePath: string, treeItemLabel: string): string {
     return localize('uploadingFromTo', 'Uploading from "{0}" to "{1}"', sourcePath, treeItemLabel);
-}
-
-async function showDuplicateResourceWarning(resourceName: string): Promise<OverwriteChoice> {
-    const message: string = localize('resourceExists', 'A resource named "{0}" already exists. Do you want to upload and overwrite it?', resourceName);
-    const items = [
-        { title: localize('yesToAll', 'Yes to all'), data: OverwriteChoice.yesToAll },
-        { title: DialogResponses.yes.title, data: OverwriteChoice.yes },
-        { title: localize('noToAll', 'No to all'), data: OverwriteChoice.noToAll },
-        { title: DialogResponses.no.title, data: OverwriteChoice.no }
-    ];
-    return (await ext.ui.showWarningMessage(message, { modal: true }, ...items)).data;
-}
-
-// Pass `overwriteChoice` as an object to make use of pass by reference.
-export async function checkCanOverwrite(
-    destPath: string,
-    overwriteChoice: { choice: OverwriteChoice | undefined },
-    destPathExists: () => Promise<boolean>
-): Promise<boolean> {
-    if (overwriteChoice.choice === OverwriteChoice.yesToAll) {
-        // Always overwrite
-        return true;
-    }
-
-    if (await destPathExists()) {
-        if (overwriteChoice.choice === OverwriteChoice.noToAll) {
-            // Resources that already exist shouldn't be overwritten
-            return false;
-        } else {
-            overwriteChoice.choice = await showDuplicateResourceWarning(destPath);
-            switch (overwriteChoice.choice) {
-                case OverwriteChoice.no:
-                case OverwriteChoice.noToAll:
-                    return false;
-
-                case OverwriteChoice.yes:
-                case OverwriteChoice.yesToAll:
-                default:
-                    return true;
-            }
-        }
-    } else {
-        // This resource doesn't exist yet, so overwriting is OK
-        return true;
-    }
 }
 
 export async function checkCanUpload(
