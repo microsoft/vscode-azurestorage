@@ -381,9 +381,24 @@
                     "group": "inline"
                 },
                 {
+                    "command": "azureStorage.createGpv2Account",
+                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+                    "group": "1@1"
+                },
+                {
+                    "command": "azureStorage.createGpv2AccountAdvanced",
+                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+                    "group": "1@2"
+                },
+                {
+                    "command": "azureStorage.openInPortal",
+                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+                    "group": "2@1"
+                },
+                {
                     "command": "azureStorage.refresh",
                     "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
-                    "group": "9_refresh"
+                    "group": "3@1"
                 },
                 {
                     "$comment": "========= azureStorageAccount =========",
@@ -575,16 +590,6 @@
                 {
                     "command": "azureStorage.uploadFolder",
                     "when": "view == azureStorage && viewItem == azureFileShare",
-                    "group": "2_create@4"
-                },
-                {
-                    "command": "azureStorage.createGpv2Account",
-                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
-                    "group": "2_create@3"
-                },
-                {
-                    "command": "azureStorage.createGpv2AccountAdvanced",
-                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
                     "group": "2_create@4"
                 },
                 {
