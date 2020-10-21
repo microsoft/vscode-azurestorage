@@ -6,11 +6,12 @@
 import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
+import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { localize } from "../../utils/localize";
 import { ICopyUrl } from "../ICopyUrl";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
@@ -83,27 +84,34 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         ext.outputChannel.appendLog(`Blob Directory URL copied to clipboard: ${url}`);
     }
 
-    public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
-        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-            progress.report({ message: `Deleting directory ${this.dirName}` });
-            let errors: boolean = await this.deleteFolder(context);
+    public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {
+        let response: vscode.MessageItem | undefined;
+        if (!context.suppressMessage) {
+            const message: string = localize('deleteBlobDir', "Are you sure you want to delete the blob directory '{0}' and all its contents?", this.label);
+            response = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        }
+        if (response === DialogResponses.deleteResponse || context.suppressMessage) {
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                progress.report({ message: `Deleting directory ${this.dirName}` });
+                let errors: boolean = await this.deleteFolder(context);
 
-            if (errors) {
-                ext.outputChannel.appendLog('Please refresh the viewlet to see the changes made.');
+                if (errors) {
+                    ext.outputChannel.appendLog('Please refresh the viewlet to see the changes made.');
 
-                const viewOutput: vscode.MessageItem = { title: 'View Errors' };
-                const errorMessage: string = `Errors occurred when deleting "${this.dirName}".`;
-                vscode.window.showWarningMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
-                    if (result === viewOutput) {
-                        ext.outputChannel.show();
-                    }
-                });
+                    const viewOutput: vscode.MessageItem = { title: 'View Errors' };
+                    const errorMessage: string = `Errors occurred when deleting "${this.dirName}".`;
+                    vscode.window.showWarningMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
+                        if (result === viewOutput) {
+                            ext.outputChannel.show();
+                        }
+                    });
 
-                throw new Error(`Errors occurred when deleting "${this.dirName}".`);
-            }
-        });
+                    throw new Error(`Errors occurred when deleting "${this.dirName}".`);
+                }
+            });
 
-        AzureStorageFS.fireDeleteEvent(this);
+            AzureStorageFS.fireDeleteEvent(this);
+        }
     }
 
     private async deleteFolder(context: IActionContext): Promise<boolean> {
