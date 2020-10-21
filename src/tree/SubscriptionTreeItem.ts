@@ -5,7 +5,7 @@
 
 import { StorageManagementClient } from '@azure/arm-storage';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
@@ -40,7 +40,8 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
             new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
             new StorageAccountTreeItemCreateStep(this),
-            new StaticWebsiteConfigureStep()
+            new StaticWebsiteConfigureStep(),
+            new VerifyProvidersStep(['Microsoft.Storage'])
         ];
 
         if (context.advancedCreation) {
