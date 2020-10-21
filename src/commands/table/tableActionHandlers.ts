@@ -13,10 +13,10 @@ export function registerTableActionHandlers(): void {
     registerCommand("azureStorage.deleteTable", async (context: IActionContext, treeItem?: TableTreeItem) => await deleteNode(context, TableTreeItem.contextValue, treeItem));
 }
 
-async function openTableInStorageExplorer(_context: IActionContext, treeItem: TableTreeItem): Promise<void> {
+async function openTableInStorageExplorer(context: IActionContext, treeItem: TableTreeItem): Promise<void> {
     let accountId = treeItem.root.storageAccountId;
     const resourceType = "Azure.Table";
     let resourceName = treeItem.tableName;
 
-    await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(context, accountId, treeItem.root.subscriptionId, resourceType, resourceName);
 }

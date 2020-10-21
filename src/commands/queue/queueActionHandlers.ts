@@ -13,10 +13,10 @@ export function registerQueueActionHandlers(): void {
     registerCommand("azureStorage.deleteQueue", async (context: IActionContext, treeItem?: QueueTreeItem) => await deleteNode(context, QueueTreeItem.contextValue, treeItem));
 }
 
-async function openQueueInStorageExplorer(_context: IActionContext, treeItem: QueueTreeItem): Promise<void> {
+async function openQueueInStorageExplorer(context: IActionContext, treeItem: QueueTreeItem): Promise<void> {
     let accountId = treeItem.root.storageAccountId;
     const resourceType = "Azure.Queue";
     let resourceName = treeItem.queue.name;
 
-    await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(context, accountId, treeItem.root.subscriptionId, resourceType, resourceName);
 }

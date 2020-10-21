@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import * as fs from "fs";
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
+import { IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
 import { Launcher } from "../utils/launcher";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
@@ -15,7 +15,7 @@ const regKey: { hive: string, key: string } = { hive: "HKCR", key: "\\storageexp
 
 export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher {
 
-    public async openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void> {
+    public async openResource(context: IActionContext, accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void> {
         // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
@@ -33,39 +33,36 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
             url = `${url}&resourcename=${resourceName}`;
         }
 
-        await WindowsStorageExplorerLauncher.launchStorageExplorer([url]);
+        await WindowsStorageExplorerLauncher.launchStorageExplorer(context, [url]);
     }
 
-    private static async getStorageExplorerExecutable(): Promise<string> {
-        return await callWithTelemetryAndErrorHandling('getStorageExplorerExecutableWindows', async context => {
-            let regVal: string | undefined;
-            try {
-                regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(regKey.hive, regKey.key);
-            } catch (err) {
-                context.telemetry.properties.storageExplorerNotFound = 'true';
+    private static async getStorageExplorerExecutable(context: IActionContext): Promise<string> {
+        let regVal: string | undefined;
+        try {
+            regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(regKey.hive, regKey.key);
+        } catch (err) {
+            context.telemetry.properties.storageExplorerNotFound = 'true';
+        }
+
+        let exePath: string | undefined;
+        if (regVal) {
+            // Parse from e.g.: "C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe" -- "%1"
+            exePath = regVal.split("\"")[1];
+        }
+        if (exePath && await WindowsStorageExplorerLauncher.fileExists(exePath)) {
+            // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
+            return exePath;
+        } else {
+            context.telemetry.properties.storageExplorerNotFound = 'true';
+            let selected: "Download" = <"Download">await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
+            if (selected === "Download") {
+                context.telemetry.properties.downloadStorageExplorer = 'true';
+                await WindowsStorageExplorerLauncher.downloadStorageExplorer();
             }
 
-            let exePath: string | undefined;
-            if (regVal) {
-                // Parse from e.g.: "C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe" -- "%1"
-                exePath = regVal.split("\"")[1];
-            }
-            if (exePath && await WindowsStorageExplorerLauncher.fileExists(exePath)) {
-                // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
-                return exePath;
-            } else {
-                context.telemetry.properties.storageExplorerNotFound = 'true';
-                let selected: "Download" = <"Download">await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
-                if (selected === "Download") {
-                    context.telemetry.properties.downloadStorageExplorer = 'true';
-                    await WindowsStorageExplorerLauncher.downloadStorageExplorer();
-                }
-
-                // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
-                throw new UserCancelledError();
-            }
-            // tslint:disable-next-line: strict-boolean-expressions
-        }) || '';
+            // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
+            throw new UserCancelledError();
+        }
     }
 
     private static async fileExists(path: string): Promise<boolean> {
@@ -95,8 +92,8 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
         await Launcher.launch("cmd", "/c", "start", downloadPageUrl);
     }
 
-    private static async launchStorageExplorer(args: string[] = []): Promise<void> {
-        let storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
+    private static async launchStorageExplorer(context: IActionContext, args: string[] = []): Promise<void> {
+        let storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable(context);
         await Launcher.launch(storageExplorerExecutable, ...args);
     }
 }

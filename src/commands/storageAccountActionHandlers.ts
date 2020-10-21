@@ -31,7 +31,7 @@ async function openStorageAccountInStorageExplorer(context: IActionContext, tree
 
     let accountId = treeItem.storageAccount.id;
 
-    await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId);
+    await storageExplorerLauncher.openResource(context, accountId, treeItem.root.subscriptionId);
 }
 
 async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {

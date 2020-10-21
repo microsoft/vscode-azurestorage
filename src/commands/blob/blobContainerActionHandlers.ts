@@ -44,10 +44,10 @@ export function registerBlobContainerActionHandlers(): void {
     });
 }
 
-async function openBlobContainerInStorageExplorer(_context: IActionContext, treeItem: BlobContainerTreeItem): Promise<void> {
+async function openBlobContainerInStorageExplorer(context: IActionContext, treeItem: BlobContainerTreeItem): Promise<void> {
     let accountId = treeItem.root.storageAccountId;
     const resourceType = 'Azure.BlobContainer';
     let resourceName = treeItem.container.name;
 
-    await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(context, accountId, treeItem.root.subscriptionId, resourceType, resourceName);
 }

@@ -14,7 +14,7 @@ export async function askOpenInStorageExplorer(context: IActionContext, errorMes
     window.showErrorMessage(errorMessage, message).then(async result => {
         if (result === message) {
             context.telemetry.properties.openInStorageExplorer = 'true';
-            await storageExplorerLauncher.openResource(resourceId, subscriptionId, resourceType, resourceName);
+            await storageExplorerLauncher.openResource(context, resourceId, subscriptionId, resourceType, resourceName);
         }
     });
 

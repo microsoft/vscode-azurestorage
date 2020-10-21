@@ -22,11 +22,11 @@ export function registerFileShareActionHandlers(): void {
     });
 }
 
-async function openFileShareInStorageExplorer(_context: IActionContext, treeItem: FileShareTreeItem): Promise<void> {
+async function openFileShareInStorageExplorer(context: IActionContext, treeItem: FileShareTreeItem): Promise<void> {
     let accountId = treeItem.root.storageAccountId;
     let subscriptionid = treeItem.root.subscriptionId;
     const resourceType = 'Azure.FileShare';
     let resourceName = treeItem.shareName;
 
-    await storageExplorerLauncher.openResource(accountId, subscriptionid, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(context, accountId, subscriptionid, resourceType, resourceName);
 }
