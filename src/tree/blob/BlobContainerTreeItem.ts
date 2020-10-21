@@ -6,10 +6,11 @@
 import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as fse from 'fs-extra';
+import * as retry from 'p-retry';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
@@ -19,6 +20,7 @@ import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
+import { localize } from '../../utils/localize';
 import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -205,47 +207,65 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         notificationProgress: NotificationProgress,
         cancellationToken: vscode.CancellationToken
     ): Promise<string> {
-        try {
-            // Find existing blobs
-            let blobsToDelete: azureStorageBlob.BlobItem[] = [];
-            blobsToDelete = await this.listAllBlobs(cancellationToken);
+        const retries: number = 4;
+        await retry(
+            async (currentAttempt) => {
+                context.telemetry.properties.deployAttempt = currentAttempt.toString();
+                if (currentAttempt > 1) {
+                    const message: string = localize('retryingDeploy', 'Retrying deploy (Attempt {0}/{1})...', currentAttempt, retries + 1);
+                    ext.outputChannel.appendLog(message);
+                }
 
-            if (blobsToDelete.length) {
-                let message = `The storage container "${this.friendlyContainerName}" contains ${blobsToDelete.length} files. Deploying will delete all of these existing files.  Continue?`;
-                let deleteAndDeploy: vscode.MessageItem = { title: 'Delete and Deploy' };
-                const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteAndDeploy, DialogResponses.cancel);
-                if (result !== deleteAndDeploy) {
-                    context.telemetry.properties.cancelStep = 'AreYouSureYouWantToDeleteExistingBlobs';
-                    throw new UserCancelledError();
+                // Find existing blobs
+                let blobsToDelete: azureStorageBlob.BlobItem[] = [];
+                blobsToDelete = await this.listAllBlobs(cancellationToken);
+
+                if (blobsToDelete.length) {
+                    let message = `The storage container "${this.friendlyContainerName}" contains ${blobsToDelete.length} files. Deploying will delete all of these existing files.  Continue?`;
+                    let deleteAndDeploy: vscode.MessageItem = { title: 'Delete and Deploy' };
+                    const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteAndDeploy, DialogResponses.cancel);
+                    if (result !== deleteAndDeploy) {
+                        context.telemetry.properties.cancelStep = 'AreYouSureYouWantToDeleteExistingBlobs';
+                        throw new UserCancelledError();
+                    }
+                }
+
+                ext.outputChannel.appendLog(`Deploying to static website ${this.root.storageAccountName}/${this.container.name}`);
+
+                // Delete existing blobs (if requested)
+                let transferProgress = new TransferProgress('blobs', blobsToDelete.length, 'Deleting');
+                await this.deleteBlobs(blobsToDelete, transferProgress, notificationProgress, cancellationToken, context.telemetry.properties);
+
+                // Reset notification progress. Otherwise the progress bar will remain full when uploading blobs
+                notificationProgress.report({ increment: -1 });
+
+                // Upload files as blobs
+                await uploadLocalFolder(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading', false);
+            },
+            {
+                retries,
+                minTimeout: 2 * 1000,
+                onFailedAttempt: error => {
+                    const parsedError: IParsedError = parseError(error);
+                    if (/server failed to authenticate/i.test(parsedError.message)) {
+                        // Only retry if we see this error
+                        return;
+                    } else if (parsedError.isUserCancelledError) {
+                        ext.outputChannel.appendLog("Deployment canceled.");
+                    }
+                    throw error;
                 }
             }
+        );
 
-            ext.outputChannel.appendLog(`Deploying to static website ${this.root.storageAccountName}/${this.container.name}`);
-
-            // Delete existing blobs (if requested)
-            let transferProgress = new TransferProgress('blobs', blobsToDelete.length, 'Deleting');
-            await this.deleteBlobs(blobsToDelete, transferProgress, notificationProgress, cancellationToken, context.telemetry.properties);
-
-            // Reset notification progress. Otherwise the progress bar will remain full when uploading blobs
-            notificationProgress.report({ increment: -1 });
-
-            // Upload files as blobs
-            await uploadLocalFolder(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading', false);
-
-            let webEndpoint = this.getPrimaryWebEndpoint();
-            if (!webEndpoint) {
-                throw new Error(`Could not obtain the primary web endpoint for ${this.root.storageAccountName}`);
-            }
-
-            ext.outputChannel.appendLog(`Deployment to static website complete. Primary web endpoint is ${webEndpoint}`);
-
-            return webEndpoint;
-        } catch (error) {
-            if (parseError(error).isUserCancelledError) {
-                ext.outputChannel.appendLog("Deployment canceled.");
-            }
-            throw error;
+        let webEndpoint = this.getPrimaryWebEndpoint();
+        if (!webEndpoint) {
+            throw new Error(`Could not obtain the primary web endpoint for ${this.root.storageAccountName}`);
         }
+
+        ext.outputChannel.appendLog(`Deployment to static website complete. Primary web endpoint is ${webEndpoint}`);
+
+        return webEndpoint;
     }
 
     public getPrimaryWebEndpoint(): string | undefined {
