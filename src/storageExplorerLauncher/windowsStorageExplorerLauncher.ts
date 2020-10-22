@@ -38,7 +38,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
         await WindowsStorageExplorerLauncher.launchStorageExplorer([url]);
     }
 
-    private static async getStorageExplorerExecutable(): Promise<string | undefined> {
+    private static async getStorageExplorerExecutable(): Promise<string> {
         return await callWithTelemetryAndErrorHandling('getStorageExplorerExecutableWindows', async context => {
             let regVal: string | undefined;
             try {
@@ -62,9 +62,10 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 await ext.ui.showWarningMessage(message, download);
                 context.telemetry.properties.downloadStorageExplorer = 'true';
                 await WindowsStorageExplorerLauncher.downloadStorageExplorer();
-                return undefined;
+                throw new UserCancelledError();
             }
-        });
+            // tslint:disable-next-line: strict-boolean-expressions
+        }) || '';
     }
 
     private static async fileExists(path: string): Promise<boolean> {
@@ -95,7 +96,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async launchStorageExplorer(args: string[] = []): Promise<void> {
-        let storageExplorerExecutable: string | undefined = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
+        let storageExplorerExecutable: string = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
         if (!storageExplorerExecutable) {
             throw new UserCancelledError();
         }
