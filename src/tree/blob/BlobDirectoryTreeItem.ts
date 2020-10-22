@@ -6,11 +6,12 @@
 import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
+import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { localize } from "../../utils/localize";
 import { ICopyUrl } from "../ICopyUrl";
 import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
@@ -83,7 +84,12 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         ext.outputChannel.appendLog(`Blob Directory URL copied to clipboard: ${url}`);
     }
 
-    public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
+    public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {
+        if (!context.suppressMessage) {
+            const message: string = localize('deleteBlobDir', "Are you sure you want to delete the blob directory '{0}' and all its contents?", this.label);
+            await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        }
+
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
             progress.report({ message: `Deleting directory ${this.dirName}` });
             let errors: boolean = await this.deleteFolder(context);
