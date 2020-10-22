@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzCopyClient, AzCopyLocation, FromToOption, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
+import { IJobInfo } from "@azure-tools/azcopy-node/dist/src/IJobInfo";
 import { ExitJobStatus, ITransferStatus, ProgressJobStatus } from "@azure-tools/azcopy-node/dist/src/Output/TransferStatus";
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
 import { NotificationProgress } from "../../constants";
 import { ext } from '../../extensionVariables';
@@ -33,11 +34,12 @@ export async function azCopyTransfer(
     // `followSymLinks: true` causes downloads to fail (which is expected) but it currently doesn't work as expected for uploads: https://github.com/Azure/azure-storage-azcopy/issues/1174
     // So it's omitted from `copyOptions` for now
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, excludePath: '.git;.vscode' };
-    const finalTransferStatus: AzCopyTransferStatus = await startAndWaitForTransfer(context, { src, dst }, copyOptions, transferProgress, notificationProgress, cancellationToken);
-    handleFinalTransferStatus(context, finalTransferStatus, src.path);
+    const jobInfo: IJobInfo = await startAndWaitForTransfer(context, { src, dst }, copyOptions, transferProgress, notificationProgress, cancellationToken);
+    await handleJob(context, jobInfo, src.path);
 }
 
-function handleFinalTransferStatus(context: IActionContext, finalTransferStatus: AzCopyTransferStatus, transferLabel: string): void {
+async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLabel: string): Promise<void> {
+    const finalTransferStatus: AzCopyTransferStatus = jobInfo.latestStatus;
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
         // tslint:disable-next-line: strict-boolean-expressions
@@ -61,6 +63,12 @@ function handleFinalTransferStatus(context: IActionContext, finalTransferStatus:
             // Add an additional error log since we don't have any more info about the failure
             ext.outputChannel.appendLog(localize('couldNotTransfer', 'Could not transfer "{0}"', transferLabel));
         }
+
+        if (jobInfo.logFileLocation) {
+            const uri: Uri = Uri.file(jobInfo.logFileLocation);
+            ext.outputChannel.appendLog(localize('logFile', 'Log file: {0}', uri.toString()));
+        }
+
         message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
         if (finalTransferStatus?.JobStatus && /CompletedWith*/gi.test(finalTransferStatus.JobStatus)) {
@@ -71,6 +79,7 @@ function handleFinalTransferStatus(context: IActionContext, finalTransferStatus:
         }
     }
 }
+
 async function startAndWaitForTransfer(
     context: IActionContext,
     location: ITransferLocation,
@@ -78,7 +87,7 @@ async function startAndWaitForTransfer(
     transferProgress: TransferProgress,
     notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken
-): Promise<AzCopyTransferStatus> {
+): Promise<IJobInfo> {
     const copyClient: AzCopyClient = new AzCopyClient();
     const jobId: string = await copyClient.copy(location.src, location.dst, options);
 
@@ -107,5 +116,5 @@ async function startAndWaitForTransfer(
         await delay(1000);
     }
 
-    return (await copyClient.getJobInfo(jobId)).latestStatus;
+    return await copyClient.getJobInfo(jobId);
 }
