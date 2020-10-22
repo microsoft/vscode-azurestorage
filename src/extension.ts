@@ -57,7 +57,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         const azureAccountTreeItem = new AzureAccountTreeItem();
         context.subscriptions.push(azureAccountTreeItem);
         ext.tree = new AzExtTreeDataProvider(azureAccountTreeItem, 'azureStorage.loadMore');
-        ext.treeView = vscode.window.createTreeView(ext.prefix, { treeDataProvider: ext.tree, showCollapseAll: true });
+        ext.treeView = vscode.window.createTreeView(ext.prefix, { treeDataProvider: ext.tree, showCollapseAll: true, canSelectMany: true });
         context.subscriptions.push(ext.treeView);
 
         registerBlobActionHandlers();

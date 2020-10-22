@@ -6,9 +6,11 @@
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 import { BlockBlobClient } from "@azure/storage-blob";
 import { ShareFileClient } from "@azure/storage-file-share";
-import { extname, join } from "path";
-import { ProgressLocation, SaveDialogOptions, Uri, window } from "vscode";
-import { IActionContext, UserCancelledError } from "vscode-azureextensionui";
+import * as fse from 'fs-extra';
+import { join, posix } from "path";
+import { ProgressLocation, window } from "vscode";
+import { AzExtTreeItem, IActionContext } from "vscode-azureextensionui";
+import { configurationSettingsKeys } from "../constants";
 import { ext } from "../extensionVariables";
 import { TransferProgress } from "../TransferProgress";
 import { BlobDirectoryTreeItem } from "../tree/blob/BlobDirectoryTreeItem";
@@ -16,86 +18,139 @@ import { BlobTreeItem } from "../tree/blob/BlobTreeItem";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
 import { createBlockBlobClient } from "../utils/blobUtils";
+import { checkCanOverwrite } from "../utils/checkCanOverwrite";
 import { createFileClient } from "../utils/fileUtils";
+import { isSubpath } from "../utils/fs";
 import { localize } from "../utils/localize";
+import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
+import { OverwriteChoice } from "../utils/uploadUtils";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from "./azCopy/azCopyLocations";
 import { azCopyTransfer } from "./azCopy/azCopyTransfer";
 
-export async function download(
-    context: IActionContext,
-    treeItem: BlobTreeItem | BlobDirectoryTreeItem | FileTreeItem | DirectoryTreeItem,
-): Promise<void> {
-    let remoteFileName: string;
-    let remoteFilePath: string;
-    let fromTo: FromToOption;
-    let storageClient: BlockBlobClient | ShareFileClient | undefined;
-    let isDirectory: boolean;
-    if (treeItem instanceof BlobTreeItem) {
-        await treeItem.checkCanDownload(context);
-
-        remoteFileName = treeItem.blobName;
-        remoteFilePath = treeItem.blobPath;
-        fromTo = 'BlobLocal';
-        storageClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
-        isDirectory = false;
-    } else if (treeItem instanceof BlobDirectoryTreeItem) {
-        remoteFileName = treeItem.dirName;
-        remoteFilePath = treeItem.dirPath;
-        fromTo = 'BlobLocal';
-        isDirectory = true;
-    } else if (treeItem instanceof FileTreeItem) {
-        remoteFileName = treeItem.fileName;
-        remoteFilePath = join(treeItem.directoryPath, treeItem.fileName);
-        fromTo = 'FileLocal';
-        storageClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
-        isDirectory = false;
-    } else {
-        remoteFileName = treeItem.directoryName;
-        remoteFilePath = join(treeItem.parentPath, treeItem.directoryName);
-        fromTo = 'FileLocal';
-        isDirectory = true;
-    }
-
-    const uri: Uri = await getUriForDownload(remoteFileName);
-    if (uri.scheme === 'file') {
-        const src: IRemoteSasLocation = createAzCopyRemoteLocation(treeItem, remoteFilePath, isDirectory);
-        const dst: ILocalLocation = createAzCopyLocalLocation(uri.fsPath);
-
-        let totalWork: number | undefined;
-        if (storageClient) {
-            totalWork = (await storageClient.getProperties()).contentLength;
-        }
-
-        const transferProgress: TransferProgress = new TransferProgress('bytes', totalWork, remoteFileName);
-        const title: string = localize('downloadingTo', 'Downloading from "{0}" to "{1}"...', remoteFileName, uri.fsPath);
-
-        ext.outputChannel.appendLog(title);
-        await window.withProgress({ title, location: ProgressLocation.Notification }, async (notificationProgress, cancellationToken) => {
-            await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
-        });
-        ext.outputChannel.appendLog(localize('successfullyDownloaded', 'Successfully downloaded "{0}".', uri.toString()));
-    } else {
-        context.errorHandling.suppressReportIssue = true;
-        throw new Error(localize('downloadDest', 'Download destination scheme cannot be "{0}". Only "file" scheme is supported.', uri.scheme));
-    }
+interface IAzCopyDownload {
+    remoteFileName: string;
+    remoteFilePath: string;
+    localFilePath: string;
+    fromTo: FromToOption;
+    isDirectory: boolean;
+    treeItem: BlobTreeItem | BlobDirectoryTreeItem | FileTreeItem | DirectoryTreeItem;
+    totalWork?: number;
 }
 
-async function getUriForDownload(resourceName: string): Promise<Uri> {
-    const extension: string = extname(resourceName);
-    const filters = { "All files": ['*'] };
-    if (extension) {
-        // This is needed to ensure the file extension is added in the Save dialog, since the filename will be displayed without it by default on Windows
-        filters[`*${extension}`] = [extension];
+export async function download(context: IActionContext, treeItem: AzExtTreeItem, treeItems?: AzExtTreeItem[]): Promise<void> {
+    // tslint:disable-next-line: strict-boolean-expressions
+    treeItems = treeItems || [treeItem];
+
+    const placeHolderString: string = localize('selectFolderForDownload', 'Select destination folder for download');
+    const destinationFolder: string = await showWorkspaceFoldersQuickPick(placeHolderString, context, configurationSettingsKeys.deployPath);
+
+    const azCopyDownloads: IAzCopyDownload[] = await getAzCopyDownloads(context, destinationFolder, treeItems);
+    if (azCopyDownloads.length === 0) {
+        // Nothing to download
+        return;
     }
-    const options: SaveDialogOptions = {
-        saveLabel: localize('download', 'Download'),
-        filters,
-        defaultUri: Uri.file(resourceName)
-    };
-    const uri: Uri | undefined = await window.showSaveDialog(options);
-    if (uri) {
-        return uri;
-    } else {
-        throw new UserCancelledError();
+
+    const title: string = localize('downloadingTo', 'Downloading to "{0}"...', destinationFolder);
+    ext.outputChannel.appendLog(title);
+    await window.withProgress({ title, location: ProgressLocation.Notification }, async (notificationProgress, cancellationToken) => {
+        for (const azCopyDownload of azCopyDownloads) {
+            const src: IRemoteSasLocation = createAzCopyRemoteLocation(azCopyDownload.treeItem, azCopyDownload.remoteFilePath, azCopyDownload.isDirectory);
+            const dst: ILocalLocation = createAzCopyLocalLocation(azCopyDownload.localFilePath);
+            const units: 'files' | 'bytes' = azCopyDownload.isDirectory ? 'files' : 'bytes';
+            const transferProgress: TransferProgress = new TransferProgress(units, azCopyDownload.totalWork, azCopyDownload.remoteFileName);
+            await azCopyTransfer(context, azCopyDownload.fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
+        }
+    });
+
+    ext.outputChannel.appendLog(localize('successfullyDownloaded', 'Successfully downloaded to "{0}".', destinationFolder));
+}
+
+async function getAzCopyDownloads(context: IActionContext, destinationFolder: string, treeItems: AzExtTreeItem[]): Promise<IAzCopyDownload[]> {
+    const allFolderDownloads: IAzCopyDownload[] = [];
+    const allFileDownloads: IAzCopyDownload[] = [];
+
+    for (const treeItem of treeItems) {
+        if (treeItem instanceof BlobTreeItem) {
+            await treeItem.checkCanDownload(context);
+            const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
+            allFileDownloads.push({
+                remoteFileName: treeItem.blobName,
+                remoteFilePath: treeItem.blobPath,
+                localFilePath: join(destinationFolder, treeItem.blobName),
+                fromTo: 'BlobLocal',
+                isDirectory: false,
+                treeItem,
+                totalWork: (await blockBlobClient.getProperties()).contentLength
+            });
+        } else if (treeItem instanceof BlobDirectoryTreeItem) {
+            allFolderDownloads.push({
+                remoteFileName: treeItem.dirName,
+                remoteFilePath: treeItem.dirPath,
+                localFilePath: join(destinationFolder, treeItem.dirName),
+                fromTo: 'BlobLocal',
+                isDirectory: true,
+                treeItem
+            });
+        } else if (treeItem instanceof FileTreeItem) {
+            const fileClient: ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+            allFileDownloads.push({
+                remoteFileName: treeItem.fileName,
+                remoteFilePath: posix.join(treeItem.directoryPath, treeItem.fileName),
+                localFilePath: join(destinationFolder, treeItem.fileName),
+                fromTo: 'FileLocal',
+                isDirectory: false,
+                treeItem,
+                totalWork: (await fileClient.getProperties()).contentLength
+            });
+        } else if (treeItem instanceof DirectoryTreeItem) {
+            allFolderDownloads.push({
+                remoteFileName: treeItem.directoryName,
+                remoteFilePath: posix.join(treeItem.parentPath, treeItem.directoryName),
+                localFilePath: join(destinationFolder, treeItem.directoryName),
+                fromTo: 'FileLocal',
+                isDirectory: true,
+                treeItem
+            });
+        }
     }
+
+    let hasParent: boolean;
+    let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+    const foldersToDownload: IAzCopyDownload[] = [];
+    const filesToDownload: IAzCopyDownload[] = [];
+
+    // Only download folders and files if their containing folder isn't already being downloaded.
+    for (const folderDownload of allFolderDownloads) {
+        hasParent = false;
+        for (const parentFolderDownload of allFolderDownloads) {
+            if (folderDownload !== parentFolderDownload && isSubpath(parentFolderDownload.remoteFilePath, folderDownload.remoteFilePath)) {
+                hasParent = true;
+                break;
+            }
+        }
+
+        if (!hasParent && await checkCanDownload(folderDownload.localFilePath, overwriteChoice)) {
+            foldersToDownload.push(folderDownload);
+        }
+    }
+
+    for (const fileDownload of allFileDownloads) {
+        hasParent = false;
+        for (const parentFolderDownload of allFolderDownloads) {
+            if (isSubpath(parentFolderDownload.remoteFilePath, fileDownload.remoteFilePath)) {
+                hasParent = true;
+                break;
+            }
+        }
+
+        if (!hasParent && await checkCanDownload(fileDownload.localFilePath, overwriteChoice)) {
+            filesToDownload.push(fileDownload);
+        }
+    }
+
+    return [...foldersToDownload, ...filesToDownload];
+}
+
+async function checkCanDownload(destPath: string, overwriteChoice: { choice: OverwriteChoice | undefined }): Promise<boolean> {
+    return await checkCanOverwrite(destPath, overwriteChoice, async () => await fse.pathExists(destPath));
 }
