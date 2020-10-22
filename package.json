@@ -819,6 +819,11 @@
                     "scope": "resource",
                     "type": "string",
                     "description": "The name of the task to run before deploying."
+                },
+                "azureStorage.deleteBeforeDeploy": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Delete all existing blobs before deploying to static website."
                 }
             }
         }
