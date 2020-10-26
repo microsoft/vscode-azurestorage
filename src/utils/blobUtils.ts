@@ -142,6 +142,17 @@ export async function getBlobPath(parent: BlobContainerTreeItem | BlobDirectoryT
     });
 }
 
+export function filterOutLoadedChildren(children: AzExtTreeItem[], loadedChildren: Set<string>): AzExtTreeItem[] {
+    let result: AzExtTreeItem[] = [];
+    for (const child of children) {
+        if (!loadedChildren.has(child.fullId)) {
+            result.push(child);
+            loadedChildren.add(child.fullId);
+        }
+    }
+    return result;
+}
+
 export interface IBlobContainerCreateChildContext extends IActionContext {
     childType: string;
     childName: string;
