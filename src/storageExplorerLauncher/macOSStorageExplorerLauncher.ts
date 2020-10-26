@@ -73,8 +73,10 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     }
 
     private async launchStorageExplorer(extraArgs: string[] = []): Promise<void> {
-        let storageExplorerExecutable = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
-
+        let storageExplorerExecutable: string = await MacOSStorageExplorerLauncher.getStorageExplorerExecutable();
+        if (!storageExplorerExecutable) {
+            throw new UserCancelledError();
+        }
         return Launcher.launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
     }
 
