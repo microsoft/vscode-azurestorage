@@ -15,12 +15,13 @@ import { AzureStorageFS } from '../../AzureStorageFS';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFiles';
-import { configurationSettingsKeys, extensionPrefix, getResourcesPath, NotificationProgress, staticWebsiteContainerName } from "../../constants";
+import { configurationSettingsKeys, getResourcesPath, NotificationProgress, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { localize } from '../../utils/localize';
+import { getWorkspaceSetting } from '../../utils/settingsUtils';
 import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
@@ -207,7 +208,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         notificationProgress: NotificationProgress,
         cancellationToken: vscode.CancellationToken
     ): Promise<string> {
-        ext.outputChannel.appendLog(localize('deploying', 'Deploying to static website {0}/{1}', this.root.storageAccountId, this.container.name));
+        ext.outputChannel.appendLog(localize('deploying', 'Deploying to static website "{0}/{1}"', this.root.storageAccountId, this.container.name));
         const retries: number = 4;
         await retry(
             async (currentAttempt) => {
@@ -217,7 +218,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                     ext.outputChannel.appendLog(message);
                 }
 
-                if (vscode.workspace.getConfiguration(extensionPrefix).get<boolean>(configurationSettingsKeys.deleteBeforeDeploy)) {
+                if (getWorkspaceSetting<boolean>(configurationSettingsKeys.deleteBeforeDeploy)) {
                     // Find existing blobs
                     let blobsToDelete: azureStorageBlob.BlobItem[] = [];
                     blobsToDelete = await this.listAllBlobs(cancellationToken);
