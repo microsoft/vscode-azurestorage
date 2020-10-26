@@ -13,6 +13,7 @@ export const maxPageSize = 50;
 export enum configurationSettingsKeys {
     deployPath = 'deployPath',
     preDeployTask = 'preDeployTask',
+    deleteBeforeDeploy = 'deleteBeforeDeploy'
 }
 
 export const extensionPrefix: string = 'azureStorage';
