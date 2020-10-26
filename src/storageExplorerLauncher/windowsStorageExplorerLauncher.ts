@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as fs from "fs";
-import * as vscode from 'vscode';
+import { MessageItem } from "vscode";
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
+import { ext } from "../extensionVariables";
 import { Launcher } from "../utils/launcher";
+import { localize } from "../utils/localize";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
@@ -55,13 +57,11 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 return exePath;
             } else {
                 context.telemetry.properties.storageExplorerNotFound = 'true';
-                let selected: "Download" = <"Download">await vscode.window.showWarningMessage("Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?", "Download");
-                if (selected === "Download") {
-                    context.telemetry.properties.downloadStorageExplorer = 'true';
-                    await WindowsStorageExplorerLauncher.downloadStorageExplorer();
-                }
-
-                // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
+                const download: MessageItem = { title: localize('download', 'Download') };
+                const message: string = localize('cantFindSE', 'Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?');
+                await ext.ui.showWarningMessage(message, download);
+                context.telemetry.properties.downloadStorageExplorer = 'true';
+                await WindowsStorageExplorerLauncher.downloadStorageExplorer();
                 throw new UserCancelledError();
             }
             // tslint:disable-next-line: strict-boolean-expressions
@@ -96,7 +96,10 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async launchStorageExplorer(args: string[] = []): Promise<void> {
-        let storageExplorerExecutable = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
+        let storageExplorerExecutable: string = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
+        if (!storageExplorerExecutable) {
+            throw new UserCancelledError();
+        }
         await Launcher.launch(storageExplorerExecutable, ...args);
     }
 }
