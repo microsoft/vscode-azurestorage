@@ -37,7 +37,7 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
     const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
     const settings: PageSettings = {
         continuationToken,
-        //
+        // https://github.com/Azure/Azurite/issues/605
         maxPageSize: parent.root.isEmulated ? maxPageSize * 10 : maxPageSize
     };
     let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(path.posix.sep, { prefix }).byPage(settings);
