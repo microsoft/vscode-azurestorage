@@ -10,7 +10,7 @@ import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, IC
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { createBlobClient, createChildAsNewBlockBlob, filterOutLoadedChildren, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { createBlobClient, createChildAsNewBlockBlob, ensureLoadMoreBlobChildren, IBlobContainerCreateChildContext } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from "../ICopyUrl";
 import { IStorageRoot } from "../IStorageRoot";
@@ -62,11 +62,8 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             this._loadedChildren.clear();
         }
 
-        let { children, continuationToken } = await loadMoreBlobChildren(this, this._continuationToken);
+        let { children, continuationToken } = await ensureLoadMoreBlobChildren(this, this._loadedChildren, this._continuationToken);
         this._continuationToken = continuationToken;
-        if (this.root.isEmulated) {
-            children = filterOutLoadedChildren(children, this._loadedChildren);
-        }
         return children;
     }
 

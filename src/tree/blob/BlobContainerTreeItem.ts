@@ -18,7 +18,7 @@ import { IExistingFileContext } from '../../commands/uploadFiles';
 import { configurationSettingsKeys, getResourcesPath, NotificationProgress, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
-import { createBlobContainerClient, createChildAsNewBlockBlob, filterOutLoadedChildren, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { createBlobContainerClient, createChildAsNewBlockBlob, ensureLoadMoreBlobChildren, IBlobContainerCreateChildContext } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
@@ -87,11 +87,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             result.push(ti);
         }
 
-        let { children, continuationToken } = await loadMoreBlobChildren(this, this._continuationToken);
+        let { children, continuationToken } = await ensureLoadMoreBlobChildren(this, this._loadedChildren, this._continuationToken);
         this._continuationToken = continuationToken;
-        if (this.root.isEmulated) {
-            children = filterOutLoadedChildren(children, this._loadedChildren);
-        }
         return result.concat(children);
     }
 
