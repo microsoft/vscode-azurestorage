@@ -69,7 +69,7 @@ export async function ensureLoadMoreBlobChildren(parent: BlobContainerTreeItem |
         if (parent.root.isEmulated) {
             children = filterOutLoadedChildren(children, loadedChildren);
         }
-    } while (children.length === 0 && !!continuationToken)
+    } while (children.length === 0 && !!continuationToken);
     return { children, continuationToken };
 }
 
