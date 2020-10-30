@@ -10,7 +10,7 @@ import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, IC
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { createBlobClient, createChildAsNewBlockBlob, ensureLoadMoreBlobChildren, IBlobContainerCreateChildContext } from '../../utils/blobUtils';
+import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from "../ICopyUrl";
 import { IStorageRoot } from "../IStorageRoot";
@@ -36,7 +36,6 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     public readonly dirPath: string;
 
     private _continuationToken: string | undefined;
-    private _loadedChildren: Set<string> = new Set();
 
     constructor(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, dirPath: string, public container: azureStorageBlob.ContainerItem) {
         super(parent);
@@ -59,10 +58,9 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
-            this._loadedChildren.clear();
         }
 
-        let { children, continuationToken } = await ensureLoadMoreBlobChildren(this, this._loadedChildren, this._continuationToken);
+        let { children, continuationToken } = await loadMoreBlobChildren(this, this._continuationToken);
         this._continuationToken = continuationToken;
         return children;
     }

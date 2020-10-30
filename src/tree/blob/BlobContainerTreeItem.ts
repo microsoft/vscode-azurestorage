@@ -18,7 +18,7 @@ import { IExistingFileContext } from '../../commands/uploadFiles';
 import { configurationSettingsKeys, getResourcesPath, NotificationProgress, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
-import { createBlobContainerClient, createChildAsNewBlockBlob, ensureLoadMoreBlobChildren, IBlobContainerCreateChildContext } from '../../utils/blobUtils';
+import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
@@ -39,7 +39,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     private _continuationToken: string | undefined;
     private _websiteHostingEnabled: boolean;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
-    private _loadedChildren: Set<string> = new Set();
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
@@ -76,7 +75,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         const result: AzExtTreeItem[] = [];
         if (clearCache) {
             this._continuationToken = undefined;
-            this._loadedChildren.clear();
             const ti = new GenericTreeItem(this, {
                 label: this._openInFileExplorerString,
                 commandId: 'azureStorage.openInFileExplorer',
@@ -87,7 +85,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             result.push(ti);
         }
 
-        let { children, continuationToken } = await ensureLoadMoreBlobChildren(this, this._loadedChildren, this._continuationToken);
+        let { children, continuationToken } = await loadMoreBlobChildren(this, this._continuationToken);
         this._continuationToken = continuationToken;
         return result.concat(children);
     }

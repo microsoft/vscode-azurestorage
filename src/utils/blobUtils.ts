@@ -16,11 +16,6 @@ import { BlobTreeItem } from '../tree/blob/BlobTreeItem';
 import { IStorageRoot } from "../tree/IStorageRoot";
 import { localize } from './localize';
 
-export interface ILoadMoreBlobChildrenResponse {
-    children: AzExtTreeItem[];
-    continuationToken?: string;
-}
-
 export function createBlobContainerClient(root: IStorageRoot, containerName: string): azureStorageBlob.ContainerClient {
     const blobServiceClient: azureStorageBlob.BlobServiceClient = root.createBlobServiceClient();
     return blobServiceClient.getContainerClient(containerName);
@@ -36,7 +31,7 @@ export function createBlockBlobClient(root: IStorageRoot, containerName: string,
     return blobContainerClient.getBlockBlobClient(blobName);
 }
 
-async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, continuationToken?: string): Promise<ILoadMoreBlobChildrenResponse> {
+export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, continuationToken?: string): Promise<{ children: AzExtTreeItem[], continuationToken?: string }> {
     const prefix: string | undefined = parent instanceof BlobDirectoryTreeItem ? parent.dirPath : undefined;
     const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
     let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(path.posix.sep, { prefix }).byPage({ continuationToken, maxPageSize: maxPageSize });
@@ -58,30 +53,6 @@ async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobDirector
     }
 
     return { children, continuationToken };
-}
-
-export async function ensureLoadMoreBlobChildren(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, loadedChildren: Set<string>, continuationToken?: string | undefined): Promise<ILoadMoreBlobChildrenResponse> {
-    let children: AzExtTreeItem[];
-    do {
-        const response: ILoadMoreBlobChildrenResponse = await loadMoreBlobChildren(parent, continuationToken);
-        children = response.children;
-        continuationToken = response.continuationToken;
-        if (parent.root.isEmulated) {
-            children = filterOutLoadedChildren(children, loadedChildren);
-        }
-    } while (children.length === 0 && !!continuationToken);
-    return { children, continuationToken };
-}
-
-function filterOutLoadedChildren(children: AzExtTreeItem[], loadedChildren: Set<string>): AzExtTreeItem[] {
-    let result: AzExtTreeItem[] = [];
-    for (const child of children) {
-        if (!loadedChildren.has(child.fullId)) {
-            result.push(child);
-            loadedChildren.add(child.fullId);
-        }
-    }
-    return result;
 }
 
 // Currently only supports creating block blobs
