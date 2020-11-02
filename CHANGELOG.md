@@ -1,6 +1,15 @@
 # Change Log
 All notable changes to the "vscode-azurestorage" extension will be documented in this file.
 
+## 0.11.0 - 2020-11-02
+### Added
+- Support for downloading multiple blobs, files, and directories at a time
+- Added setting "azureStorage.deleteBeforeDeploy" to delete existing blobs before deploying to static website (defaults to "true")
+- View AzCopy log files when transfers fail
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-azurestorage/issues?utf8=%E2%9C%93&q=is%3Aclosed+is%3Aissue+milestone%3A0.11.0+)
+
 ## 0.10.1 - 2020-10-02
 ### Added
 - Choose the destination directory when uploading resources
