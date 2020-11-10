@@ -43,7 +43,7 @@ async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLab
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
         // tslint:disable-next-line: strict-boolean-expressions
-        let message: string = localize('azCopyTransfer', 'AzCopy Transfer: "{0}".', finalTransferStatus?.JobStatus || 'Failed');
+        let message: string = jobInfo.errorMessage || localize('azCopyTransfer', 'AzCopy Transfer: "{0}". ', finalTransferStatus?.JobStatus || 'Failed');
         if (finalTransferStatus?.FailedTransfers?.length || finalTransferStatus?.SkippedTransfers?.length) {
             message += localize('checkOutputWindow', ' Check the [output window](command:{0}) for a list of incomplete transfers.', `${ext.prefix}.showOutputChannel`);
 
