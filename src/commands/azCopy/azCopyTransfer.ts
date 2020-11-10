@@ -59,7 +59,7 @@ async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLab
                     ext.outputChannel.appendLog(`\t${skippedTransfer.Dst}`);
                 }
             }
-        } else if (!jobInfo.errorMessage) {
+        } else {
             // Add an additional error log since we don't have any more info about the failure
             ext.outputChannel.appendLog(localize('couldNotTransfer', 'Could not transfer "{0}"', transferLabel));
         }
