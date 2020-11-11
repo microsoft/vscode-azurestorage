@@ -1,5 +1,7 @@
+import { Environment } from '@azure/ms-rest-azure-env';
 import * as path from 'path';
 import * as request from 'request';
+import { ISubscriptionContext } from "vscode-azureextensionui";
 
 let environmentType: string = "unknown";
 let baseUrl: string = "";
@@ -17,7 +19,7 @@ interface IJsonObject {
 }
 export function ifStack(): boolean {
     if (environmentType === "unknown") {
-        const vscodetype = 'Code - Insiders'; //Change this to 'Code'
+        const vscodetype = 'Code';
         const settingsPath = path.join(<string>process.env.APPDATA, vscodetype, 'User', 'settings.json');
         let isStack: string = "";
         try {
@@ -66,13 +68,12 @@ async function fetchEndpointMetadata(): Promise<any> {
     });
 }
 
-// tslint:disable-next-line: typedef
-export async function getEnvironment(root): Promise<void> {
+export async function getEnvironment(root: ISubscriptionContext): Promise<void> {
     if (environmentType === "AzureStack") {
         let result = await fetchEndpointMetadata();
         let metadata: IJsonObject = <IJsonObject>result;
-        // tslint:disable-next-line: no-unsafe-any
-        let env = root.credentials.environment;
+        type IRootEnvironment<T> = { -readonly [P in keyof T]: T[P] };
+        let env: IRootEnvironment<Environment> = root.credentials.environment;
         env.name = "AzureStack";
         env.portalUrl = metadata.portalEndpoint;
         env.resourceManagerEndpointUrl = baseUrl;
@@ -83,7 +84,6 @@ export async function getEnvironment(root): Promise<void> {
         env.storageEndpointSuffix = baseUrl.substring(baseUrl.indexOf('.'));
         env.keyVaultDnsSuffix = ".vault".concat(baseUrl.substring(baseUrl.indexOf('.')));
         env.managementEndpointUrl = metadata.authentication.audiences[0];
-        // tslint:disable-next-line: no-unsafe-any
         root.environment = env;
     }
 }

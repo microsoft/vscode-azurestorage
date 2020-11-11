@@ -4,26 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage-profile-2019-03-01-hybrid';
-import { AzureNameStep, createAzureClient, IStorageAccountWizardContext, ResourceGroupListStep, resourceGroupNamingRules, storageAccountNamingRules } from 'vscode-azureextensionui';
+import { StorageManagementClient as StackStorageManagementClient } from '@azure/arm-storage-profile-2019-03-01-hybrid';
+import { AzureNameStep, IStorageAccountWizardContext, ResourceGroupListStep, resourceGroupNamingRules, storageAccountNamingRules } from 'vscode-azureextensionui';
 import { ext } from '../../extensionVariables';
-import { ifStack } from '../../utils/environmentUtils';
+import { createStorageClientResult } from '../../utils/clientManagementUtil';
 
 export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
     public async prompt(wizardContext: T): Promise<void> {
-        let client;
-        let isAzureStack: boolean = ifStack();
-        if (isAzureStack) {
-            client = createAzureClient(wizardContext, StorageManagementClient1);
-        } else {
-            client = createAzureClient(wizardContext, StorageManagementClient);
-        }
-
+        let clientResult = await createStorageClientResult(wizardContext, false);
         const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
         wizardContext.newStorageAccountName = (await ext.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter a globally unique name for the new Storage Account',
-            validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(client, value)
+            validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(clientResult.clinet, value)
         })).trim();
 
         if (!wizardContext.relatedNameTask) {
@@ -39,7 +32,7 @@ export class StorageAccountNameStep<T extends IStorageAccountWizardContext> exte
         return await ResourceGroupListStep.isNameAvailable(wizardContext, name);
     }
 
-    private async validateStorageAccountName(client: StorageManagementClient, name: string): Promise<string | undefined> {
+    private async validateStorageAccountName(client: StorageManagementClient | StackStorageManagementClient, name: string): Promise<string | undefined> {
         name = name ? name.trim() : '';
 
         if (!name || name.length < storageAccountNamingRules.minLength || name.length > storageAccountNamingRules.maxLength) {

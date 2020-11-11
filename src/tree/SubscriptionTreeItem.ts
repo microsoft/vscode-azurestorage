@@ -2,13 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-
-import { StorageManagementClient } from '@azure/arm-storage';
-import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage-profile-2019-03-01-hybrid';
+import { StorageAccount as StackStorageAccount, StorageAccountListResult as StackStorageAccountListResult } from '@azure/arm-storage-profile-2019-03-01-hybrid/esm/models';
+import { StorageAccount, StorageAccountListResult } from '@azure/arm-storage/esm/models';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
-import { getEnvironment, ifStack } from '../utils/environmentUtils';
+import { createStorageClientResult } from '../utils/clientManagementUtil';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
 import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigureStep';
@@ -25,20 +24,14 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public supportsAdvancedCreation: boolean = true;
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
-        let isAzureStack: boolean = ifStack();
-        let storageManagementClient;
-        if (isAzureStack) {
-            await getEnvironment(this.root);
-            storageManagementClient = createAzureClient(this.root, StorageManagementClient1);
-        } else {
-            storageManagementClient = createAzureClient(this.root, StorageManagementClient);
-        }
-        let accounts = await storageManagementClient.storageAccounts.list();
-        return this.createTreeItemsWithErrorHandling(
+        let clientResult = await createStorageClientResult(this.root, true);
+        let storageManagementClient = clientResult.clinet;
+        let accounts: StorageAccountListResult | StackStorageAccountListResult = await storageManagementClient.storageAccounts.list();
+        return this.createTreeItemsWithErrorHandling<StorageAccount | StackStorageAccount>(
             accounts,
             'invalidStorageAccount',
-            async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa as any), storageManagementClient),
-            sa => (sa as any).name
+            async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
+            sa => (sa).name
         );
     }
 

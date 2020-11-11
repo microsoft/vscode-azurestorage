@@ -4,17 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage-profile-2019-03-01-hybrid';
+import { StorageManagementClient as StackStorageManagementClient } from '@azure/arm-storage-profile-2019-03-01-hybrid';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, AzureWizard, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, AzureWizard, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
-import { ifStack } from '../utils/environmentUtils';
+import { createStorageClientResult } from '../utils/clientManagementUtil';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -57,7 +57,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private constructor(
         parent: AzureParentTreeItem,
         public readonly storageAccount: StorageAccountWrapper,
-        public readonly storageManagementClient: StorageManagementClient) {
+        public readonly storageManagementClient: StorageManagementClient | StackStorageManagementClient) {
         super(parent);
         this._root = this.createRoot(parent.root);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
@@ -66,7 +66,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         this._tableGroupTreeItem = new TableGroupTreeItem(this);
     }
 
-    public static async createStorageAccountTreeItem(parent: AzureParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
+    public static async createStorageAccountTreeItem(parent: AzureParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient | StackStorageManagementClient): Promise<StorageAccountTreeItem> {
         const ti = new StorageAccountTreeItem(parent, storageAccount, client);
         // make sure key is initialized
         await ti.refreshKey();
@@ -128,13 +128,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
-            let storageManagementClient;
-            let isAzureStack: boolean = ifStack();
-            if (isAzureStack) {
-                storageManagementClient = createAzureClient(this.root, StorageManagementClient1);
-            } else {
-                storageManagementClient = createAzureClient(this.root, StorageManagementClient);
-            }
+            let clientResult = await createStorageClientResult(this.root, false);
+            let storageManagementClient = clientResult.clinet;
             let parsedId = this.parseAzureResourceId(this.storageAccount.id);
             let resourceGroupName = parsedId.resourceGroups;
 

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementModels } from '@azure/arm-storage';
+import { StorageManagementModels as StackStorageManagementModels } from '@azure/arm-storage-profile-2019-03-01-hybrid';
 import { isNullOrUndefined } from 'util';
 
 export function nonNull<T>(value: T | undefined, name?: string): T {
@@ -28,7 +29,7 @@ function copyNonNullProperty<TSource, TDest>(source: TSource, dest: { [key: stri
  * Wrappers around StorageAccountWrapper that guarantees certain properties are not undefined/null
  */
 export class StorageAccountWrapper {
-    constructor(_account: StorageManagementModels.StorageAccount) {
+    constructor(_account: StorageManagementModels.StorageAccount | StackStorageManagementModels.StorageAccount) {
         copyNonNullProperty(_account, this, 'id');
         copyNonNullProperty(_account, this, 'name');
         copyNonNullProperty(_account, this, 'type');

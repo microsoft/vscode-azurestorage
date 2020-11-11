@@ -3,10 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementClient } from '@azure/arm-storage';
-import { StorageManagementClient as StorageManagementClient1 } from '@azure/arm-storage-profile-2019-03-01-hybrid';
-import { AzureWizardExecuteStep, createAzureClient, IStorageAccountWizardContext } from "vscode-azureextensionui";
-import { ifStack } from '../../utils/environmentUtils';
+import { AzureWizardExecuteStep, IStorageAccountWizardContext } from "vscode-azureextensionui";
+import { createStorageClientResult } from '../../utils/clientManagementUtil';
 import { nonNullProp } from '../../utils/nonNull';
 import { StorageAccountWrapper } from "../../utils/storageWrappers";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -26,14 +24,8 @@ export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<ISt
     }
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {
-        let storageManagementClient;
-        let isAzureStack: boolean = ifStack();
-        if (isAzureStack) {
-            storageManagementClient = createAzureClient(this.parent.root, StorageManagementClient1);
-        } else {
-            storageManagementClient = createAzureClient(this.parent.root, StorageManagementClient);
-        }
-        wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.parent, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')), storageManagementClient);
+        let clientResult = await createStorageClientResult(this.parent.root, false);
+        wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.parent, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')), clientResult.clinet);
     }
 
     public shouldExecute(): boolean {
