@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { createStorageClientResult } from '../utils/clientManagementUtil';
+import { ifStack } from '../utils/environmentUtils';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
 import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigureStep';
@@ -36,11 +37,14 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
-        const defaultLocation = 'westus';
+        const isStack = ifStack();
+        const defaultLocation = isStack ? 'local' : 'westus';
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
-            new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
+            isStack ?
+                new StorageAccountCreateStep({ kind: StorageAccountKind.Storage, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }) :
+                new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
             new StorageAccountTreeItemCreateStep(this),
             new StaticWebsiteConfigureStep()
         ];
@@ -52,9 +56,9 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         } else {
             executeSteps.push(new ResourceGroupCreateStep());
             Object.assign(wizardContext, {
-                enableStaticWebsite: true,
-                indexDocument: StaticWebsiteIndexDocumentStep.defaultIndexDocument,
-                errorDocument404Path: StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
+                enableStaticWebsite: isStack ? false : true,
+                indexDocument: isStack ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
+                errorDocument404Path: isStack ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
             });
             await LocationListStep.setLocation(wizardContext, defaultLocation);
         }
