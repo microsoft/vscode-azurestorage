@@ -15,13 +15,13 @@ export async function createStorageClientResult(clientInfo: ISubscriptionContext
         storageManagementClient = createAzureClient(clientInfo, StorageManagementClient);
     }
     let storageClientResult: IStorageClientResult = {
-        clinet: storageManagementClient,
+        client: storageManagementClient,
         isAzureStack: isAzureStack
     };
     return storageClientResult;
 }
 
 export interface IStorageClientResult {
-    clinet: StorageManagementClient | StackStorageManagementClient;
+    client: StorageManagementClient | StackStorageManagementClient;
     isAzureStack: boolean;
 }

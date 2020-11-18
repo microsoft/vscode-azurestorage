@@ -25,7 +25,7 @@ export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<ISt
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {
         let clientResult = await createStorageClientResult(this.parent.root, false);
-        wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.parent, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')), clientResult.clinet);
+        wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.parent, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')), clientResult.client);
     }
 
     public shouldExecute(): boolean {

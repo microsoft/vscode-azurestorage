@@ -129,7 +129,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         if (result === DialogResponses.deleteResponse) {
             const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
             let clientResult = await createStorageClientResult(this.root, false);
-            let storageManagementClient = clientResult.clinet;
+            let storageManagementClient = clientResult.client;
             let parsedId = this.parseAzureResourceId(this.storageAccount.id);
             let resourceGroupName = parsedId.resourceGroups;
 

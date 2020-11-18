@@ -30,7 +30,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         let newSkuName: StackStorageManagementModels.SkuName | StorageManagementModels.SkuName;
         let wizardStorageAccount: StorageManagementModels.StorageAccount | StackStorageManagementModels.StorageAccount;
         if (storageManagementResult.isAzureStack) {
-            storageClient = <StackStorageManagementClient>storageManagementResult.clinet;
+            storageClient = <StackStorageManagementClient>storageManagementResult.client;
             newSkuName = <StackStorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
             this.messageCreatingStorageAccount(newName, newLocation, newSkuName, progress);
             let stackStorageCreateParams = {
@@ -46,7 +46,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
                 stackStorageCreateParams
             );
         } else {
-            storageClient = <StorageManagementClient>storageManagementResult.clinet;
+            storageClient = <StorageManagementClient>storageManagementResult.client;
             newSkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
             this.messageCreatingStorageAccount(newName, newLocation, newSkuName, progress);
             let storageCreateParams = {
