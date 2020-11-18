@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementClient } from '@azure/arm-storage';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, createAzureClient, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
+import { createStorageClient } from '../utils/azureClients';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
 import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigureStep';
@@ -23,7 +23,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public supportsAdvancedCreation: boolean = true;
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
-        let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
+        let storageManagementClient = await createStorageClient(this.root);
         let accounts = await storageManagementClient.storageAccounts.list();
         return this.createTreeItemsWithErrorHandling(
             accounts,
