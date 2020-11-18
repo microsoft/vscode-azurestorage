@@ -51,7 +51,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
         if (context.advancedCreation) {
             promptSteps.push(new ResourceGroupListStep());
-            promptSteps.push(new StaticWebsiteEnableStep());
+            promptSteps.push(new StaticWebsiteEnableStep(isStack));
             LocationListStep.addStep(wizardContext, promptSteps);
         } else {
             executeSteps.push(new ResourceGroupCreateStep());
