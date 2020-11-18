@@ -62,9 +62,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
                 storageCreateParams
             );
         }
-        // Also change type in extensionui to make wizardContext.StorageAccount support stack api-version.
-        // tslint:disable-next-line: no-unsafe-any
-        wizardContext.storageAccount = <StorageManagementModels.StorageAccount>wizardStorageAccount;
+        wizardContext.storageAccount = wizardStorageAccount;
         const createdStorageAccount: string = `Successfully created storage account "${newName}".`;
         ext.outputChannel.appendLog(createdStorageAccount);
     }
