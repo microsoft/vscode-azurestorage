@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { AzureWizardExecuteStep, createAzureClient, INewStorageAccountDefaults, IStorageAccountWizardContext } from 'vscode-azureextensionui';
+import { AzureWizardExecuteStep, INewStorageAccountDefaults, IStorageAccountWizardContext } from 'vscode-azureextensionui';
 import { NotificationProgress } from '../../constants';
 import { ext } from '../../extensionVariables';
+import { createStorageClient } from '../../utils/azureClients';
 
 export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> implements StorageAccountCreateStep<T> {
     public priority: number = 130;
@@ -27,7 +28,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation}" with sku "${newSkuName}"...`;
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
-        const storageClient: StorageManagementClient = createAzureClient(wizardContext, StorageManagementClient);
+        const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
         wizardContext.storageAccount = await storageClient.storageAccounts.create(
             // tslint:disable-next-line:no-non-null-assertion
             wizardContext.resourceGroup!.name!,

@@ -11,9 +11,10 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, AzureWizard, createAzureClient, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzureParentTreeItem, AzureTreeItem, AzureWizard, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
+import { createStorageClient } from '../utils/azureClients';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -127,7 +128,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
-            let storageManagementClient = createAzureClient(this.root, StorageManagementClient);
+            let storageManagementClient = await createStorageClient(this.root);
             let parsedId = this.parseAzureResourceId(this.storageAccount.id);
             let resourceGroupName = parsedId.resourceGroups;
 
