@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { createStorageClient } from '../utils/azureClients';
+import { getEnvironment, ifStack } from '../utils/envUtils';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
 import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigureStep';
@@ -21,8 +22,12 @@ import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public childTypeLabel: string = "Storage Account";
     public supportsAdvancedCreation: boolean = true;
+    private isStack: boolean = ifStack();
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
+        if (this.isStack) {
+            await getEnvironment(this.root);
+        }
         let storageManagementClient = await createStorageClient(this.root);
         let accounts = await storageManagementClient.storageAccounts.list();
         return this.createTreeItemsWithErrorHandling(
@@ -34,11 +39,11 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
-        const defaultLocation = 'westus';
+        const defaultLocation = this.isStack ? 'local' : 'westus';
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
-            new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
+            new StorageAccountCreateStep({ kind: this.isStack ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
             new StorageAccountTreeItemCreateStep(this),
             new StaticWebsiteConfigureStep(),
             new VerifyProvidersStep(['Microsoft.Storage'])
@@ -46,14 +51,14 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
         if (context.advancedCreation) {
             promptSteps.push(new ResourceGroupListStep());
-            promptSteps.push(new StaticWebsiteEnableStep());
+            promptSteps.push(new StaticWebsiteEnableStep(this.isStack));
             LocationListStep.addStep(wizardContext, promptSteps);
         } else {
             executeSteps.push(new ResourceGroupCreateStep());
             Object.assign(wizardContext, {
-                enableStaticWebsite: true,
-                indexDocument: StaticWebsiteIndexDocumentStep.defaultIndexDocument,
-                errorDocument404Path: StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
+                enableStaticWebsite: this.isStack ? false : true,
+                indexDocument: this.isStack ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
+                errorDocument404Path: this.isStack ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
             });
             await LocationListStep.setLocation(wizardContext, defaultLocation);
         }
