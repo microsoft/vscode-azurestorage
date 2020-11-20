@@ -61,8 +61,7 @@ export function ifStack(): boolean {
     return false;
 }
 
-// tslint:disable-next-line: no-any
-async function fetchEndpointMetadata(): Promise<any> {
+async function fetchEndpointMetadata(): Promise<IJsonObject> {
     const fetchUrl: string = baseUrl.concat("metadata/endpoints?api-version=1.0");
     let options = {
         url: fetchUrl,
@@ -72,13 +71,11 @@ async function fetchEndpointMetadata(): Promise<any> {
         rejectUnauthorized: false
     };
     return new Promise((resolve, reject) => {
-        // tslint:disable-next-line: no-unsafe-any
-        request.get(options, (err, _resp, body) => {
+        request.get(options, (err, _resp, body: string) => {
             if (err) {
                 reject(err);
             } else {
-                // tslint:disable-next-line: no-unsafe-any
-                resolve(JSON.parse(body));
+                resolve(<IJsonObject>JSON.parse(body));
             }
         });
     });
@@ -87,7 +84,7 @@ async function fetchEndpointMetadata(): Promise<any> {
 export async function getEnvironment(root: ISubscriptionContext): Promise<void> {
     if (environmentType === "AzureStack") {
         let result = await fetchEndpointMetadata();
-        let metadata: IJsonObject = <IJsonObject>result;
+        let metadata: IJsonObject = result;
         type IRootEnvironment<T> = { -readonly [P in keyof T]: T[P] };
         let env: IRootEnvironment<Environment> = root.credentials.environment;
         env.name = "AzureStack";
