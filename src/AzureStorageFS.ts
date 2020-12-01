@@ -18,7 +18,7 @@ import { BlobTreeItem } from "./tree/blob/BlobTreeItem";
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./tree/fileShare/DirectoryTreeItem";
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "./tree/fileShare/FileTreeItem";
-import { createBlobClient, createBlockBlobClient, createOrUpdateBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
+import { blobIdToFilePath, createBlobClient, createBlockBlobClient, createOrUpdateBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
 import { createFileClient, doesFileExist, updateFileFromText } from "./utils/fileUtils";
 import { localize } from "./utils/localize";
 import { nonNullValue } from "./utils/nonNull";
@@ -50,7 +50,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
         let rootId = matches[1];
         const rootName = path.basename(rootId);
-        filePath = filePath || matches[2];
+
+        // Blob directory IDs aren't equal to their paths since a blob directory can have the same name as a blob.
+        filePath = filePath || (rootId.includes('Blob Containers') ? blobIdToFilePath(matches[2]) : matches[2]);
 
         return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath)}?resourceId=${rootId}`);
     }
@@ -392,7 +394,13 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         }
 
         let pathToLook = filePath.split('/');
+        let childCount: number = 0;
         for (const childName of pathToLook) {
+            // Only allow blobs to be found on the last iteration of the loop.
+            // Otherwise a blob with the same names as a directory will be found first leading to a file system error.
+            childCount += 1;
+            const allowBlobTreeItem: boolean = childCount === pathToLook.length;
+
             if (treeItem instanceof BlobTreeItem) {
                 if (endSearchEarly) {
                     return treeItem;
@@ -402,7 +410,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             let children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
             let child = children.find((element) => {
-                if (element instanceof BlobTreeItem) {
+                if (element instanceof BlobTreeItem && allowBlobTreeItem) {
                     return element.blobName === childName;
                 } else if (element instanceof BlobDirectoryTreeItem) {
                     return element.dirName === childName;

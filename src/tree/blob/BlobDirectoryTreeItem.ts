@@ -19,6 +19,7 @@ import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 
 export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     public static contextValue: string = 'azureBlobDirectory';
+    public static idSuffix: string = '-blobDirectory';
     public contextValue: string = BlobDirectoryTreeItem.contextValue;
     public iconPath: { light: string | vscode.Uri; dark: string | vscode.Uri } = {
         light: path.join(getResourcesPath(), 'light', 'folder.svg'),
@@ -49,6 +50,10 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public get label(): string {
         return this.dirName;
+    }
+
+    public get id(): string {
+        return `${this.dirName}${BlobDirectoryTreeItem.idSuffix}`;
     }
 
     public hasMoreChildrenImpl(): boolean {
