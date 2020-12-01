@@ -397,7 +397,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         let childCount: number = 0;
         for (const childName of pathToLook) {
             // Only allow blobs to be found on the last iteration of the loop.
-            // Otherwise a blob with the same names as a directory will be found first leading to a file system error.
+            // Otherwise a blob with the same name as a directory will be found first leading to a file system error.
             childCount += 1;
             const allowBlobTreeItem: boolean = childCount === pathToLook.length;
 
