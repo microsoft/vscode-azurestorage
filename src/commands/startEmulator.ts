@@ -16,7 +16,7 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
     if (!!vscode.extensions.getExtension(azuriteExtensionId)) {
         // Use the Azurite extension
         await vscode.commands.executeCommand(`azurite.start_${emulatorType}`);
-        await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
+        await ext.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
     } else if (await azuriteCLIInstalled()) {
         // Use the Azurite CLI
 
@@ -28,7 +28,7 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
             setTimeout(resolve, emulatorTimeoutMS);
         });
 
-        await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
+        await ext.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
     } else {
         const installAzurite: vscode.MessageItem = { title: localize('installAzurite', 'Install Azurite') };
         const message: string = localize('mustInstallAzurite', 'You must install Azurite to start the storage emulator from VS Code.');

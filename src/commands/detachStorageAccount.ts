@@ -13,5 +13,5 @@ export async function detachStorageAccount(actionContext: IActionContext, treeIt
     }
 
     await ext.attachedStorageAccountsTreeItem.detach(treeItem);
-    await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
+    await ext.tree.refresh(actionContext, ext.attachedStorageAccountsTreeItem);
 }

@@ -65,6 +65,6 @@ export async function uploadFolder(
         }
     }
 
-    await ext.tree.refresh(treeItem);
+    await ext.tree.refresh(actionContext, treeItem);
     return resolution;
 }
