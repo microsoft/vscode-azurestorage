@@ -96,5 +96,5 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         vscode.window.showInformationMessage(complete);
     }
 
-    await ext.tree.refresh(treeItem);
+    await ext.tree.refresh(actionContext, treeItem);
 }

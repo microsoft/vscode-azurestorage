@@ -94,7 +94,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await wizard.prompt();
             await wizard.execute();
         });
-        registerCommand('azureStorage.refresh', async (_actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(treeItem));
+        registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(actionContext, treeItem));
         registerCommand('azureStorage.loadMore', async (actionContext: IActionContext, treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem, actionContext));
         registerCommand('azureStorage.copyUrl', (_actionContext: IActionContext, treeItem: AzureTreeItem & ICopyUrl) => treeItem.copyUrl());
         registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
@@ -142,8 +142,8 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     registerCommand("azureStorage.uploadFolder", uploadFolder);
     registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
     registerCommand('azureStorage.download', download);
-    registerCommand("azureStorage.attachStorageAccount", async () => {
-        await ext.attachedStorageAccountsTreeItem.attachWithConnectionString();
+    registerCommand("azureStorage.attachStorageAccount", async (actionContext: IActionContext) => {
+        await ext.attachedStorageAccountsTreeItem.attachWithConnectionString(actionContext);
     });
     registerCommand('azureStorage.detachStorageAccount', detachStorageAccount);
     registerCommand('azureStorage.startBlobEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.blob); }, startEmulatorDebounce);

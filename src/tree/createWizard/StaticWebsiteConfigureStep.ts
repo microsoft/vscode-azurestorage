@@ -47,7 +47,7 @@ export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageA
         window.showInformationMessage(msg);
 
         if (newStatus.staticWebsite && this.previouslyEnabled !== newStatus.staticWebsite.enabled) {
-            await ext.tree.refresh(this.accountTreeItem);
+            await ext.tree.refresh(wizardContext, this.accountTreeItem);
         }
     }
 

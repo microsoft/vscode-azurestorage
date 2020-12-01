@@ -6,7 +6,7 @@
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, ISubscriptionContext, parseError } from "vscode-azureextensionui";
+import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, IActionContext, ISubscriptionContext, parseError } from "vscode-azureextensionui";
 import { emulatorAccountName, emulatorConnectionString, getResourcesPath } from '../constants';
 import { ext } from '../extensionVariables';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
@@ -68,7 +68,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
         return contextValue !== StorageAccountTreeItem.contextValue && contextValue !== SubscriptionTreeItem.contextValue;
     }
 
-    public async attachWithConnectionString(): Promise<void> {
+    public async attachWithConnectionString(context: IActionContext): Promise<void> {
         const connectionString = await ext.ui.showInputBox({
             prompt: localize('enterConnectionString', 'Enter the connection string for your storage account'),
             validateInput: (value: string): string | undefined => this.validateConnectionString(value)
@@ -77,7 +77,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
         let accountName: string = getPropertyFromConnectionString(connectionString, 'AccountName') || emulatorAccountName;
 
         await this.attachAccount(await this.createTreeItem(connectionString, accountName));
-        await ext.tree.refresh(ext.attachedStorageAccountsTreeItem);
+        await ext.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
     }
 
     public async detach(treeItem: AttachedStorageAccountTreeItem): Promise<void> {
