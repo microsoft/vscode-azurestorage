@@ -217,7 +217,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async getWebsiteCapableContainer(context: IActionContext): Promise<BlobContainerTreeItem | undefined> {
         // Refresh the storage account first to make sure $web has been picked up if new
-        await this.refresh();
+        await this.refresh(context);
 
         // Currently only the child with the name "$web" is supported for hosting websites
         let id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${staticWebsiteContainerName}`;
@@ -288,7 +288,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             let props = { staticWebsite: { enabled: false } };
             await this.setWebsiteHostingProperties(props);
             window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
-            await ext.tree.refresh(this);
+            await ext.tree.refresh(context, this);
         }
     }
 
