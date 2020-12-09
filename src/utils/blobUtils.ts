@@ -148,11 +148,6 @@ export async function getBlobPath(parent: BlobContainerTreeItem | BlobDirectoryT
     });
 }
 
-export function blobIdToFilePath(id: string): string {
-    const idSuffixRegex: RegExp = new RegExp(`${BlobDirectoryTreeItem.idSuffix}\/`, 'g');
-    return id.replace(idSuffixRegex, '/');
-}
-
 export interface IBlobContainerCreateChildContext extends IActionContext {
     childType: string;
     childName: string;
