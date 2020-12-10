@@ -403,7 +403,7 @@
                 {
                     "$comment": "========= azureStorageAccount =========",
                     "command": "azureStorage.openStorageAccount",
-                    "when": "view == azureStorage && viewItem == azureStorageAccount",
+                    "when": "view == azureStorage && viewItem == azureStorageAccount && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
@@ -470,7 +470,7 @@
                 {
                     "$comment": "========= azureBlobContainer =========",
                     "command": "azureStorage.openBlobContainer",
-                    "when": "view == azureStorage && viewItem == azureBlobContainer",
+                    "when": "view == azureStorage && viewItem == azureBlobContainer && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
@@ -569,7 +569,7 @@
                 {
                     "$comment": "========= azureFileShare =========",
                     "command": "azureStorage.openFileShare",
-                    "when": "view == azureStorage && viewItem == azureFileShare",
+                    "when": "view == azureStorage && viewItem == azureFileShare && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
@@ -673,7 +673,7 @@
                 {
                     "$comment": "========= azureQueue =========",
                     "command": "azureStorage.openQueue",
-                    "when": "view == azureStorage && viewItem == azureQueue",
+                    "when": "view == azureStorage && viewItem == azureQueue && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
@@ -695,7 +695,7 @@
                 {
                     "$comment": "========= azureTable =========",
                     "command": "azureStorage.openTable",
-                    "when": "view == azureStorage && viewItem == azureTable",
+                    "when": "view == azureStorage && viewItem == azureTable && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
