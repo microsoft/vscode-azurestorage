@@ -49,7 +49,6 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     ext.outputChannel = createAzExtOutputChannel('Azure Storage', ext.prefix);
     context.subscriptions.push(ext.outputChannel);
     registerUIExtensionVariables(ext);
-    commands.executeCommand('setContext', 'azureStorage.isLinux', process.platform === 'linux');
 
     await callWithTelemetryAndErrorHandling('activate', async (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
