@@ -111,12 +111,28 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             let treeItem: AzureStorageTreeItem = await this.lookup(uri, context);
             let fileType: vscode.FileType = treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem ? vscode.FileType.Directory : vscode.FileType.File;
+            let ctime: number | undefined;
+            let props: (BlobGetPropertiesResponse & FileGetPropertiesResponse) | undefined;
 
-            // creation and modification times as well as size of tree item are intentionally set to 0 for now
-            return { type: fileType, ctime: 0, mtime: 0, size: 0 };
+            if (treeItem instanceof BlobTreeItem) {
+                const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
+                props = await blockBlobClient.getProperties();
+                ctime = props.createdOn?.valueOf();
+            } else if (treeItem instanceof FileTreeItem) {
+                const fileClient: ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+                props = await fileClient.getProperties();
+                ctime = props.fileCreatedOn?.valueOf();
+            }
 
-            // tslint:disable-next-line: strict-boolean-expressions
+            return {
+                type: fileType,
+                // tslint:disable: strict-boolean-expressions
+                ctime: ctime || 0,
+                mtime: props?.lastModified?.valueOf() || 0,
+                size: props?.contentLength || 0
+            };
         }) || { type: vscode.FileType.Unknown, ctime: 0, mtime: 0, size: 0 };
+        // tslint:enable: strict-boolean-expressions
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
