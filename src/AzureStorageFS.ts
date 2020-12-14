@@ -78,7 +78,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         }
 
         let doc = await vscode.workspace.openTextDocument(uri);
-        await vscode.window.showTextDocument(doc, { preserveFocus: true, preview: false });
+        await vscode.window.showTextDocument(doc, { preserveFocus: false, preview: false });
     }
 
     public static fireDeleteEvent(node: AzExtTreeItem): void {
