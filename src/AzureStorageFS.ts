@@ -392,7 +392,13 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         }
 
         let pathToLook = filePath.split('/');
+        let childCount: number = 0;
         for (const childName of pathToLook) {
+            // Only allow blobs to be found on the last iteration of the loop.
+            // Otherwise a blob with the same name as a directory will be found first leading to a file system error.
+            childCount += 1;
+            const allowBlobTreeItem: boolean = childCount === pathToLook.length;
+
             if (treeItem instanceof BlobTreeItem) {
                 if (endSearchEarly) {
                     return treeItem;
@@ -402,7 +408,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             let children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
             let child = children.find((element) => {
-                if (element instanceof BlobTreeItem) {
+                if (element instanceof BlobTreeItem && allowBlobTreeItem) {
                     return element.blobName === childName;
                 } else if (element instanceof BlobDirectoryTreeItem) {
                     return element.dirName === childName;
