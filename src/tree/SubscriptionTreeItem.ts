@@ -23,22 +23,27 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public supportsAdvancedCreation: boolean = true;
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
-        let storageManagementClient = await createStorageClient(this.root);
-        let accounts = await storageManagementClient.storageAccounts.list();
-        return this.createTreeItemsWithErrorHandling(
-            accounts,
-            'invalidStorageAccount',
-            async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
-            sa => sa.name
-        );
+        try {
+            let storageManagementClient = await createStorageClient(this.root);
+            let accounts = await storageManagementClient.storageAccounts.list();
+            return this.createTreeItemsWithErrorHandling(
+                accounts,
+                'invalidStorageAccount',
+                async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
+                sa => sa.name
+            );
+        } catch (error) {
+            throw error;
+        }
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
-        const defaultLocation = 'westus';
+        let isStack = this.root.environment.name === "AzurePPE" ? true : false
+        const defaultLocation = isStack ? 'local' : 'westus';
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
-            new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
+            new StorageAccountCreateStep({ kind: isStack ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
             new StorageAccountTreeItemCreateStep(this),
             new StaticWebsiteConfigureStep(),
             new VerifyProvidersStep(['Microsoft.Storage'])
@@ -46,14 +51,14 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
         if (context.advancedCreation) {
             promptSteps.push(new ResourceGroupListStep());
-            promptSteps.push(new StaticWebsiteEnableStep());
+            promptSteps.push(new StaticWebsiteEnableStep(isStack));
             LocationListStep.addStep(wizardContext, promptSteps);
         } else {
             executeSteps.push(new ResourceGroupCreateStep());
             Object.assign(wizardContext, {
-                enableStaticWebsite: true,
-                indexDocument: StaticWebsiteIndexDocumentStep.defaultIndexDocument,
-                errorDocument404Path: StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
+                enableStaticWebsite: isStack ? false : true,
+                indexDocument: isStack ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
+                errorDocument404Path: isStack ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
             });
             await LocationListStep.setLocation(wizardContext, defaultLocation);
         }
