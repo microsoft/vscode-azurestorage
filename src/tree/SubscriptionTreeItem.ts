@@ -38,7 +38,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
-        let isStack = this.root.environment.name === "AzurePPE" ? true : false
+        let isStack = this.root.environment.name === "AzurePPE" ? true : false;
         const defaultLocation = isStack ? 'local' : 'westus';
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
