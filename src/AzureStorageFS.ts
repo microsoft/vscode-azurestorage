@@ -100,6 +100,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
+        let ctime: number = 0;
+        let mtime: number = 0;
+        let size: number = 0;
+
         return await callWithTelemetryAndErrorHandling('stat', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
 
@@ -111,12 +115,24 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             let treeItem: AzureStorageTreeItem = await this.lookup(uri, context);
             let fileType: vscode.FileType = treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem ? vscode.FileType.Directory : vscode.FileType.File;
+            let props: (BlobGetPropertiesResponse & FileGetPropertiesResponse) | undefined;
 
-            // creation and modification times as well as size of tree item are intentionally set to 0 for now
-            return { type: fileType, ctime: 0, mtime: 0, size: 0 };
+            if (treeItem instanceof BlobTreeItem) {
+                const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
+                props = await blockBlobClient.getProperties();
+            } else if (treeItem instanceof FileTreeItem) {
+                const fileClient: ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+                props = await fileClient.getProperties();
+            }
 
-            // tslint:disable-next-line: strict-boolean-expressions
-        }) || { type: vscode.FileType.Unknown, ctime: 0, mtime: 0, size: 0 };
+            // tslint:disable: strict-boolean-expressions
+            ctime = props?.createdOn?.valueOf() || props?.fileCreatedOn?.valueOf() || 0;
+            mtime = props?.lastModified?.valueOf() || 0;
+            size = props?.contentLength || 0;
+
+            return { type: fileType, ctime, mtime, size };
+        }) || { type: vscode.FileType.Unknown, ctime, mtime, size };
+        // tslint:enable: strict-boolean-expressions
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
