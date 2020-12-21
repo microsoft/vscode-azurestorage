@@ -22,7 +22,7 @@ import { createBlobClient, createBlockBlobClient, createOrUpdateBlockBlob, doesB
 import { createFileClient, doesFileExist, updateFileFromText } from "./utils/fileUtils";
 import { localize } from "./utils/localize";
 import { nonNullValue } from "./utils/nonNull";
-import { validateBlobDirectoryName, validateFileDirectoryName } from "./utils/validateNames";
+import { validateBlobDirectoryName, validateFileOrDirectoryName } from "./utils/validateNames";
 
 type AzureStorageFileTreeItem = FileTreeItem | DirectoryTreeItem | FileShareTreeItem;
 type AzureStorageBlobTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
@@ -150,7 +150,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             try {
                 let parsedUri: IParsedUri = this.parseUri(uri);
-                let response: string | undefined = this.isFileShareUri(uri) ? validateFileDirectoryName(parsedUri.baseName) : validateBlobDirectoryName(parsedUri.baseName);
+                let response: string | undefined = this.isFileShareUri(uri) ? validateFileOrDirectoryName(parsedUri.baseName) : validateBlobDirectoryName(parsedUri.baseName);
                 if (response) {
                     // Use getFileSystemError to prevent multiple error notifications
                     throw getFileSystemError(uri, context, () => { return new vscode.FileSystemError(<string>response); });
