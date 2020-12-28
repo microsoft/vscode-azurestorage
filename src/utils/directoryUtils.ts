@@ -6,33 +6,24 @@
 import * as azureStorageShare from "@azure/storage-file-share";
 import * as path from "path";
 import { ProgressLocation, window } from "vscode";
-import { AzureParentTreeItem, ICreateChildImplContext, UserCancelledError } from "vscode-azureextensionui";
+import { AzureParentTreeItem, ICreateChildImplContext } from "vscode-azureextensionui";
 import { maxPageSize } from "../constants";
 import { ext } from "../extensionVariables";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
 import { IStorageRoot } from "../tree/IStorageRoot";
-import { createDirectoryClient, deleteFile } from "./fileUtils";
-import { validateFileDirectoryName } from "./validateNames";
+import { createDirectoryClient, deleteFile, getFileOrDirectoryName } from "./fileUtils";
 
 // Supports both file share and directory parents
 export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem> {
-    const dirName = context.childName || await window.showInputBox({
-        placeHolder: 'Enter a name for the new directory',
-        validateInput: validateFileDirectoryName
+    const dirName: string = context.childName || await getFileOrDirectoryName(parent, parentPath, shareName);
+    return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
+        context.showCreatingTreeItem(dirName);
+        progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
+        const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(parent.root, shareName, path.posix.join(parentPath, dirName));
+        await directoryClient.create();
+        return new DirectoryTreeItem(parent, parentPath, dirName, shareName);
     });
-
-    if (dirName) {
-        return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-            context.showCreatingTreeItem(dirName);
-            progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
-            const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(parent.root, shareName, path.posix.join(parentPath, dirName));
-            await directoryClient.create();
-            return new DirectoryTreeItem(parent, parentPath, dirName, shareName);
-        });
-    }
-
-    throw new UserCancelledError();
 }
 
 export async function listFilesInDirectory(directory: string, shareName: string, root: IStorageRoot, currentToken?: string): Promise<{ files: azureStorageShare.FileItem[], directories: azureStorageShare.DirectoryItem[], continuationToken: string }> {
