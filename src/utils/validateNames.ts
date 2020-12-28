@@ -6,8 +6,8 @@
 import { localize } from "./localize";
 
 const invalidBlobDirectoryChar = '\\'; // Keeps behavior consistent on Mac & Windows when creating blob directories via the file explorer
-const invalidFileChars = ['"', '/', '\\', ':', '|', '<', '>', '?', '*'];
-const invalidFileCharsString = invalidFileChars.join(', ');
+const invalidFileAndDirectoryChars = ['"', '/', '\\', ':', '|', '<', '>', '?', '*'];
+const invalidFileAndDirectoryCharsString = invalidFileAndDirectoryChars.join(', ');
 
 export enum DocumentType {
     index = 'index',
@@ -33,8 +33,8 @@ export function validateFileOrDirectoryName(name: string): string | undefined {
         return localize('nameMustContain', 'Name must contain between {0} and {1} characters', validLength.min, validLength.max);
     }
 
-    if (invalidFileChars.some(ch => name.indexOf(ch) >= 0)) {
-        return localize('nameCantContain', 'Name cannot contain the following characters: {0}', invalidFileCharsString);
+    if (invalidFileAndDirectoryChars.some(ch => name.indexOf(ch) >= 0)) {
+        return localize('nameCantContain', 'Name cannot contain the following characters: {0}', invalidFileAndDirectoryCharsString);
     }
 
     return undefined;
