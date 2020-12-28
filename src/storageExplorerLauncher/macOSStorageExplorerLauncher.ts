@@ -7,6 +7,7 @@ import * as fs from "fs";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
+import { storageExplorerDownloadUrl } from "../constants";
 import { Launcher } from "../utils/launcher";
 import { getSingleRootWorkspace } from "../utils/workspaceUtils";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
@@ -14,7 +15,6 @@ import { ResourceType } from "./ResourceType";
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     private static subExecutableLocation: string = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
-    public static downloadPageUrl: string = "https://go.microsoft.com/fwlink/?LinkId=723579";
 
     private static async getStorageExplorerExecutable(
         warningString: string = "Cannot find Storage Explorer. Browse to existing installation location or download and install Storage Explorer."): Promise<string> {
@@ -69,7 +69,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
     }
 
     private static async downloadStorageExplorer(): Promise<void> {
-        await Launcher.launch("open", MacOSStorageExplorerLauncher.downloadPageUrl);
+        await Launcher.launch("open", storageExplorerDownloadUrl);
     }
 
     private async launchStorageExplorer(extraArgs: string[] = []): Promise<void> {
