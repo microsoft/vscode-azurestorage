@@ -91,7 +91,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
 
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-            progress.report({ message: `Deleting directory ${this.dirName}` });
+            progress.report({ message: localize('deletingDirectory', 'Deleting directory "{0}"...', this.dirName) });
             let errors: boolean = await this.deleteFolder(context);
 
             if (errors) {
