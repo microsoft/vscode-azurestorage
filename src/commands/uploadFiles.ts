@@ -12,7 +12,7 @@ import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
-import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, upload } from "../utils/uploadUtils";
+import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, showUploadSuccessMessage, upload } from "../utils/uploadUtils";
 import { IAzCopyResolution } from "./azCopy/IAzCopyResolution";
 
 let lastUriUpload: Uri | undefined;
@@ -72,9 +72,15 @@ export async function uploadFiles(
         return await uploadFilesHelper(context, treeItem, urisToUpload, notificationProgress, cancellationToken, destinationDirectory, calledFromUploadToAzureStorage);
     } else {
         const title: string = getUploadingMessage(treeItem.label);
-        return await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
+        const resolution: IAzCopyResolution = await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
             return await uploadFilesHelper(context, nonNullValue(treeItem), urisToUpload, newNotificationProgress, newCancellationToken, nonNullValue(destinationDirectory), calledFromUploadToAzureStorage);
         });
+
+        if (!calledFromUploadToAzureStorage) {
+            showUploadSuccessMessage(treeItem.label);
+        }
+
+        return resolution;
     }
 }
 

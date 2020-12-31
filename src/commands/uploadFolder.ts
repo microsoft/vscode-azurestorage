@@ -11,7 +11,7 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { isAzCopyError } from '../utils/errorUtils';
 import { nonNullValue } from '../utils/nonNull';
-import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, showUploadSuccessMessage, upload, uploadLocalFolder } from '../utils/uploadUtils';
 import { IAzCopyResolution } from './azCopy/IAzCopyResolution';
 
 export async function uploadFolder(
@@ -63,6 +63,10 @@ export async function uploadFolder(
         } else {
             throw error;
         }
+    }
+
+    if (!calledFromUploadToAzureStorage) {
+        showUploadSuccessMessage(treeItem.label);
     }
 
     await ext.tree.refresh(actionContext, treeItem);
