@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { StorageManagementClient } from '@azure/arm-storage';
+import { StorageAccountsListNextResponse } from '@azure/arm-storage/esm/models';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
@@ -22,9 +24,20 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public childTypeLabel: string = "Storage Account";
     public supportsAdvancedCreation: boolean = true;
 
-    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
-        let storageManagementClient = await createStorageClient(this.root);
-        let accounts = await storageManagementClient.storageAccounts.list();
+    private _nextLink: string | undefined;
+
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
+        if (clearCache) {
+            this._nextLink = undefined;
+        }
+
+        let storageManagementClient: StorageManagementClient = await createStorageClient(this.root);
+        let accounts: StorageAccountsListNextResponse = this._nextLink ?
+            await storageManagementClient.storageAccounts.listNext(this._nextLink) :
+            await storageManagementClient.storageAccounts.list();
+
+        this._nextLink = accounts.nextLink;
+
         return this.createTreeItemsWithErrorHandling(
             accounts,
             'invalidStorageAccount',
@@ -82,7 +95,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     }
 
     public hasMoreChildrenImpl(): boolean {
-        return false;
+        return !!this._nextLink;
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {

@@ -6,8 +6,8 @@
 import { localize } from "./localize";
 
 const invalidBlobDirectoryChar = '\\'; // Keeps behavior consistent on Mac & Windows when creating blob directories via the file explorer
-const invalidFileChars = ['"', '/', '\\', ':', '|', '<', '>', '?', '*'];
-const invalidFileCharsString = invalidFileChars.join(', ');
+const invalidFileAndDirectoryChars = ['"', '/', '\\', ':', '|', '<', '>', '?', '*'];
+const invalidFileAndDirectoryCharsString = invalidFileAndDirectoryChars.join(', ');
 
 export enum DocumentType {
     index = 'index',
@@ -22,37 +22,19 @@ export function validateBlobDirectoryName(name: string): string | undefined {
     return undefined;
 }
 
-export function validateFileDirectoryName(name: string): string | undefined {
+export function validateFileOrDirectoryName(name: string): string | undefined {
     const validLength = { min: 1, max: 255 };
 
     if (!name) {
-        return "Directory name cannot be empty";
+        return localize('nameCantBeEmpty', 'Name cannot be empty');
     }
 
     if (name.length < validLength.min || name.length > validLength.max) {
-        return `Directory name must contain between ${validLength.min} and ${validLength.max} characters`;
+        return localize('nameMustContain', 'Name must contain between {0} and {1} characters', validLength.min, validLength.max);
     }
 
-    if (invalidFileChars.some(ch => name.indexOf(ch) >= 0)) {
-        return `Directory name cannot contain the following characters: '${invalidFileCharsString}`;
-    }
-
-    return undefined;
-}
-
-export function validateFileName(name: string): string | undefined {
-    const validLength = { min: 1, max: 255 };
-
-    if (!name) {
-        return "File name cannot be empty";
-    }
-
-    if (name.length < validLength.min || name.length > validLength.max) {
-        return `File name must contain between ${validLength.min} and ${validLength.max} characters`;
-    }
-
-    if (invalidFileChars.some(ch => name.indexOf(ch) >= 0)) {
-        return `File name cannot contain the following characters: ${invalidFileCharsString}'`;
+    if (invalidFileAndDirectoryChars.some(ch => name.indexOf(ch) >= 0)) {
+        return localize('nameCantContain', 'Name cannot contain the following characters: {0}', invalidFileAndDirectoryCharsString);
     }
 
     return undefined;
