@@ -10,6 +10,7 @@ import { storageExplorerDownloadUrl } from "../constants";
 import { ext } from "../extensionVariables";
 import { Launcher } from "../utils/launcher";
 import { localize } from "../utils/localize";
+import { openUrl } from "../utils/openUrl";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
@@ -61,7 +62,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 const message: string = localize('cantFindSE', 'Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?');
                 await ext.ui.showWarningMessage(message, download);
                 context.telemetry.properties.downloadStorageExplorer = 'true';
-                await WindowsStorageExplorerLauncher.downloadStorageExplorer();
+                await openUrl(storageExplorerDownloadUrl);
                 throw new UserCancelledError();
             }
             // tslint:disable-next-line: strict-boolean-expressions
@@ -88,11 +89,6 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 }
             });
         });
-    }
-
-    private static async downloadStorageExplorer(): Promise<void> {
-        //I'm not sure why running start directly doesn't work. Opening separate cmd to run the command works well
-        await Launcher.launch("cmd", "/c", "start", storageExplorerDownloadUrl);
     }
 
     private static async launchStorageExplorer(args: string[] = []): Promise<void> {

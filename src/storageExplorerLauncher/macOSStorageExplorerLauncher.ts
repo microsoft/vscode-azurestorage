@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import { storageExplorerDownloadUrl } from "../constants";
 import { Launcher } from "../utils/launcher";
+import { openUrl } from "../utils/openUrl";
 import { getSingleRootWorkspace } from "../utils/workspaceUtils";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
@@ -31,11 +32,12 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
                     let userSelectedAppLocation = await MacOSStorageExplorerLauncher.showOpenDialog();
                     await vscode.workspace.getConfiguration('azureStorage').update('storageExplorerLocation', userSelectedAppLocation, vscode.ConfigurationTarget.Global);
                     return await MacOSStorageExplorerLauncher.getStorageExplorerExecutable("Selected app is not a valid Storage Explorer installation. Browse to existing installation location or download and install Storage Explorer.");
-                } else if (selected === "Download") {
-                    context.telemetry.properties.downloadStorageExplorer = 'true';
-                    await MacOSStorageExplorerLauncher.downloadStorageExplorer();
-                    throw new UserCancelledError();
                 } else {
+                    if (selected === "Download") {
+                        context.telemetry.properties.downloadStorageExplorer = 'true';
+                        await openUrl(storageExplorerDownloadUrl);
+                    }
+
                     throw new UserCancelledError();
                 }
             }
@@ -66,10 +68,6 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         await this.launchStorageExplorer([
             url
         ]);
-    }
-
-    private static async downloadStorageExplorer(): Promise<void> {
-        await Launcher.launch("open", storageExplorerDownloadUrl);
     }
 
     private async launchStorageExplorer(extraArgs: string[] = []): Promise<void> {
