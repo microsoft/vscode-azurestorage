@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { MessageItem, Uri, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath } from "../../constants";
+import { getResourcesPath, storageExplorerDownloadUrl } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
@@ -79,7 +79,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         context.telemetry.measurements.blobDownloadSize = props.contentLength;
         if (props.blobType && !props.blobType.toLocaleLowerCase().startsWith("block")) {
             context.telemetry.properties.invalidBlobTypeForDownload = 'true';
-            const message: string = localize('pleaseUseSE', 'Please use Storage Explorer for blobs of type "{0}".', props.blobType);
+            const message: string = localize('pleaseUseSE', 'Please use [Storage Explorer]({0}) for blobs of type "{1}".', storageExplorerDownloadUrl, props.blobType);
             await askOpenInStorageExplorer(context, message, this.root.storageAccountId, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
         }
     }

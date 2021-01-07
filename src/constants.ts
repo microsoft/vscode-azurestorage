@@ -25,6 +25,8 @@ export const emulatorKey: string = 'Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6
 export const maxRemoteFileEditSizeMB: number = 50;
 export const maxRemoteFileEditSizeBytes: number = maxRemoteFileEditSizeMB * 1024 * 1024;
 
+export const storageExplorerDownloadUrl: string = 'https://go.microsoft.com/fwlink/?LinkId=723579';
+
 export function getResourcesPath(): string {
     return ext.context.asAbsolutePath('resources');
 }
