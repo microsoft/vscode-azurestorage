@@ -39,8 +39,15 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
         let isStack = this.root.environment.name === "AzurePPE" ? true : false;
-        const defaultLocation = isStack ? 'local' : 'westus';
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
+        let stackLocation = (await LocationListStep.getLocations(wizardContext)).find(l => l.displayName !== undefined || l.name !== undefined);
+        let defaultStackLocation: string;
+        if (stackLocation === undefined) {
+            throw new Error("there is no available location for resource provider in azure stack");
+        } else {
+            defaultStackLocation = <string>(stackLocation.name !== undefined ? stackLocation.name : stackLocation.displayName);
+        }
+        const defaultLocation: string = isStack ? defaultStackLocation : 'westus';
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
             new StorageAccountCreateStep({ kind: isStack ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
