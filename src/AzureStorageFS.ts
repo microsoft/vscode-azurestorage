@@ -5,10 +5,11 @@
 
 import { BlobClient, BlobDownloadResponseModel, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
 import { FileDownloadResponseModel, FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
+import * as retry from 'p-retry';
 import * as path from "path";
 import * as querystring from "querystring";
 import * as vscode from "vscode";
-import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError, UserCancelledError } from "vscode-azureextensionui";
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, IParsedError, parseError, UserCancelledError } from "vscode-azureextensionui";
 import { download } from "./commands/downloadFile";
 import { maxRemoteFileEditSizeBytes, maxRemoteFileEditSizeMB } from "./constants";
 import { ext } from "./extensionVariables";
@@ -245,72 +246,95 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
         await callWithTelemetryAndErrorHandling('writeFile', async (context) => {
-            if (!options.create && !options.overwrite) {
-                throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
-            }
-
-            if (uri.path.endsWith('/')) {
-                // https://github.com/microsoft/vscode-azurestorage/issues/576
-                context.errorHandling.rethrow = true;
-                context.errorHandling.suppressDisplay = true;
-                vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer'); // Show any parent directories that may have already been created
-                throw new Error("File/blob names with a trailing '/' are not allowed.");
-            }
-
-            const writeToFileShare: boolean = this.isFileShareUri(uri);
-            let parsedUri = this.parseUri(uri);
-            let treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
-
-            let childExists: boolean;
-            try {
-                await this.lookup(uri, context);
-                childExists = true;
-            } catch {
-                childExists = false;
-            }
-
-            let childExistsRemote: boolean;
-            if (treeItem instanceof FileShareTreeItem) {
-                childExistsRemote = await doesFileExist(parsedUri.baseName, treeItem, parsedUri.parentDirPath, treeItem.shareName);
-            } else {
-                childExistsRemote = await doesBlobExist(treeItem, parsedUri.filePath);
-            }
-
-            if (childExists !== childExistsRemote) {
-                // Need to be extra careful here to prevent possible data-loss. Related to https://github.com/microsoft/vscode-azurestorage/issues/436
-                throw new Error(localize('outOfSync', 'Your Azure Storage file system is out of sync and must be refreshed.'));
-            }
-
-            if (!childExists && !options.create) {
-                throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-            } else if (childExists && !options.overwrite) {
-                throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
-            } else {
-                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-                    if (childExists) {
-                        progress.report({ message: `Saving ${writeToFileShare ? 'file' : 'blob'} ${parsedUri.filePath}` });
-
-                        if (treeItem instanceof FileShareTreeItem) {
-                            await updateFileFromText(parsedUri.parentDirPath, parsedUri.baseName, treeItem.shareName, treeItem.root, content.toString());
-                        } else {
-                            await createOrUpdateBlockBlob(treeItem, parsedUri.filePath, content.toString());
-                        }
-
-                        // NOTE: This is the only event handled directly in this class and not in the tree item
-                        this.fireSoon({ type: vscode.FileChangeType.Changed, uri });
-                    } else {
-                        progress.report({ message: `Creating ${writeToFileShare ? 'file' : 'blob'} ${parsedUri.filePath}` });
-                        let parentUri: vscode.Uri = AzureStorageFS.idToUri(parsedUri.resourceId, parsedUri.parentDirPath);
-                        let parent = await this.lookupAsDirectory(parentUri, context, parsedUri.resourceId, parsedUri.parentDirPath);
-
-                        if (writeToFileShare) {
-                            await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFile', childName: parsedUri.baseName });
-                        } else {
-                            await parent.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlob', childName: parsedUri.filePath });
-                        }
+            const retries: number = 4;
+            await retry(
+                async (currentAttempt) => {
+                    context.telemetry.properties.writeAttempt = currentAttempt.toString();
+                    if (currentAttempt > 1) {
+                        const message: string = localize('retryingWriteFile', 'Trying to write file (Attempt {0}/{1})...', currentAttempt, retries + 1);
+                        ext.outputChannel.appendLog(message);
                     }
-                });
-            }
+
+                    if (!options.create && !options.overwrite) {
+                        throw getFileSystemError(uri, context, vscode.FileSystemError.NoPermissions);
+                    }
+
+                    if (uri.path.endsWith('/')) {
+                        // https://github.com/microsoft/vscode-azurestorage/issues/576
+                        context.errorHandling.rethrow = true;
+                        context.errorHandling.suppressDisplay = true;
+                        vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer'); // Show any parent directories that may have already been created
+                        throw new Error("File/blob names with a trailing '/' are not allowed.");
+                    }
+
+                    const writeToFileShare: boolean = this.isFileShareUri(uri);
+                    let parsedUri = this.parseUri(uri);
+                    let treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
+
+                    let childExists: boolean;
+                    try {
+                        await this.lookup(uri, context);
+                        childExists = true;
+                    } catch {
+                        childExists = false;
+                    }
+
+                    let childExistsRemote: boolean;
+                    if (treeItem instanceof FileShareTreeItem) {
+                        childExistsRemote = await doesFileExist(parsedUri.baseName, treeItem, parsedUri.parentDirPath, treeItem.shareName);
+                    } else {
+                        childExistsRemote = await doesBlobExist(treeItem, parsedUri.filePath);
+                    }
+
+                    if (childExists !== childExistsRemote) {
+                        // Need to be extra careful here to prevent possible data-loss. Related to https://github.com/microsoft/vscode-azurestorage/issues/436
+                        throw new Error(localize('outOfSync', 'Your Azure Storage file system is out of sync and must be refreshed.'));
+                    }
+
+                    if (!childExists && !options.create) {
+                        throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+                    } else if (childExists && !options.overwrite) {
+                        throw getFileSystemError(uri, context, vscode.FileSystemError.FileExists);
+                    } else {
+                        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
+                            if (childExists) {
+                                progress.report({ message: `Saving ${writeToFileShare ? 'file' : 'blob'} ${parsedUri.filePath}` });
+
+                                if (treeItem instanceof FileShareTreeItem) {
+                                    await updateFileFromText(parsedUri.parentDirPath, parsedUri.baseName, treeItem.shareName, treeItem.root, content.toString());
+                                } else {
+                                    await createOrUpdateBlockBlob(treeItem, parsedUri.filePath, content.toString());
+                                }
+
+                                // NOTE: This is the only event handled directly in this class and not in the tree item
+                                this.fireSoon({ type: vscode.FileChangeType.Changed, uri });
+                            } else {
+                                progress.report({ message: `Creating ${writeToFileShare ? 'file' : 'blob'} ${parsedUri.filePath}` });
+                                let parentUri: vscode.Uri = AzureStorageFS.idToUri(parsedUri.resourceId, parsedUri.parentDirPath);
+                                let parent = await this.lookupAsDirectory(parentUri, context, parsedUri.resourceId, parsedUri.parentDirPath);
+
+                                if (writeToFileShare) {
+                                    await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFile', childName: parsedUri.baseName });
+                                } else {
+                                    await parent.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlob', childName: parsedUri.filePath });
+                                }
+                            }
+                        });
+                    }
+                },
+                {
+                    retries,
+                    minTimeout: 2 * 1000,
+                    onFailedAttempt: error => {
+                        const parsedError: IParsedError = parseError(error);
+                        if (/server failed to authenticate/i.test(parsedError.message)) {
+                            // Only retry if we see this error
+                            return;
+                        }
+                        throw error;
+                    }
+                }
+            );
         });
     }
 
