@@ -33,7 +33,7 @@ export async function azCopyTransfer(
 ): Promise<void> {
     // `followSymLinks: true` causes downloads to fail (which is expected) but it currently doesn't work as expected for uploads: https://github.com/Azure/azure-storage-azcopy/issues/1174
     // So it's omitted from `copyOptions` for now
-    const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, excludePath: '.git;.vscode' };
+    const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, excludePath: '.git/;.vscode/' };
     const jobInfo: IJobInfo = await startAndWaitForTransfer(context, { src, dst }, copyOptions, transferProgress, notificationProgress, cancellationToken);
     await handleJob(context, jobInfo, src.path);
 }
