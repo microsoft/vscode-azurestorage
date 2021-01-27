@@ -100,7 +100,9 @@ export async function getDestinationDirectory(destinationDirectory?: string): Pr
 
 async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {
     const options: readdirp.ReaddirpOptions = {
-        directoryFilter: ['!.git', '!.vscode'],
+        directoryFilter: (entryInfo: readdirp.EntryInfo) => {
+            return entryInfo.path !== '.git' && entryInfo.path !== '.vscode';
+        },
         type: countFolders ? 'files_directories' : 'files'
     };
     const resources: readdirp.EntryInfo[] = await readdirp.promise(directoryPath, options);
