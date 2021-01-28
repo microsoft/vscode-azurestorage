@@ -12,10 +12,8 @@ import { StaticWebsiteErrorDocument404Step } from "./StaticWebsiteErrorDocument4
 import { StaticWebsiteIndexDocumentStep } from "./StaticWebsiteIndexDocumentStep";
 
 export class StaticWebsiteEnableStep extends AzureWizardPromptStep<IStaticWebsiteConfigWizardContext> {
-    isStack: boolean;
-    /**
-     *
-     */
+    private isStack: boolean;
+
     constructor(isStack: boolean) {
         super();
         this.isStack = isStack;

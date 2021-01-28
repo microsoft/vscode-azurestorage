@@ -95,16 +95,16 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     private async getDefaultLocation(wizardContext: IStorageAccountWizardContext): Promise<string> {
         const stackLocation: SubscriptionModels.Location | undefined = (await LocationListStep.getLocations(wizardContext)).find(l => l.displayName !== undefined || l.name !== undefined);
-        let defaultStackLocation: string;
+        let defaultLocation: string;
         if (this.isStack) {
             if (stackLocation === undefined) {
                 throw new Error(localize("noAvilableLocation", "There is no available location for resource provider in Azure Stack"));
             } else {
-                defaultStackLocation = <string>(stackLocation.name !== undefined ? stackLocation.name : stackLocation.displayName);
+                defaultLocation = <string>(stackLocation.name !== undefined ? stackLocation.name : stackLocation.displayName);
             }
         } else {
-            defaultStackLocation = 'westus';
+            defaultLocation = 'westus';
         }
-        return defaultStackLocation;
+        return defaultLocation;
     }
 }
