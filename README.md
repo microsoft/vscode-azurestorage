@@ -62,6 +62,16 @@ Use these configuration settings to customize the Azure Storage extension.
 * `azureStorage.file.showSavePrompt`: Set to `false` to prevent showing a warning dialog on File file save.
 * `azureStorage.blob.showSavePrompt`: Set to `false` to prevent showing a warning dialog on Blob file save.
 
+## Known Issues
+
+* `libsecret-1-dev` is required for AzCopy transfers on Linux and is not installed by default in many distros running in WSL.
+To install it on Debian based distros, run
+
+    ```
+    sudo apt update
+    sudo apt install libsecret-1-dev
+    ```
+
 <!-- region exclude-from-marketplace -->
 
 ## Contributing
