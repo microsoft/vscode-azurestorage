@@ -3,10 +3,12 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { SubscriptionModels } from '@azure/arm-subscriptions';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { createStorageClient } from '../utils/azureClients';
+import { localize } from '../utils/localize';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
 import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigureStep';
@@ -21,36 +23,26 @@ import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public childTypeLabel: string = "Storage Account";
     public supportsAdvancedCreation: boolean = true;
+    private isStack: boolean;
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
-        try {
-            let storageManagementClient = await createStorageClient(this.root);
-            let accounts = await storageManagementClient.storageAccounts.list();
-            return this.createTreeItemsWithErrorHandling(
-                accounts,
-                'invalidStorageAccount',
-                async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
-                sa => sa.name
-            );
-        } catch (error) {
-            throw error;
-        }
+        let storageManagementClient = await createStorageClient(this.root);
+        let accounts = await storageManagementClient.storageAccounts.list();
+        return this.createTreeItemsWithErrorHandling(
+            accounts,
+            'invalidStorageAccount',
+            async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
+            sa => sa.name
+        );
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
-        let isStack = this.root.environment.name === "AzurePPE" ? true : false;
+        this.isStack = this.root.environment.name === "AzurePPE" ? true : false;
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
-        let stackLocation = (await LocationListStep.getLocations(wizardContext)).find(l => l.displayName !== undefined || l.name !== undefined);
-        let defaultStackLocation: string;
-        if (stackLocation === undefined) {
-            throw new Error("there is no available location for resource provider in azure stack");
-        } else {
-            defaultStackLocation = <string>(stackLocation.name !== undefined ? stackLocation.name : stackLocation.displayName);
-        }
-        const defaultLocation: string = isStack ? defaultStackLocation : 'westus';
+        const defaultLocation: string = await this.getDefaultLocation(wizardContext);
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
-            new StorageAccountCreateStep({ kind: isStack ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
+            new StorageAccountCreateStep({ kind: this.isStack ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
             new StorageAccountTreeItemCreateStep(this),
             new StaticWebsiteConfigureStep(),
             new VerifyProvidersStep(['Microsoft.Storage'])
@@ -58,14 +50,14 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
         if (context.advancedCreation) {
             promptSteps.push(new ResourceGroupListStep());
-            promptSteps.push(new StaticWebsiteEnableStep(isStack));
+            promptSteps.push(new StaticWebsiteEnableStep(this.isStack));
             LocationListStep.addStep(wizardContext, promptSteps);
         } else {
             executeSteps.push(new ResourceGroupCreateStep());
             Object.assign(wizardContext, {
-                enableStaticWebsite: isStack ? false : true,
-                indexDocument: isStack ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
-                errorDocument404Path: isStack ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
+                enableStaticWebsite: this.isStack ? false : true,
+                indexDocument: this.isStack ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
+                errorDocument404Path: this.isStack ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
             });
             await LocationListStep.setLocation(wizardContext, defaultLocation);
         }
@@ -99,5 +91,20 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     public isAncestorOfImpl(contextValue: string): boolean {
         return contextValue !== AttachedStorageAccountTreeItem.baseContextValue && contextValue !== AttachedStorageAccountTreeItem.emulatedContextValue;
+    }
+
+    private async getDefaultLocation(wizardContext: IStorageAccountWizardContext): Promise<string> {
+        const stackLocation: SubscriptionModels.Location | undefined = (await LocationListStep.getLocations(wizardContext)).find(l => l.displayName !== undefined || l.name !== undefined);
+        let defaultStackLocation: string;
+        if (this.isStack) {
+            if (stackLocation === undefined) {
+                throw new Error(localize("noAvilableLocation", "There is no available location for resource provider in Azure Stack"));
+            } else {
+                defaultStackLocation = <string>(stackLocation.name !== undefined ? stackLocation.name : stackLocation.displayName);
+            }
+        } else {
+            defaultStackLocation = 'westus';
+        }
+        return defaultStackLocation;
     }
 }
