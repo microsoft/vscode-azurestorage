@@ -47,7 +47,6 @@ export async function uploadFolder(
 
     try {
         if (notificationProgress && cancellationToken) {
-            // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
             await uploadLocalFolder(actionContext, treeItem, sourcePath, destPath, notificationProgress, cancellationToken, destPath);
         } else {
             const title: string = getUploadingMessageWithSource(sourcePath, treeItem.label);

@@ -41,7 +41,7 @@ export async function uploadLocalFolder(
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
     const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, true);
     const dst: IRemoteSasLocation = createAzCopyRemoteLocation(destTreeItem, destPath);
-    const transferProgress: TransferProgress = new TransferProgress('files', undefined, messagePrefix);
+    const transferProgress: TransferProgress = new TransferProgress('files', messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
 }

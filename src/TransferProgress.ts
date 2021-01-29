@@ -14,18 +14,15 @@ export class TransferProgress {
 
     constructor(
         private readonly units: 'bytes' | 'files' | 'blobs',
-        public totalWork?: number,
         private readonly messagePrefix?: string,
         private readonly updateTimerMs: number = 200
     ) { }
 
-    public reportToNotification(finishedWork: number, notificationProgress: NotificationProgress, totalWork?: number): void {
-        this.totalWork = this.totalWork || totalWork;
-
+    public reportToNotification(finishedWork: number, totalWork: number, notificationProgress: NotificationProgress): void {
         // This function may be called very frequently. Calls made to notificationProgress.report too rapidly result in incremental
         // progress not displaying in the notification window. So debounce calls to notificationProgress.report
         if (this.lastUpdated + this.updateTimerMs < Date.now()) {
-            this.preReport(finishedWork);
+            this.preReport(finishedWork, totalWork);
             if (this.percentage !== this.lastPercentage) {
                 notificationProgress.report({ message: this.message, increment: this.percentage - this.lastPercentage });
             }
@@ -33,22 +30,18 @@ export class TransferProgress {
         }
     }
 
-    public reportToOutputWindow(finishedWork: number, totalWork?: number): void {
-        this.totalWork = this.totalWork || totalWork;
-        this.preReport(finishedWork);
+    public reportToOutputWindow(finishedWork: number, totalWork: number): void {
+        this.preReport(finishedWork, totalWork);
         if (this.percentage !== this.lastPercentage) {
             ext.outputChannel.appendLog(this.message);
         }
         this.postReport();
     }
 
-    private preReport(finishedWork: number): void {
-        if (this.totalWork) {
-            // Only update message if `totalWork` is valid
-            this.percentage = Math.trunc((finishedWork / this.totalWork) * 100);
-            const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
-            this.message = `${prefix}${finishedWork}/${this.totalWork} ${this.units} (${this.percentage}%)`;
-        }
+    private preReport(finishedWork: number, totalWork: number): void {
+        this.percentage = Math.trunc((finishedWork / totalWork) * 100);
+        const prefix: string = this.messagePrefix ? `${this.messagePrefix}: ` : '';
+        this.message = `${prefix}${finishedWork}/${totalWork} ${this.units} (${this.percentage}%)`;
     }
 
     private postReport(): void {
