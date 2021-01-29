@@ -75,6 +75,10 @@ async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLab
             // tslint:disable-next-line: no-floating-promises
             ext.ui.showWarningMessage(message);
         } else {
+            if (/^AzCopy Transfer: "Failed"\.\s$/i.test(message) && process.platform === 'linux') {
+                message += localize('viewTheWiki', 'View [the wiki](https://github.com/microsoft/vscode-azurestorage/wiki/Known-Issues) for help with known issues.');
+            }
+
             throw new Error(message);
         }
     }
