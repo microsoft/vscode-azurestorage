@@ -20,9 +20,9 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
     }
 
     public async execute(wizardContext: T, progress: NotificationProgress): Promise<void> {
-        // tslint:disable-next-line:no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newLocation: string = wizardContext.location!.name!;
-        // tslint:disable-next-line:no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newName: string = wizardContext.newStorageAccountName!;
         const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
         const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation}" with sku "${newSkuName}"...`;
@@ -30,7 +30,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         progress.report({ message: creatingStorageAccount });
         const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
         wizardContext.storageAccount = await storageClient.storageAccounts.create(
-            // tslint:disable-next-line:no-non-null-assertion
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             wizardContext.resourceGroup!.name!,
             newName,
             {

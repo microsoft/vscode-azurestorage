@@ -69,14 +69,13 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return !!this._continuationToken;
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
+    async listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise((resolve, reject) => {
             let queueService = this.root.createQueueService();
             queueService.listQueuesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.QueueService.ListQueueResult) => {
                 if (err) {
                     reject(err);
-                } else {
+                } else if (result) {
                     resolve(result);
                 }
             });
@@ -118,7 +117,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
                     // 204 (No Content) is returned.
                     // Source: https://msdn.microsoft.com/en-us/library/azure/dd179342.aspx
                     reject(new Error('The queue specified already exists.'));
-                } else {
+                } else if (result) {
                     resolve(result);
                 }
             });

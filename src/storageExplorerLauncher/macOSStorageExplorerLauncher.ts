@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as fs from "fs";
+import { existsSync } from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
@@ -22,9 +22,10 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
 
         return await callWithTelemetryAndErrorHandling('getStorageExplorerExecutableMac', async context => {
             let selectedLocation = vscode.workspace.getConfiguration('azureStorage').get<string>('storageExplorerLocation');
-            // tslint:disable-next-line:no-non-null-assertion // storageExplorerLocation has default value, can't be undefined
+            // storageExplorerLocation has default value, can't be undefined
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             let exePath = path.join(selectedLocation!, MacOSStorageExplorerLauncher.subExecutableLocation);
-            if (!(await MacOSStorageExplorerLauncher.fileExists(exePath))) {
+            if (!MacOSStorageExplorerLauncher.fileExists(exePath)) {
                 context.telemetry.properties.storageExplorerNotFound = 'true';
                 let selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
 
@@ -78,12 +79,8 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
         return Launcher.launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
     }
 
-    private static async fileExists(filePath: string): Promise<boolean> {
-        return await new Promise<boolean>((resolve, _reject) => {
-            fs.exists(filePath, (exists: boolean) => {
-                resolve(exists);
-            });
-        });
+    private static fileExists(filePath: string): boolean {
+        return existsSync(filePath);
     }
 
     private static async showOpenDialog(): Promise<string> {

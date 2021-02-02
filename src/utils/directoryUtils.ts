@@ -44,7 +44,7 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
     const parallelOperations = 5;
 
     let currentToken: string | undefined;
-    // tslint:disable-next-line:no-constant-condition
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         let { files, directories, continuationToken }: { files: azureStorageShare.FileItem[], directories: azureStorageShare.DirectoryItem[], continuationToken: string } = await listFilesInDirectory(directory, shareName, root, currentToken);
         let promises: Promise<void>[] = [];

@@ -124,7 +124,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async deleteTreeItemImpl(): Promise<void> {
         const message: string = `Are you sure you want to delete account "${this.label}" and all its contents?`;
-        //Use ext.ui to emulate user input by TestUserInput() method so that the tests can work
+        // Use ext.ui to emulate user input by TestUserInput() method so that the tests can work
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
@@ -139,7 +139,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
             const deleteSuccessful: string = localize('successfullyDeletedStorageAccount', 'Successfully deleted storage account "{0}".', this.label);
             ext.outputChannel.appendLog(deleteSuccessful);
-            window.showInformationMessage(deleteSuccessful);
+            void window.showInformationMessage(deleteSuccessful);
         } else {
             throw new UserCancelledError();
         }
@@ -169,7 +169,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 return azureStorage.createQueueService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.queue).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             },
             createTableService: () => {
-                // tslint:disable-next-line:no-any the typings for createTableService are incorrect
+                // The typings for createTableService are incorrect
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 return azureStorage.createTableService(this.storageAccount.name, this.key.value, <any>this.storageAccount.primaryEndpoints.table).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             }
         });
@@ -279,7 +280,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         await this.ensureHostingCapable(context, websiteHostingStatus);
 
         if (!websiteHostingStatus.enabled) {
-            window.showInformationMessage(`Account '${this.label}' does not currently have static website hosting enabled.`);
+            void window.showInformationMessage(`Account '${this.label}' does not currently have static website hosting enabled.`);
             return;
         }
         let disableMessage: MessageItem = { title: "Disable" };
@@ -287,7 +288,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         if (confirmDisable === disableMessage) {
             let props = { staticWebsite: { enabled: false } };
             await this.setWebsiteHostingProperties(props);
-            window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
+            void window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
             await ext.tree.refresh(context, this);
         }
     }

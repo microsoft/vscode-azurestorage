@@ -253,7 +253,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 // https://github.com/microsoft/vscode-azurestorage/issues/576
                 context.errorHandling.rethrow = true;
                 context.errorHandling.suppressDisplay = true;
-                vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer'); // Show any parent directories that may have already been created
+                void vscode.commands.executeCommand('workbench.files.action.refreshFilesExplorer'); // Show any parent directories that may have already been created
                 throw new Error("File/blob names with a trailing '/' are not allowed.");
             }
 

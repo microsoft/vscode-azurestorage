@@ -72,8 +72,7 @@ async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLab
         message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
         if (finalTransferStatus?.JobStatus && /CompletedWith*/gi.test(finalTransferStatus.JobStatus)) {
-            // tslint:disable-next-line: no-floating-promises
-            ext.ui.showWarningMessage(message);
+            void ext.ui.showWarningMessage(message);
         } else {
             throw new Error(message);
         }

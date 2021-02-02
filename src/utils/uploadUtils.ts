@@ -60,7 +60,7 @@ export function getUploadingMessageWithSource(sourcePath: string, treeItemLabel:
 export function showUploadSuccessMessage(treeItemLabel: string): void {
     const success: string = localize('uploadSuccess', 'Successfully uploaded to "{0}"', treeItemLabel);
     ext.outputChannel.appendLog(success);
-    vscode.window.showInformationMessage(success);
+    void vscode.window.showInformationMessage(success);
 }
 
 export async function checkCanUpload(

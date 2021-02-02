@@ -99,7 +99,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
                 const viewOutput: vscode.MessageItem = { title: 'View Errors' };
                 const errorMessage: string = `Errors occurred when deleting "${this.dirName}".`;
-                vscode.window.showWarningMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
+                void vscode.window.showWarningMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
                     if (result === viewOutput) {
                         ext.outputChannel.show();
                     }
@@ -114,7 +114,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     private async deleteFolder(context: IActionContext): Promise<boolean> {
         let dirPaths: BlobDirectoryTreeItem[] = [];
-        // tslint:disable-next-line: no-var-self
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let dirPath: BlobDirectoryTreeItem | undefined = this;
         let errors: boolean = false;
 

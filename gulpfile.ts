@@ -8,6 +8,8 @@
 import * as cp from 'child_process';
 import * as fse from 'fs-extra';
 import * as gulp from 'gulp';
+import * as eslint from 'gulp-eslint';
+import * as gulpIf from 'gulp-if';
 import * as path from 'path';
 import { gulp_installAzureAccount, gulp_webpack } from 'vscode-azureextensiondev';
 
@@ -35,8 +37,28 @@ async function setAzCopyExePermissions(): Promise<void> {
     }
 }
 
+function lint(): void {
+    const fix: boolean = process.argv.slice(2).includes('--fix');
+    return gulp.src(['src/**/*.ts'])
+        .pipe(eslint({ fix }))
+        .pipe(eslint.format())
+        .pipe(eslint.failAfterError())
+        .pipe(eslint.results(
+            results => {
+                if (results.warningCount) {
+                    throw new Error('ESLint generated warnings.');
+                }
+            }))
+        .pipe(gulpIf(isFixed, gulp.dest('src')));
+}
+
+function isFixed(file) {
+	return file.eslint != null && file.eslint.fixed;
+}
+
 exports['webpack-dev'] = gulp.series(prepareForWebpack, () => gulp_webpack('development'));
 exports['webpack-prod'] = gulp.series(prepareForWebpack, () => gulp_webpack('production'));
 exports.preTest = gulp_installAzureAccount;
 exports.cleanReadme = cleanReadme;
 exports.setAzCopyExePermissions = setAzCopyExePermissions;
+exports.lint = lint;

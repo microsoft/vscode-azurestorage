@@ -7,7 +7,6 @@ import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 
-// tslint:disable-next-line: export-name
 export async function run(): Promise<void> {
     const options: Mocha.MochaOptions = {
         ui: 'tdd',

@@ -7,7 +7,6 @@ import * as vscode from 'vscode';
 import { TestUserInput } from 'vscode-azureextensiondev';
 import { ext } from '../extension.bundle';
 
-// tslint:disable-next-line:strict-boolean-expressions export-name
 export const longRunningTestsEnabled: boolean = !/^(false|0)?$/i.test(process.env.ENABLE_LONG_RUNNING_TESTS || '');
 export const testUserInput: TestUserInput = new TestUserInput(vscode);
 

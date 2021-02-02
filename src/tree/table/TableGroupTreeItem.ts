@@ -57,14 +57,13 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return !!this._continuationToken;
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listTables(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
+    async listTables(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
             let tableService = this.root.createTableService();
             tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {
                 if (err) {
                     reject(err);
-                } else {
+                } else if (result) {
                     resolve(result);
                 }
             });
@@ -103,7 +102,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
                     } else {
                         reject(err);
                     }
-                } else {
+                } else if (result) {
                     resolve(result);
                 }
             });

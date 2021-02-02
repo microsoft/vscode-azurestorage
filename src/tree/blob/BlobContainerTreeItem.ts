@@ -101,7 +101,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     public async refreshImpl(): Promise<void> {
-        //tslint:disable-next-line:no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const hostingStatus = await (<StorageAccountTreeItem>this!.parent!.parent).getActualWebsiteHostingStatus();
         this._websiteHostingEnabled = hostingStatus.enabled;
     }
@@ -115,7 +115,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
         ext.outputChannel.appendLog(`Querying Azure... Method: listBlobsFlat blobContainerName: "${this.container.name}" prefix: ""`);
 
-        // tslint:disable-next-line:no-constant-condition
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             throwIfCanceled(cancellationToken, properties, "listAllBlobs");
             response = containerClient.listBlobsFlat().byPage({ continuationToken: currentToken, maxPageSize: 5000 });
@@ -181,7 +181,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         );
 
         let browseWebsite: vscode.MessageItem = { title: "Browse to website" };
-        vscode.window.showInformationMessage(
+        void vscode.window.showInformationMessage(
             `Deployment complete. The primary web endpoint is ${webEndpoint}`,
             browseWebsite
         ).then(async (result) => {

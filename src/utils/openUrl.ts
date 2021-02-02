@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable-next-line:no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import opn = require("opn");
 
 export async function openUrl(url: string): Promise<void> {
@@ -11,7 +11,5 @@ export async function openUrl(url: string): Promise<void> {
     // Specifically, opening the Live Metrics Stream for Linux Function Apps doesn't work in this extension.
     // await vscode.env.openExternal(vscode.Uri.parse(url));
 
-    // tslint:disable-next-line: no-unsafe-any
-    // tslint:disable-next-line: no-floating-promises
-    opn(url);
+    void opn(url);
 }

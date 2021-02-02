@@ -4,6 +4,8 @@
   **/
 
 import { spawn } from "child_process";
+
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Launcher {
     // tslint:disable:no-stateless-class // Grandfathered in
     public static async launch(command: string, ...args: string[]): Promise<void> {
