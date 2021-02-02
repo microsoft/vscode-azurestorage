@@ -12,14 +12,8 @@ import { StaticWebsiteErrorDocument404Step } from "./StaticWebsiteErrorDocument4
 import { StaticWebsiteIndexDocumentStep } from "./StaticWebsiteIndexDocumentStep";
 
 export class StaticWebsiteEnableStep extends AzureWizardPromptStep<IStaticWebsiteConfigWizardContext> {
-    private isStack: boolean;
-
-    constructor(isStack: boolean) {
-        super();
-        this.isStack = isStack;
-    }
     public async prompt(wizardContext: IStaticWebsiteConfigWizardContext): Promise<void> {
-        if (!this.isStack) {
+        if (!wizardContext.isStack) {
             const placeHolder: string = localize('wouldYouLikeToEnableStaticWebsiteHosting', 'Would you like to enable static website hosting?');
             const yes: QuickPickItem = { label: DialogResponses.yes.title };
             const no: QuickPickItem = { label: DialogResponses.no.title };

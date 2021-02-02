@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { createStorageClient } from '../utils/azureClients';
+import { isStackCheck } from '../utils/isStackCheck';
 import { localize } from '../utils/localize';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
@@ -23,7 +24,6 @@ import { StorageAccountTreeItem } from './StorageAccountTreeItem';
 export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     public childTypeLabel: string = "Storage Account";
     public supportsAdvancedCreation: boolean = true;
-    private isStack: boolean;
 
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         let storageManagementClient = await createStorageClient(this.root);
@@ -37,12 +37,12 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
-        this.isStack = this.root.environment.name === "AzurePPE" ? true : false;
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
-        const defaultLocation: string = await this.getDefaultLocation(wizardContext);
+        wizardContext.isStack = isStackCheck();
+        const defaultLocation: string | undefined = await this.getDefaultLocation(wizardContext);
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
-            new StorageAccountCreateStep({ kind: this.isStack ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
+            new StorageAccountCreateStep({ kind: wizardContext.isStack ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
             new StorageAccountTreeItemCreateStep(this),
             new StaticWebsiteConfigureStep(),
             new VerifyProvidersStep(['Microsoft.Storage'])
@@ -50,16 +50,18 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
         if (context.advancedCreation) {
             promptSteps.push(new ResourceGroupListStep());
-            promptSteps.push(new StaticWebsiteEnableStep(this.isStack));
+            promptSteps.push(new StaticWebsiteEnableStep());
             LocationListStep.addStep(wizardContext, promptSteps);
         } else {
             executeSteps.push(new ResourceGroupCreateStep());
             Object.assign(wizardContext, {
-                enableStaticWebsite: this.isStack ? false : true,
-                indexDocument: this.isStack ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
-                errorDocument404Path: this.isStack ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
+                enableStaticWebsite: wizardContext.isStack ? false : true,
+                indexDocument: wizardContext.isStack ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
+                errorDocument404Path: wizardContext.isStack ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
             });
-            await LocationListStep.setLocation(wizardContext, defaultLocation);
+            if (defaultLocation) {
+                await LocationListStep.setLocation(wizardContext, defaultLocation);
+            }
         }
 
         const wizard = new AzureWizard(wizardContext, {
@@ -93,14 +95,14 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         return contextValue !== AttachedStorageAccountTreeItem.baseContextValue && contextValue !== AttachedStorageAccountTreeItem.emulatedContextValue;
     }
 
-    private async getDefaultLocation(wizardContext: IStorageAccountWizardContext): Promise<string> {
-        const stackLocation: SubscriptionModels.Location | undefined = (await LocationListStep.getLocations(wizardContext)).find(l => l.displayName !== undefined || l.name !== undefined);
-        let defaultLocation: string;
-        if (this.isStack) {
-            if (stackLocation === undefined) {
-                throw new Error(localize("noAvilableLocation", "There is no available location for resource provider in Azure Stack"));
+    private async getDefaultLocation(wizardContext: IStorageAccountWizardContext): Promise<string | undefined> {
+        let defaultLocation: string | undefined;
+        if (wizardContext.isStack) {
+            const stackLocation: SubscriptionModels.Location | undefined = (await LocationListStep.getLocations(wizardContext)).find(l => l.displayName !== undefined || l.name !== undefined);
+            if (!stackLocation) {
+                throw new Error(localize("noAvailableLocation", "There is no available location for resource provider in Azure Stack"));
             } else {
-                defaultLocation = <string>(stackLocation.name !== undefined ? stackLocation.name : stackLocation.displayName);
+                defaultLocation = stackLocation.name || stackLocation.displayName;
             }
         } else {
             defaultLocation = 'westus';
