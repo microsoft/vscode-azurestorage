@@ -44,6 +44,8 @@ async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLab
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
         // tslint:disable-next-line: strict-boolean-expressions
         let message: string = jobInfo.errorMessage || localize('azCopyTransfer', 'AzCopy Transfer: "{0}". ', finalTransferStatus?.JobStatus || 'Failed');
+        const originalMessage: string = message;
+
         if (finalTransferStatus?.FailedTransfers?.length || finalTransferStatus?.SkippedTransfers?.length) {
             message += localize('checkOutputWindow', ' Check the [output window](command:{0}) for a list of incomplete transfers.', `${ext.prefix}.showOutputChannel`);
 
@@ -75,8 +77,9 @@ async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLab
             // tslint:disable-next-line: no-floating-promises
             ext.ui.showWarningMessage(message);
         } else {
-            if (/^AzCopy Transfer: "Failed"\.\s$/i.test(message) && process.platform === 'linux') {
-                message += localize('viewTheWiki', 'View [the wiki](https://github.com/microsoft/vscode-azurestorage/wiki/Known-Issues) for help with known issues.');
+            const isDefaultFailMessage: boolean = !jobInfo.errorMessage && /failed/i.test(message) && message === originalMessage;
+            if (isDefaultFailMessage && process.platform === 'linux') {
+                message += localize('viewHelp', 'View help with [known issues](https://aka.ms/AAb0i6o).');
             }
 
             throw new Error(message);
