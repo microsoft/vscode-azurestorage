@@ -5,7 +5,6 @@
 
 import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageBlob from '@azure/storage-blob';
-import * as fse from 'fs-extra';
 import * as retry from 'p-retry';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -234,7 +233,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                     }
 
                     // Delete existing blobs
-                    let transferProgress = new TransferProgress('blobs', blobsToDelete.length, 'Deleting');
+                    let transferProgress = new TransferProgress('blobs', 'Deleting');
                     await this.deleteBlobs(blobsToDelete, transferProgress, notificationProgress, cancellationToken, context.telemetry.properties);
 
                     // Reset notification progress. Otherwise the progress bar will remain full when uploading blobs
@@ -242,7 +241,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 }
 
                 // Upload files as blobs
-                await uploadLocalFolder(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading', false);
+                await uploadLocalFolder(context, this, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken, 'Uploading');
             },
             {
                 retries,
@@ -307,7 +306,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                 } else if (response.errorCode) {
                     throw new Error(response.errorCode);
                 } else {
-                    transferProgress.reportToNotification(blobIndex, notificationProgress);
+                    transferProgress.reportToNotification(blobIndex, blobsToDelete.length, notificationProgress);
                 }
             } catch (error) {
                 if (parseError(error).isUserCancelledError) {
@@ -330,9 +329,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         ext.outputChannel.appendLog(getUploadingMessageWithSource(filePath, this.label));
         const src: ILocalLocation = createAzCopyLocalLocation(filePath);
         const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, blobPath);
-        // tslint:disable-next-line: strict-boolean-expressions
-        const totalBytes: number = (await fse.stat(filePath)).size || 1;
-        const transferProgress: TransferProgress = new TransferProgress('bytes', totalBytes, blobPath);
+        const transferProgress: TransferProgress = new TransferProgress('bytes', blobPath);
         await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress, notificationProgress, cancellationToken);
     }
 

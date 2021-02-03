@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
-import { BlockBlobClient } from "@azure/storage-blob";
-import { ShareFileClient } from "@azure/storage-file-share";
 import * as fse from 'fs-extra';
 import { join, posix } from "path";
 import { ProgressLocation, window } from "vscode";
@@ -17,9 +15,7 @@ import { BlobDirectoryTreeItem } from "../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../tree/blob/BlobTreeItem";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
-import { createBlockBlobClient } from "../utils/blobUtils";
 import { checkCanOverwrite } from "../utils/checkCanOverwrite";
-import { createFileClient } from "../utils/fileUtils";
 import { isSubpath } from "../utils/fs";
 import { localize } from "../utils/localize";
 import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
@@ -34,7 +30,6 @@ interface IAzCopyDownload {
     fromTo: FromToOption;
     isDirectory: boolean;
     treeItem: BlobTreeItem | BlobDirectoryTreeItem | FileTreeItem | DirectoryTreeItem;
-    totalWork?: number;
 }
 
 export async function download(context: IActionContext, treeItem: AzExtTreeItem, treeItems?: AzExtTreeItem[]): Promise<void> {
@@ -57,7 +52,7 @@ export async function download(context: IActionContext, treeItem: AzExtTreeItem,
             const src: IRemoteSasLocation = createAzCopyRemoteLocation(azCopyDownload.treeItem, azCopyDownload.remoteFilePath, azCopyDownload.isDirectory);
             const dst: ILocalLocation = createAzCopyLocalLocation(azCopyDownload.localFilePath);
             const units: 'files' | 'bytes' = azCopyDownload.isDirectory ? 'files' : 'bytes';
-            const transferProgress: TransferProgress = new TransferProgress(units, azCopyDownload.totalWork, azCopyDownload.remoteFileName);
+            const transferProgress: TransferProgress = new TransferProgress(units, azCopyDownload.remoteFileName);
             await azCopyTransfer(context, azCopyDownload.fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
         }
     });
@@ -72,7 +67,6 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
     for (const treeItem of treeItems) {
         if (treeItem instanceof BlobTreeItem) {
             await treeItem.checkCanDownload(context);
-            const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
             allFileDownloads.push({
                 remoteFileName: treeItem.blobName,
                 remoteFilePath: treeItem.blobPath,
@@ -80,7 +74,6 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 fromTo: 'BlobLocal',
                 isDirectory: false,
                 treeItem,
-                totalWork: (await blockBlobClient.getProperties()).contentLength
             });
         } else if (treeItem instanceof BlobDirectoryTreeItem) {
             allFolderDownloads.push({
@@ -92,7 +85,6 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 treeItem
             });
         } else if (treeItem instanceof FileTreeItem) {
-            const fileClient: ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
             allFileDownloads.push({
                 remoteFileName: treeItem.fileName,
                 remoteFilePath: posix.join(treeItem.directoryPath, treeItem.fileName),
@@ -100,7 +92,6 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 fromTo: 'FileLocal',
                 isDirectory: false,
                 treeItem,
-                totalWork: (await fileClient.getProperties()).contentLength
             });
         } else if (treeItem instanceof DirectoryTreeItem) {
             allFolderDownloads.push({

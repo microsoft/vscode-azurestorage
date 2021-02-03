@@ -106,11 +106,11 @@ async function startAndWaitForTransfer(
         finishedWork = (displayWorkAsTotalTransfers ? status?.TransfersCompleted : status?.BytesOverWire) || 0;
         // tslint:enable: strict-boolean-expressions
 
-        if (totalWork || transferProgress.totalWork) {
+        if (totalWork) {
             // Only report progress if we have `totalWork`
             transferProgress.reportToOutputWindow(finishedWork, totalWork);
             if (!!notificationProgress) {
-                transferProgress.reportToNotification(finishedWork, notificationProgress);
+                transferProgress.reportToNotification(finishedWork, totalWork, notificationProgress);
             }
         }
         await delay(1000);
