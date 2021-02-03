@@ -43,7 +43,7 @@ async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLab
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
         // tslint:disable-next-line: strict-boolean-expressions
-        let message: string = jobInfo.errorMessage || localize('azCopyTransfer', 'AzCopy Transfer: "{0}". ', finalTransferStatus?.JobStatus || 'Failed');
+        let message: string = jobInfo.errorMessage || finalTransferStatus?.ErrorMsg || localize('azCopyTransfer', 'AzCopy Transfer: "{0}". ', finalTransferStatus?.JobStatus || 'Unknown');
         if (finalTransferStatus?.FailedTransfers?.length || finalTransferStatus?.SkippedTransfers?.length) {
             message += localize('checkOutputWindow', ' Check the [output window](command:{0}) for a list of incomplete transfers.', `${ext.prefix}.showOutputChannel`);
 
@@ -62,14 +62,17 @@ async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLab
         } else {
             // Add an additional error log since we don't have any more info about the failure
             ext.outputChannel.appendLog(localize('couldNotTransfer', 'Could not transfer "{0}"', transferLabel));
+
+            const isDefaultFailMessage: boolean = !jobInfo.errorMessage && finalTransferStatus?.JobStatus === 'Failed';
+            if (isDefaultFailMessage && process.platform === 'linux') {
+                message += localize('viewHelp', 'View help with [known issues](https://aka.ms/AAb0i6o).');
+            }
         }
 
         if (jobInfo.logFileLocation) {
             const uri: Uri = Uri.file(jobInfo.logFileLocation);
             ext.outputChannel.appendLog(localize('logFile', 'Log file: {0}', uri.toString()));
         }
-
-        message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
         if (finalTransferStatus?.JobStatus && /CompletedWith*/gi.test(finalTransferStatus.JobStatus)) {
             // tslint:disable-next-line: no-floating-promises
