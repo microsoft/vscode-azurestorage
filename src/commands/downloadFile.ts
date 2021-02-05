@@ -115,7 +115,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
     }
 
     let hasParent: boolean;
-    let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+    const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
     const foldersToDownload: IAzCopyDownload[] = [];
     const filesToDownload: IAzCopyDownload[] = [];
 

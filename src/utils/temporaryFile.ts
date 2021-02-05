@@ -11,8 +11,8 @@ import { getRandomHexString } from "./stringUtils";
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class TemporaryFile {
     static async create(fileName: string): Promise<string> {
-        let folderName = getRandomHexString(12);
-        let filePath = path.join(os.tmpdir(), folderName, fileName);
+        const folderName = getRandomHexString(12);
+        const filePath = path.join(os.tmpdir(), folderName, fileName);
         await fse.ensureFile(filePath);
         return filePath;
     }

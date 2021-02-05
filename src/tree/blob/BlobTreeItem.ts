@@ -64,7 +64,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
             result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         }
         if (result === DialogResponses.deleteResponse || context.suppressMessage) {
-            let blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
+            const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
             await blobClient.delete();
         } else {
             throw new UserCancelledError();
@@ -75,12 +75,12 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
 
     public async checkCanDownload(context: IActionContext): Promise<void> {
         const client: BlockBlobClient = createBlockBlobClient(this.root, this.container.name, this.blobPath);
-        let props: BlobGetPropertiesResponse = await client.getProperties();
+        const props: BlobGetPropertiesResponse = await client.getProperties();
         context.telemetry.measurements.blobDownloadSize = props.contentLength;
         if (props.blobType && !props.blobType.toLocaleLowerCase().startsWith("block")) {
             context.telemetry.properties.invalidBlobTypeForDownload = 'true';
             const message: string = localize('pleaseUseSE', 'Please use [Storage Explorer]({0}) for blobs of type "{1}".', storageExplorerDownloadUrl, props.blobType);
-            await askOpenInStorageExplorer(context, message, this.root.storageAccountId, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
+            askOpenInStorageExplorer(context, message, this.root.storageAccountId, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
         }
     }
 }

@@ -82,23 +82,24 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public static contextValue: string = 'azureStorageAccount';
     public contextValue: string = StorageAccountTreeItem.contextValue;
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<IStorageRoot>[]> {
-        let primaryEndpoints = this.storageAccount.primaryEndpoints;
-        let groupTreeItems: AzureTreeItem<IStorageRoot>[] = [];
+        const primaryEndpoints = this.storageAccount.primaryEndpoints;
+        const groupTreeItems: AzureTreeItem<IStorageRoot>[] = [];
 
-        if (!!primaryEndpoints.blob) {
+        if (primaryEndpoints.blob) {
             groupTreeItems.push(this._blobContainerGroupTreeItem);
         }
 
-        if (!!primaryEndpoints.file) {
+        if (primaryEndpoints.file) {
             groupTreeItems.push(this._fileShareGroupTreeItem);
         }
 
-        if (!!primaryEndpoints.queue) {
+        if (primaryEndpoints.queue) {
             groupTreeItems.push(this._queueGroupTreeItem);
         }
 
-        if (!!primaryEndpoints.table) {
+        if (primaryEndpoints.table) {
             groupTreeItems.push(this._tableGroupTreeItem);
         }
 
@@ -110,8 +111,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     async refreshKey(): Promise<void> {
-        let keys: StorageAccountKeyWrapper[] = await this.getKeys();
-        let primaryKey = keys.find(key => {
+        const keys: StorageAccountKeyWrapper[] = await this.getKeys();
+        const primaryKey = keys.find(key => {
             return key.keyName === "key1" || key.keyName === "primaryKey";
         });
 
@@ -128,9 +129,9 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
-            let storageManagementClient = await createStorageClient(this.root);
-            let parsedId = this.parseAzureResourceId(this.storageAccount.id);
-            let resourceGroupName = parsedId.resourceGroups;
+            const storageManagementClient = await createStorageClient(this.root);
+            const parsedId = this.parseAzureResourceId(this.storageAccount.id);
+            const resourceGroupName = parsedId.resourceGroups;
 
             ext.outputChannel.appendLog(deletingStorageAccount);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deletingStorageAccount }, async () => {
@@ -176,14 +177,14 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         });
     }
 
-    async getConnectionString(): Promise<string> {
+    getConnectionString(): string {
         return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${nonNullProp(this.root.environment, 'storageEndpointSuffix')}`;
     }
 
     async getKeys(): Promise<StorageAccountKeyWrapper[]> {
-        let parsedId = this.parseAzureResourceId(this.storageAccount.id);
-        let resourceGroupName = parsedId.resourceGroups;
-        let keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
+        const parsedId = this.parseAzureResourceId(this.storageAccount.id);
+        const resourceGroupName = parsedId.resourceGroups;
+        const keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
         // tslint:disable-next-line:strict-boolean-expressions
         return (keyResult.keys || <StorageManagementModels.StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
     }
@@ -221,8 +222,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         await this.refresh(context);
 
         // Currently only the child with the name "$web" is supported for hosting websites
-        let id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${staticWebsiteContainerName}`;
-        let containerTreeItem = <BlobContainerTreeItem>await this.treeDataProvider.findTreeItem(id, context);
+        const id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${staticWebsiteContainerName}`;
+        const containerTreeItem = <BlobContainerTreeItem>await this.treeDataProvider.findTreeItem(id, context);
         return containerTreeItem;
     }
 
@@ -234,9 +235,9 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     public async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
         // Does NOT update treeItem's _webHostingEnabled.
-        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        let properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
-        let staticWebsite: azureStorageBlob.StaticWebsite | undefined = properties.staticWebsite;
+        const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        const properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
+        const staticWebsite: azureStorageBlob.StaticWebsite | undefined = properties.staticWebsite;
 
         return {
             capable: !!staticWebsite,
@@ -247,13 +248,13 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async setWebsiteHostingProperties(properties: azureStorageBlob.BlobServiceProperties): Promise<void> {
-        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
         await serviceClient.setProperties(properties);
     }
 
     private async getAccountType(): Promise<StorageTypes> {
-        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        let accountType: azureStorageBlob.AccountKind | undefined = (await serviceClient.getAccountInfo()).accountKind;
+        const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        const accountType: azureStorageBlob.AccountKind | undefined = (await serviceClient.getAccountInfo()).accountKind;
 
         if (!accountType) {
             throw new Error("Could not determine storage account type.");
@@ -276,17 +277,17 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async disableStaticWebsite(context: IActionContext): Promise<void> {
-        let websiteHostingStatus = await this.getActualWebsiteHostingStatus();
+        const websiteHostingStatus = await this.getActualWebsiteHostingStatus();
         await this.ensureHostingCapable(context, websiteHostingStatus);
 
         if (!websiteHostingStatus.enabled) {
             void window.showInformationMessage(`Account '${this.label}' does not currently have static website hosting enabled.`);
             return;
         }
-        let disableMessage: MessageItem = { title: "Disable" };
-        let confirmDisable: MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, { modal: true }, disableMessage, DialogResponses.cancel);
+        const disableMessage: MessageItem = { title: "Disable" };
+        const confirmDisable: MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, { modal: true }, disableMessage, DialogResponses.cancel);
         if (confirmDisable === disableMessage) {
-            let props = { staticWebsite: { enabled: false } };
+            const props = { staticWebsite: { enabled: false } };
             await this.setWebsiteHostingProperties(props);
             void window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
             await ext.tree.refresh(context, this);
@@ -298,12 +299,12 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             title: "Configure website hosting"
         };
 
-        let hostingStatus = await this.getActualWebsiteHostingStatus();
+        const hostingStatus = await this.getActualWebsiteHostingStatus();
         await this.ensureHostingCapable(context, hostingStatus);
 
         if (!hostingStatus.enabled) {
-            let msg = "Static website hosting is not enabled for this storage account.";
-            let result = await window.showErrorMessage(msg, configure);
+            const msg = "Static website hosting is not enabled for this storage account.";
+            const result = await window.showErrorMessage(msg, configure);
             if (result === configure) {
                 await commands.executeCommand('azureStorage.configureStaticWebsite', this);
             }
@@ -311,17 +312,17 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
 
         if (!hostingStatus.indexDocument) {
-            let msg = "No index document has been set for this website.";
-            let result = await window.showErrorMessage(msg, configure);
+            const msg = "No index document has been set for this website.";
+            const result = await window.showErrorMessage(msg, configure);
             if (result === configure) {
                 await commands.executeCommand('azureStorage.configureStaticWebsite', this);
             }
             throw new UserCancelledError(msg);
         }
 
-        let endpoint = this.getPrimaryWebEndpoint();
+        const endpoint = this.getPrimaryWebEndpoint();
         if (endpoint) {
-            await openUrl(endpoint);
+            openUrl(endpoint);
         } else {
             throw new Error(`Could not retrieve the primary web endpoint for ${this.label}`);
         }

@@ -43,7 +43,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             }
         }
 
-        let { entries, continuationToken } = tables;
+        const { entries, continuationToken } = tables;
         this._continuationToken = continuationToken;
 
         return entries.map((table: string) => {
@@ -59,7 +59,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     async listTables(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
-            let tableService = this.root.createTableService();
+            const tableService = this.root.createTableService();
             tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {
                 if (err) {
                     reject(err);
@@ -94,7 +94,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     private async createTable(name: string): Promise<azureStorage.TableService.TableResult> {
         return new Promise((resolve, reject) => {
-            let tableService = this.root.createTableService();
+            const tableService = this.root.createTableService();
             tableService.createTable(name, (err?: Error, result?: azureStorage.TableService.TableResult) => {
                 if (err) {
                     if (parseError(err).errorType === "TableAlreadyExists") {

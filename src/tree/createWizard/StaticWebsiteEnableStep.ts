@@ -20,6 +20,7 @@ export class StaticWebsiteEnableStep extends AzureWizardPromptStep<IStaticWebsit
         wizardContext.enableStaticWebsite = await ext.ui.showQuickPick([yes, no], { placeHolder }) === yes;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async getSubWizard(wizardContext: IStaticWebsiteConfigWizardContext): Promise<IWizardOptions<IStaticWebsiteConfigWizardContext> | undefined> {
         if (wizardContext.enableStaticWebsite) {
             return {

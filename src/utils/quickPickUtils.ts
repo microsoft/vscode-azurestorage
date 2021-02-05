@@ -13,7 +13,7 @@ import { ext } from '../extensionVariables';
 export async function showWorkspaceFoldersQuickPick(placeHolderString: string, context: IActionContext, subPathSetting: string | undefined): Promise<string> {
     const folderQuickPickItems: IAzureQuickPickItem<string | undefined>[] = [];
     if (vscode.workspace.workspaceFolders) {
-        for (let workspaceFolder of vscode.workspace.workspaceFolders) {
+        for (const workspaceFolder of vscode.workspace.workspaceFolders) {
             {
                 let fsPath: string = workspaceFolder.uri.fsPath;
                 if (subPathSetting) {
@@ -31,7 +31,7 @@ export async function showWorkspaceFoldersQuickPick(placeHolderString: string, c
 
                 // If the workspace has any of build, dist, or out, show those as well
                 const buildDefaultPaths = ["build", "dist", "out"];
-                for (let defaultPath of buildDefaultPaths) {
+                for (const defaultPath of buildDefaultPaths) {
                     const buildPath: string = path.join(fsPath, defaultPath);
                     if (fse.existsSync(buildPath)) {
                         folderQuickPickItems.push({

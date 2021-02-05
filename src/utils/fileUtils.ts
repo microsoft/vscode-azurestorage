@@ -46,7 +46,7 @@ export async function getFileOrDirectoryName(parent: AzureParentTreeItem<IStorag
         value,
         placeHolder: localize('enterName', 'Enter a name for the new resource'),
         validateInput: async (name: string) => {
-            let nameError: string | undefined = validateFileOrDirectoryName(name);
+            const nameError: string | undefined = validateFileOrDirectoryName(name);
             if (nameError) {
                 return nameError;
             } else if (await doesFileExist(name, parent, directoryPath, shareName) || await doesDirectoryExist(parent, posix.join(directoryPath, name), shareName)) {
@@ -98,8 +98,8 @@ export async function deleteFile(directory: string, name: string, share: string,
 // Gets existing create options using the `@azure/storage-file-share` SDK
 export async function getExistingCreateOptions(directoryPath: string, name: string, shareName: string, root: IStorageRoot): Promise<azureStorageShare.FileCreateOptions> {
     const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
-    let propertiesResult: azureStorageShare.FileGetPropertiesResponse = await fileClient.getProperties();
-    let options: azureStorageShare.FileCreateOptions = {};
+    const propertiesResult: azureStorageShare.FileGetPropertiesResponse = await fileClient.getProperties();
+    const options: azureStorageShare.FileCreateOptions = {};
     options.fileHttpHeaders = {};
     options.fileHttpHeaders.fileCacheControl = propertiesResult.cacheControl;
     options.fileHttpHeaders.fileContentDisposition = propertiesResult.contentDisposition;

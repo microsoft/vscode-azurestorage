@@ -30,11 +30,11 @@ export async function listFilesInDirectory(directory: string, shareName: string,
     const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directory);
     const response: AsyncIterableIterator<azureStorageShare.DirectoryListFilesAndDirectoriesSegmentResponse> = directoryClient.listFilesAndDirectories().byPage({ continuationToken: currentToken, maxPageSize });
 
-    // tslint:disable-next-line: no-unsafe-any
-    let responseValue: azureStorageShare.DirectoryListFilesAndDirectoriesSegmentResponse = (await response.next()).value;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const responseValue: azureStorageShare.DirectoryListFilesAndDirectoriesSegmentResponse = (await response.next()).value;
 
-    let files: azureStorageShare.FileItem[] = responseValue.segment.fileItems;
-    let directories: azureStorageShare.DirectoryItem[] = responseValue.segment.directoryItems;
+    const files: azureStorageShare.FileItem[] = responseValue.segment.fileItems;
+    const directories: azureStorageShare.DirectoryItem[] = responseValue.segment.directoryItems;
     currentToken = responseValue.continuationToken;
 
     return { files, directories, continuationToken: currentToken };
@@ -46,10 +46,10 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
     let currentToken: string | undefined;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-        let { files, directories, continuationToken }: { files: azureStorageShare.FileItem[], directories: azureStorageShare.DirectoryItem[], continuationToken: string } = await listFilesInDirectory(directory, shareName, root, currentToken);
+        const { files, directories, continuationToken }: { files: azureStorageShare.FileItem[], directories: azureStorageShare.DirectoryItem[], continuationToken: string } = await listFilesInDirectory(directory, shareName, root, currentToken);
         let promises: Promise<void>[] = [];
-        for (let file of files) {
-            let promise = deleteFile(directory, file.name, shareName, root);
+        for (const file of files) {
+            const promise = deleteFile(directory, file.name, shareName, root);
             promises.push(promise);
             ext.outputChannel.appendLog(`Deleted file "${directory}/${file.name}"`);
 
@@ -60,7 +60,7 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
         }
         await Promise.all(promises);
 
-        for (let dir of directories) {
+        for (const dir of directories) {
             await deleteDirectoryAndContents(path.posix.join(directory, dir.name), shareName, root);
         }
 

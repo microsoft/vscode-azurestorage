@@ -19,7 +19,8 @@ export function nonNull<T>(value: T | undefined, name?: string): T {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function copyNonNullProperty<TSource, TDest>(source: TSource, dest: { [key: string]: any }, name: keyof TSource & keyof TDest): void {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let value: any = nonNull(source[name], <string>name);
+    const value: any = nonNull(source[name], <string>name);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     dest[<string>name] = value;
 }
 

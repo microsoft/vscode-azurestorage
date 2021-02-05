@@ -39,7 +39,7 @@ export async function selectStorageAccountTreeItemForCommand(
         treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
 
-    let storageOrContainerTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>treeItem;
+    const storageOrContainerTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>treeItem;
     assert(
         storageOrContainerTreeItem instanceof StorageAccountTreeItem || storageOrContainerTreeItem instanceof BlobContainerTreeItem,
         `Internal error: Incorrect treeItem type "${storageOrContainerTreeItem.contextValue}" passed to selectStorageAccountTreeItemForCommand()`);
@@ -54,7 +54,7 @@ export async function selectStorageAccountTreeItemForCommand(
     }
 
     if (options.mustBeWebsiteCapable) {
-        let hostingStatus = await accountTreeItem.getActualWebsiteHostingStatus();
+        const hostingStatus = await accountTreeItem.getActualWebsiteHostingStatus();
         await accountTreeItem.ensureHostingCapable(context, hostingStatus);
 
         if (options.configureWebsite && !hostingStatus.enabled) {
@@ -62,7 +62,7 @@ export async function selectStorageAccountTreeItemForCommand(
 
             if (context.showEnableWebsiteHostingPrompt) {
                 context.telemetry.properties.enableResponse = 'false';
-                let enableWebHostingPrompt = "Enable website hosting";
+                const enableWebHostingPrompt = "Enable website hosting";
                 // don't check result since cancel throws UserCancelledError and only other option is 'Enable'
                 await ext.ui.showWarningMessage(
                     `Website hosting is not enabled on storage account "${accountTreeItem.label}".`,

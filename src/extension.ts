@@ -50,7 +50,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     context.subscriptions.push(ext.outputChannel);
     registerUIExtensionVariables(ext);
 
-    await callWithTelemetryAndErrorHandling('activate', async (activateContext: IActionContext) => {
+    await callWithTelemetryAndErrorHandling('activate', (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
         activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
@@ -106,7 +106,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await treeItem.openInPortal();
         });
         registerCommand("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
-            let accountTreeItem = await selectStorageAccountTreeItemForCommand(
+            const accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
                 actionContext,
                 {
@@ -116,7 +116,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await accountTreeItem.configureStaticWebsite(actionContext);
         });
         registerCommand("azureStorage.disableStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
-            let accountTreeItem = await selectStorageAccountTreeItemForCommand(
+            const accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
                 actionContext,
                 {
@@ -128,7 +128,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerCommand("azureStorage.createGpv2Account", createStorageAccount);
         registerCommand("azureStorage.createGpv2AccountAdvanced", createStorageAccountAdvanced);
         registerCommand('azureStorage.browseStaticWebsite', async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
-            let accountTreeItem = await selectStorageAccountTreeItemForCommand(
+            const accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
                 actionContext,
                 {

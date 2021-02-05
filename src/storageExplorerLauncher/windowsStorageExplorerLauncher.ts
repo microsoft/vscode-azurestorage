@@ -28,11 +28,11 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
             + "&source="
             + encodeURIComponent("VSCODE-AzureStorage");
 
-        if (!!resourceType) {
+        if (resourceType) {
             url = `${url}&resourcetype=${resourceType}`;
         }
 
-        if (!!resourceName) {
+        if (resourceName) {
             url = `${url}&resourcename=${resourceName}`;
         }
 
@@ -62,7 +62,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 const message: string = localize('cantFindSE', 'Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?');
                 await ext.ui.showWarningMessage(message, download);
                 context.telemetry.properties.downloadStorageExplorer = 'true';
-                await openUrl(storageExplorerDownloadUrl);
+                openUrl(storageExplorerDownloadUrl);
                 throw new UserCancelledError();
             }
             // tslint:disable-next-line: strict-boolean-expressions
@@ -75,7 +75,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
 
     private static async getWindowsRegistryValue(hive: string, key: string): Promise<string | undefined> {
         return new Promise((resolve, reject) => {
-            let rgKey = new winreg({ hive, key });
+            const rgKey = new winreg({ hive, key });
             rgKey.values((err?: {}, items?: Winreg.RegistryItem[]) => {
                 if (err) {
                     reject(err);
@@ -87,7 +87,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async launchStorageExplorer(args: string[] = []): Promise<void> {
-        let storageExplorerExecutable: string = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
+        const storageExplorerExecutable: string = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
         if (!storageExplorerExecutable) {
             throw new UserCancelledError();
         }

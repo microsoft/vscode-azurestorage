@@ -35,10 +35,10 @@ export async function azCopyTransfer(
     // So it's omitted from `copyOptions` for now
     const copyOptions: ICopyOptions = { fromTo, overwriteExisting: "true", recursive: true, excludePath: '.git/;.vscode/' };
     const jobInfo: IJobInfo = await startAndWaitForTransfer(context, { src, dst }, copyOptions, transferProgress, notificationProgress, cancellationToken);
-    await handleJob(context, jobInfo, src.path);
+    handleJob(context, jobInfo, src.path);
 }
 
-async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLabel: string): Promise<void> {
+function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLabel: string): void {
     const finalTransferStatus: AzCopyTransferStatus = jobInfo.latestStatus;
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
@@ -49,13 +49,13 @@ async function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLab
 
             if (finalTransferStatus.FailedTransfers?.length) {
                 ext.outputChannel.appendLog(localize('failedTransfers', 'Failed transfer(s):'));
-                for (let failedTransfer of finalTransferStatus.FailedTransfers) {
+                for (const failedTransfer of finalTransferStatus.FailedTransfers) {
                     ext.outputChannel.appendLog(`\t${failedTransfer.Dst}`);
                 }
             }
             if (finalTransferStatus.SkippedTransfers?.length) {
                 ext.outputChannel.appendLog(localize('skippedTransfers', 'Skipped transfer(s):'));
-                for (let skippedTransfer of finalTransferStatus.SkippedTransfers) {
+                for (const skippedTransfer of finalTransferStatus.SkippedTransfers) {
                     ext.outputChannel.appendLog(`\t${skippedTransfer.Dst}`);
                 }
             }
@@ -108,7 +108,7 @@ async function startAndWaitForTransfer(
         if (totalWork || transferProgress.totalWork) {
             // Only report progress if we have `totalWork`
             transferProgress.reportToOutputWindow(finishedWork, totalWork);
-            if (!!notificationProgress) {
+            if (notificationProgress) {
                 transferProgress.reportToNotification(finishedWork, notificationProgress);
             }
         }

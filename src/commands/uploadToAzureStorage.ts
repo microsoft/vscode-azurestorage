@@ -35,7 +35,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     }
 
     let hasParent: boolean;
-    let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+    const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
     const folderUrisToUpload: vscode.Uri[] = [];
     const fileUrisToUpload: vscode.Uri[] = [];
 

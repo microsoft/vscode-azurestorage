@@ -55,7 +55,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             }
         }
 
-        let { entries, continuationToken } = queues;
+        const { entries, continuationToken } = queues;
         this._continuationToken = continuationToken;
 
         return entries.map((queue: azureStorage.QueueService.QueueResult) => {
@@ -71,7 +71,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     async listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise((resolve, reject) => {
-            let queueService = this.root.createQueueService();
+            const queueService = this.root.createQueueService();
             queueService.listQueuesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.QueueService.ListQueueResult) => {
                 if (err) {
                     reject(err);
@@ -106,7 +106,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     private async createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
         return new Promise((resolve, reject) => {
-            let queueService = this.root.createQueueService();
+            const queueService = this.root.createQueueService();
             queueService.createQueue(name, (err?: Error, result?: azureStorage.QueueService.QueueResult, response?: azureStorage.ServiceResponse) => {
                 if (err) {
                     reject(err);

@@ -51,7 +51,7 @@ export async function uploadFiles(
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
     let urisToUpload: Uri[] = [];
     if (!calledFromUploadToAzureStorage) {
-        let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+        const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
             const destPath: string = convertLocalPathToRemotePath(uri.fsPath, destinationDirectory);
             if (!(await stat(uri.fsPath)).isDirectory() && await checkCanUpload(destPath, overwriteChoice, treeItem)) {

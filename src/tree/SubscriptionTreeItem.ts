@@ -31,8 +31,8 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             this._nextLink = undefined;
         }
 
-        let storageManagementClient: StorageManagementClient = await createStorageClient(this.root);
-        let accounts: StorageAccountsListNextResponse = this._nextLink ?
+        const storageManagementClient: StorageManagementClient = await createStorageClient(this.root);
+        const accounts: StorageAccountsListNextResponse = this._nextLink ?
             await storageManagementClient.storageAccounts.listNext(this._nextLink) :
             await storageManagementClient.storageAccounts.list();
 
