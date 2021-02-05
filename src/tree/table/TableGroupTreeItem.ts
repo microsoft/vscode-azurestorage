@@ -60,10 +60,10 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     async listTables(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
             const tableService = this.root.createTableService();
-            tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {
+            tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err: Error | undefined, result: azureStorage.TableService.ListTablesResponse) => {
                 if (err) {
                     reject(err);
-                } else if (result) {
+                } else {
                     resolve(result);
                 }
             });
@@ -95,14 +95,14 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private async createTable(name: string): Promise<azureStorage.TableService.TableResult> {
         return new Promise((resolve, reject) => {
             const tableService = this.root.createTableService();
-            tableService.createTable(name, (err?: Error, result?: azureStorage.TableService.TableResult) => {
+            tableService.createTable(name, (err: Error | undefined, result: azureStorage.TableService.TableResult) => {
                 if (err) {
                     if (parseError(err).errorType === "TableAlreadyExists") {
                         reject(new Error('The table specified already exists.'));
                     } else {
                         reject(err);
                     }
-                } else if (result) {
+                } else {
                     resolve(result);
                 }
             });

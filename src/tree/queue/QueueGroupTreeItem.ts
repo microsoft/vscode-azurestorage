@@ -72,10 +72,10 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     async listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
         return new Promise((resolve, reject) => {
             const queueService = this.root.createQueueService();
-            queueService.listQueuesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.QueueService.ListQueueResult) => {
+            queueService.listQueuesSegmented(currentToken, { maxResults: maxPageSize }, (err: Error | undefined, result: azureStorage.QueueService.ListQueueResult) => {
                 if (err) {
                     reject(err);
-                } else if (result) {
+                } else {
                     resolve(result);
                 }
             });
@@ -107,7 +107,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private async createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
         return new Promise((resolve, reject) => {
             const queueService = this.root.createQueueService();
-            queueService.createQueue(name, (err?: Error, result?: azureStorage.QueueService.QueueResult, response?: azureStorage.ServiceResponse) => {
+            queueService.createQueue(name, (err: Error | undefined, result: azureStorage.QueueService.QueueResult, response?: azureStorage.ServiceResponse) => {
                 if (err) {
                     reject(err);
                 } else if (response && response.statusCode === 204) {
@@ -117,7 +117,7 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
                     // 204 (No Content) is returned.
                     // Source: https://msdn.microsoft.com/en-us/library/azure/dd179342.aspx
                     reject(new Error('The queue specified already exists.'));
-                } else if (result) {
+                } else {
                     resolve(result);
                 }
             });
