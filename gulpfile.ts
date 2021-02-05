@@ -3,8 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// tslint:disable:no-unsafe-any
-
 import * as cp from 'child_process';
 import * as fse from 'fs-extra';
 import * as gulp from 'gulp';

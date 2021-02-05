@@ -7,7 +7,6 @@ import { spawn } from "child_process";
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Launcher {
-    // tslint:disable:no-stateless-class // Grandfathered in
     public static async launch(command: string, ...args: string[]): Promise<void> {
         await new Promise<void>((resolve, _reject) => {
             const spawnEnv = <{ [key: string]: string }>JSON.parse(JSON.stringify(process.env));

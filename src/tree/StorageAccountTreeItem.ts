@@ -185,7 +185,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const parsedId = this.parseAzureResourceId(this.storageAccount.id);
         const resourceGroupName = parsedId.resourceGroups;
         const keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
-        // tslint:disable-next-line:strict-boolean-expressions
         return (keyResult.keys || <StorageManagementModels.StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
     }
 

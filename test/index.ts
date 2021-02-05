@@ -44,7 +44,6 @@ function addEnvVarsToMochaOptions(options: Mocha.MochaOptions): void {
         const match: RegExpMatchArray | null = envVar.match(/^mocha_(.+)/i);
         if (match) {
             const [, option] = match;
-            // tslint:disable-next-line:strict-boolean-expressions
             let value: string | number = process.env[envVar] || '';
             if (typeof value === 'string' && !isNaN(parseInt(value))) {
                 value = parseInt(value);

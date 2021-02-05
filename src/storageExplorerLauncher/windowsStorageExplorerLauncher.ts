@@ -19,7 +19,6 @@ const regKey: { hive: string, key: string } = { hive: "HKCR", key: "\\storageexp
 export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher {
 
     public async openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void> {
-        // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
             + encodeURIComponent(accountId)
@@ -54,7 +53,6 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 exePath = regVal.split("\"")[1];
             }
             if (exePath && await pathExists(exePath)) {
-                // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
                 return exePath;
             } else {
                 context.telemetry.properties.storageExplorerNotFound = 'true';
@@ -65,7 +63,6 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 openUrl(storageExplorerDownloadUrl);
                 throw new UserCancelledError();
             }
-            // tslint:disable-next-line: strict-boolean-expressions
         }) || '';
     }
 

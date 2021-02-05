@@ -140,7 +140,6 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         }
 
         const fileSize: number = (await fse.stat(sourceFilePath)).size;
-        // tslint:disable-next-line: strict-boolean-expressions
         const transferProgress: TransferProgress = new TransferProgress('bytes', fileSize || 1, destFilePath);
         const src: ILocalLocation = createAzCopyLocalLocation(sourceFilePath);
         const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, destFilePath);

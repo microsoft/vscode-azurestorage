@@ -52,7 +52,6 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
         children.push(new BlobTreeItem(parent, blob.name, parent.container));
     }
 
-    // tslint:disable-next-line: strict-boolean-expressions
     for (const directory of responseValue.segment.blobPrefixes || []) {
         // NOTE: `directory.name` as returned from Azure is actually the directory path in the container
         children.push(new BlobDirectoryTreeItem(parent, directory.name, parent.container));
@@ -79,11 +78,9 @@ export async function createOrUpdateBlockBlob(parent: BlobContainerTreeItem | Bl
     const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
 
     let properties: azureStorageBlob.BlockBlobUploadOptions | undefined = await getExistingProperties(parent, name);
-    // tslint:disable: strict-boolean-expressions
     properties = properties || {};
     properties.blobHTTPHeaders = properties.blobHTTPHeaders || {};
     properties.blobHTTPHeaders.blobContentType = properties.blobHTTPHeaders.blobContentType || mime.getType(name) || undefined;
-    // tslint:enable: strict-boolean-expressions
 
     await containerClient.uploadBlockBlob(name, text, contentLength, properties);
 }

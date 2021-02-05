@@ -50,7 +50,6 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             }
         }
 
-        // tslint:disable-next-line: strict-boolean-expressions
         const shares: azureStorageShare.ShareItem[] = responseValue.shareItems || [];
         this._continuationToken = responseValue.continuationToken;
 

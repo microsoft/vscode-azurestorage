@@ -14,7 +14,6 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
     public hideStepCount: boolean = true;
 
     public async execute(context: IOpenInFileExplorerWizardContext): Promise<void> {
-        // tslint:disable-next-line:strict-boolean-expressions
         const openFolders: readonly WorkspaceFolder[] = workspace.workspaceFolders || [];
         if (context.openBehavior === 'AddToWorkspace' && openFolders.length === 0) {
             // no point in adding to an empty workspace

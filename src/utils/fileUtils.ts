@@ -70,11 +70,9 @@ export async function doesFileExist(fileName: string, parent: AzureParentTreeIte
 export async function createFile(directoryPath: string, name: string, shareName: string, root: IStorageRoot, options?: azureStorageShare.FileCreateOptions): Promise<azureStorageShare.FileCreateResponse> {
     const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
 
-    // tslint:disable: strict-boolean-expressions
     options = options || {};
     options.fileHttpHeaders = options.fileHttpHeaders || {};
     options.fileHttpHeaders.fileContentType = options.fileHttpHeaders.fileContentType || mime.getType(name) || undefined;
-    // tslint:enable: strict-boolean-expressions
 
     return await fileClient.create(0, options);
 }
@@ -82,11 +80,9 @@ export async function createFile(directoryPath: string, name: string, shareName:
 export async function updateFileFromText(directoryPath: string, name: string, shareName: string, root: IStorageRoot, text: string | Buffer): Promise<void> {
     const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
     let options: azureStorageShare.FileParallelUploadOptions = await getExistingCreateOptions(directoryPath, name, shareName, root);
-    // tslint:disable: strict-boolean-expressions
     options = options || {};
     options.fileHttpHeaders = options.fileHttpHeaders || {};
     options.fileHttpHeaders.fileContentType = options.fileHttpHeaders.fileContentType || mime.getType(name) || undefined;
-    // tslint:enable: strict-boolean-expressions
     await fileClient.uploadData(Buffer.from(text), options);
 }
 

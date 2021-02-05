@@ -41,7 +41,6 @@ import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
 import { StorageAccountTreeItem } from './tree/StorageAccountTreeItem';
 
-// tslint:disable-next-line:max-func-body-length
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
     ext.context = context;
     ext.ignoreBundle = ignoreBundle;

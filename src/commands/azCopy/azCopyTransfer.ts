@@ -42,7 +42,6 @@ function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLabel: st
     const finalTransferStatus: AzCopyTransferStatus = jobInfo.latestStatus;
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
-        // tslint:disable-next-line: strict-boolean-expressions
         let message: string = jobInfo.errorMessage || localize('azCopyTransfer', 'AzCopy Transfer: "{0}". ', finalTransferStatus?.JobStatus || 'Failed');
         if (finalTransferStatus?.FailedTransfers?.length || finalTransferStatus?.SkippedTransfers?.length) {
             message += localize('checkOutputWindow', ' Check the [output window](command:{0}) for a list of incomplete transfers.', `${ext.prefix}.showOutputChannel`);
@@ -100,11 +99,8 @@ async function startAndWaitForTransfer(
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'startAndWaitForTransfer');
         status = (await copyClient.getJobInfo(jobId)).latestStatus;
 
-        // tslint:disable: strict-boolean-expressions
         totalWork = (displayWorkAsTotalTransfers ? status?.TotalTransfers : status?.TotalBytesEnumerated) || undefined;
         finishedWork = (displayWorkAsTotalTransfers ? status?.TransfersCompleted : status?.BytesOverWire) || 0;
-        // tslint:enable: strict-boolean-expressions
-
         if (totalWork || transferProgress.totalWork) {
             // Only report progress if we have `totalWork`
             transferProgress.reportToOutputWindow(finishedWork, totalWork);

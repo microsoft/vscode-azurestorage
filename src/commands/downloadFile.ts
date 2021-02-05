@@ -38,7 +38,6 @@ interface IAzCopyDownload {
 }
 
 export async function download(context: IActionContext, treeItem: AzExtTreeItem, treeItems?: AzExtTreeItem[]): Promise<void> {
-    // tslint:disable-next-line: strict-boolean-expressions
     treeItems = treeItems || [treeItem];
 
     const placeHolderString: string = localize('selectFolderForDownload', 'Select destination folder for download');

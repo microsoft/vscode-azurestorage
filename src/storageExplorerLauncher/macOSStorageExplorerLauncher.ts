@@ -44,12 +44,10 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             }
 
             return exePath;
-            // tslint:disable-next-line: strict-boolean-expressions
         }) || '';
     }
 
     public async openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void> {
-        // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
             + encodeURIComponent(accountId)

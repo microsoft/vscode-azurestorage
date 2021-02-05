@@ -25,7 +25,6 @@ export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageA
     }
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext & IStaticWebsiteConfigWizardContext, progress: NotificationProgress): Promise<void> {
-        // tslint:disable-next-line: strict-boolean-expressions
         this.accountTreeItem = this.accountTreeItem || wizardContext.accountTreeItem;
 
         progress.report({ message: localize('configuringStaticWebsiteHosting', `Configuring static website hosing for storage account "${this.accountTreeItem.label}"...`) });

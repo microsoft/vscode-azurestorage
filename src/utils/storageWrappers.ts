@@ -8,7 +8,6 @@ import { StorageManagementModels } from '@azure/arm-storage';
 export function nonNull<T>(value: T | undefined, name?: string): T {
     if (value === null || value === undefined) {
         throw new Error(
-            // tslint:disable-next-line:prefer-template
             "Internal error: Expected value to be not null and not undefined"
             + (name ? `: ${name}` : ''));
     }
@@ -37,7 +36,6 @@ export class StorageAccountWrapper {
 
     readonly id: string;
     readonly name: string;
-    // tslint:disable-next-line:no-reserved-keywords
     readonly type: string;
     readonly primaryEndpoints: StorageManagementModels.Endpoints;
 }

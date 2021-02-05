@@ -54,7 +54,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     public get iconPath(): { light: string | Uri; dark: string | Uri } {
-        // tslint:disable-next-line:no-non-null-assertion
         const iconFileName = this._websiteHostingEnabled && this.container.name === staticWebsiteContainerName ?
             'BrandAzureStaticWebsites' : 'AzureBlobContainer';
         return {
@@ -200,7 +199,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
      *
      * @returns The primary web endpoint
      */
-    // tslint:disable-next-line: max-func-body-length
     private async deployStaticWebsiteCore(
         context: IActionContext,
         sourceFolderPath: string,
@@ -272,7 +270,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public getPrimaryWebEndpoint(): string | undefined {
         // Right now only one web endpoint is supported per storage account
-        // tslint:disable-next-line:strict-boolean-expressions
         return this.root.primaryEndpoints && this.root.primaryEndpoints.web;
     }
 
@@ -330,7 +327,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         ext.outputChannel.appendLog(getUploadingMessageWithSource(filePath, this.label));
         const src: ILocalLocation = createAzCopyLocalLocation(filePath);
         const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, blobPath);
-        // tslint:disable-next-line: strict-boolean-expressions
         const totalBytes: number = (await fse.stat(filePath)).size || 1;
         const transferProgress: TransferProgress = new TransferProgress('bytes', totalBytes, blobPath);
         await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress, notificationProgress, cancellationToken);

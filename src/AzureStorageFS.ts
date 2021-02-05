@@ -125,14 +125,12 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 props = await fileClient.getProperties();
             }
 
-            // tslint:disable: strict-boolean-expressions
             ctime = props?.createdOn?.valueOf() || props?.fileCreatedOn?.valueOf() || 0;
             mtime = props?.lastModified?.valueOf() || 0;
             size = props?.contentLength || 0;
 
             return { type: fileType, ctime, mtime, size };
         }) || { type: vscode.FileType.Unknown, ctime, mtime, size };
-        // tslint:enable: strict-boolean-expressions
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
@@ -156,7 +154,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             }
 
             return result;
-            // tslint:disable-next-line: strict-boolean-expressions
         }) || [];
     }
 
@@ -172,7 +169,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                     throw getFileSystemError(uri, context, () => { return new vscode.FileSystemError(response); });
                 }
 
-                // tslint:disable-next-line: no-void-expression
                 this.isFileShareUri(uri) ? await this.createDirectoryFileShare(parsedUri, context) : await this.createDirectoryBlobContainer(uri, parsedUri, context);
             } catch (error) {
                 const pe = parseError(error);
@@ -237,9 +233,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 throw error;
             }
 
-            // tslint:disable-next-line: strict-boolean-expressions
             return Buffer.from(result || '');
-            // tslint:disable-next-line: strict-boolean-expressions
         }) || Buffer.from('');
     }
 
@@ -314,7 +308,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         });
     }
 
-    // tslint:disable-next-line: no-reserved-keywords
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         await callWithTelemetryAndErrorHandling('delete', async (context) => {
             context.errorHandling.rethrow = true;

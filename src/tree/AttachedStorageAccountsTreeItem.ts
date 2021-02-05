@@ -35,7 +35,6 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
     constructor(parent: AzExtParentTreeItem) {
         super(parent);
         this._keytar = tryGetKeyTar();
-        // tslint:disable-next-line: no-use-before-declare
         this._root = new AttachedAccountRoot();
         this._loadPersistedAccountsTask = this.loadPersistedAccounts();
     }

@@ -118,7 +118,6 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         let dirPath: BlobDirectoryTreeItem | undefined = this;
         let errors: boolean = false;
 
-        // tslint:disable-next-line: strict-boolean-expressions
         while (dirPath) {
             const children: AzExtTreeItem[] = await dirPath.getCachedChildren(context);
             for (const child of children) {

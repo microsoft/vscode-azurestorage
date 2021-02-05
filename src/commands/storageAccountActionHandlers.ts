@@ -68,7 +68,6 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
     } else {
         // Command called from command palette or from storage account/container treeItem
         destTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>target;
-        // tslint:disable-next-line:strict-boolean-expressions
         context.telemetry.properties.contextValue = (destTreeItem && destTreeItem.contextValue) || 'CommandPalette';
     }
 

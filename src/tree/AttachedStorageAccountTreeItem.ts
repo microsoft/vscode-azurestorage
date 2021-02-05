@@ -43,7 +43,6 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
         public readonly connectionString: string,
         private readonly storageAccountName: string) {
         super(parent);
-        // tslint:disable-next-line: no-use-before-declare
         this._root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
@@ -105,7 +104,6 @@ class AttachedStorageRoot extends AttachedAccountRoot {
     public storageAccountName: string;
     public isEmulated: boolean;
 
-    // tslint:disable-next-line:typedef
     private readonly _serviceClientPipelineOptions = { retryOptions: { maxTries: 2 } };
     private _connectionString: string;
 

@@ -46,7 +46,6 @@ export async function uploadFiles(
         );
     }
 
-    // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
     let urisToUpload: Uri[] = [];
