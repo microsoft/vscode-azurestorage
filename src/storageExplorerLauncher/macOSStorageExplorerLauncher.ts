@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { existsSync } from 'fs-extra';
+import { pathExists } from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
@@ -25,7 +25,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             // storageExplorerLocation has default value, can't be undefined
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const exePath = path.join(selectedLocation!, MacOSStorageExplorerLauncher.subExecutableLocation);
-            if (!MacOSStorageExplorerLauncher.fileExists(exePath)) {
+            if (!(await pathExists(exePath))) {
                 context.telemetry.properties.storageExplorerNotFound = 'true';
                 const selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
 
@@ -77,10 +77,6 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             throw new UserCancelledError();
         }
         return Launcher.launch("open", ...["-a", storageExplorerExecutable].concat(extraArgs));
-    }
-
-    private static fileExists(filePath: string): boolean {
-        return existsSync(filePath);
     }
 
     private static async showOpenDialog(): Promise<string> {

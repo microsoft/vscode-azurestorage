@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { existsSync } from 'fs-extra';
+import { pathExists } from 'fs-extra';
 import { MessageItem } from "vscode";
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
@@ -53,7 +53,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 // Parse from e.g.: "C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe" -- "%1"
                 exePath = regVal.split("\"")[1];
             }
-            if (exePath && WindowsStorageExplorerLauncher.fileExists(exePath)) {
+            if (exePath && await pathExists(exePath)) {
                 // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
                 return exePath;
             } else {
@@ -67,10 +67,6 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
             }
             // tslint:disable-next-line: strict-boolean-expressions
         }) || '';
-    }
-
-    private static fileExists(path: string): boolean {
-        return existsSync(path);
     }
 
     private static async getWindowsRegistryValue(hive: string, key: string): Promise<string | undefined> {
