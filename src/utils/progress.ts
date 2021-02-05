@@ -18,7 +18,7 @@ export async function awaitWithProgress<T>(title: string, promise: Promise<T>, g
 
     let thisProgress: StatusBarProgress;
 
-    await window.withProgress(
+    void window.withProgress(
         <ProgressOptions>{
             location: ProgressLocation.Window,
             title: title

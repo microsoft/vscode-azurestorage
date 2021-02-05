@@ -225,7 +225,7 @@ async function doesShareExist(shareClient: azureStorageShare.ShareClient): Promi
 
 // get the connection string of a storage account by the command azureStorage.copyConnectionString
 async function getConnectionString(storageAccountName: string): Promise<string> {
-    void vscode.env.clipboard.writeText('');
+    await vscode.env.clipboard.writeText('');
     await testUserInput.runWithInputs([storageAccountName], async () => {
         await vscode.commands.executeCommand('azureStorage.copyConnectionString');
     });
