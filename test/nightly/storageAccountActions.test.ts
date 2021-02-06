@@ -13,8 +13,8 @@ import { DialogResponses, getRandomHexString } from '../../extension.bundle';
 import { longRunningTestsEnabled, testUserInput } from '../global.test';
 import { resourceGroupsToDelete, webSiteClient as client } from './global.resource.test';
 
-// tslint:disable-next-line: max-func-body-length
-suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<void> {
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
+suite('Storage Account Actions', function (this: Mocha.Suite): void {
     this.timeout(5 * 60 * 1000);
     let blobUrl: string;
     let fileUrl: string;
@@ -25,7 +25,7 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
     let attachedRegex: RegExp;
     let resourceName: string;
 
-    suiteSetup(async function (this: Mocha.Context): Promise<void> {
+    suiteSetup(function (this: Mocha.Context): void {
         if (!longRunningTestsEnabled) {
             this.skip();
         }
@@ -195,7 +195,7 @@ suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<voi
     }
 });
 
-// Validate the storage account exists or not based on its resource group name and account name
+// Validate the storage account exists or not based on its resource group name and account name
 async function validateAccountExists(resourceGroupName: string, accountName: string): Promise<void> {
     const createdAccount: StorageManagementModels.StorageAccount = await client.storageAccounts.getProperties(resourceGroupName, accountName);
     assert.ok(createdAccount);
@@ -203,7 +203,7 @@ async function validateAccountExists(resourceGroupName: string, accountName: str
 
 // validate the resource exists or not
 async function doesResourceExist<T>(service: StorageServiceClient, fn: string, name: string): Promise<T> {
-    // tslint:disable-next-line: no-unsafe-any
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     return new Promise((resolve, reject) => service[fn](name, (err: Error | undefined, res: T) => {
         if (err) {
             reject(err);
@@ -225,7 +225,7 @@ async function doesShareExist(shareClient: azureStorageShare.ShareClient): Promi
 
 // get the connection string of a storage account by the command azureStorage.copyConnectionString
 async function getConnectionString(storageAccountName: string): Promise<string> {
-    vscode.env.clipboard.writeText('');
+    await vscode.env.clipboard.writeText('');
     await testUserInput.runWithInputs([storageAccountName], async () => {
         await vscode.commands.executeCommand('azureStorage.copyConnectionString');
     });

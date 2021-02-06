@@ -30,10 +30,9 @@ export class TableTreeItem extends AzureTreeItem<IStorageRoot> {
         const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const tableService = this.root.createTableService();
-            await new Promise((resolve, reject) => {
-                // tslint:disable-next-line:no-any
+            await new Promise<void>((resolve, reject) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 tableService.deleteTable(this.tableName, (err?: any) => {
-                    // tslint:disable-next-line:no-void-expression // Grandfathered in
                     err ? reject(err) : resolve();
                 });
             });

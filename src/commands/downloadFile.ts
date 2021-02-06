@@ -33,7 +33,6 @@ interface IAzCopyDownload {
 }
 
 export async function download(context: IActionContext, treeItem: AzExtTreeItem, treeItems?: AzExtTreeItem[]): Promise<void> {
-    // tslint:disable-next-line: strict-boolean-expressions
     treeItems = treeItems || [treeItem];
 
     const placeHolderString: string = localize('selectFolderForDownload', 'Select destination folder for download');
@@ -106,7 +105,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
     }
 
     let hasParent: boolean;
-    let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+    const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
     const foldersToDownload: IAzCopyDownload[] = [];
     const filesToDownload: IAzCopyDownload[] = [];
 

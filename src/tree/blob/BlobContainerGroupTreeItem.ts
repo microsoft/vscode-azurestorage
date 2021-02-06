@@ -72,9 +72,9 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
 
     async listContainers(continuationToken?: string): Promise<azureStorageBlob.ListContainersSegmentResponse> {
         const blobServiceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        let response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
+        const response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
 
-        // tslint:disable-next-line: no-unsafe-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (await response.next()).value;
     }
 
@@ -103,9 +103,9 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
         const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, name);
         await containerClient.create();
 
-        let containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers();
+        const containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers();
         let createdContainer: azureStorageBlob.ContainerItem | undefined;
-        for (let container of containersResponse.containerItems) {
+        for (const container of containersResponse.containerItems) {
             if (container.name === name) {
                 createdContainer = container;
                 break;

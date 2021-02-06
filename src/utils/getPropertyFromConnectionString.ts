@@ -5,7 +5,6 @@
 
 export function getPropertyFromConnectionString(connectionString: string, property: string): string | undefined {
     const regexp: RegExp = new RegExp(`(?:^|;)\\s*${property}=([^;]+)(?:;|$)`, 'i');
-    // tslint:disable-next-line: strict-boolean-expressions
     const match: RegExpMatchArray | undefined = connectionString.match(regexp) || undefined;
     return match && match[1];
 }

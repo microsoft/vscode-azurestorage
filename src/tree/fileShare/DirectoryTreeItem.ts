@@ -49,7 +49,7 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             this._continuationToken = undefined;
         }
 
-        let { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory(this.fullPath, this.shareName, this.root, this._continuationToken);
+        const { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory(this.fullPath, this.shareName, this.root, this._continuationToken);
         this._continuationToken = continuationToken;
 
         return (<(DirectoryTreeItem | FileTreeItem)[]>[])
@@ -63,7 +63,7 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
     public async copyUrl(): Promise<void> {
         // Use this.fullPath here instead of this.directoryName. Otherwise only the leaf directory is displayed in the URL
-        let directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, this.fullPath);
+        const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, this.fullPath);
         const url = directoryClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();

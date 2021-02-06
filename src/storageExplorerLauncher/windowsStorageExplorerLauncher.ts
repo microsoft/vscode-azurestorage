@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import * as fs from "fs";
+import { pathExists } from 'fs-extra';
 import { MessageItem } from "vscode";
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
@@ -19,7 +19,6 @@ const regKey: { hive: string, key: string } = { hive: "HKCR", key: "\\storageexp
 export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher {
 
     public async openResource(accountId: string, subscriptionid: string, resourceType?: ResourceType, resourceName?: string): Promise<void> {
-        // tslint:disable-next-line:prefer-template
         let url = "storageexplorer://v=1"
             + "&accountid="
             + encodeURIComponent(accountId)
@@ -28,11 +27,11 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
             + "&source="
             + encodeURIComponent("VSCODE-AzureStorage");
 
-        if (!!resourceType) {
+        if (resourceType) {
             url = `${url}&resourcetype=${resourceType}`;
         }
 
-        if (!!resourceName) {
+        if (resourceName) {
             url = `${url}&resourcename=${resourceName}`;
         }
 
@@ -53,8 +52,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 // Parse from e.g.: "C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe" -- "%1"
                 exePath = regVal.split("\"")[1];
             }
-            if (exePath && await WindowsStorageExplorerLauncher.fileExists(exePath)) {
-                // tslint:disable-next-line:no-unsafe-finally // Grandfathered in
+            if (exePath && await pathExists(exePath)) {
                 return exePath;
             } else {
                 context.telemetry.properties.storageExplorerNotFound = 'true';
@@ -62,25 +60,15 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 const message: string = localize('cantFindSE', 'Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?');
                 await ext.ui.showWarningMessage(message, download);
                 context.telemetry.properties.downloadStorageExplorer = 'true';
-                await openUrl(storageExplorerDownloadUrl);
+                openUrl(storageExplorerDownloadUrl);
                 throw new UserCancelledError();
             }
-            // tslint:disable-next-line: strict-boolean-expressions
         }) || '';
     }
 
-    private static async fileExists(path: string): Promise<boolean> {
-        return await new Promise<boolean>((resolve, _reject) => {
-            fs.exists(path, (exists: boolean) => {
-                resolve(exists);
-            });
-        });
-    }
-
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    private static getWindowsRegistryValue(hive: string, key: string): Promise<string | undefined> {
+    private static async getWindowsRegistryValue(hive: string, key: string): Promise<string | undefined> {
         return new Promise((resolve, reject) => {
-            let rgKey = new winreg({ hive, key });
+            const rgKey = new winreg({ hive, key });
             rgKey.values((err?: {}, items?: Winreg.RegistryItem[]) => {
                 if (err) {
                     reject(err);
@@ -92,7 +80,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async launchStorageExplorer(args: string[] = []): Promise<void> {
-        let storageExplorerExecutable: string = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
+        const storageExplorerExecutable: string = await WindowsStorageExplorerLauncher.getStorageExplorerExecutable();
         if (!storageExplorerExecutable) {
             throw new UserCancelledError();
         }

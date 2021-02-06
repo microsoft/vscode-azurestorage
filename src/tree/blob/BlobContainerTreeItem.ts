@@ -53,7 +53,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     public get iconPath(): { light: string | Uri; dark: string | Uri } {
-        // tslint:disable-next-line:no-non-null-assertion
         const iconFileName = this._websiteHostingEnabled && this.container.name === staticWebsiteContainerName ?
             'BrandAzureStaticWebsites' : 'AzureBlobContainer';
         return {
@@ -84,7 +83,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             result.push(ti);
         }
 
-        let { children, continuationToken } = await loadMoreBlobChildren(this, this._continuationToken);
+        const { children, continuationToken } = await loadMoreBlobChildren(this, this._continuationToken);
         this._continuationToken = continuationToken;
         return result.concat(children);
     }
@@ -100,7 +99,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     public async refreshImpl(): Promise<void> {
-        //tslint:disable-next-line:no-non-null-assertion
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const hostingStatus = await (<StorageAccountTreeItem>this!.parent!.parent).getActualWebsiteHostingStatus();
         this._websiteHostingEnabled = hostingStatus.enabled;
     }
@@ -114,12 +113,12 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
         ext.outputChannel.appendLog(`Querying Azure... Method: listBlobsFlat blobContainerName: "${this.container.name}" prefix: ""`);
 
-        // tslint:disable-next-line:no-constant-condition
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             throwIfCanceled(cancellationToken, properties, "listAllBlobs");
             response = containerClient.listBlobsFlat().byPage({ continuationToken: currentToken, maxPageSize: 5000 });
 
-            // tslint:disable-next-line: no-unsafe-any
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             responseValue = (await response.next()).value;
 
             blobs.push(...responseValue.segment.blobItems);
@@ -161,15 +160,15 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public async copyUrl(): Promise<void> {
         const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
-        let url: string = containerClient.url;
+        const url: string = containerClient.url;
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLog(`Container URL copied to clipboard: ${url}`);
     }
 
     public async deployStaticWebsite(context: IActionContext, sourceFolderPath: string): Promise<void> {
-        let destBlobFolder = "";
-        let webEndpoint = await vscode.window.withProgress(
+        const destBlobFolder = "";
+        const webEndpoint = await vscode.window.withProgress(
             {
                 cancellable: true,
                 location: ProgressLocation.Notification,
@@ -179,8 +178,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             async (notificationProgress, cancellationToken) => await this.deployStaticWebsiteCore(context, sourceFolderPath, destBlobFolder, notificationProgress, cancellationToken),
         );
 
-        let browseWebsite: vscode.MessageItem = { title: "Browse to website" };
-        vscode.window.showInformationMessage(
+        const browseWebsite: vscode.MessageItem = { title: "Browse to website" };
+        void vscode.window.showInformationMessage(
             `Deployment complete. The primary web endpoint is ${webEndpoint}`,
             browseWebsite
         ).then(async (result) => {
@@ -199,7 +198,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
      *
      * @returns The primary web endpoint
      */
-    // tslint:disable-next-line: max-func-body-length
     private async deployStaticWebsiteCore(
         context: IActionContext,
         sourceFolderPath: string,
@@ -223,8 +221,8 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                     blobsToDelete = await this.listAllBlobs(cancellationToken);
 
                     if (blobsToDelete.length) {
-                        let message = `The storage container "${this.friendlyContainerName}" contains ${blobsToDelete.length} files. Deploying will delete all of these existing files.  Continue?`;
-                        let deleteAndDeploy: vscode.MessageItem = { title: 'Delete and Deploy' };
+                        const message = `The storage container "${this.friendlyContainerName}" contains ${blobsToDelete.length} files. Deploying will delete all of these existing files.  Continue?`;
+                        const deleteAndDeploy: vscode.MessageItem = { title: 'Delete and Deploy' };
                         const result = await vscode.window.showWarningMessage(message, { modal: true }, deleteAndDeploy, DialogResponses.cancel);
                         if (result !== deleteAndDeploy) {
                             context.telemetry.properties.cancelStep = 'AreYouSureYouWantToDeleteExistingBlobs';
@@ -233,7 +231,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
                     }
 
                     // Delete existing blobs
-                    let transferProgress = new TransferProgress('blobs', 'Deleting');
+                    const transferProgress = new TransferProgress('blobs', 'Deleting');
                     await this.deleteBlobs(blobsToDelete, transferProgress, notificationProgress, cancellationToken, context.telemetry.properties);
 
                     // Reset notification progress. Otherwise the progress bar will remain full when uploading blobs
@@ -259,7 +257,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             }
         );
 
-        let webEndpoint = this.getPrimaryWebEndpoint();
+        const webEndpoint = this.getPrimaryWebEndpoint();
         if (!webEndpoint) {
             throw new Error(`Could not obtain the primary web endpoint for ${this.root.storageAccountName}`);
         }
@@ -271,7 +269,6 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public getPrimaryWebEndpoint(): string | undefined {
         // Right now only one web endpoint is supported per storage account
-        // tslint:disable-next-line:strict-boolean-expressions
         return this.root.primaryEndpoints && this.root.primaryEndpoints.web;
     }
 
@@ -280,7 +277,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             throw new Error(`Unexpected treeItem type: ${treeItem.contextValue}`);
         }
 
-        let storageAccountTreeItem = treeItem.parent && treeItem.parent.parent;
+        const storageAccountTreeItem = treeItem.parent && treeItem.parent.parent;
         if (storageAccountTreeItem && storageAccountTreeItem instanceof StorageAccountTreeItem) {
             return storageAccountTreeItem;
         } else {
@@ -296,11 +293,11 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         properties: TelemetryProperties,
     ): Promise<void> {
         const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
-        for (let blobIndex of blobsToDelete.keys()) {
-            let blob: azureStorageBlob.BlobItem = blobsToDelete[blobIndex];
+        for (const blobIndex of blobsToDelete.keys()) {
+            const blob: azureStorageBlob.BlobItem = blobsToDelete[blobIndex];
             try {
                 ext.outputChannel.appendLog(`Deleting blob "${blob.name}"...`);
-                let response: azureStorageBlob.BlobDeleteResponse = await containerClient.deleteBlob(blob.name);
+                const response: azureStorageBlob.BlobDeleteResponse = await containerClient.deleteBlob(blob.name);
                 if (cancellationToken.isCancellationRequested) {
                     throw new UserCancelledError();
                 } else if (response.errorCode) {

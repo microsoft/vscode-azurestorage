@@ -13,7 +13,7 @@ const azuriteExtensionId: string = 'Azurite.azurite';
 export const emulatorTimeoutMS: number = 3 * 1000;
 
 export async function startEmulator(context: IActionContext, emulatorType: EmulatorType): Promise<void> {
-    if (!!vscode.extensions.getExtension(azuriteExtensionId)) {
+    if (vscode.extensions.getExtension(azuriteExtensionId)) {
         // Use the Azurite extension
         await vscode.commands.executeCommand(`azurite.start_${emulatorType}`);
         await ext.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
@@ -23,7 +23,7 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
         // This task will remain active as long as the user keeps the emulator running. Only show an error if it happens in the first three seconds
         const emulatorTask: Promise<string> = cpUtils.executeCommand(ext.outputChannel, undefined, `azurite-${emulatorType}`);
         ext.outputChannel.show();
-        await new Promise((resolve: () => void, reject: (error: unknown) => void) => {
+        await new Promise((resolve: (value: unknown) => void, reject: (error: unknown) => void) => {
             emulatorTask.catch(reject);
             setTimeout(resolve, emulatorTimeoutMS);
         });

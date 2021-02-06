@@ -46,7 +46,7 @@ export async function getFileOrDirectoryName(parent: AzureParentTreeItem<IStorag
         value,
         placeHolder: localize('enterName', 'Enter a name for the new resource'),
         validateInput: async (name: string) => {
-            let nameError: string | undefined = validateFileOrDirectoryName(name);
+            const nameError: string | undefined = validateFileOrDirectoryName(name);
             if (nameError) {
                 return nameError;
             } else if (await doesFileExist(name, parent, directoryPath, shareName) || await doesDirectoryExist(parent, posix.join(directoryPath, name), shareName)) {
@@ -70,11 +70,9 @@ export async function doesFileExist(fileName: string, parent: AzureParentTreeIte
 export async function createFile(directoryPath: string, name: string, shareName: string, root: IStorageRoot, options?: azureStorageShare.FileCreateOptions): Promise<azureStorageShare.FileCreateResponse> {
     const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
 
-    // tslint:disable: strict-boolean-expressions
     options = options || {};
     options.fileHttpHeaders = options.fileHttpHeaders || {};
     options.fileHttpHeaders.fileContentType = options.fileHttpHeaders.fileContentType || mime.getType(name) || undefined;
-    // tslint:enable: strict-boolean-expressions
 
     return await fileClient.create(0, options);
 }
@@ -82,11 +80,9 @@ export async function createFile(directoryPath: string, name: string, shareName:
 export async function updateFileFromText(directoryPath: string, name: string, shareName: string, root: IStorageRoot, text: string | Buffer): Promise<void> {
     const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
     let options: azureStorageShare.FileParallelUploadOptions = await getExistingCreateOptions(directoryPath, name, shareName, root);
-    // tslint:disable: strict-boolean-expressions
     options = options || {};
     options.fileHttpHeaders = options.fileHttpHeaders || {};
     options.fileHttpHeaders.fileContentType = options.fileHttpHeaders.fileContentType || mime.getType(name) || undefined;
-    // tslint:enable: strict-boolean-expressions
     await fileClient.uploadData(Buffer.from(text), options);
 }
 
@@ -98,8 +94,8 @@ export async function deleteFile(directory: string, name: string, share: string,
 // Gets existing create options using the `@azure/storage-file-share` SDK
 export async function getExistingCreateOptions(directoryPath: string, name: string, shareName: string, root: IStorageRoot): Promise<azureStorageShare.FileCreateOptions> {
     const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
-    let propertiesResult: azureStorageShare.FileGetPropertiesResponse = await fileClient.getProperties();
-    let options: azureStorageShare.FileCreateOptions = {};
+    const propertiesResult: azureStorageShare.FileGetPropertiesResponse = await fileClient.getProperties();
+    const options: azureStorageShare.FileCreateOptions = {};
     options.fileHttpHeaders = {};
     options.fileHttpHeaders.fileCacheControl = propertiesResult.cacheControl;
     options.fileHttpHeaders.fileContentDisposition = propertiesResult.contentDisposition;

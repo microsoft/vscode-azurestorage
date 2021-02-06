@@ -43,7 +43,6 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
         public readonly connectionString: string,
         private readonly storageAccountName: string) {
         super(parent);
-        // tslint:disable-next-line: no-use-before-declare
         this._root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
@@ -63,8 +62,9 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
         return this.root.isEmulated ? AttachedStorageAccountTreeItem.emulatedContextValue : AttachedStorageAccountTreeItem.baseContextValue;
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async loadMoreChildrenImpl(): Promise<AzureTreeItem<IStorageRoot>[]> {
-        let groupTreeItems: AzureTreeItem<IStorageRoot>[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem];
+        const groupTreeItems: AzureTreeItem<IStorageRoot>[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem];
 
         if (!this.root.isEmulated) {
             groupTreeItems.push(this._fileShareGroupTreeItem, this._tableGroupTreeItem);
@@ -77,15 +77,15 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
         return false;
     }
 
-    public async getConnectionString(): Promise<string> {
+    public getConnectionString(): string {
         return this.connectionString;
     }
 
     public async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
         // Does NOT update treeItem's _webHostingEnabled.
-        let serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        let properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
-        let staticWebsite: azureStorageBlob.StaticWebsite | undefined = properties.staticWebsite;
+        const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        const properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
+        const staticWebsite: azureStorageBlob.StaticWebsite | undefined = properties.staticWebsite;
 
         return {
             capable: !!staticWebsite,
@@ -104,7 +104,6 @@ class AttachedStorageRoot extends AttachedAccountRoot {
     public storageAccountName: string;
     public isEmulated: boolean;
 
-    // tslint:disable-next-line:typedef
     private readonly _serviceClientPipelineOptions = { retryOptions: { maxTries: 2 } };
     private _connectionString: string;
 

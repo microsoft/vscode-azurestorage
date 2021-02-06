@@ -29,7 +29,7 @@ async function openStorageAccountInStorageExplorer(context: IActionContext, tree
         treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
 
-    let accountId = treeItem.storageAccount.id;
+    const accountId = treeItem.storageAccount.id;
 
     await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId);
 }
@@ -47,7 +47,7 @@ async function copyConnectionString(context: IActionContext, treeItem?: StorageA
         treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
 
-    let connectionString = await treeItem.getConnectionString();
+    const connectionString = treeItem.getConnectionString();
     await vscode.env.clipboard.writeText(connectionString);
 }
 
@@ -68,7 +68,6 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
     } else {
         // Command called from command palette or from storage account/container treeItem
         destTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>target;
-        // tslint:disable-next-line:strict-boolean-expressions
         context.telemetry.properties.contextValue = (destTreeItem && destTreeItem.contextValue) || 'CommandPalette';
     }
 
@@ -78,7 +77,7 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
     }
 
     // Ask for destination account
-    let destAccountTreeItem: StorageAccountTreeItem = await selectStorageAccountTreeItemForCommand(
+    const destAccountTreeItem: StorageAccountTreeItem = await selectStorageAccountTreeItemForCommand(
         destTreeItem,
         context,
         {
@@ -87,7 +86,7 @@ async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri 
         });
 
     // Get the $web container
-    let destContainerTreeItem = await destAccountTreeItem.getWebsiteCapableContainer(context);
+    const destContainerTreeItem = await destAccountTreeItem.getWebsiteCapableContainer(context);
     if (!destContainerTreeItem) {
         throw new Error(`Could not find $web blob container for storage account "${destAccountTreeItem.label}"`);
     }
@@ -105,7 +104,7 @@ async function runPreDeployTask(deployFsPath: string, context: IActionContext): 
         const preDeployTask: vscode.Task | undefined = tasks.find((task: vscode.Task) => isTaskEqual(taskName, deployFsPath, task));
         if (preDeployTask) {
             await vscode.tasks.executeTask(preDeployTask);
-            await new Promise((resolve: () => void, reject: (error: Error) => void): void => {
+            await new Promise((resolve: (value?: unknown) => void, reject: (error: Error) => void): void => {
                 const listener: vscode.Disposable = vscode.tasks.onDidEndTaskProcess((e: vscode.TaskProcessEndEvent) => {
                     if (e.execution.task === preDeployTask) {
                         listener.dispose();

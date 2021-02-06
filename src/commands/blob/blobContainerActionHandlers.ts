@@ -26,7 +26,7 @@ export function registerBlobContainerActionHandlers(): void {
         let dirParentTreeItem: BlobDirectoryTreeItem | BlobContainerTreeItem = parent;
 
         for (const dirName of dirNames) {
-            let treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | undefined = await ext.tree.findTreeItem(`${dirParentTreeItem.fullId}/${dirName}`, context);
+            const treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | undefined = await ext.tree.findTreeItem(`${dirParentTreeItem.fullId}/${dirName}`, context);
             if (!treeItem) {
                 // This directory doesn't exist yet
                 dirParentTreeItem = await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobDirectoryTreeItem.contextValue, childName: dirName });
@@ -45,9 +45,9 @@ export function registerBlobContainerActionHandlers(): void {
 }
 
 async function openBlobContainerInStorageExplorer(_context: IActionContext, treeItem: BlobContainerTreeItem): Promise<void> {
-    let accountId = treeItem.root.storageAccountId;
+    const accountId = treeItem.root.storageAccountId;
     const resourceType = 'Azure.BlobContainer';
-    let resourceName = treeItem.container.name;
+    const resourceName = treeItem.container.name;
 
     await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
 }

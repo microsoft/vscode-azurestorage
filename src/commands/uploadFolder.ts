@@ -33,7 +33,6 @@ export async function uploadFolder(
         }))[0];
     }
 
-    // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
 

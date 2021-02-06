@@ -46,12 +46,11 @@ export async function uploadFiles(
         );
     }
 
-    // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
     let urisToUpload: Uri[] = [];
     if (!calledFromUploadToAzureStorage) {
-        let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+        const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
             const destPath: string = convertLocalPathToRemotePath(uri.fsPath, destinationDirectory);
             if (!(await stat(uri.fsPath)).isDirectory() && await checkCanUpload(destPath, overwriteChoice, treeItem)) {
