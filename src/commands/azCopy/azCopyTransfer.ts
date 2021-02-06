@@ -42,7 +42,7 @@ function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLabel: st
     const finalTransferStatus: AzCopyTransferStatus = jobInfo.latestStatus;
     context.telemetry.properties.jobStatus = finalTransferStatus?.JobStatus;
     if (!finalTransferStatus || finalTransferStatus.JobStatus !== 'Completed') {
-        let message: string = jobInfo.errorMessage || localize('azCopyTransfer', 'AzCopy Transfer: "{0}". ', finalTransferStatus?.JobStatus || 'Failed');
+        let message: string = jobInfo.errorMessage || finalTransferStatus?.ErrorMsg || localize('azCopyTransfer', 'AzCopy Transfer: "{0}". ', finalTransferStatus?.JobStatus || 'Unknown');
         if (finalTransferStatus?.FailedTransfers?.length || finalTransferStatus?.SkippedTransfers?.length) {
             message += localize('checkOutputWindow', ' Check the [output window](command:{0}) for a list of incomplete transfers.', `${ext.prefix}.showOutputChannel`);
 
@@ -61,14 +61,17 @@ function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLabel: st
         } else {
             // Add an additional error log since we don't have any more info about the failure
             ext.outputChannel.appendLog(localize('couldNotTransfer', 'Could not transfer "{0}"', transferLabel));
+
+            const isDefaultFailMessage: boolean = !jobInfo.errorMessage && finalTransferStatus?.JobStatus === 'Failed';
+            if (isDefaultFailMessage && process.platform === 'linux') {
+                message += localize('viewHelp', 'View help with [known issues](https://aka.ms/AAb0i6o).');
+            }
         }
 
         if (jobInfo.logFileLocation) {
             const uri: Uri = Uri.file(jobInfo.logFileLocation);
             ext.outputChannel.appendLog(localize('logFile', 'Log file: {0}', uri.toString()));
         }
-
-        message += finalTransferStatus?.ErrorMsg ? ` ${finalTransferStatus.ErrorMsg}` : '';
 
         if (finalTransferStatus?.JobStatus && /CompletedWith*/gi.test(finalTransferStatus.JobStatus)) {
             void ext.ui.showWarningMessage(message);
@@ -101,11 +104,11 @@ async function startAndWaitForTransfer(
 
         totalWork = (displayWorkAsTotalTransfers ? status?.TotalTransfers : status?.TotalBytesEnumerated) || undefined;
         finishedWork = (displayWorkAsTotalTransfers ? status?.TransfersCompleted : status?.BytesOverWire) || 0;
-        if (totalWork || transferProgress.totalWork) {
+        if (totalWork) {
             // Only report progress if we have `totalWork`
             transferProgress.reportToOutputWindow(finishedWork, totalWork);
             if (notificationProgress) {
-                transferProgress.reportToNotification(finishedWork, notificationProgress);
+                transferProgress.reportToNotification(finishedWork, totalWork, notificationProgress);
             }
         }
         await delay(1000);

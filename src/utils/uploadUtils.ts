@@ -5,7 +5,6 @@
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import { basename, dirname, posix } from 'path';
-import * as readdirp from 'readdirp';
 import * as vscode from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/azCopy/azCopyLocations';
@@ -38,13 +37,11 @@ export async function uploadLocalFolder(
     notificationProgress: NotificationProgress,
     cancellationToken: vscode.CancellationToken,
     messagePrefix?: string,
-    countFoldersAsResources?: boolean,
 ): Promise<void> {
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
     const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, true);
     const dst: IRemoteSasLocation = createAzCopyRemoteLocation(destTreeItem, destPath);
-    const totalWork: number = await getNumResourcesInDirectory(sourcePath, countFoldersAsResources);
-    const transferProgress: TransferProgress = new TransferProgress('files', totalWork, messagePrefix);
+    const transferProgress: TransferProgress = new TransferProgress('files', messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
 }
@@ -96,13 +93,4 @@ export async function promptForDestinationDirectory(): Promise<string> {
 
 export async function getDestinationDirectory(destinationDirectory?: string): Promise<string> {
     return destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory();
-}
-
-async function getNumResourcesInDirectory(directoryPath: string, countFolders?: boolean): Promise<number> {
-    const options: readdirp.ReaddirpOptions = {
-        directoryFilter: ['!.git', '!.vscode'],
-        type: countFolders ? 'files_directories' : 'files'
-    };
-    const resources: readdirp.EntryInfo[] = await readdirp.promise(directoryPath, options);
-    return resources.length;
 }

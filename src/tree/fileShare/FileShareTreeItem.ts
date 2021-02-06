@@ -5,7 +5,6 @@
 
 import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageShare from '@azure/storage-file-share';
-import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
@@ -139,8 +138,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }
         }
 
-        const fileSize: number = (await fse.stat(sourceFilePath)).size;
-        const transferProgress: TransferProgress = new TransferProgress('bytes', fileSize || 1, destFilePath);
+        const transferProgress: TransferProgress = new TransferProgress('bytes', destFilePath);
         const src: ILocalLocation = createAzCopyLocalLocation(sourceFilePath);
         const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, destFilePath);
         await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress, notificationProgress, cancellationToken);
