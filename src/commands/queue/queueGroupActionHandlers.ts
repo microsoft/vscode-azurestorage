@@ -5,12 +5,12 @@
 
 import { IActionContext, registerCommand } from 'vscode-azureextensionui';
 import { QueueGroupTreeItem } from '../../tree/queue/QueueGroupTreeItem';
+import { isAzuriteInstalled, warnAzuriteNotInstalled } from '../../utils/azuriteUtils';
 import { createChildNode } from '../commonTreeCommands';
-import { isAzuriteCliInstalled, isAzuriteExtensionInstalled, warnAzuriteNotInstalled } from '../startEmulator';
 
 export function registerQueueGroupActionHandlers(): void {
     registerCommand("azureStorage.createQueue", async (context: IActionContext, treeItem?: QueueGroupTreeItem) => {
-        if (treeItem?.root.isEmulated && !isAzuriteExtensionInstalled() && !(await isAzuriteCliInstalled())) {
+        if (treeItem?.root.isEmulated && !(await isAzuriteInstalled())) {
             warnAzuriteNotInstalled(context);
         }
         await createChildNode(context, QueueGroupTreeItem.contextValue, treeItem)

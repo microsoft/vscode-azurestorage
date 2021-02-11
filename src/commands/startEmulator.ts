@@ -5,12 +5,10 @@
 
 import * as vscode from 'vscode';
 import { IActionContext } from 'vscode-azureextensionui';
+import { emulatorTimeoutMS } from '../constants';
 import { ext } from "../extensionVariables";
+import { isAzuriteCliInstalled, isAzuriteExtensionInstalled, warnAzuriteNotInstalled } from '../utils/azuriteUtils';
 import { cpUtils } from '../utils/cpUtils';
-import { localize } from '../utils/localize';
-
-export const azuriteExtensionId: string = 'Azurite.azurite';
-export const emulatorTimeoutMS: number = 3 * 1000;
 
 export async function startEmulator(context: IActionContext, emulatorType: EmulatorType): Promise<void> {
     if (isAzuriteExtensionInstalled()) {
@@ -32,26 +30,6 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
     } else {
         warnAzuriteNotInstalled(context);
     }
-}
-
-export function isAzuriteExtensionInstalled(): boolean {
-    return !!vscode.extensions.getExtension(azuriteExtensionId);
-}
-
-export async function isAzuriteCliInstalled(): Promise<boolean> {
-    try {
-        await cpUtils.executeCommand(undefined, undefined, 'azurite -v');
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-export function warnAzuriteNotInstalled(context: IActionContext): void {
-    void ext.ui.showWarningMessage(localize('mustInstallAzurite', 'You must install the [Azurite extension](command:azureStorage.showAzuriteExtension) to perform this operation.'));
-    context.telemetry.properties.cancelStep = 'installAzuriteExtension';
-    context.errorHandling.suppressDisplay = true;
-    throw new Error(`"${azuriteExtensionId}" extension is not installed.`);
 }
 
 export enum EmulatorType {

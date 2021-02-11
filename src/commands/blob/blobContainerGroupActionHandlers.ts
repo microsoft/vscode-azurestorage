@@ -5,12 +5,12 @@
 
 import { IActionContext, registerCommand } from 'vscode-azureextensionui';
 import { BlobContainerGroupTreeItem } from '../../tree/blob/BlobContainerGroupTreeItem';
+import { isAzuriteInstalled, warnAzuriteNotInstalled } from '../../utils/azuriteUtils';
 import { createChildNode } from '../commonTreeCommands';
-import { isAzuriteCliInstalled, isAzuriteExtensionInstalled, warnAzuriteNotInstalled } from '../startEmulator';
 
 export function registerBlobContainerGroupActionHandlers(): void {
     registerCommand("azureStorage.createBlobContainer", async (context: IActionContext, treeItem?: BlobContainerGroupTreeItem) => {
-        if (treeItem?.root.isEmulated && !isAzuriteExtensionInstalled() && !(await isAzuriteCliInstalled())) {
+        if (treeItem?.root.isEmulated && !(await isAzuriteInstalled())) {
             warnAzuriteNotInstalled(context);
         }
         await createChildNode(context, BlobContainerGroupTreeItem.contextValue, treeItem)
