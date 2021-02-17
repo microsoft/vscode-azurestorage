@@ -7,7 +7,7 @@
 
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { AzureExtensionApi, AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureStorageFS } from './AzureStorageFS';
 import { revealTreeItem } from './commands/api/revealTreeItem';
@@ -137,6 +137,10 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 });
             await accountTreeItem.browseStaticWebsite(actionContext);
         });
+
+        // Suppress "Report an Issue" button for all errors in favor of the command
+        registerErrorHandler(c => c.errorHandling.suppressReportIssue = true);
+        registerReportIssueCommand('azureStorage.reportIssue');
     });
     registerCommand("azureStorage.uploadFiles", uploadFiles);
     registerCommand("azureStorage.uploadFolder", uploadFolder);

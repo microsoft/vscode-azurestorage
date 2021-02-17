@@ -74,7 +74,8 @@
         "onCommand:azureStorage.attachStorageAccount",
         "onCommand:azureStorage.detachStorageAccount",
         "onCommand:azureStorage.startBlobEmulator",
-        "onCommand:azureStorage.startQueueEmulator"
+        "onCommand:azureStorage.startQueueEmulator",
+        "onCommand:azureStorage.reportIssue"
     ],
     "main": "main",
     "icon": "resources/storageAccount.png",
@@ -335,6 +336,11 @@
             {
                 "command": "azureStorage.startQueueEmulator",
                 "title": "Start Queue Emulator",
+                "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.reportIssue",
+                "title": "Report Issue...",
                 "category": "Azure Storage"
             }
         ],
