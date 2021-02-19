@@ -8,7 +8,6 @@ import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { createStorageClient } from '../utils/azureClients';
-import { isStackCheck } from '../utils/isStackCheck';
 import { localize } from '../utils/localize';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
@@ -38,7 +37,6 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
-        wizardContext.isStack = isStackCheck();
         const defaultLocation: string | undefined = await this.getDefaultLocation(wizardContext);
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
