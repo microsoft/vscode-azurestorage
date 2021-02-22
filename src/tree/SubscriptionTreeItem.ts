@@ -40,7 +40,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         const defaultLocation: string | undefined = await this.getDefaultLocation(wizardContext);
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
-            new StorageAccountCreateStep({ kind: wizardContext.isStack ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
+            new StorageAccountCreateStep({ kind: wizardContext.isCustomCloud ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
             new StorageAccountTreeItemCreateStep(this),
             new StaticWebsiteConfigureStep(),
             new VerifyProvidersStep(['Microsoft.Storage'])
@@ -53,9 +53,9 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         } else {
             executeSteps.push(new ResourceGroupCreateStep());
             Object.assign(wizardContext, {
-                enableStaticWebsite: wizardContext.isStack ? false : true,
-                indexDocument: wizardContext.isStack ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
-                errorDocument404Path: wizardContext.isStack ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
+                enableStaticWebsite: wizardContext.isCustomCloud ? false : true,
+                indexDocument: wizardContext.isCustomCloud ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
+                errorDocument404Path: wizardContext.isCustomCloud ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
             });
             if (defaultLocation) {
                 await LocationListStep.setLocation(wizardContext, defaultLocation);
@@ -95,7 +95,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     private async getDefaultLocation(wizardContext: IStorageAccountWizardContext): Promise<string | undefined> {
         let defaultLocation: string | undefined;
-        if (wizardContext.isStack) {
+        if (wizardContext.isCustomCloud) {
             const stackLocation: SubscriptionModels.Location | undefined = (await LocationListStep.getLocations(wizardContext)).find(l => l.displayName !== undefined || l.name !== undefined);
             if (!stackLocation) {
                 throw new Error(localize("noAvailableLocation", "There is no available location for resource provider in Azure Stack"));

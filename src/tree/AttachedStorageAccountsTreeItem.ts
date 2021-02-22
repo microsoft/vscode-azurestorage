@@ -214,7 +214,7 @@ export class AttachedAccountRoot implements ISubscriptionContext {
         throw this._error;
     }
 
-    public get isStack(): never {
+    public get isCustomCloud(): never {
         throw this._error;
     }
 }
