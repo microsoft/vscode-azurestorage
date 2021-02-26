@@ -77,8 +77,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             throw new UserCancelledError(message);
         }
 
-        const doc = await vscode.workspace.openTextDocument(uri);
-        await vscode.window.showTextDocument(doc, { preserveFocus: false, preview: false });
+        await vscode.commands.executeCommand('vscode.open', uri);
     }
 
     public static fireDeleteEvent(node: AzExtTreeItem): void {
@@ -213,7 +212,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            let result: string | undefined;
             const parsedUri = this.parseUri(uri);
             const treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
 
@@ -224,7 +222,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                     client = createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
                 }
                 downloaded = await client.download();
-                result = await this.streamToString(downloaded.readableStreamBody);
             } catch (error) {
                 const pe = parseError(error);
                 if (pe.errorType === 'BlobNotFound' || pe.errorType === 'ResourceNotFound') {
@@ -233,7 +230,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 throw error;
             }
 
-            return Buffer.from(result || '');
+            return this.streamToBuffer(downloaded.readableStreamBody);
         }) || Buffer.from('');
     }
 
@@ -518,18 +515,18 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         return this.verifyUri(uri).query.indexOf('File Shares') > 0;
     }
 
-    private async streamToString(readableStream: NodeJS.ReadableStream | undefined): Promise<string | undefined> {
+    private async streamToBuffer(readableStream: NodeJS.ReadableStream | undefined): Promise<Buffer | undefined> {
         if (!readableStream) {
             return undefined;
         }
         return new Promise((resolve, reject) => {
-            const chunks: string[] = [];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const chunks: any[] = [];
             readableStream.on("data", (data) => {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-                chunks.push(data.toString());
+                chunks.push(data);
             });
             readableStream.on("end", () => {
-                resolve(chunks.join(""));
+                resolve(Buffer.concat(chunks));
             });
             readableStream.on("error", reject);
         });
