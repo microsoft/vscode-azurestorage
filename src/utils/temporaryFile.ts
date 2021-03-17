@@ -8,11 +8,11 @@ import * as os from 'os';
 import * as path from 'path';
 import { getRandomHexString } from "./stringUtils";
 
-// tslint:disable:no-stateless-class // Grandfathered in
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class TemporaryFile {
     static async create(fileName: string): Promise<string> {
-        let folderName = getRandomHexString(12);
-        let filePath = path.join(os.tmpdir(), folderName, fileName);
+        const folderName = getRandomHexString(12);
+        const filePath = path.join(os.tmpdir(), folderName, fileName);
         await fse.ensureFile(filePath);
         return filePath;
     }

@@ -24,6 +24,7 @@ export class StaticWebsiteEnableStep extends AzureWizardPromptStep<IStaticWebsit
         }
     }
 
+    // eslint-disable-next-line @typescript-eslint/require-await
     public async getSubWizard(wizardContext: IStaticWebsiteConfigWizardContext): Promise<IWizardOptions<IStaticWebsiteConfigWizardContext> | undefined> {
         if (wizardContext.enableStaticWebsite) {
             return {

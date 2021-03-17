@@ -4,12 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementModels } from '@azure/arm-storage';
-import { isNullOrUndefined } from 'util';
 
 export function nonNull<T>(value: T | undefined, name?: string): T {
-    if (isNullOrUndefined(value)) {
+    if (value === null || value === undefined) {
         throw new Error(
-            // tslint:disable-next-line:prefer-template
             "Internal error: Expected value to be not null and not undefined"
             + (name ? `: ${name}` : ''));
     }
@@ -17,10 +15,11 @@ export function nonNull<T>(value: T | undefined, name?: string): T {
     return value;
 }
 
-// tslint:disable-next-line:no-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function copyNonNullProperty<TSource, TDest>(source: TSource, dest: { [key: string]: any }, name: keyof TSource & keyof TDest): void {
-    // tslint:disable-next-line:no-any
-    let value: any = nonNull(source[name], <string>name);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value: any = nonNull(source[name], <string>name);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     dest[<string>name] = value;
 }
 
@@ -37,7 +36,6 @@ export class StorageAccountWrapper {
 
     readonly id: string;
     readonly name: string;
-    // tslint:disable-next-line:no-reserved-keywords
     readonly type: string;
     readonly primaryEndpoints: StorageManagementModels.Endpoints;
 }

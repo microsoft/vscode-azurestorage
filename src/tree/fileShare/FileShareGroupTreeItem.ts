@@ -40,7 +40,7 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
         let responseValue: azureStorageShare.ServiceListSharesSegmentResponse;
         try {
-            // tslint:disable-next-line: no-unsafe-any
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             responseValue = (await response.next()).value;
         } catch (error) {
             if (parseError(error).errorType === 'REQUEST_SEND_ERROR') {
@@ -50,7 +50,6 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             }
         }
 
-        // tslint:disable-next-line: strict-boolean-expressions
         const shares: azureStorageShare.ShareItem[] = responseValue.shareItems || [];
         this._continuationToken = responseValue.continuationToken;
 

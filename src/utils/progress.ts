@@ -18,13 +18,12 @@ export async function awaitWithProgress<T>(title: string, promise: Promise<T>, g
 
     let thisProgress: StatusBarProgress;
 
-    window.withProgress(
+    void window.withProgress(
         <ProgressOptions>{
             location: ProgressLocation.Window,
             title: title
         },
-        // tslint:disable-next-line:promise-function-async // Grandfathered in
-        (progress: StatusBarProgress): Promise<T> => {
+        async (progress: StatusBarProgress): Promise<T> => {
             thisProgress = progress;
             return promise;
         });

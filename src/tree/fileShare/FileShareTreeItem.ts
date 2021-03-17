@@ -5,7 +5,6 @@
 
 import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageShare from '@azure/storage-file-share';
-import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Uri } from 'vscode';
@@ -62,7 +61,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             result.push(ti);
         }
 
-        let { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory('', this.shareName, this.root, this._continuationToken);
+        const { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory('', this.shareName, this.root, this._continuationToken);
         this._continuationToken = continuationToken;
         return result.concat(directories.map((directory: azureStorageShare.DirectoryItem) => {
             return new DirectoryTreeItem(this, '', directory.name, this.shareName);
@@ -131,7 +130,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
 
         // Ensure parent directories exist before creating child files
         let partialParentDirectoryPath: string = '';
-        for (let dir of parentDirectories) {
+        for (const dir of parentDirectories) {
             partialParentDirectoryPath += `${dir}/`;
             if (!(await doesDirectoryExist(this, partialParentDirectoryPath, this.shareName))) {
                 const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, partialParentDirectoryPath);
@@ -139,9 +138,7 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
             }
         }
 
-        const fileSize: number = (await fse.stat(sourceFilePath)).size;
-        // tslint:disable-next-line: strict-boolean-expressions
-        const transferProgress: TransferProgress = new TransferProgress('bytes', fileSize || 1, destFilePath);
+        const transferProgress: TransferProgress = new TransferProgress('bytes', destFilePath);
         const src: ILocalLocation = createAzCopyLocalLocation(sourceFilePath);
         const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, destFilePath);
         await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress, notificationProgress, cancellationToken);

@@ -43,7 +43,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             }
         }
 
-        let { entries, continuationToken } = tables;
+        const { entries, continuationToken } = tables;
         this._continuationToken = continuationToken;
 
         return entries.map((table: string) => {
@@ -57,11 +57,10 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return !!this._continuationToken;
     }
 
-    // tslint:disable-next-line:promise-function-async // Grandfathered in
-    listTables(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
+    async listTables(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
         return new Promise((resolve, reject) => {
-            let tableService = this.root.createTableService();
-            tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err?: Error, result?: azureStorage.TableService.ListTablesResponse) => {
+            const tableService = this.root.createTableService();
+            tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err: Error | undefined, result: azureStorage.TableService.ListTablesResponse) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -95,8 +94,8 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
     private async createTable(name: string): Promise<azureStorage.TableService.TableResult> {
         return new Promise((resolve, reject) => {
-            let tableService = this.root.createTableService();
-            tableService.createTable(name, (err?: Error, result?: azureStorage.TableService.TableResult) => {
+            const tableService = this.root.createTableService();
+            tableService.createTable(name, (err: Error | undefined, result: azureStorage.TableService.TableResult) => {
                 if (err) {
                     if (parseError(err).errorType === "TableAlreadyExists") {
                         reject(new Error('The table specified already exists.'));

@@ -1,6 +1,7 @@
 {
     "recommendations": [
-        "ms-vscode.vscode-typescript-tslint-plugin",
-        "ms-vscode.azure-account"
+        "dbaeumer.vscode-eslint",
+        "ms-vscode.azure-account",
+        "ms-azuretools.vscode-azureresourcegroups"
     ]
 }

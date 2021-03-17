@@ -60,7 +60,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
             this._continuationToken = undefined;
         }
 
-        let { children, continuationToken } = await loadMoreBlobChildren(this, this._continuationToken);
+        const { children, continuationToken } = await loadMoreBlobChildren(this, this._continuationToken);
         this._continuationToken = continuationToken;
         return children;
     }
@@ -91,15 +91,15 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         }
 
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-            progress.report({ message: `Deleting directory ${this.dirName}` });
-            let errors: boolean = await this.deleteFolder(context);
+            progress.report({ message: localize('deletingDirectory', 'Deleting directory "{0}"...', this.dirName) });
+            const errors: boolean = await this.deleteFolder(context);
 
             if (errors) {
                 ext.outputChannel.appendLog('Please refresh the viewlet to see the changes made.');
 
                 const viewOutput: vscode.MessageItem = { title: 'View Errors' };
                 const errorMessage: string = `Errors occurred when deleting "${this.dirName}".`;
-                vscode.window.showWarningMessage(errorMessage, viewOutput).then(async (result: vscode.MessageItem | undefined) => {
+                void vscode.window.showWarningMessage(errorMessage, viewOutput).then((result: vscode.MessageItem | undefined) => {
                     if (result === viewOutput) {
                         ext.outputChannel.show();
                     }
@@ -113,14 +113,13 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     }
 
     private async deleteFolder(context: IActionContext): Promise<boolean> {
-        let dirPaths: BlobDirectoryTreeItem[] = [];
-        // tslint:disable-next-line: no-var-self
+        const dirPaths: BlobDirectoryTreeItem[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let dirPath: BlobDirectoryTreeItem | undefined = this;
         let errors: boolean = false;
 
-        // tslint:disable-next-line: strict-boolean-expressions
         while (dirPath) {
-            let children: AzExtTreeItem[] = await dirPath.getCachedChildren(context);
+            const children: AzExtTreeItem[] = await dirPath.getCachedChildren(context);
             for (const child of children) {
                 if (child instanceof BlobTreeItem) {
                     try {

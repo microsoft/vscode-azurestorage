@@ -11,7 +11,7 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { isAzCopyError } from '../utils/errorUtils';
 import { nonNullValue } from '../utils/nonNull';
-import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, upload, uploadLocalFolder } from '../utils/uploadUtils';
+import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, showUploadSuccessMessage, upload, uploadLocalFolder } from '../utils/uploadUtils';
 import { IAzCopyResolution } from './azCopy/IAzCopyResolution';
 
 export async function uploadFolder(
@@ -33,7 +33,6 @@ export async function uploadFolder(
         }))[0];
     }
 
-    // tslint:disable-next-line: strict-boolean-expressions
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
     destinationDirectory = await getDestinationDirectory(destinationDirectory);
 
@@ -47,12 +46,11 @@ export async function uploadFolder(
 
     try {
         if (notificationProgress && cancellationToken) {
-            // AzCopy recognizes folders as a resource when uploading to file shares. So only set `countFoldersAsResources=true` in that case
-            await uploadLocalFolder(actionContext, treeItem, sourcePath, destPath, notificationProgress, cancellationToken, destPath, treeItem instanceof FileShareTreeItem);
+            await uploadLocalFolder(actionContext, treeItem, sourcePath, destPath, notificationProgress, cancellationToken, destPath);
         } else {
             const title: string = getUploadingMessageWithSource(sourcePath, treeItem.label);
             await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-                await uploadLocalFolder(actionContext, nonNullValue(treeItem), sourcePath, nonNullValue(destPath), newNotificationProgress, newCancellationToken, destPath, treeItem instanceof FileShareTreeItem);
+                await uploadLocalFolder(actionContext, nonNullValue(treeItem), sourcePath, nonNullValue(destPath), newNotificationProgress, newCancellationToken, destPath);
             });
         }
     } catch (error) {
@@ -63,6 +61,10 @@ export async function uploadFolder(
         } else {
             throw error;
         }
+    }
+
+    if (!calledFromUploadToAzureStorage) {
+        showUploadSuccessMessage(treeItem.label);
     }
 
     await ext.tree.refresh(actionContext, treeItem);

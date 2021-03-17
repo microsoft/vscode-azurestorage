@@ -17,16 +17,16 @@ export function registerFileShareActionHandlers(): void {
     registerCommand("azureStorage.deleteFileShare", async (context: IActionContext, treeItem?: FileShareTreeItem) => await deleteNode(context, FileShareTreeItem.contextValue, treeItem));
     registerCommand("azureStorage.createDirectory", async (context: IActionContext, treeItem: FileShareTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.contextValue }));
     registerCommand("azureStorage.createFile", async (context: IActionContext, treeItem: FileShareTreeItem) => {
-        let childTreeItem = await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue });
+        const childTreeItem = await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue });
         await vscode.commands.executeCommand("azureStorage.editFile", childTreeItem);
     });
 }
 
 async function openFileShareInStorageExplorer(_context: IActionContext, treeItem: FileShareTreeItem): Promise<void> {
-    let accountId = treeItem.root.storageAccountId;
-    let subscriptionid = treeItem.root.subscriptionId;
+    const accountId = treeItem.root.storageAccountId;
+    const subscriptionid = treeItem.root.subscriptionId;
     const resourceType = 'Azure.FileShare';
-    let resourceName = treeItem.shareName;
+    const resourceName = treeItem.shareName;
 
     await storageExplorerLauncher.openResource(accountId, subscriptionid, resourceType, resourceName);
 }

@@ -7,7 +7,7 @@
 
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
+import { AzExtTreeDataProvider, AzExtTreeItem, AzureTreeItem, AzureUserInput, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
 import { AzureExtensionApi, AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureStorageFS } from './AzureStorageFS';
 import { revealTreeItem } from './commands/api/revealTreeItem';
@@ -27,13 +27,14 @@ import { OpenTreeItemStep } from './commands/openInFileExplorer/OpenTreeItemStep
 import { registerQueueActionHandlers } from './commands/queue/queueActionHandlers';
 import { registerQueueGroupActionHandlers } from './commands/queue/queueGroupActionHandlers';
 import { selectStorageAccountTreeItemForCommand } from './commands/selectStorageAccountNodeForCommand';
-import { emulatorTimeoutMS as startEmulatorDebounce, EmulatorType, startEmulator } from './commands/startEmulator';
+import { EmulatorType, startEmulator } from './commands/startEmulator';
 import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
 import { uploadFiles } from './commands/uploadFiles';
 import { uploadFolder } from './commands/uploadFolder';
 import { uploadToAzureStorage } from './commands/uploadToAzureStorage';
+import { azuriteExtensionId, emulatorTimeoutMS as startEmulatorDebounce } from './constants';
 import { ext } from './extensionVariables';
 import { AzureAccountTreeItem } from './tree/AzureAccountTreeItem';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
@@ -41,7 +42,6 @@ import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
 import { StorageAccountTreeItem } from './tree/StorageAccountTreeItem';
 
-// tslint:disable-next-line:max-func-body-length
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
     ext.context = context;
     ext.ignoreBundle = ignoreBundle;
@@ -50,7 +50,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     context.subscriptions.push(ext.outputChannel);
     registerUIExtensionVariables(ext);
 
-    await callWithTelemetryAndErrorHandling('activate', async (activateContext: IActionContext) => {
+    await callWithTelemetryAndErrorHandling('activate', (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
         activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
@@ -106,7 +106,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await treeItem.openInPortal();
         });
         registerCommand("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
-            let accountTreeItem = await selectStorageAccountTreeItemForCommand(
+            const accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
                 actionContext,
                 {
@@ -116,7 +116,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await accountTreeItem.configureStaticWebsite(actionContext);
         });
         registerCommand("azureStorage.disableStaticWebsite", async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
-            let accountTreeItem = await selectStorageAccountTreeItemForCommand(
+            const accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
                 actionContext,
                 {
@@ -128,7 +128,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerCommand("azureStorage.createGpv2Account", createStorageAccount);
         registerCommand("azureStorage.createGpv2AccountAdvanced", createStorageAccountAdvanced);
         registerCommand('azureStorage.browseStaticWebsite', async (actionContext: IActionContext, treeItem?: AzureTreeItem) => {
-            let accountTreeItem = await selectStorageAccountTreeItemForCommand(
+            const accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
                 actionContext,
                 {
@@ -137,6 +137,10 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 });
             await accountTreeItem.browseStaticWebsite(actionContext);
         });
+
+        // Suppress "Report an Issue" button for all errors in favor of the command
+        registerErrorHandler(c => c.errorHandling.suppressReportIssue = true);
+        registerReportIssueCommand('azureStorage.reportIssue');
     });
     registerCommand("azureStorage.uploadFiles", uploadFiles);
     registerCommand("azureStorage.uploadFolder", uploadFolder);
@@ -148,6 +152,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     registerCommand('azureStorage.detachStorageAccount', detachStorageAccount);
     registerCommand('azureStorage.startBlobEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.blob); }, startEmulatorDebounce);
     registerCommand('azureStorage.startQueueEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.queue); }, startEmulatorDebounce);
+    registerCommand('azureStorage.showAzuriteExtension', async () => { await commands.executeCommand('extension.open', azuriteExtensionId); });
 
     return createApiProvider([<AzureExtensionApi>{
         revealTreeItem,

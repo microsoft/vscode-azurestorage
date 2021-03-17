@@ -12,7 +12,7 @@ import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { multipleAzCopyErrorsMessage, throwIfCanceled } from '../utils/errorUtils';
 import { isSubpath } from '../utils/fs';
 import { localize } from '../utils/localize';
-import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, OverwriteChoice, promptForDestinationDirectory } from '../utils/uploadUtils';
+import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, OverwriteChoice, promptForDestinationDirectory, showUploadSuccessMessage } from '../utils/uploadUtils';
 import { uploadFiles } from './uploadFiles';
 import { uploadFolder } from './uploadFolder';
 
@@ -35,7 +35,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     }
 
     let hasParent: boolean;
-    let overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
+    const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
     const folderUrisToUpload: vscode.Uri[] = [];
     const fileUrisToUpload: vscode.Uri[] = [];
 
@@ -91,9 +91,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     } else if (errors.length > 1) {
         throw new Error(multipleAzCopyErrorsMessage);
     } else {
-        const complete: string = localize('uploadComplete', 'Upload to "{0}" is complete.', treeItem.label);
-        ext.outputChannel.appendLog(complete);
-        vscode.window.showInformationMessage(complete);
+        showUploadSuccessMessage(treeItem.label);
     }
 
     await ext.tree.refresh(actionContext, treeItem);
