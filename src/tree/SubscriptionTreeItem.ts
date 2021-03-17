@@ -3,12 +3,10 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SubscriptionModels } from '@azure/arm-subscriptions';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { createStorageClient } from '../utils/azureClients';
-import { localize } from '../utils/localize';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
 import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigureStep';
@@ -37,7 +35,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
-        const defaultLocation: string | undefined = await this.getDefaultLocation(wizardContext);
+        const defaultLocation: string | undefined = wizardContext.isCustomCloud ? undefined : 'westus';
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
             new StorageAccountCreateStep({ kind: wizardContext.isCustomCloud ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
@@ -59,6 +57,8 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             });
             if (defaultLocation) {
                 await LocationListStep.setLocation(wizardContext, defaultLocation);
+            } else {
+                LocationListStep.addStep(wizardContext, promptSteps);
             }
         }
 
@@ -91,20 +91,5 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     public isAncestorOfImpl(contextValue: string): boolean {
         return contextValue !== AttachedStorageAccountTreeItem.baseContextValue && contextValue !== AttachedStorageAccountTreeItem.emulatedContextValue;
-    }
-
-    private async getDefaultLocation(wizardContext: IStorageAccountWizardContext): Promise<string | undefined> {
-        let defaultLocation: string | undefined;
-        if (wizardContext.isCustomCloud) {
-            const stackLocation: SubscriptionModels.Location | undefined = (await LocationListStep.getLocations(wizardContext)).find(l => l.displayName !== undefined || l.name !== undefined);
-            if (!stackLocation) {
-                throw new Error(localize("noAvailableLocation", "There is no available location for resource provider in Azure Stack"));
-            } else {
-                defaultLocation = stackLocation.name || stackLocation.displayName;
-            }
-        } else {
-            defaultLocation = 'westus';
-        }
-        return defaultLocation;
     }
 }
