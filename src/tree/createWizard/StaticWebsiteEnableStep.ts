@@ -13,11 +13,15 @@ import { StaticWebsiteIndexDocumentStep } from "./StaticWebsiteIndexDocumentStep
 
 export class StaticWebsiteEnableStep extends AzureWizardPromptStep<IStaticWebsiteConfigWizardContext> {
     public async prompt(wizardContext: IStaticWebsiteConfigWizardContext): Promise<void> {
-        const placeHolder: string = localize('wouldYouLikeToEnableStaticWebsiteHosting', 'Would you like to enable static website hosting?');
-        const yes: QuickPickItem = { label: DialogResponses.yes.title };
-        const no: QuickPickItem = { label: DialogResponses.no.title };
+        if (!wizardContext.isCustomCloud) {
+            const placeHolder: string = localize('wouldYouLikeToEnableStaticWebsiteHosting', 'Would you like to enable static website hosting?');
+            const yes: QuickPickItem = { label: DialogResponses.yes.title };
+            const no: QuickPickItem = { label: DialogResponses.no.title };
 
-        wizardContext.enableStaticWebsite = await ext.ui.showQuickPick([yes, no], { placeHolder }) === yes;
+            wizardContext.enableStaticWebsite = await ext.ui.showQuickPick([yes, no], { placeHolder }) === yes;
+        } else {
+            wizardContext.enableStaticWebsite = false;
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await

@@ -47,11 +47,11 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
-        const defaultLocation = 'westus';
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
+        const defaultLocation: string | undefined = wizardContext.isCustomCloud ? undefined : 'westus';
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
-            new StorageAccountCreateStep({ kind: StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
+            new StorageAccountCreateStep({ kind: wizardContext.isCustomCloud ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
             new StorageAccountTreeItemCreateStep(this),
             new StaticWebsiteConfigureStep(),
             new VerifyProvidersStep(['Microsoft.Storage'])
@@ -64,11 +64,15 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         } else {
             executeSteps.push(new ResourceGroupCreateStep());
             Object.assign(wizardContext, {
-                enableStaticWebsite: true,
-                indexDocument: StaticWebsiteIndexDocumentStep.defaultIndexDocument,
-                errorDocument404Path: StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
+                enableStaticWebsite: wizardContext.isCustomCloud ? false : true,
+                indexDocument: wizardContext.isCustomCloud ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
+                errorDocument404Path: wizardContext.isCustomCloud ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
             });
-            await LocationListStep.setLocation(wizardContext, defaultLocation);
+            if (defaultLocation) {
+                await LocationListStep.setLocation(wizardContext, defaultLocation);
+            } else {
+                LocationListStep.addStep(wizardContext, promptSteps);
+            }
         }
 
         const wizard = new AzureWizard(wizardContext, {
