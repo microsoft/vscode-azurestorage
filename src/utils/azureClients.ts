@@ -11,7 +11,7 @@ import { createAzureClient, ISubscriptionContext } from 'vscode-azureextensionui
 
 export async function createStorageClient<T extends ISubscriptionContext>(context: T): Promise<StorageManagementClient> {
     if (context.isCustomCloud) {
-        return <StorageManagementClient><unknown>createAzureClient(context, (await import('@azure/arm-storage-profile-2019-03-01-hybrid')).StorageManagementClient);
+        return <StorageManagementClient><unknown>createAzureClient(context, (await import('@azure/arm-storage-profile-2020-09-01-hybrid')).StorageManagementClient);
     } else {
         return createAzureClient(context, (await import('@azure/arm-storage')).StorageManagementClient);
     }
