@@ -12,7 +12,7 @@ import { createGenericClient, ext, getRandomHexString, IActionContext, StorageAc
 import { longRunningTestsEnabled, testUserInput } from '../global.test';
 import { resourceGroupsToDelete, webSiteClient } from './global.resource.test';
 
-suite('Storage Account Actions', async function (this: Mocha.Suite): Promise<void> {
+suite('Deploy', async function (this: Mocha.Suite): Promise<void> {
     this.timeout(3 * 60 * 1000);
 
     suiteSetup(async function (this: Mocha.Context): Promise<void> {
