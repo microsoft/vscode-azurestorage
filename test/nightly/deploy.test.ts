@@ -25,7 +25,7 @@ suite('Deploy', async function (this: Mocha.Suite): Promise<void> {
         const resourceName = getRandomHexString().toLowerCase()
         resourceGroupsToDelete.push(resourceName);
         const context: IActionContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, ui: testUserInput, valuesToMask: [] };
-        const testFolderPath: string = await getWorkspacePath('dist');
+        const testFolderPath: string = await getWorkspacePath('testFolder');
         await testUserInput.runWithInputs([testFolderPath, /create new storage account/i, resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.deployStaticWebsite');
         });
