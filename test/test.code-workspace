@@ -1,7 +1,7 @@
 {
     "folders": [
         {
-            "path": "../testWorkspace"
+            "path": "./nightly/testFolder/vue-realworld-example-app"
         }
     ],
     "settings": {}
