@@ -321,7 +321,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
 
         const endpoint = this.getPrimaryWebEndpoint();
         if (endpoint) {
-            openUrl(endpoint);
+            await openUrl(endpoint);
         } else {
             throw new Error(`Could not retrieve the primary web endpoint for ${this.label}`);
         }

@@ -60,7 +60,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 const message: string = localize('cantFindSE', 'Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?');
                 await ext.ui.showWarningMessage(message, download);
                 context.telemetry.properties.downloadStorageExplorer = 'true';
-                openUrl(storageExplorerDownloadUrl);
+                await openUrl(storageExplorerDownloadUrl);
                 throw new UserCancelledError();
             }
         }) || '';

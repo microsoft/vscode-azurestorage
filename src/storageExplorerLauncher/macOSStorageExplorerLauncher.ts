@@ -36,7 +36,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
                 } else {
                     if (selected === "Download") {
                         context.telemetry.properties.downloadStorageExplorer = 'true';
-                        openUrl(storageExplorerDownloadUrl);
+                        await openUrl(storageExplorerDownloadUrl);
                     }
 
                     throw new UserCancelledError();
