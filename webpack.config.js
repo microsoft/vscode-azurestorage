@@ -33,9 +33,11 @@ let config = dev.getDefaultWebpackConfig({
         'keytar': true
     },
     plugins: [
-        new CopyWebpackPlugin([
-            { from: './out/src/utils/getCoreNodeModule.js', to: 'node_modules' }
-        ])
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: './out/src/utils/getCoreNodeModule.js', to: 'node_modules' }
+            ]
+        })
     ]
 });
 
