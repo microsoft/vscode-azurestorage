@@ -4,12 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageShare from '@azure/storage-file-share';
-import * as path from 'path';
 import * as vscode from 'vscode';
-import { MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { MessageItem, window } from 'vscode';
+import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createFileClient, deleteFile } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
@@ -28,10 +26,10 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     public label: string = this.fileName;
     public static contextValue: string = 'azureFile';
     public contextValue: string = FileTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'document.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'document.svg')
-    };
+
+    public get iconPath(): TreeItemIconPath {
+        return new vscode.ThemeIcon('file');
+    }
 
     public commandId: string = 'azureStorage.editFile';
 
