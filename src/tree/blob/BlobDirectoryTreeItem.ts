@@ -6,9 +6,8 @@
 import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError } from "vscode-azureextensionui";
+import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError, TreeItemIconPath } from "vscode-azureextensionui";
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
@@ -20,10 +19,6 @@ import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
     public static contextValue: string = 'azureBlobDirectory';
     public contextValue: string = BlobDirectoryTreeItem.contextValue;
-    public iconPath: { light: string | vscode.Uri; dark: string | vscode.Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'folder.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'folder.svg')
-    };
 
     /**
      * The name (and only the name) of the directory
@@ -49,6 +44,10 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
     public get label(): string {
         return this.dirName;
+    }
+
+    public get iconPath(): TreeItemIconPath {
+        return new vscode.ThemeIcon('folder');
     }
 
     public hasMoreChildrenImpl(): boolean {

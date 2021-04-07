@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
-import * as path from 'path';
-import { Uri } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, IActionContext, ISubscriptionContext, parseError } from "vscode-azureextensionui";
-import { emulatorAccountName, emulatorConnectionString, getResourcesPath } from '../constants';
+import { ThemeIcon } from 'vscode';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, IActionContext, ISubscriptionContext, parseError, TreeItemIconPath } from "vscode-azureextensionui";
+import { emulatorAccountName, emulatorConnectionString } from '../constants';
 import { ext } from '../extensionVariables';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
 import { KeyTar, tryGetKeyTar } from '../utils/keytar';
@@ -43,11 +42,8 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
         return this._root;
     }
 
-    public get iconPath(): { light: string | Uri; dark: string | Uri } {
-        return {
-            light: path.join(getResourcesPath(), 'light', 'ConnectPlugged.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'ConnectPlugged.svg')
-        };
+    public get iconPath(): TreeItemIconPath {
+        return new ThemeIcon('plug');
     }
 
     public hasMoreChildrenImpl(): boolean {

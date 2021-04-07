@@ -7,10 +7,10 @@ import * as azureStorageBlob from "@azure/storage-blob";
 import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { MessageItem, Uri, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { MessageItem, window } from 'vscode';
+import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath, storageExplorerDownloadUrl } from "../../constants";
+import { storageExplorerDownloadUrl } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
@@ -43,10 +43,9 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         return this.blobName;
     }
 
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'document.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'document.svg')
-    };
+    public get iconPath(): TreeItemIconPath {
+        return new vscode.ThemeIcon('file');
+    }
 
     public async copyUrl(): Promise<void> {
         // Use this.blobPath here instead of this.blobName. Otherwise the blob's containing directory/directories aren't displayed

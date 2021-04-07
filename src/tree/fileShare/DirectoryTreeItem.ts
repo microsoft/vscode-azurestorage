@@ -6,10 +6,9 @@
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { MessageItem, Uri, window } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { MessageItem, window } from 'vscode';
+import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
@@ -31,10 +30,10 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     public label: string = this.directoryName;
     public static contextValue: string = 'azureFileShareDirectory';
     public contextValue: string = DirectoryTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'folder.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'folder.svg')
-    };
+
+    public get iconPath(): TreeItemIconPath {
+        return new vscode.ThemeIcon('folder');
+    }
 
     private get fullPath(): string {
         return path.posix.join(this.parentPath, this.directoryName);
