@@ -22,10 +22,10 @@ suite('Deploy', function (this: Mocha.Suite): void {
     });
 
     test("deployStaticWebsite", async () => {
-        const resourceName = getRandomHexString().toLowerCase()
+        const resourceName = getRandomHexString().toLowerCase();
         resourceGroupsToDelete.push(resourceName);
         const context: IActionContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, ui: testUserInput, valuesToMask: [] };
-        const testFolderPath: string = getWorkspacePath('vue-realworld-example-app');
+        const testFolderPath: string = getWorkspacePath('html-docs-hello-world');
         await testUserInput.runWithInputs([testFolderPath, /create new storage account/i, resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.deployStaticWebsite');
         });
@@ -33,7 +33,7 @@ suite('Deploy', function (this: Mocha.Suite): void {
         const webUrl: string | undefined = (<StorageAccountTreeItem>await ext.tree.findTreeItem(<string>createdAccount.id, context)).root.primaryEndpoints?.web;
         const client: ServiceClient = await createGenericClient();
         const response: HttpOperationResponse = await client.sendRequest({ method: 'GET', url: webUrl });
-        assert.strictEqual(response.status, 200);
+        assert.ok(response.bodyAsText && response.bodyAsText.includes('Hello World!'));
     })
 });
 
@@ -44,9 +44,9 @@ function getWorkspacePath(testWorkspaceName: string): string {
     if (!workspaceFolders || workspaceFolders.length === 0) {
         throw new Error("No workspace is open");
     } else {
-        for (const obj of workspaceFolders) {
-            if (obj.name === testWorkspaceName) {
-                workspacePath = obj.uri.fsPath;
+        for (const projectFolder of workspaceFolders) {
+            if (projectFolder.name === testWorkspaceName) {
+                workspacePath = projectFolder.uri.fsPath;
             }
         }
         assert.strictEqual(path.basename(workspacePath), testWorkspaceName, "Opened against an unexpected workspace.");
