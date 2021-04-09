@@ -1,7 +1,7 @@
 {
     "folders": [
         {
-            "path": "./nightly/testFolder/html-docs-hello-world"
+            "path": "./nightly/testFolder/html-hello-world"
         }
     ],
     "settings": {}

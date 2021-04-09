@@ -25,7 +25,7 @@ suite('Deploy', function (this: Mocha.Suite): void {
         const resourceName: string = getRandomHexString().toLowerCase();
         resourceGroupsToDelete.push(resourceName);
         const context: IActionContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, ui: testUserInput, valuesToMask: [] };
-        const testFolderPath: string = getWorkspacePath('html-docs-hello-world');
+        const testFolderPath: string = getWorkspacePath('html-hello-world');
         await testUserInput.runWithInputs([testFolderPath, /create new storage account/i, resourceName], async () => {
             await vscode.commands.executeCommand('azureStorage.deployStaticWebsite');
         });
@@ -55,12 +55,12 @@ function getWorkspacePath(testWorkspaceName: string): string {
 
 // Polling to send the request within the maximum time
 async function validateWebSite(webUrl: string | undefined, client: ServiceClient, maximumValidationMs: number, pollingMs: number) {
-    const startTime: number = Date.now() + maximumValidationMs;
+    const endTime: number = Date.now() + maximumValidationMs;
     let response: HttpOperationResponse;
     // eslint-disable-next-line no-constant-condition
     while (true) {
         response = await client.sendRequest({ method: 'GET', url: webUrl });
-        if (Date.now() > startTime || response.status == 200) {
+        if (Date.now() > endTime || response.status == 200) {
             break;
         }
         await delay(pollingMs);
