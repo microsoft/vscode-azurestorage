@@ -1,11 +1,12 @@
 steps:
-- script: |
+- bash: |
     npm install --force @azure-tools/azcopy-darwin \
       @azure-tools/azcopy-linux \
       @azure-tools/azcopy-win32 \
       @azure-tools/azcopy-win64
-    sudo chmod u+x node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64 \
+    chmod u+x node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64 \
       node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64
+  displayName: 'Install azcopy'
 
 - task: Npm@1
   displayName: 'cleanReadme'
@@ -30,4 +31,5 @@ steps:
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
     ArtifactName: vsix
-  condition: ne(variables['System.PullRequest.IsFork'], 'True')
+  # Only publish vsix from linux build since we use this to release and want to stay consistent
+  condition: and(eq(variables['Agent.OS'], 'Linux'), ne(variables['System.PullRequest.IsFork'], 'True'))
