@@ -29,8 +29,6 @@ let config = dev.getDefaultWebpackConfig({
     ],
     externals: {
         './getCoreNodeModule': 'commonjs getCoreNodeModule',
-        '@storage-explorer/macos-keychain': true,
-        'keytar': true
     },
     plugins: [
         new CopyWebpackPlugin({
