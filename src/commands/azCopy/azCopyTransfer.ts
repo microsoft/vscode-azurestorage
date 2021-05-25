@@ -62,9 +62,9 @@ function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLabel: st
             // Add an additional error log since we don't have any more info about the failure
             ext.outputChannel.appendLog(localize('couldNotTransfer', 'Could not transfer "{0}"', transferLabel));
 
-            const isDefaultFailMessage: boolean = !jobInfo.errorMessage && finalTransferStatus?.JobStatus === 'Failed';
+            const isDefaultFailMessage: boolean = !finalTransferStatus?.ErrorMsg && finalTransferStatus?.JobStatus === 'Failed';
             if (isDefaultFailMessage && process.platform === 'linux') {
-                message += localize('viewHelp', 'View help with [known issues](https://aka.ms/AAb0i6o).');
+                message += localize('viewHelp', ' View help with [known issues](https://aka.ms/AAb0i6o).');
             }
         }
 
