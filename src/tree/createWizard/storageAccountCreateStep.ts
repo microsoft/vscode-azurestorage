@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { AzureWizardExecuteStep, INewStorageAccountDefaults, IStorageAccountWizardContext } from 'vscode-azureextensionui';
-import { NotificationProgress } from '../../constants';
+import { AzureWizardExecuteStep, INewStorageAccountDefaults, IStorageAccountWizardContext, LocationListStep } from 'vscode-azureextensionui';
+import { NotificationProgress, storageProvider } from '../../constants';
 import { ext } from '../../extensionVariables';
 import { createStorageClient } from '../../utils/azureClients';
+import { nonNullProp } from '../../utils/nonNull';
 
 export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> extends AzureWizardExecuteStep<T> implements StorageAccountCreateStep<T> {
     public priority: number = 130;
@@ -20,23 +21,21 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
     }
 
     public async execute(wizardContext: T, progress: NotificationProgress): Promise<void> {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newLocation: string = wizardContext.location!.name!;
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newName: string = wizardContext.newStorageAccountName!;
+        const newLocation = await LocationListStep.getLocation(wizardContext, storageProvider);
+        const newName: string = nonNullProp(wizardContext, 'newStorageAccountName');
+        const rgName: string = nonNullProp(nonNullProp(wizardContext, 'resourceGroup'), 'name');
         const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
-        const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation}" with sku "${newSkuName}"...`;
+        const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation.name}" with sku "${newSkuName}"...`;
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
         const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
         wizardContext.storageAccount = await storageClient.storageAccounts.create(
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            wizardContext.resourceGroup!.name!,
+            rgName,
             newName,
             {
                 sku: { name: newSkuName },
                 kind: this._defaults.kind,
-                location: newLocation,
+                location: newLocation.name,
                 enableHttpsTrafficOnly: true
             }
         );
