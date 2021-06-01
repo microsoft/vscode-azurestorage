@@ -37,3 +37,5 @@ export type NotificationProgress = Progress<{
     message?: string | undefined;
     increment?: number | undefined;
 }>;
+
+export const storageProvider: string = 'Microsoft.Storage';

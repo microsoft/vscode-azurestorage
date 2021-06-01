@@ -8,6 +8,7 @@ import { StorageAccountsListNextResponse } from '@azure/arm-storage/esm/models';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
+import { storageProvider } from '../constants';
 import { createStorageClient } from '../utils/azureClients';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
@@ -54,8 +55,9 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             new StorageAccountCreateStep({ kind: wizardContext.isCustomCloud ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
             new StorageAccountTreeItemCreateStep(this),
             new StaticWebsiteConfigureStep(),
-            new VerifyProvidersStep(['Microsoft.Storage'])
+            new VerifyProvidersStep([storageProvider])
         ];
+        LocationListStep.addProviderForFiltering(wizardContext, storageProvider, 'storageAccounts');
 
         if (context.advancedCreation) {
             promptSteps.push(new ResourceGroupListStep());
