@@ -1,8 +1,14 @@
 # Change Log
 
-## Unreleased
+## 0.12.1 - 2021-06-10
+### Added
+- Support for Azure Stack
+
 ### Changed
 - Icons updated to match VS Code's theme. Install new product icon themes [here](https://marketplace.visualstudio.com/search?term=tag%3Aproduct-icon-theme&target=VSCode)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-azurestorage/issues?utf8=%E2%9C%93&q=is%3Aclosed+is%3Aissue+milestone%3A0.12.1+)
 
 ## 0.12.0 - 2021-02-26
 ### Added
