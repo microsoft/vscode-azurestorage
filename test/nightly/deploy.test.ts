@@ -67,7 +67,6 @@ async function validateWebSite(webUrl: string | undefined, client: ServiceClient
         } catch {
             // Ignore errors. In almost every case, the site isn't enabled yet when we ping it the first few times
         }
-
         await delay(pollingMs);
     }
     assert.ok(response.bodyAsText && response.bodyAsText.includes('Hello World!'));
