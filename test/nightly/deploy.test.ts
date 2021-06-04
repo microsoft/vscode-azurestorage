@@ -59,9 +59,13 @@ async function validateWebSite(webUrl: string | undefined, client: ServiceClient
     let response: HttpOperationResponse;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-        response = await client.sendRequest({ method: 'GET', url: webUrl });
-        if (Date.now() > endTime || response.status == 200) {
-            break;
+        try {
+            response = await client.sendRequest({ method: 'GET', url: webUrl });
+            if (Date.now() > endTime || response.status == 200) {
+                break;
+            }
+        } catch {
+            // Ignore errors. In almost every case, the site isn't enabled yet when we ping it the first few times
         }
         await delay(pollingMs);
     }
