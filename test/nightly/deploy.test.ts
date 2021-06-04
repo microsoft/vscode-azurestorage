@@ -59,10 +59,21 @@ async function validateWebSite(webUrl: string | undefined, client: ServiceClient
     let response: HttpOperationResponse;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-        response = await client.sendRequest({ method: 'GET', url: webUrl });
-        if (Date.now() > endTime || response.status == 200) {
-            break;
+        try {
+            response = await client.sendRequest({ method: 'GET', url: webUrl });
+            if (Date.now() > endTime || response.status == 200) {
+                break;
+            }
+        } catch (error) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            if (error?.statusCode === 404 && /websitedisabled/i.test(error?.body)) {
+                // In almost every case, the site isn't enabled yet when we ping it the first few times
+                // So ignore this error
+            } else {
+                throw error;
+            }
         }
+
         await delay(pollingMs);
     }
     assert.ok(response.bodyAsText && response.bodyAsText.includes('Hello World!'));
