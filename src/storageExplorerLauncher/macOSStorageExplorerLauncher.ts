@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { pathExists } from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import { storageExplorerDownloadUrl } from "../constants";
 import { Launcher } from "../utils/launcher";
 import { openUrl } from "../utils/openUrl";
+import { workspaceFsUtils } from '../utils/workspaceFsUtils';
 import { getSingleRootWorkspace } from "../utils/workspaceUtils";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
@@ -25,7 +25,7 @@ export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
             // storageExplorerLocation has default value, can't be undefined
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const exePath = path.join(selectedLocation!, MacOSStorageExplorerLauncher.subExecutableLocation);
-            if (!(await pathExists(exePath))) {
+            if (!(await workspaceFsUtils.pathExists(exePath))) {
                 context.telemetry.properties.storageExplorerNotFound = 'true';
                 const selected: "Browse" | "Download" = <"Browse" | "Download">await vscode.window.showWarningMessage(warningString, "Browse", "Download");
 

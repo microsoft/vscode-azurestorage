@@ -2,7 +2,6 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { pathExists } from 'fs-extra';
 import { MessageItem } from "vscode";
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
@@ -11,6 +10,7 @@ import { ext } from "../extensionVariables";
 import { Launcher } from "../utils/launcher";
 import { localize } from "../utils/localize";
 import { openUrl } from "../utils/openUrl";
+import { workspaceFsUtils } from '../utils/workspaceFsUtils';
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
@@ -52,7 +52,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 // Parse from e.g.: "C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe" -- "%1"
                 exePath = regVal.split("\"")[1];
             }
-            if (exePath && await pathExists(exePath)) {
+            if (exePath && await workspaceFsUtils.pathExists(exePath)) {
                 return exePath;
             } else {
                 context.telemetry.properties.storageExplorerNotFound = 'true';
