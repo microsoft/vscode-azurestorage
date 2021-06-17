@@ -7,10 +7,10 @@ import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-az
 import * as winreg from "winreg";
 import { storageExplorerDownloadUrl } from "../constants";
 import { ext } from "../extensionVariables";
+import { AzExtFsExtra } from '../utils/AzExtFsExtra';
 import { Launcher } from "../utils/launcher";
 import { localize } from "../utils/localize";
 import { openUrl } from "../utils/openUrl";
-import { workspaceFsUtils } from '../utils/workspaceFsUtils';
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
@@ -52,7 +52,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 // Parse from e.g.: "C:\Program Files (x86)\Microsoft Azure Storage Explorer\StorageExplorer.exe" -- "%1"
                 exePath = regVal.split("\"")[1];
             }
-            if (exePath && await workspaceFsUtils.pathExists(exePath)) {
+            if (exePath && await AzExtFsExtra.pathExists(exePath)) {
                 return exePath;
             } else {
                 context.telemetry.properties.storageExplorerNotFound = 'true';

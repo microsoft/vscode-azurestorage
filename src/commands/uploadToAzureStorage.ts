@@ -8,6 +8,7 @@ import { IActionContext, IParsedError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
+import { AzExtFsExtra } from '../utils/AzExtFsExtra';
 import { multipleAzCopyErrorsMessage, throwIfCanceled } from '../utils/errorUtils';
 import { isSubpath } from '../utils/fs';
 import { localize } from '../utils/localize';
@@ -26,7 +27,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
             throw new Error(localize('cannotUploadToAzureFromAzureResource', 'Cannot upload to Azure from an Azure resource.'));
         }
 
-        if ((await vscode.workspace.fs.stat(uri)).type === vscode.FileType.Directory) {
+        if (await AzExtFsExtra.isDirectory(uri.fsPath)) {
             allFolderUris.push(uri);
         } else {
             allFileUris.push(uri);

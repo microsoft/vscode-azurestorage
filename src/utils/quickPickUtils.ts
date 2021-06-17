@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { IActionContext, IAzureQuickPickItem } from 'vscode-azureextensionui';
 import { extensionPrefix } from '../constants';
 import { ext } from '../extensionVariables';
-import { workspaceFsUtils } from './workspaceFsUtils';
+import { AzExtFsExtra } from './AzExtFsExtra';
 
 export async function showWorkspaceFoldersQuickPick(placeHolderString: string, context: IActionContext, subPathSetting: string | undefined): Promise<string> {
     const folderQuickPickItems: IAzureQuickPickItem<string | undefined>[] = [];
@@ -33,7 +33,7 @@ export async function showWorkspaceFoldersQuickPick(placeHolderString: string, c
                 const buildDefaultPaths = ["build", "dist", "out"];
                 for (const defaultPath of buildDefaultPaths) {
                     const buildPath: string = path.join(fsPath, defaultPath);
-                    if (await workspaceFsUtils.pathExists(buildPath)) {
+                    if (await AzExtFsExtra.pathExists(buildPath)) {
                         folderQuickPickItems.push({
                             label: path.basename(buildPath),
                             description: buildPath,

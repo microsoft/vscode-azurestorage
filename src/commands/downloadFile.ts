@@ -14,12 +14,12 @@ import { BlobDirectoryTreeItem } from "../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../tree/blob/BlobTreeItem";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
+import { AzExtFsExtra } from "../utils/AzExtFsExtra";
 import { checkCanOverwrite } from "../utils/checkCanOverwrite";
 import { isSubpath } from "../utils/fs";
 import { localize } from "../utils/localize";
 import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
 import { OverwriteChoice } from "../utils/uploadUtils";
-import { workspaceFsUtils } from "../utils/workspaceFsUtils";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from "./azCopy/azCopyLocations";
 import { azCopyTransfer } from "./azCopy/azCopyTransfer";
 
@@ -142,5 +142,5 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
 }
 
 async function checkCanDownload(destPath: string, overwriteChoice: { choice: OverwriteChoice | undefined }): Promise<boolean> {
-    return await checkCanOverwrite(destPath, overwriteChoice, async () => await workspaceFsUtils.pathExists(destPath));
+    return await checkCanOverwrite(destPath, overwriteChoice, async () => await AzExtFsExtra.pathExists(destPath));
 }

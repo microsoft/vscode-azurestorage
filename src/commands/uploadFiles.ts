@@ -3,12 +3,13 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { CancellationToken, FileType, ProgressLocation, Uri, window, workspace } from "vscode";
+import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
 import { IActionContext, IParsedError, parseError } from "vscode-azureextensionui";
 import { NotificationProgress } from "../constants";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
+import { AzExtFsExtra } from "../utils/AzExtFsExtra";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
 import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, showUploadSuccessMessage, upload } from "../utils/uploadUtils";
@@ -52,7 +53,7 @@ export async function uploadFiles(
         const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
             const destPath: string = convertLocalPathToRemotePath(uri.fsPath, destinationDirectory);
-            if ((await workspace.fs.stat(uri)).type !== FileType.Directory && await checkCanUpload(destPath, overwriteChoice, treeItem)) {
+            if (!await AzExtFsExtra.isDirectory(uri.fsPath) && await checkCanUpload(destPath, overwriteChoice, treeItem)) {
                 // Don't allow directories to sneak in https://github.com/microsoft/vscode-azurestorage/issues/803
                 urisToUpload.push(uri);
             }
