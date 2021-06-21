@@ -8,61 +8,70 @@ import { FileStat, FileType, Uri, workspace } from 'vscode';
 import { parseError } from 'vscode-azureextensionui';
 
 export namespace AzExtFsExtra {
-    export async function isDirectory(path: string): Promise<boolean> {
-        const dir = Uri.file(path);
-        const stats = await workspace.fs.stat(dir);
+    export async function isDirectory(resource: Uri | string): Promise<boolean> {
+        const uri = typeof resource === 'string' ? Uri.file(resource) : resource;
+        const stats = await workspace.fs.stat(uri);
         return stats.type === FileType.Directory;
     }
 
-    export async function isFile(path: string): Promise<boolean> {
-        const dir = Uri.file(path);
-        const stats = await workspace.fs.stat(dir);
+    export async function isFile(resource: Uri | string): Promise<boolean> {
+        const uri = typeof resource === 'string' ? Uri.file(resource) : resource;
+        const stats = await workspace.fs.stat(uri);
         return stats.type === FileType.File;
     }
 
-    export async function ensureDir(path: string): Promise<void> {
-        const dir = Uri.file(path);
+    export async function ensureDir(resource: Uri | string): Promise<void> {
+        const uri = typeof resource === 'string' ? Uri.file(resource) : resource;
         try {
-            await isDirectory(path);
+            // if it is a file, then we should create the directory
+            if (await isDirectory(uri)) return;
         } catch (err) {
             // throws a vscode.FileSystemError is it doesn't exist
             const pError = parseError(err);
             if (pError && pError.errorType === 'FileNotFound') {
-                await workspace.fs.createDirectory(dir);
+                // drop down below to create the directory
             } else {
                 throw err
             }
         }
+
+        await workspace.fs.createDirectory(uri);
     }
 
-    export async function ensureFile(path: string): Promise<void> {
+    export async function ensureFile(resource: Uri | string): Promise<void> {
+        const uri = typeof resource === 'string' ? Uri.file(resource) : resource;
         try {
             // file exists so exit
-            if (await isFile(path)) return;
+            if (await isFile(uri)) return;
         } catch (err) {
-            const dir: string = dirname(path);
-            await ensureDir(dir);
+            // throws a vscode.FileSystemError is it doesn't exist
+            const pError = parseError(err);
+            if (pError && pError.errorType === 'FileNotFound') {
+                const dir: string = dirname(uri.fsPath);
+                await ensureDir(dir);
+            } else {
+                throw err
+            }
         }
 
-        const file = Uri.file(path);
-        await workspace.fs.writeFile(file, Buffer.from(''));
+        await workspace.fs.writeFile(uri, Buffer.from(''));
     }
 
-    export async function readFile(path: string): Promise<string> {
-        const file = Uri.file(path);
-        return (await workspace.fs.readFile(file)).toString();
+    export async function readFile(resource: Uri | string): Promise<string> {
+        const uri = typeof resource === 'string' ? Uri.file(resource) : resource;
+        return (await workspace.fs.readFile(uri)).toString();
     }
 
-    export async function writeFile(path: string, contents: string): Promise<void> {
-        const file = Uri.file(path);
-        await workspace.fs.writeFile(file, Buffer.from(contents));
+    export async function writeFile(resource: Uri | string, contents: string): Promise<void> {
+        const uri = typeof resource === 'string' ? Uri.file(resource) : resource;
+        await workspace.fs.writeFile(uri, Buffer.from(contents));
     }
 
-    export async function pathExists(path: string): Promise<boolean> {
+    export async function pathExists(resource: Uri | string): Promise<boolean> {
         let stats: FileStat | undefined;
-        const file = Uri.file(path);
+        const uri = typeof resource === 'string' ? Uri.file(resource) : resource;
         try {
-            stats = await workspace.fs.stat(file);
+            stats = await workspace.fs.stat(uri);
         } catch { /*ignore*/ }
         return !!stats;
     }
