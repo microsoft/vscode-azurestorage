@@ -27,7 +27,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
             throw new Error(localize('cannotUploadToAzureFromAzureResource', 'Cannot upload to Azure from an Azure resource.'));
         }
 
-        if (await AzExtFsExtra.isDirectory(uri.fsPath)) {
+        if (await AzExtFsExtra.isDirectory(uri)) {
             allFolderUris.push(uri);
         } else {
             allFileUris.push(uri);

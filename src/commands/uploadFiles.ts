@@ -53,7 +53,7 @@ export async function uploadFiles(
         const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
             const destPath: string = convertLocalPathToRemotePath(uri.fsPath, destinationDirectory);
-            if (!await AzExtFsExtra.isDirectory(uri.fsPath) && await checkCanUpload(destPath, overwriteChoice, treeItem)) {
+            if (!await AzExtFsExtra.isDirectory(uri) && await checkCanUpload(destPath, overwriteChoice, treeItem)) {
                 // Don't allow directories to sneak in https://github.com/microsoft/vscode-azurestorage/issues/803
                 urisToUpload.push(uri);
             }
