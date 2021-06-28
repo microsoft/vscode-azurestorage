@@ -5,7 +5,6 @@
 
 import assert = require('assert');
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 import { Uri, workspace, WorkspaceFolder } from 'vscode';
 import { AzExtFsExtra, getRandomHexString } from "../extension.bundle";
@@ -33,74 +32,79 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
         workspaceFilePath = path.join(workspacePath, indexHtml);
     });
 
+    suiteTeardown(async function (this: Mocha.Context): Promise<void> {
+        await workspace.fs.delete(Uri.file(path.join(workspacePath, testFolderPath)), { recursive: true })
+        console.log(testFolderPath, 'deleted.');
+    });
+
     test('pathExists for directory', async () => {
-        assert.strictEqual(await AzExtFsExtra.pathExists(workspacePath), fs.existsSync(workspacePath));
-        assert.strictEqual(await AzExtFsExtra.pathExists(nonExistingPath), fs.existsSync(nonExistingPath));
+        assert.strictEqual(await AzExtFsExtra.pathExists(workspacePath), true);
+        assert.strictEqual(await AzExtFsExtra.pathExists(nonExistingPath), false);
     });
 
     test('pathExists for file', async () => {
-        assert.strictEqual(await AzExtFsExtra.pathExists(workspaceFilePath), fs.existsSync(workspaceFilePath));
-        assert.strictEqual(await AzExtFsExtra.pathExists(nonExistingFilePath), fs.existsSync(nonExistingFilePath));
+        assert.strictEqual(await AzExtFsExtra.pathExists(workspaceFilePath), true);
+        assert.strictEqual(await AzExtFsExtra.pathExists(nonExistingFilePath), false);
     });
 
     test('isDirectory properly detects folders', async () => {
-        assert.strictEqual(await AzExtFsExtra.isDirectory(workspacePath), isDirectoryFs(workspacePath));
-        assert.strictEqual(await AzExtFsExtra.isDirectory(workspaceFilePath), isDirectoryFs(workspaceFilePath));
+        assert.strictEqual(await AzExtFsExtra.isDirectory(workspacePath), true);
+        assert.strictEqual(await AzExtFsExtra.isDirectory(workspaceFilePath), false);
 
     });
 
     test('isFile properly detects files', async () => {
-        assert.strictEqual(await AzExtFsExtra.isFile(workspaceFilePath), isFileFs(workspaceFilePath));
-        assert.strictEqual(await AzExtFsExtra.isFile(workspacePath), isFileFs(workspacePath));
+        assert.strictEqual(await AzExtFsExtra.isFile(workspaceFilePath), true);
+        assert.strictEqual(await AzExtFsExtra.isFile(workspacePath), false);
     });
 
     test('ensureDir that does not exist', async () => {
-        const fsPath = path.join(os.homedir(), testFolderPath, getRandomHexString());
-        assert.strictEqual(await AzExtFsExtra.pathExists(fsPath), fs.existsSync(fsPath));
+        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
+        assert.strictEqual(fs.existsSync(fsPath), false);
         await AzExtFsExtra.ensureDir(fsPath);
 
-        assert.strictEqual(await AzExtFsExtra.isDirectory(fsPath), isDirectoryFs(fsPath));
-        assert.strictEqual(await AzExtFsExtra.pathExists(fsPath), fs.existsSync(fsPath));
+        assert.strictEqual(isDirectoryFs(fsPath), true);
+        assert.strictEqual(fs.existsSync(fsPath), true);
     });
 
     test('ensureDir that exists as a file errors', async () => {
-        const fsPath = path.join(os.homedir(), testFolderPath, getRandomHexString());
-        assert.strictEqual(await AzExtFsExtra.pathExists(fsPath), fs.existsSync(fsPath));
-        await AzExtFsExtra.ensureFile(fsPath);
+        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
+        assert.strictEqual(fs.existsSync(fsPath), false);
+        ensureFile(fsPath);
 
         await assertThrowsAsync(async () => await AzExtFsExtra.ensureDir(fsPath), /FileSystemError/);
     });
 
     test('ensureFile where directory exists', async () => {
-        const fsPath = path.join(os.homedir(), testFolderPath, getRandomHexString());
+        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
 
-        assert.strictEqual(await AzExtFsExtra.pathExists(fsPath), fs.existsSync(fsPath));
-        await AzExtFsExtra.ensureDir(fsPath);
-        assert.strictEqual(await AzExtFsExtra.pathExists(fsPath), fs.existsSync(fsPath));
+        assert.strictEqual(fs.existsSync(fsPath), false);
+        ensureDir(fsPath);
+        assert.strictEqual(fs.existsSync(fsPath), true);
 
         const filePath = path.join(fsPath, indexHtml);
-        assert.strictEqual(await AzExtFsExtra.pathExists(filePath), fs.existsSync(filePath));
+        assert.strictEqual(fs.existsSync(filePath), false);
         await AzExtFsExtra.ensureFile(filePath);
 
-        assert.strictEqual(await AzExtFsExtra.isFile(filePath), isFileFs(filePath));
-        assert.strictEqual(await AzExtFsExtra.pathExists(filePath), fs.existsSync(filePath));
+        assert.strictEqual(isFileFs(filePath), true);
+        assert.strictEqual(fs.existsSync(filePath), true);
     });
 
     test('ensureFile where directory does not exist', async () => {
-        const fsPath = path.join(os.homedir(), testFolderPath, getRandomHexString());
+        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
         const filePath = path.join(fsPath, indexHtml);
 
-        assert.strictEqual(await AzExtFsExtra.pathExists(filePath), fs.existsSync(filePath));
+        assert.strictEqual(fs.existsSync(filePath), false);
         await AzExtFsExtra.ensureFile(filePath);
 
-        assert.strictEqual(await AzExtFsExtra.isFile(filePath), isFileFs(filePath));
-        assert.strictEqual(await AzExtFsExtra.pathExists(filePath), fs.existsSync(filePath));
+        assert.strictEqual(isFileFs(filePath), true);
+        assert.strictEqual(fs.existsSync(filePath), true);
     });
 
     test('ensureFile where directory exists with the same name errors', async () => {
-        const fsPath = path.join(os.homedir(), testFolderPath, getRandomHexString());
-        assert.strictEqual(await AzExtFsExtra.pathExists(fsPath), fs.existsSync(fsPath));
-        await AzExtFsExtra.ensureDir(fsPath);
+        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
+        assert.strictEqual(fs.existsSync(fsPath), false);
+        ensureDir(fsPath);
 
         await assertThrowsAsync(async () => await AzExtFsExtra.ensureFile(fsPath), /FileSystemError/);
     });
@@ -113,19 +117,13 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('writeFile', async () => {
-        const fsPath = path.join(os.homedir(), testFolderPath, getRandomHexString());
+        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
         const filePath = path.join(fsPath, indexHtml);
         const contents = 'writeFileTest';
         await AzExtFsExtra.writeFile(filePath, contents);
 
-        const fileContents = await AzExtFsExtra.readFile(filePath);
         const fsFileContents = fs.readFileSync(filePath).toString();
-        assert.strictEqual(fileContents, fsFileContents);
-    });
-
-    suiteTeardown(async function (this: Mocha.Context): Promise<void> {
-        await workspace.fs.delete(Uri.file(path.join(os.homedir(), testFolderPath)), { recursive: true })
-        console.log(testFolderPath, 'deleted.');
+        assert.strictEqual(contents, fsFileContents);
     });
 });
 
@@ -135,5 +133,17 @@ function isDirectoryFs(fsPath: string): boolean {
 
 function isFileFs(fsPath: string): boolean {
     return fs.statSync(fsPath).isFile();
+}
+
+function ensureFile(fsPath: string): void {
+    if (!fs.existsSync(fsPath)) {
+        fs.writeFileSync(fsPath, '');
+    }
+}
+
+function ensureDir(fsPath: string): void {
+    if (!fs.existsSync(fsPath)) {
+        fs.mkdirSync(fsPath);
+    }
 }
 
