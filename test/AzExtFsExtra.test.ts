@@ -22,7 +22,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     const nonExistingFilePath = path.join(nonExistingPath, indexHtml);
 
     suiteSetup(function (this: Mocha.Context): void {
-        testFolderPath = `azExtFsExtra${getRandomHexString()}`
+        testFolderPath = path.join(workspacePath, `azExtFsExtra${getRandomHexString()}`)
         const workspaceFolders: readonly WorkspaceFolder[] | undefined = workspace.workspaceFolders;
         if (!workspaceFolders) {
             throw new Error("No workspace is open");
@@ -59,7 +59,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureDir that does not exist', async () => {
-        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
+        const fsPath = path.join(testFolderPath, getRandomHexString());
         assert.strictEqual(fs.existsSync(fsPath), false);
         await AzExtFsExtra.ensureDir(fsPath);
 
@@ -68,7 +68,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureDir that exists as a file errors', async () => {
-        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
+        const fsPath = path.join(testFolderPath, getRandomHexString());
         assert.strictEqual(fs.existsSync(fsPath), false);
         ensureFile(fsPath);
 
@@ -76,7 +76,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureFile where directory exists', async () => {
-        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
+        const fsPath = path.join(testFolderPath, getRandomHexString());
 
         assert.strictEqual(fs.existsSync(fsPath), false);
         ensureDir(fsPath);
@@ -91,7 +91,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureFile where directory does not exist', async () => {
-        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
+        const fsPath = path.join(testFolderPath, getRandomHexString());
         const filePath = path.join(fsPath, indexHtml);
 
         assert.strictEqual(fs.existsSync(filePath), false);
@@ -102,7 +102,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('ensureFile where directory exists with the same name errors', async () => {
-        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
+        const fsPath = path.join(testFolderPath, getRandomHexString());
         assert.strictEqual(fs.existsSync(fsPath), false);
         ensureDir(fsPath);
 
@@ -117,7 +117,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     test('writeFile', async () => {
-        const fsPath = path.join(workspacePath, testFolderPath, getRandomHexString());
+        const fsPath = path.join(testFolderPath, getRandomHexString());
         const filePath = path.join(fsPath, indexHtml);
         const contents = 'writeFileTest';
         await AzExtFsExtra.writeFile(filePath, contents);
