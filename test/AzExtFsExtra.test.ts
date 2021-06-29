@@ -22,7 +22,6 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     const nonExistingFilePath = path.join(nonExistingPath, indexHtml);
 
     suiteSetup(function (this: Mocha.Context): void {
-        testFolderPath = path.join(workspacePath, `azExtFsExtra${getRandomHexString()}`)
         const workspaceFolders: readonly WorkspaceFolder[] | undefined = workspace.workspaceFolders;
         if (!workspaceFolders) {
             throw new Error("No workspace is open");
@@ -30,6 +29,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
 
         workspacePath = workspaceFolders[0].uri.fsPath;
         workspaceFilePath = path.join(workspacePath, indexHtml);
+        testFolderPath = path.join(workspacePath, `azExtFsExtra${getRandomHexString()}`)
     });
 
     suiteTeardown(async function (this: Mocha.Context): Promise<void> {
