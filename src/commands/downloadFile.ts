@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
-import * as fse from 'fs-extra';
 import { join, posix } from "path";
 import { ProgressLocation, window } from "vscode";
 import { AzExtTreeItem, IActionContext } from "vscode-azureextensionui";
@@ -15,6 +14,7 @@ import { BlobDirectoryTreeItem } from "../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../tree/blob/BlobTreeItem";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
+import { AzExtFsExtra } from "../utils/AzExtFsExtra";
 import { checkCanOverwrite } from "../utils/checkCanOverwrite";
 import { isSubpath } from "../utils/fs";
 import { localize } from "../utils/localize";
@@ -142,5 +142,5 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
 }
 
 async function checkCanDownload(destPath: string, overwriteChoice: { choice: OverwriteChoice | undefined }): Promise<boolean> {
-    return await checkCanOverwrite(destPath, overwriteChoice, async () => await fse.pathExists(destPath));
+    return await checkCanOverwrite(destPath, overwriteChoice, async () => await AzExtFsExtra.pathExists(destPath));
 }
