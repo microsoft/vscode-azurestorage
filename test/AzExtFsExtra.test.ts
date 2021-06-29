@@ -33,7 +33,7 @@ suite('AzExtFsExtra', function (this: Mocha.Suite): void {
     });
 
     suiteTeardown(async function (this: Mocha.Context): Promise<void> {
-        await workspace.fs.delete(Uri.file(path.join(workspacePath, testFolderPath)), { recursive: true })
+        await workspace.fs.delete(Uri.file(testFolderPath), { recursive: true })
         console.log(testFolderPath, 'deleted.');
     });
 
