@@ -9,9 +9,9 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as assert from 'assert';
 import { createQueueService, createTableService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
 import * as vscode from 'vscode';
+import { runWithTestActionContext } from 'vscode-azureextensiondev';
 import { copyConnectionString, copyPrimaryKey, createBlobContainer, createFileShare, createQueue, createStorageAccount, createStorageAccountAdvanced, createTable, deleteBlobContainer, deleteFileShare, deleteQueue, deleteStorageAccount, deleteTable, DialogResponses, getRandomHexString } from '../../extension.bundle';
 import { longRunningTestsEnabled } from '../global.test';
-import { runWithTestActionContext } from '../testActionContext';
 import { resourceGroupsToDelete, webSiteClient as client } from './global.resource.test';
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises

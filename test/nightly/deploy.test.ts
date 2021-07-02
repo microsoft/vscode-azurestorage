@@ -8,9 +8,9 @@ import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { runWithTestActionContext } from 'vscode-azureextensiondev';
 import { createGenericClient, delay, deployStaticWebsite, ext, getRandomHexString, StorageAccountTreeItem } from '../../extension.bundle';
 import { longRunningTestsEnabled } from '../global.test';
-import { runWithTestActionContext } from '../testActionContext';
 import { resourceGroupsToDelete, webSiteClient } from './global.resource.test';
 
 suite('Deploy', function (this: Mocha.Suite): void {
