@@ -61,11 +61,12 @@ export function showUploadSuccessMessage(treeItemLabel: string): void {
 }
 
 export async function checkCanUpload(
+    context: IActionContext,
     destPath: string,
     overwriteChoice: { choice: OverwriteChoice | undefined },
     treeItem: BlobContainerTreeItem | FileShareTreeItem
 ): Promise<boolean> {
-    return await checkCanOverwrite(destPath, overwriteChoice, async () => {
+    return await checkCanOverwrite(context, destPath, overwriteChoice, async () => {
         if (treeItem instanceof BlobContainerTreeItem) {
             return await doesBlobExist(treeItem, destPath) || await doesBlobDirectoryExist(treeItem, destPath);
         } else {
@@ -84,13 +85,13 @@ export function convertLocalPathToRemotePath(localPath: string, destinationDirec
     return path;
 }
 
-export async function promptForDestinationDirectory(): Promise<string> {
-    return await ext.ui.showInputBox({
+export async function promptForDestinationDirectory(context: IActionContext): Promise<string> {
+    return await context.ui.showInputBox({
         value: posix.sep,
         prompt: localize('destinationDirectory', 'Enter the destination directory for this upload.'),
     });
 }
 
-export async function getDestinationDirectory(destinationDirectory?: string): Promise<string> {
-    return destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory();
+export async function getDestinationDirectory(context: IActionContext, destinationDirectory?: string): Promise<string> {
+    return destinationDirectory !== undefined ? destinationDirectory : await promptForDestinationDirectory(context);
 }

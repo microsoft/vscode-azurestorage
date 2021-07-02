@@ -14,7 +14,7 @@ import { deleteNode } from '../commonTreeCommands';
 export function registerFileShareActionHandlers(): void {
     registerCommand("azureStorage.openFileShare", openFileShareInStorageExplorer);
     registerCommand("azureStorage.editFile", async (context: IActionContext, treeItem: FileTreeItem) => AzureStorageFS.showEditor(context, treeItem), 250);
-    registerCommand("azureStorage.deleteFileShare", async (context: IActionContext, treeItem?: FileShareTreeItem) => await deleteNode(context, FileShareTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.deleteFileShare", deleteFileShare);
     registerCommand("azureStorage.createDirectory", async (context: IActionContext, treeItem: FileShareTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.contextValue }));
     registerCommand("azureStorage.createFile", async (context: IActionContext, treeItem: FileShareTreeItem) => {
         const childTreeItem = await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue });
@@ -29,4 +29,8 @@ async function openFileShareInStorageExplorer(_context: IActionContext, treeItem
     const resourceName = treeItem.shareName;
 
     await storageExplorerLauncher.openResource(accountId, subscriptionid, resourceType, resourceName);
+}
+
+export async function deleteFileShare(context: IActionContext, treeItem?: FileShareTreeItem): Promise<void> {
+    await deleteNode(context, FileShareTreeItem.contextValue, treeItem);
 }

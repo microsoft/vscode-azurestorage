@@ -15,7 +15,7 @@ import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, 
 import { IAzCopyResolution } from './azCopy/IAzCopyResolution';
 
 export async function uploadFolder(
-    actionContext: IActionContext,
+    context: IActionContext,
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
     uri?: vscode.Uri,
     notificationProgress?: NotificationProgress,
@@ -24,7 +24,7 @@ export async function uploadFolder(
 ): Promise<IAzCopyResolution> {
     const calledFromUploadToAzureStorage: boolean = uri !== undefined;
     if (uri === undefined) {
-        uri = (await ext.ui.showOpenDialog({
+        uri = (await context.ui.showOpenDialog({
             canSelectFiles: false,
             canSelectFolders: true,
             canSelectMany: false,
@@ -33,24 +33,24 @@ export async function uploadFolder(
         }))[0];
     }
 
-    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
-    destinationDirectory = await getDestinationDirectory(destinationDirectory);
+    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
+    destinationDirectory = await getDestinationDirectory(context, destinationDirectory);
 
     const sourcePath: string = uri.fsPath;
     const destPath: string = convertLocalPathToRemotePath(sourcePath, destinationDirectory);
     const resolution: IAzCopyResolution = { errors: [] };
-    if (!calledFromUploadToAzureStorage && !(await checkCanUpload(destPath, { choice: undefined }, treeItem))) {
+    if (!calledFromUploadToAzureStorage && !(await checkCanUpload(context, destPath, { choice: undefined }, treeItem))) {
         // Don't upload this folder
         return resolution;
     }
 
     try {
         if (notificationProgress && cancellationToken) {
-            await uploadLocalFolder(actionContext, treeItem, sourcePath, destPath, notificationProgress, cancellationToken, destPath);
+            await uploadLocalFolder(context, treeItem, sourcePath, destPath, notificationProgress, cancellationToken, destPath);
         } else {
             const title: string = getUploadingMessageWithSource(sourcePath, treeItem.label);
             await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-                await uploadLocalFolder(actionContext, nonNullValue(treeItem), sourcePath, nonNullValue(destPath), newNotificationProgress, newCancellationToken, destPath);
+                await uploadLocalFolder(context, nonNullValue(treeItem), sourcePath, nonNullValue(destPath), newNotificationProgress, newCancellationToken, destPath);
             });
         }
     } catch (error) {
@@ -67,6 +67,6 @@ export async function uploadFolder(
         showUploadSuccessMessage(treeItem.label);
     }
 
-    await ext.tree.refresh(actionContext, treeItem);
+    await ext.tree.refresh(context, treeItem);
     return resolution;
 }

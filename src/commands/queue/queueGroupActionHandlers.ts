@@ -9,10 +9,12 @@ import { isAzuriteInstalled, warnAzuriteNotInstalled } from '../../utils/azurite
 import { createChildNode } from '../commonTreeCommands';
 
 export function registerQueueGroupActionHandlers(): void {
-    registerCommand("azureStorage.createQueue", async (context: IActionContext, treeItem?: QueueGroupTreeItem) => {
-        if (treeItem?.root.isEmulated && !(await isAzuriteInstalled())) {
-            warnAzuriteNotInstalled(context);
-        }
-        await createChildNode(context, QueueGroupTreeItem.contextValue, treeItem)
-    });
+    registerCommand("azureStorage.createQueue", createQueue);
+}
+
+export async function createQueue(context: IActionContext, treeItem?: QueueGroupTreeItem): Promise<void> {
+    if (treeItem?.root.isEmulated && !(await isAzuriteInstalled())) {
+        warnAzuriteNotInstalled(context);
+    }
+    await createChildNode(context, QueueGroupTreeItem.contextValue, treeItem);
 }

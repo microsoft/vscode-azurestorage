@@ -7,8 +7,7 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as mime from 'mime';
 import { posix } from 'path';
 import { ProgressLocation, window } from "vscode";
-import { AzureParentTreeItem, ICreateChildImplContext } from "vscode-azureextensionui";
-import { ext } from "../extensionVariables";
+import { AzureParentTreeItem, IActionContext, ICreateChildImplContext } from "vscode-azureextensionui";
 import { IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
 import { IStorageRoot } from "../tree/IStorageRoot";
@@ -32,7 +31,7 @@ export function createFileClient(root: IStorageRoot, shareName: string, director
 }
 
 export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem> {
-    const fileName: string = context.childName || await getFileOrDirectoryName(parent, directoryPath, shareName);
+    const fileName: string = context.childName || await getFileOrDirectoryName(context, parent, directoryPath, shareName);
     return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(fileName);
         progress.report({ message: `Azure Storage: Creating file '${fileName}'` });
@@ -41,8 +40,8 @@ export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<ISto
     });
 }
 
-export async function getFileOrDirectoryName(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string, value?: string): Promise<string> {
-    return await ext.ui.showInputBox({
+export async function getFileOrDirectoryName(context: IActionContext, parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string, value?: string): Promise<string> {
+    return await context.ui.showInputBox({
         value,
         placeHolder: localize('enterName', 'Enter a name for the new resource'),
         validateInput: async (name: string) => {

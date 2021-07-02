@@ -8,8 +8,9 @@ import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { createGenericClient, delay, ext, getRandomHexString, IActionContext, StorageAccountTreeItem } from '../../extension.bundle';
-import { longRunningTestsEnabled, testUserInput } from '../global.test';
+import { createGenericClient, delay, deployStaticWebsite, ext, getRandomHexString, StorageAccountTreeItem } from '../../extension.bundle';
+import { longRunningTestsEnabled } from '../global.test';
+import { runWithTestActionContext } from '../testActionContext';
 import { resourceGroupsToDelete, webSiteClient } from './global.resource.test';
 
 suite('Deploy', function (this: Mocha.Suite): void {
@@ -24,15 +25,16 @@ suite('Deploy', function (this: Mocha.Suite): void {
     test("deployStaticWebsite", async () => {
         const resourceName: string = getRandomHexString().toLowerCase();
         resourceGroupsToDelete.push(resourceName);
-        const context: IActionContext = { telemetry: { properties: {}, measurements: {} }, errorHandling: { issueProperties: {} }, ui: testUserInput, valuesToMask: [] };
         const testFolderPath: string = getWorkspacePath('html-hello-world');
-        await testUserInput.runWithInputs([testFolderPath, /create new storage account/i, resourceName], async () => {
-            await vscode.commands.executeCommand('azureStorage.deployStaticWebsite');
+        await runWithTestActionContext('deployStaticWebsite', async context => {
+            await context.ui.runWithInputs([testFolderPath, /create new storage account/i, resourceName], async () => {
+                await deployStaticWebsite(context);
+            });
+            const createdAccount: StorageAccount = await webSiteClient.storageAccounts.getProperties(resourceName, resourceName);
+            const webUrl: string | undefined = (<StorageAccountTreeItem>await ext.tree.findTreeItem(<string>createdAccount.id, context)).root.primaryEndpoints?.web;
+            const client: ServiceClient = await createGenericClient();
+            await validateWebSite(webUrl, client, 60 * 1000, 1000);
         });
-        const createdAccount: StorageAccount = await webSiteClient.storageAccounts.getProperties(resourceName, resourceName);
-        const webUrl: string | undefined = (<StorageAccountTreeItem>await ext.tree.findTreeItem(<string>createdAccount.id, context)).root.primaryEndpoints?.web;
-        const client: ServiceClient = await createGenericClient();
-        await validateWebSite(webUrl, client, 60 * 1000, 1000);
     })
 });
 

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IAzureQuickPickItem } from 'vscode-azureextensionui';
-import { ext } from '../../extensionVariables';
 import { localize } from '../../utils/localize';
 import { IOpenInFileExplorerWizardContext, OpenBehavior } from './IOpenInFileExplorerWizardContext';
 
@@ -17,7 +16,7 @@ export class OpenBehaviorStep extends AzureWizardPromptStep<IOpenInFileExplorerW
         ];
 
         const placeHolder: string = localize('selectOpenBehavior', 'Select how you would like to open this resource');
-        context.openBehavior = (await ext.ui.showQuickPick(picks, { placeHolder })).data;
+        context.openBehavior = (await context.ui.showQuickPick(picks, { placeHolder })).data;
     }
 
     public shouldPrompt(context: IOpenInFileExplorerWizardContext): boolean {

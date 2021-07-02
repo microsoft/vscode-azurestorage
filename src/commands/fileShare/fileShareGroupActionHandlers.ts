@@ -8,5 +8,9 @@ import { FileShareGroupTreeItem } from '../../tree/fileShare/FileShareGroupTreeI
 import { createChildNode } from '../commonTreeCommands';
 
 export function registerFileShareGroupActionHandlers(): void {
-    registerCommand("azureStorage.createFileShare", async (context: IActionContext, treeItem?: FileShareGroupTreeItem) => await createChildNode(context, FileShareGroupTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.createFileShare", createFileShare);
+}
+
+export async function createFileShare(context: IActionContext, treeItem?: FileShareGroupTreeItem): Promise<void> {
+    await createChildNode(context, FileShareGroupTreeItem.contextValue, treeItem);
 }

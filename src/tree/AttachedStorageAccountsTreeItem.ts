@@ -64,7 +64,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
     }
 
     public async attachWithConnectionString(context: IActionContext): Promise<void> {
-        const connectionString = await ext.ui.showInputBox({
+        const connectionString = await context.ui.showInputBox({
             prompt: localize('enterConnectionString', 'Enter the connection string for your storage account'),
             validateInput: (value: string): string | undefined => this.validateConnectionString(value)
         });

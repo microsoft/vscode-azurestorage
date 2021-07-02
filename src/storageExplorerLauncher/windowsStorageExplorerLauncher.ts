@@ -6,7 +6,6 @@ import { MessageItem } from "vscode";
 import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
 import { storageExplorerDownloadUrl } from "../constants";
-import { ext } from "../extensionVariables";
 import { AzExtFsExtra } from '../utils/AzExtFsExtra';
 import { Launcher } from "../utils/launcher";
 import { localize } from "../utils/localize";
@@ -58,7 +57,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
                 context.telemetry.properties.storageExplorerNotFound = 'true';
                 const download: MessageItem = { title: localize('download', 'Download') };
                 const message: string = localize('cantFindSE', 'Cannot find a compatible Storage Explorer. Would you like to download the latest Storage Explorer?');
-                await ext.ui.showWarningMessage(message, download);
+                await context.ui.showWarningMessage(message, download);
                 context.telemetry.properties.downloadStorageExplorer = 'true';
                 await openUrl(storageExplorerDownloadUrl);
                 throw new UserCancelledError();

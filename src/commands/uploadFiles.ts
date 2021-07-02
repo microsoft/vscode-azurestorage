@@ -32,7 +32,7 @@ export async function uploadFiles(
 ): Promise<IAzCopyResolution> {
     const calledFromUploadToAzureStorage: boolean = uris !== undefined;
     if (uris === undefined) {
-        uris = await ext.ui.showOpenDialog(
+        uris = await context.ui.showOpenDialog(
             {
                 canSelectFiles: true,
                 canSelectFolders: false,
@@ -47,13 +47,13 @@ export async function uploadFiles(
     }
 
     treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
-    destinationDirectory = await getDestinationDirectory(destinationDirectory);
+    destinationDirectory = await getDestinationDirectory(context, destinationDirectory);
     let urisToUpload: Uri[] = [];
     if (!calledFromUploadToAzureStorage) {
         const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
             const destPath: string = convertLocalPathToRemotePath(uri.fsPath, destinationDirectory);
-            if (!await AzExtFsExtra.isDirectory(uri) && await checkCanUpload(destPath, overwriteChoice, treeItem)) {
+            if (!await AzExtFsExtra.isDirectory(uri) && await checkCanUpload(context, destPath, overwriteChoice, treeItem)) {
                 // Don't allow directories to sneak in https://github.com/microsoft/vscode-azurestorage/issues/803
                 urisToUpload.push(uri);
             }

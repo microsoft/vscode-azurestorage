@@ -119,7 +119,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
             }
         }
 
-        if (!hasParent && await checkCanDownload(folderDownload.localFilePath, overwriteChoice)) {
+        if (!hasParent && await checkCanDownload(context, folderDownload.localFilePath, overwriteChoice)) {
             foldersToDownload.push(folderDownload);
         }
     }
@@ -133,7 +133,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
             }
         }
 
-        if (!hasParent && await checkCanDownload(fileDownload.localFilePath, overwriteChoice)) {
+        if (!hasParent && await checkCanDownload(context, fileDownload.localFilePath, overwriteChoice)) {
             filesToDownload.push(fileDownload);
         }
     }
@@ -141,6 +141,6 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
     return [...foldersToDownload, ...filesToDownload];
 }
 
-async function checkCanDownload(destPath: string, overwriteChoice: { choice: OverwriteChoice | undefined }): Promise<boolean> {
-    return await checkCanOverwrite(destPath, overwriteChoice, async () => await AzExtFsExtra.pathExists(destPath));
+async function checkCanDownload(context: IActionContext, destPath: string, overwriteChoice: { choice: OverwriteChoice | undefined }): Promise<boolean> {
+    return await checkCanOverwrite(context, destPath, overwriteChoice, async () => await AzExtFsExtra.pathExists(destPath));
 }

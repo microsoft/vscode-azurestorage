@@ -8,5 +8,9 @@ import { TableGroupTreeItem } from '../../tree/table/TableGroupTreeItem';
 import { createChildNode } from '../commonTreeCommands';
 
 export function registerTableGroupActionHandlers(): void {
-    registerCommand("azureStorage.createTable", async (context: IActionContext, treeItem?: TableGroupTreeItem) => await createChildNode(context, TableGroupTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.createTable", createTable);
+}
+
+export async function createTable(context: IActionContext, treeItem?: TableGroupTreeItem): Promise<void> {
+    await createChildNode(context, TableGroupTreeItem.contextValue, treeItem);
 }

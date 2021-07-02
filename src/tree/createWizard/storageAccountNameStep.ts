@@ -5,22 +5,21 @@
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
 import { AzureNameStep, IStorageAccountWizardContext, ResourceGroupListStep, resourceGroupNamingRules, storageAccountNamingRules } from 'vscode-azureextensionui';
-import { ext } from '../../extensionVariables';
 import { createStorageClient } from '../../utils/azureClients';
 
 export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
-    public async prompt(wizardContext: T): Promise<void> {
-        const client: StorageManagementClient = await createStorageClient(wizardContext);
+    public async prompt(context: T): Promise<void> {
+        const client: StorageManagementClient = await createStorageClient(context);
 
-        const suggestedName: string | undefined = wizardContext.relatedNameTask ? await wizardContext.relatedNameTask : undefined;
-        wizardContext.newStorageAccountName = (await ext.ui.showInputBox({
+        const suggestedName: string | undefined = context.relatedNameTask ? await context.relatedNameTask : undefined;
+        context.newStorageAccountName = (await context.ui.showInputBox({
             value: suggestedName,
             prompt: 'Enter a globally unique name for the new Storage Account',
             validateInput: async (value: string): Promise<string | undefined> => await this.validateStorageAccountName(client, value)
         })).trim();
-        wizardContext.valuesToMask.push(wizardContext.newStorageAccountName);
-        if (!wizardContext.relatedNameTask) {
-            wizardContext.relatedNameTask = this.generateRelatedName(wizardContext, wizardContext.newStorageAccountName, resourceGroupNamingRules);
+        context.valuesToMask.push(context.newStorageAccountName);
+        if (!context.relatedNameTask) {
+            context.relatedNameTask = this.generateRelatedName(context, context.newStorageAccountName, resourceGroupNamingRules);
         }
     }
 

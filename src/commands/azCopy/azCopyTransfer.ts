@@ -73,7 +73,7 @@ function handleJob(context: IActionContext, jobInfo: IJobInfo, transferLabel: st
         }
 
         if (finalTransferStatus?.JobStatus && /CompletedWith*/gi.test(finalTransferStatus.JobStatus)) {
-            void ext.ui.showWarningMessage(message);
+            void context.ui.showWarningMessage(message);
         } else {
             throw new Error(message);
         }

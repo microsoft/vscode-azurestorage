@@ -86,7 +86,7 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
     public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {
         if (!context.suppressMessage) {
             const message: string = localize('deleteBlobDir', "Are you sure you want to delete the blob directory '{0}' and all its contents?", this.label);
-            await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+            await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         }
 
         await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {

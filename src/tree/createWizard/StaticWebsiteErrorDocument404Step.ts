@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep } from "vscode-azureextensionui";
-import { ext } from "../../extensionVariables";
 import { localize } from "../../utils/localize";
 import { DocumentType, validateDocumentPath } from "../../utils/validateNames";
 import { IStaticWebsiteConfigWizardContext } from "./IStaticWebsiteConfigWizardContext";
@@ -18,8 +17,8 @@ export class StaticWebsiteErrorDocument404Step extends AzureWizardPromptStep<ISt
         this.oldErrorDocument404Path = oldErrorDocument404Path;
     }
 
-    public async prompt(wizardContext: IStaticWebsiteConfigWizardContext): Promise<void> {
-        wizardContext.errorDocument404Path = await ext.ui.showInputBox({
+    public async prompt(context: IStaticWebsiteConfigWizardContext): Promise<void> {
+        context.errorDocument404Path = await context.ui.showInputBox({
             prompt: localize('enterThe404ErrorDocumentPath', 'Enter the 404 error document path'),
             value: this.oldErrorDocument404Path || StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path,
             validateInput: (value) => { return validateDocumentPath(value, DocumentType.error); }

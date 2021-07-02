@@ -19,9 +19,9 @@ import { deleteNode } from '../commonTreeCommands';
 export function registerBlobContainerActionHandlers(): void {
     registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
     registerCommand("azureStorage.editBlob", async (context: IActionContext, treeItem: BlobTreeItem) => AzureStorageFS.showEditor(context, treeItem), 250);
-    registerCommand("azureStorage.deleteBlobContainer", async (context: IActionContext, treeItem?: BlobContainerTreeItem) => await deleteNode(context, BlobContainerTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.deleteBlobContainer", deleteBlobContainer);
     registerCommand("azureStorage.createBlockBlob", async (context: IActionContext, parent: BlobContainerTreeItem) => {
-        const blobPath: string = await getBlobPath(parent);
+        const blobPath: string = await getBlobPath(context, parent);
         const dirNames: string[] = blobPath.includes('/') ? path.dirname(blobPath).split('/') : [];
         let dirParentTreeItem: BlobDirectoryTreeItem | BlobContainerTreeItem = parent;
 
@@ -50,4 +50,8 @@ async function openBlobContainerInStorageExplorer(_context: IActionContext, tree
     const resourceName = treeItem.container.name;
 
     await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
+}
+
+export async function deleteBlobContainer(context: IActionContext, treeItem?: BlobContainerTreeItem): Promise<void> {
+    await deleteNode(context, BlobContainerTreeItem.contextValue, treeItem);
 }
