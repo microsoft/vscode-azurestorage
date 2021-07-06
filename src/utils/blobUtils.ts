@@ -10,7 +10,6 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, IActionContext, ICreateChildImplContext } from 'vscode-azureextensionui';
 import { maxPageSize } from '../constants';
-import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { BlobDirectoryTreeItem } from '../tree/blob/BlobDirectoryTreeItem';
 import { BlobTreeItem } from '../tree/blob/BlobTreeItem';
@@ -62,7 +61,7 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
 
 // Currently only supports creating block blobs
 export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
-    const blobPath: string = context.childName || await getBlobPath(parent);
+    const blobPath: string = context.childName || await getBlobPath(context, parent);
 
     return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(blobPath);
@@ -128,8 +127,8 @@ export async function getExistingProperties(parent: BlobTreeItem | BlobContainer
     return undefined;
 }
 
-export async function getBlobPath(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, value?: string): Promise<string> {
-    return await ext.ui.showInputBox({
+export async function getBlobPath(context: IActionContext, parent: BlobContainerTreeItem | BlobDirectoryTreeItem, value?: string): Promise<string> {
+    return await context.ui.showInputBox({
         value,
         placeHolder: localize('enterNameForNewBlockBlob', 'Enter a name for the new block blob'),
         validateInput: async (name: string) => {

@@ -9,10 +9,12 @@ import { isAzuriteInstalled, warnAzuriteNotInstalled } from '../../utils/azurite
 import { createChildNode } from '../commonTreeCommands';
 
 export function registerBlobContainerGroupActionHandlers(): void {
-    registerCommand("azureStorage.createBlobContainer", async (context: IActionContext, treeItem?: BlobContainerGroupTreeItem) => {
-        if (treeItem?.root.isEmulated && !(await isAzuriteInstalled())) {
-            warnAzuriteNotInstalled(context);
-        }
-        await createChildNode(context, BlobContainerGroupTreeItem.contextValue, treeItem)
-    });
+    registerCommand("azureStorage.createBlobContainer", createBlobContainer);
+}
+
+export async function createBlobContainer(context: IActionContext, treeItem?: BlobContainerGroupTreeItem): Promise<void> {
+    if (treeItem?.root.isEmulated && !(await isAzuriteInstalled())) {
+        warnAzuriteNotInstalled(context);
+    }
+    await createChildNode(context, BlobContainerGroupTreeItem.contextValue, treeItem);
 }

@@ -16,9 +16,9 @@ import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, Over
 import { uploadFiles } from './uploadFiles';
 import { uploadFolder } from './uploadFolder';
 
-export async function uploadToAzureStorage(actionContext: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
-    const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext);
-    const destinationDirectory: string = await promptForDestinationDirectory();
+export async function uploadToAzureStorage(context: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
+    const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context);
+    const destinationDirectory: string = await promptForDestinationDirectory(context);
     const allFolderUris: vscode.Uri[] = [];
     const allFileUris: vscode.Uri[] = [];
 
@@ -50,7 +50,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         }
 
         const destPath: string = convertLocalPathToRemotePath(folderUri.fsPath, destinationDirectory);
-        if (!hasParent && await checkCanUpload(destPath, overwriteChoice, treeItem)) {
+        if (!hasParent && await checkCanUpload(context, destPath, overwriteChoice, treeItem)) {
             folderUrisToUpload.push(folderUri);
         }
     }
@@ -65,7 +65,7 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         }
 
         const destPath: string = convertLocalPathToRemotePath(fileUri.fsPath, destinationDirectory);
-        if (!hasParent && await checkCanUpload(destPath, overwriteChoice, treeItem)) {
+        if (!hasParent && await checkCanUpload(context, destPath, overwriteChoice, treeItem)) {
             fileUrisToUpload.push(fileUri);
         }
     }
@@ -79,11 +79,11 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
     const title: string = getUploadingMessage(treeItem.label);
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (notificationProgress, cancellationToken) => {
         for (const folderUri of folderUrisToUpload) {
-            throwIfCanceled(cancellationToken, actionContext.telemetry.properties, 'uploadToAzureStorage');
-            errors.push(...(await uploadFolder(actionContext, treeItem, folderUri, notificationProgress, cancellationToken, destinationDirectory)).errors);
+            throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadToAzureStorage');
+            errors.push(...(await uploadFolder(context, treeItem, folderUri, notificationProgress, cancellationToken, destinationDirectory)).errors);
         }
 
-        errors.push(...(await uploadFiles(actionContext, treeItem, fileUrisToUpload, notificationProgress, cancellationToken, destinationDirectory)).errors);
+        errors.push(...(await uploadFiles(context, treeItem, fileUrisToUpload, notificationProgress, cancellationToken, destinationDirectory)).errors);
     });
 
     if (errors.length === 1) {
@@ -94,5 +94,5 @@ export async function uploadToAzureStorage(actionContext: IActionContext, _first
         showUploadSuccessMessage(treeItem.label);
     }
 
-    await ext.tree.refresh(actionContext, treeItem);
+    await ext.tree.refresh(context, treeItem);
 }

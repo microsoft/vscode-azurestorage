@@ -8,7 +8,6 @@ import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
-import { ext } from "../../extensionVariables";
 import { localize } from "../../utils/localize";
 import { nonNull } from "../../utils/storageWrappers";
 import { IStorageRoot } from "../IStorageRoot";
@@ -71,7 +70,7 @@ export class TableGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<TableTreeItem> {
-        const tableName = await ext.ui.showInputBox({
+        const tableName = await context.ui.showInputBox({
             placeHolder: 'Enter a name for the new table',
             validateInput: TableGroupTreeItem.validateTableName
         });

@@ -64,7 +64,7 @@ export async function selectStorageAccountTreeItemForCommand(
                 context.telemetry.properties.enableResponse = 'false';
                 const enableWebHostingPrompt = "Enable website hosting";
                 // don't check result since cancel throws UserCancelledError and only other option is 'Enable'
-                await ext.ui.showWarningMessage(
+                await context.ui.showWarningMessage(
                     `Website hosting is not enabled on storage account "${accountTreeItem.label}".`,
                     { modal: true },
                     { title: enableWebHostingPrompt });

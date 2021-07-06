@@ -123,10 +123,10 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
     }
 
-    public async deleteTreeItemImpl(): Promise<void> {
+    public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
         const message: string = `Are you sure you want to delete account "${this.label}" and all its contents?`;
         // Use ext.ui to emulate user input by TestUserInput() method so that the tests can work
-        const result = await ext.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+        const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
             const storageManagementClient = await createStorageClient(this.root);
@@ -284,7 +284,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
             return;
         }
         const disableMessage: MessageItem = { title: "Disable" };
-        const confirmDisable: MessageItem = await ext.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, { modal: true }, disableMessage, DialogResponses.cancel);
+        const confirmDisable: MessageItem = await context.ui.showWarningMessage(`Are you sure you want to disable static web hosting for the account '${this.label}'?`, { modal: true }, disableMessage, DialogResponses.cancel);
         if (confirmDisable === disableMessage) {
             const props = { staticWebsite: { enabled: false } };
             await this.setWebsiteHostingProperties(props);

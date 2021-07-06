@@ -21,7 +21,7 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
     registerCommand("azureStorage.copyConnectionString", copyConnectionString);
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
-    registerCommand("azureStorage.deleteStorageAccount", async (context: IActionContext, treeItem?: StorageAccountTreeItem) => await deleteNode(context, StorageAccountTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.deleteStorageAccount", deleteStorageAccount);
 }
 
 async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
@@ -34,7 +34,7 @@ async function openStorageAccountInStorageExplorer(context: IActionContext, tree
     await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId);
 }
 
-async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
+export async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
         treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
@@ -42,7 +42,7 @@ async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccount
     await vscode.env.clipboard.writeText(treeItem.key.value);
 }
 
-async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
+export async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
         treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
     }
@@ -51,7 +51,7 @@ async function copyConnectionString(context: IActionContext, treeItem?: StorageA
     await vscode.env.clipboard.writeText(connectionString);
 }
 
-async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {
+export async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {
     let sourcePath: string | undefined;
     let destTreeItem: StorageAccountTreeItem | BlobContainerTreeItem | undefined;
 
@@ -129,4 +129,8 @@ function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vsc
     } else {
         return false;
     }
+}
+
+export async function deleteStorageAccount(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
+    await deleteNode(context, StorageAccountTreeItem.contextValue, treeItem);
 }

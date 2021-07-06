@@ -10,7 +10,7 @@ import { deleteNode } from '../commonTreeCommands';
 
 export function registerQueueActionHandlers(): void {
     registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);
-    registerCommand("azureStorage.deleteQueue", async (context: IActionContext, treeItem?: QueueTreeItem) => await deleteNode(context, QueueTreeItem.contextValue, treeItem));
+    registerCommand("azureStorage.deleteQueue", deleteQueue);
 }
 
 async function openQueueInStorageExplorer(_context: IActionContext, treeItem: QueueTreeItem): Promise<void> {
@@ -19,4 +19,8 @@ async function openQueueInStorageExplorer(_context: IActionContext, treeItem: Qu
     const resourceName = treeItem.queue.name;
 
     await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
+}
+
+export async function deleteQueue(context: IActionContext, treeItem?: QueueTreeItem): Promise<void> {
+    await deleteNode(context, QueueTreeItem.contextValue, treeItem);
 }

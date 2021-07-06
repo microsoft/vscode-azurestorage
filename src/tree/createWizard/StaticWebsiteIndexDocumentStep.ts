@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep } from "vscode-azureextensionui";
-import { ext } from "../../extensionVariables";
 import { localize } from "../../utils/localize";
 import { DocumentType, validateDocumentPath } from "../../utils/validateNames";
 import { IStaticWebsiteConfigWizardContext } from "./IStaticWebsiteConfigWizardContext";
@@ -18,8 +17,8 @@ export class StaticWebsiteIndexDocumentStep extends AzureWizardPromptStep<IStati
         this.oldIndexDocument = oldIndexDocument;
     }
 
-    public async prompt(wizardContext: IStaticWebsiteConfigWizardContext): Promise<void> {
-        wizardContext.indexDocument = await ext.ui.showInputBox({
+    public async prompt(context: IStaticWebsiteConfigWizardContext): Promise<void> {
+        context.indexDocument = await context.ui.showInputBox({
             prompt: localize('enterTheIndexDocumentName', 'Enter the index document name'),
             value: this.oldIndexDocument || StaticWebsiteIndexDocumentStep.defaultIndexDocument,
             validateInput: (value) => { return validateDocumentPath(value, DocumentType.index); }

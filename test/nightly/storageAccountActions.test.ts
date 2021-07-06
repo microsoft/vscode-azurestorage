@@ -9,8 +9,9 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as assert from 'assert';
 import { createQueueService, createTableService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
 import * as vscode from 'vscode';
-import { DialogResponses, getRandomHexString } from '../../extension.bundle';
-import { longRunningTestsEnabled, testUserInput } from '../global.test';
+import { runWithTestActionContext } from 'vscode-azureextensiondev';
+import { copyConnectionString, copyPrimaryKey, createBlobContainer, createFileShare, createQueue, createStorageAccount, createStorageAccountAdvanced, createTable, deleteBlobContainer, deleteFileShare, deleteQueue, deleteStorageAccount, deleteTable, DialogResponses, getRandomHexString } from '../../extension.bundle';
+import { longRunningTestsEnabled } from '../global.test';
 import { resourceGroupsToDelete, webSiteClient as client } from './global.resource.test';
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -46,8 +47,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
     });
 
     test("createStorageAccount", async () => {
-        await testUserInput.runWithInputs([resourceName], async () => {
-            await vscode.commands.executeCommand('azureStorage.createGpv2Account');
+        await runWithTestActionContext('createGpv2Account', async context => {
+            await context.ui.runWithInputs([resourceName], async () => {
+                await createStorageAccount(context);
+            });
         });
         const createdAccount: StorageManagementModels.StorageAccount = await client.storageAccounts.getProperties(resourceName, resourceName);
         assert.ok(createdAccount);
@@ -57,8 +60,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
         const accountNameAdvanced: string = getRandomHexString().toLowerCase();
         const resourceNameAdvanced: string = getRandomHexString().toLowerCase();
         resourceGroupsToDelete.push(resourceNameAdvanced);
-        await testUserInput.runWithInputs([accountNameAdvanced, '$(plus) Create new resource group', resourceNameAdvanced, 'Yes', 'index.html', 'index.html', 'East US'], async () => {
-            await vscode.commands.executeCommand('azureStorage.createGpv2AccountAdvanced');
+        await runWithTestActionContext('createGpv2AccountAdvanced', async context => {
+            await context.ui.runWithInputs([accountNameAdvanced, '$(plus) Create new resource group', resourceNameAdvanced, 'Yes', 'index.html', 'index.html', 'East US'], async () => {
+                await createStorageAccountAdvanced(context);
+            });
         });
         const createdAccount: StorageManagementModels.StorageAccount = await client.storageAccounts.getProperties(resourceNameAdvanced, accountNameAdvanced);
         assert.ok(createdAccount);
@@ -73,8 +78,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
 
     test("createBlobContainer", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([attachedRegex, resourceName, containerName], async () => {
-            await vscode.commands.executeCommand('azureStorage.createBlobContainer');
+        await runWithTestActionContext('createBlobContainer', async context => {
+            await context.ui.runWithInputs([attachedRegex, resourceName, containerName], async () => {
+                await createBlobContainer(context);
+            });
         });
         const createdContainer: StorageManagementModels.BlobContainer = await client.blobContainers.get(resourceName, resourceName, containerName);
         assert.ok(createdContainer);
@@ -82,8 +89,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
 
     test("deleteBlobContainer", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([attachedRegex, resourceName, containerName, DialogResponses.deleteResponse.title], async () => {
-            await vscode.commands.executeCommand('azureStorage.deleteBlobContainer');
+        await runWithTestActionContext('deleteBlobContainer', async context => {
+            await context.ui.runWithInputs([attachedRegex, resourceName, containerName, DialogResponses.deleteResponse.title], async () => {
+                await deleteBlobContainer(context);
+            });
         });
         const primaryKey: string = await getPrimaryKey();
         const credential = new azureStorageBlob.StorageSharedKeyCredential(resourceName, primaryKey);
@@ -94,8 +103,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
 
     test("copyConnectionString and createFileShare", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([attachedRegex, resourceName, shareName, '5120'], async () => {
-            await vscode.commands.executeCommand('azureStorage.createFileShare');
+        await runWithTestActionContext('createFileShare', async context => {
+            await context.ui.runWithInputs([attachedRegex, resourceName, shareName, '5120'], async () => {
+                await createFileShare(context);
+            });
         });
         const shareClient: azureStorageShare.ShareClient = await createShareClient(resourceName, shareName);
         const shareExists: boolean = await doesShareExist(shareClient);
@@ -104,8 +115,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
 
     test("deleteFileShare", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([attachedRegex, resourceName, shareName, DialogResponses.deleteResponse.title], async () => {
-            await vscode.commands.executeCommand('azureStorage.deleteFileShare');
+        await runWithTestActionContext('deleteFileShare', async context => {
+            await context.ui.runWithInputs([attachedRegex, resourceName, shareName, DialogResponses.deleteResponse.title], async () => {
+                await deleteFileShare(context);
+            });
         });
         const shareClient: azureStorageShare.ShareClient = await createShareClient(resourceName, shareName);
         const shareExists: boolean = await doesShareExist(shareClient);
@@ -114,8 +127,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
 
     test("createQueue", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([attachedRegex, resourceName, queueName], async () => {
-            await vscode.commands.executeCommand('azureStorage.createQueue');
+        await runWithTestActionContext('createQueue', async context => {
+            await context.ui.runWithInputs([attachedRegex, resourceName, queueName], async () => {
+                await createQueue(context);
+            });
         });
         const connectionString: string = await getConnectionString(resourceName);
         const queueService: QueueService = createQueueService(connectionString);
@@ -125,8 +140,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
 
     test("deleteQueue", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([attachedRegex, resourceName, queueName, DialogResponses.deleteResponse.title], async () => {
-            await vscode.commands.executeCommand('azureStorage.deleteQueue');
+        await runWithTestActionContext('deleteQueue', async context => {
+            await context.ui.runWithInputs([attachedRegex, resourceName, queueName, DialogResponses.deleteResponse.title], async () => {
+                await deleteQueue(context);
+            });
         });
         const connectionString: string = await getConnectionString(resourceName);
         const queueService: QueueService = createQueueService(connectionString);
@@ -136,8 +153,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
 
     test("createTable", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([attachedRegex, resourceName, tableName], async () => {
-            await vscode.commands.executeCommand('azureStorage.createTable');
+        await runWithTestActionContext('createTable', async context => {
+            await context.ui.runWithInputs([attachedRegex, resourceName, tableName], async () => {
+                await createTable(context);
+            });
         });
         const connectionString: string = await getConnectionString(resourceName);
         const tableService: TableService = createTableService(connectionString);
@@ -151,8 +170,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
         const tableService: TableService = createTableService(connectionString);
         let createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
         assert.ok(createdTable.exists);
-        await testUserInput.runWithInputs([attachedRegex, resourceName, tableName, DialogResponses.deleteResponse.title], async () => {
-            await vscode.commands.executeCommand('azureStorage.deleteTable');
+        await runWithTestActionContext('deleteTable', async context => {
+            await context.ui.runWithInputs([attachedRegex, resourceName, tableName, DialogResponses.deleteResponse.title], async () => {
+                await deleteTable(context);
+            });
         });
         createdTable = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
         assert.ok(!createdTable.exists);
@@ -160,8 +181,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
 
     test("deleteStorageAccount", async () => {
         await validateAccountExists(resourceName, resourceName);
-        await testUserInput.runWithInputs([resourceName, DialogResponses.deleteResponse.title], async () => {
-            await vscode.commands.executeCommand('azureStorage.deleteStorageAccount');
+        await runWithTestActionContext('deleteStorageAccount', async context => {
+            await context.ui.runWithInputs([resourceName, DialogResponses.deleteResponse.title], async () => {
+                await deleteStorageAccount(context);
+            });
         });
         await assertThrowsAsync(async () => await client.storageAccounts.getProperties(resourceName, resourceName), /Error/);
     });
@@ -181,8 +204,10 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
     async function getPrimaryKey(): Promise<string> {
         await validateAccountExists(resourceName, resourceName);
         await vscode.env.clipboard.writeText('');
-        await testUserInput.runWithInputs([resourceName], async () => {
-            await vscode.commands.executeCommand('azureStorage.copyPrimaryKey');
+        await runWithTestActionContext('copyPrimaryKey', async context => {
+            await context.ui.runWithInputs([resourceName], async () => {
+                await copyPrimaryKey(context);
+            });
         });
         return await vscode.env.clipboard.readText();
     }
@@ -226,8 +251,10 @@ async function doesShareExist(shareClient: azureStorageShare.ShareClient): Promi
 // get the connection string of a storage account by the command azureStorage.copyConnectionString
 async function getConnectionString(storageAccountName: string): Promise<string> {
     await vscode.env.clipboard.writeText('');
-    await testUserInput.runWithInputs([storageAccountName], async () => {
-        await vscode.commands.executeCommand('azureStorage.copyConnectionString');
+    await runWithTestActionContext('copyConnectionString', async context => {
+        await context.ui.runWithInputs([storageAccountName], async () => {
+            await copyConnectionString(context);
+        });
     });
     return vscode.env.clipboard.readText();
 }

@@ -15,6 +15,17 @@
 // The tests should import '../extension.bundle.ts'. At design-time they live in tests/ and so will pick up this file (extension.bundle.ts).
 // At runtime the tests live in dist/tests and will therefore pick up the main webpack bundle at dist/extension.bundle.js.
 export * from 'vscode-azureextensionui';
+export * from './src/commands/blob/blobActionHandlers';
+export * from './src/commands/blob/blobContainerActionHandlers';
+export * from './src/commands/blob/blobContainerGroupActionHandlers';
+export * from './src/commands/createStorageAccount';
+export * from './src/commands/fileShare/fileShareActionHandlers';
+export * from './src/commands/fileShare/fileShareGroupActionHandlers';
+export * from './src/commands/queue/queueActionHandlers';
+export * from './src/commands/queue/queueGroupActionHandlers';
+export * from './src/commands/storageAccountActionHandlers';
+export * from './src/commands/table/tableActionHandlers';
+export * from './src/commands/table/tableGroupActionHandlers';
 // Export activate/deactivate for main.js
 export { activateInternal, deactivateInternal } from './src/extension';
 export { ext } from './src/extensionVariables';

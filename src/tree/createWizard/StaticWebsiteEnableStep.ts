@@ -5,22 +5,21 @@
 
 import { QuickPickItem } from 'vscode';
 import { AzureWizardPromptStep, DialogResponses, IWizardOptions } from "vscode-azureextensionui";
-import { ext } from "../../extensionVariables";
 import { localize } from "../../utils/localize";
 import { IStaticWebsiteConfigWizardContext } from "./IStaticWebsiteConfigWizardContext";
 import { StaticWebsiteErrorDocument404Step } from "./StaticWebsiteErrorDocument404Step";
 import { StaticWebsiteIndexDocumentStep } from "./StaticWebsiteIndexDocumentStep";
 
 export class StaticWebsiteEnableStep extends AzureWizardPromptStep<IStaticWebsiteConfigWizardContext> {
-    public async prompt(wizardContext: IStaticWebsiteConfigWizardContext): Promise<void> {
-        if (!wizardContext.isCustomCloud) {
+    public async prompt(context: IStaticWebsiteConfigWizardContext): Promise<void> {
+        if (!context.isCustomCloud) {
             const placeHolder: string = localize('wouldYouLikeToEnableStaticWebsiteHosting', 'Would you like to enable static website hosting?');
             const yes: QuickPickItem = { label: DialogResponses.yes.title };
             const no: QuickPickItem = { label: DialogResponses.no.title };
 
-            wizardContext.enableStaticWebsite = await ext.ui.showQuickPick([yes, no], { placeHolder }) === yes;
+            context.enableStaticWebsite = await context.ui.showQuickPick([yes, no], { placeHolder }) === yes;
         } else {
-            wizardContext.enableStaticWebsite = false;
+            context.enableStaticWebsite = false;
         }
     }
 

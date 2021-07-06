@@ -6,7 +6,6 @@
 import { extensions } from "vscode";
 import { IActionContext } from "vscode-azureextensionui";
 import { azuriteExtensionId } from "../constants";
-import { ext } from "../extensionVariables";
 import { cpUtils } from "./cpUtils";
 import { localize } from "./localize";
 
@@ -28,7 +27,7 @@ export async function isAzuriteCliInstalled(): Promise<boolean> {
 }
 
 export function warnAzuriteNotInstalled(context: IActionContext): void {
-    void ext.ui.showWarningMessage(localize('mustInstallAzurite', 'You must install the [Azurite extension](command:azureStorage.showAzuriteExtension) to perform this operation.'));
+    void context.ui.showWarningMessage(localize('mustInstallAzurite', 'You must install the [Azurite extension](command:azureStorage.showAzuriteExtension) to perform this operation.'));
     context.telemetry.properties.cancelStep = 'installAzuriteExtension';
     context.errorHandling.suppressDisplay = true;
     throw new Error(`"${azuriteExtensionId}" extension is not installed.`);
