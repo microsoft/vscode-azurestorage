@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ExtensionContext, TreeView } from "vscode";
-import { AzExtTreeDataProvider, AzExtTreeItem, IAzExtOutputChannel, IAzureUserInput } from "vscode-azureextensionui";
+import { AzExtTreeDataProvider, AzExtTreeItem, IAzExtOutputChannel } from "vscode-azureextensionui";
 import { AzureAccountTreeItem } from '../src/tree/AzureAccountTreeItem';
 import { AzureStorageFS } from "./AzureStorageFS";
 import { AttachedStorageAccountsTreeItem } from "./tree/AttachedStorageAccountsTreeItem";
@@ -15,7 +15,6 @@ import { AttachedStorageAccountsTreeItem } from "./tree/AttachedStorageAccountsT
 export namespace ext {
     export let context: ExtensionContext;
     export let outputChannel: IAzExtOutputChannel;
-    export let ui: IAzureUserInput;
     export let ignoreBundle: boolean | undefined;
 
     export let tree: AzExtTreeDataProvider;
