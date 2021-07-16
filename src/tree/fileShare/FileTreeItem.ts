@@ -21,6 +21,7 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         public readonly directoryPath: string,
         public readonly shareName: string) {
         super(parent);
+        this.commandId = 'azureStorage.editFile';
     }
 
     public label: string = this.fileName;
@@ -30,8 +31,6 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('file');
     }
-
-    public commandId: string = 'azureStorage.editFile';
 
     public async copyUrl(): Promise<void> {
         const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);

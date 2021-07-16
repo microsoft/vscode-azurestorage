@@ -5,7 +5,7 @@
 
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { ProgressLocation, Uri, window } from 'vscode';
+import { ProgressLocation, window } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from "../../utils/localize";
@@ -21,13 +21,13 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public readonly childTypeLabel: string = "Queue";
     public static contextValue: string = 'azureQueueGroup';
     public contextValue: string = QueueGroupTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
-    };
 
     public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
         super(parent);
+        this.iconPath = {
+            light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
+            dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
+        };
     }
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {

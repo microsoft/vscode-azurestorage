@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { Uri } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from '../../constants';
 import { IStorageRoot } from "../IStorageRoot";
@@ -14,15 +13,15 @@ export class TableTreeItem extends AzureTreeItem<IStorageRoot> {
         parent: AzureParentTreeItem,
         public readonly tableName: string) {
         super(parent);
+        this.iconPath = {
+            light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
+            dark: path.join(getResourcesPath(), 'dark', 'AzureTable.svg')
+        };
     }
 
     public label: string = this.tableName;
     public static contextValue: string = 'azureTable';
     public contextValue: string = TableTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'AzureTable.svg')
-    };
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
         const message: string = `Are you sure you want to delete table '${this.label}' and all its contents?`;

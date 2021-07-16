@@ -21,7 +21,6 @@ interface IPersistedAccount {
 
 export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
     public readonly contextValue: string = 'attachedStorageAccounts';
-    public readonly id: string = 'attachedStorageAccounts';
     public readonly label: string = 'Attached Storage Accounts';
     public childTypeLabel: string = 'Account';
 
@@ -33,6 +32,7 @@ export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
 
     constructor(parent: AzExtParentTreeItem) {
         super(parent);
+        this.id = 'attachedStorageAccounts';
         this._keytar = tryGetKeyTar();
         this._root = new AttachedAccountRoot();
         this._loadPersistedAccountsTask = this.loadPersistedAccounts();

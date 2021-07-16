@@ -8,7 +8,6 @@ import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSh
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { Uri } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
 import { emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
@@ -22,13 +21,8 @@ import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTr
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
 export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
-    };
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
-    public id: string = this.storageAccountName;
     public static baseContextValue: string = `${StorageAccountTreeItem.contextValue}-attached`;
     public static emulatedContextValue: string = `${AttachedStorageAccountTreeItem.baseContextValue}-emulated`;
 
@@ -43,6 +37,13 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
         public readonly connectionString: string,
         private readonly storageAccountName: string) {
         super(parent);
+
+        this.id = this.storageAccountName;
+        this.iconPath = {
+            light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
+            dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
+        };
+
         this._root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
