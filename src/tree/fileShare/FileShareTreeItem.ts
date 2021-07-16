@@ -7,7 +7,6 @@ import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
@@ -32,15 +31,15 @@ export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
         parent: AzureParentTreeItem,
         public readonly shareName: string) {
         super(parent);
+        this.iconPath = {
+            light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
+            dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
+        };
     }
 
     public label: string = this.shareName;
     public static contextValue: string = 'azureFileShare';
     public contextValue: string = FileShareTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
-    };
 
     hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;

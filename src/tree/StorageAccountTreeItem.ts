@@ -10,7 +10,7 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { commands, MessageItem, Uri, window } from 'vscode';
+import { commands, MessageItem, window } from 'vscode';
 import { AzureParentTreeItem, AzureTreeItem, AzureWizard, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
@@ -41,10 +41,6 @@ type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
 
 export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public key: StorageAccountKeyWrapper;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
-    };
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
 
@@ -59,7 +55,12 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         public readonly storageAccount: StorageAccountWrapper,
         public readonly storageManagementClient: StorageManagementClient) {
         super(parent);
+        this.id = this.storageAccount.id;
         this._root = this.createRoot(parent.root);
+        this.iconPath = {
+            light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
+            dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
+        };
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
         this._queueGroupTreeItem = new QueueGroupTreeItem(this);
@@ -77,7 +78,6 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         return this._root;
     }
 
-    public id: string = this.storageAccount.id;
     public label: string = this.storageAccount.name;
     public static contextValue: string = 'azureStorageAccount';
     public contextValue: string = StorageAccountTreeItem.contextValue;

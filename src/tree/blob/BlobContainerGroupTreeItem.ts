@@ -6,7 +6,6 @@
 import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { Uri } from 'vscode';
 import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { createBlobContainerClient } from '../../utils/blobUtils';
@@ -23,12 +22,13 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
     public readonly childTypeLabel: string = "Blob Container";
     public static contextValue: string = 'azureBlobContainerGroup';
     public contextValue: string = BlobContainerGroupTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
-    };
+
     public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
         super(parent);
+        this.iconPath = {
+            light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
+            dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
+        };
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {

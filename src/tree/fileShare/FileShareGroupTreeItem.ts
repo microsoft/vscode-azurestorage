@@ -5,7 +5,7 @@
 
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
-import { ProgressLocation, Uri, window } from 'vscode';
+import { ProgressLocation, window } from 'vscode';
 import { AzureParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from '../../utils/localize';
@@ -24,10 +24,14 @@ export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public readonly childTypeLabel: string = "File Share";
     public static contextValue: string = 'azureFileShareGroup';
     public contextValue: string = FileShareGroupTreeItem.contextValue;
-    public iconPath: { light: string | Uri; dark: string | Uri } = {
-        light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
-        dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
-    };
+
+    constructor(parent: AzureParentTreeItem) {
+        super(parent);
+        this.iconPath = {
+            light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
+            dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
+        };
+    }
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<FileShareTreeItem[]> {
         if (clearCache) {

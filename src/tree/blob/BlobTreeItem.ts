@@ -21,7 +21,6 @@ import { IStorageRoot } from "../IStorageRoot";
 export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
     public static contextValue: string = 'azureBlob';
     public contextValue: string = BlobTreeItem.contextValue;
-    public commandId: string = 'azureStorage.editBlob';
 
     /**
      * The name (and only the name) of the directory
@@ -35,6 +34,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
 
     constructor(parent: AzureParentTreeItem, blobPath: string, public readonly container: azureStorageBlob.ContainerItem) {
         super(parent);
+        this.commandId = 'azureStorage.editBlob';
         this.blobPath = blobPath;
         this.blobName = path.basename(blobPath);
     }
