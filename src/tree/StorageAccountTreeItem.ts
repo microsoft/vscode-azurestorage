@@ -37,8 +37,6 @@ export type WebsiteHostingStatus = {
     errorDocument404Path?: string;
 };
 
-type StorageTypes = 'Storage' | 'StorageV2' | 'BlobStorage';
-
 export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public key: StorageAccountKeyWrapper;
     public childTypeLabel: string = 'resource type';
@@ -251,7 +249,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         await serviceClient.setProperties(properties);
     }
 
-    private async getAccountType(): Promise<StorageTypes> {
+    private async getAccountType(): Promise<azureStorageBlob.AccountKind> {
         const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
         const accountType: azureStorageBlob.AccountKind | undefined = (await serviceClient.getAccountInfo()).accountKind;
 
@@ -330,7 +328,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public async ensureHostingCapable(context: IActionContext, hostingStatus: WebsiteHostingStatus): Promise<void> {
         if (!hostingStatus.capable) {
             // Doesn't support static website hosting. Try to narrow it down.
-            let accountType: StorageTypes | undefined;
+            let accountType: azureStorageBlob.AccountKind | undefined;
             try {
                 accountType = await this.getAccountType();
             } catch (error) {
