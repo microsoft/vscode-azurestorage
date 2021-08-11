@@ -19,6 +19,8 @@ export enum configurationSettingsKeys {
 export const extensionPrefix: string = 'azureStorage';
 
 export const azuriteExtensionId: string = 'Azurite.azurite';
+export const azuriteExtensionPrefix: string = 'azurite';
+export const azuriteLooseSetting: string = 'loose';
 export const emulatorTimeoutMS: number = 3 * 1000;
 export const emulatorAccountName: string = 'devstoreaccount1';
 export const emulatorConnectionString: string = 'UseDevelopmentStorage=true;';
