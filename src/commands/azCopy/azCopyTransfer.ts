@@ -4,7 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzCopyClient, AzCopyLocation, FromToOption, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
+// eslint-disable-next-line import/no-internal-modules
 import { IJobInfo } from "@azure-tools/azcopy-node/dist/src/IJobInfo";
+// eslint-disable-next-line import/no-internal-modules
 import { ExitJobStatus, ITransferStatus, ProgressJobStatus } from "@azure-tools/azcopy-node/dist/src/Output/TransferStatus";
 import { CancellationToken, Uri } from 'vscode';
 import { IActionContext } from "vscode-azureextensionui";

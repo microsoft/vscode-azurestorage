@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+// eslint-disable-next-line import/no-internal-modules
 import { StorageAccount } from '@azure/arm-storage/esm/models';
 import { HttpOperationResponse, ServiceClient } from '@azure/ms-rest-js';
 import * as assert from 'assert';
@@ -63,7 +64,7 @@ async function validateWebSite(webUrl: string | undefined, client: ServiceClient
     while (true) {
         try {
             response = await client.sendRequest({ method: 'GET', url: webUrl });
-            if (Date.now() > endTime || response.status == 200) {
+            if (Date.now() > endTime || response.status === 200) {
                 break;
             }
         } catch {

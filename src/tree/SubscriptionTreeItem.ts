@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient } from '@azure/arm-storage';
+// eslint-disable-next-line import/no-internal-modules
 import { StorageAccountsListNextResponse } from '@azure/arm-storage/esm/models';
 import * as vscode from 'vscode';
 import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
