@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+### Changed
+- Minimum version of VS Code is now 1.57.0
+
 ## 0.12.1 - 2021-06-10
 ### Added
 - Support for Azure Stack
