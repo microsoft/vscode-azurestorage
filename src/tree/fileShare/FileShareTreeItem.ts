@@ -7,7 +7,7 @@ import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
@@ -19,22 +19,28 @@ import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } 
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
 import { getUploadingMessageWithSource } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
-import { IStorageRoot } from "../IStorageRoot";
+import { IStorageRoot } from '../IStorageRoot';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
+import { FileShareGroupTreeItem } from './FileShareGroupTreeItem';
 import { FileTreeItem } from './FileTreeItem';
 
-export class FileShareTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
+export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl {
+    public parent: FileShareGroupTreeItem;
     private _continuationToken: string | undefined;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
 
     constructor(
-        parent: AzureParentTreeItem,
+        parent: FileShareGroupTreeItem,
         public readonly shareName: string) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
         };
+    }
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
     }
 
     public label: string = this.shareName;

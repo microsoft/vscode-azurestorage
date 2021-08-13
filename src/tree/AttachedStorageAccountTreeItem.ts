@@ -8,7 +8,7 @@ import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSh
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { AzureParentTreeItem, AzureTreeItem } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem } from 'vscode-azureextensionui';
 import { emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
 import { localize } from '../utils/localize';
@@ -20,7 +20,7 @@ import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
-export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
+export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
     public static baseContextValue: string = `${StorageAccountTreeItem.contextValue}-attached`;
@@ -33,7 +33,7 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
     private _root: IStorageRoot;
 
     constructor(
-        parent: AzureParentTreeItem,
+        parent: AzExtParentTreeItem,
         public readonly connectionString: string,
         private readonly storageAccountName: string) {
         super(parent);
@@ -64,8 +64,8 @@ export class AttachedStorageAccountTreeItem extends AzureParentTreeItem {
     }
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    public async loadMoreChildrenImpl(): Promise<AzureTreeItem<IStorageRoot>[]> {
-        const groupTreeItems: AzureTreeItem<IStorageRoot>[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem];
+    public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
+        const groupTreeItems: AzExtTreeItem[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem];
 
         if (!this.root.isEmulated) {
             groupTreeItems.push(this._fileShareGroupTreeItem, this._tableGroupTreeItem);

@@ -7,7 +7,7 @@ import { StorageManagementClient } from '@azure/arm-storage';
 // eslint-disable-next-line import/no-internal-modules
 import { StorageAccountsListNextResponse } from '@azure/arm-storage/esm/models';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
+import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { storageProvider } from '../constants';
 import { createStorageClient } from '../utils/azureClients';
@@ -28,12 +28,12 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     private _nextLink: string | undefined;
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
+    async loadMoreChildrenImpl(clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._nextLink = undefined;
         }
 
-        const storageManagementClient: StorageManagementClient = await createStorageClient(this.root);
+        const storageManagementClient: StorageManagementClient = await createStorageClient([context, this]);
         const accounts: StorageAccountsListNextResponse = this._nextLink ?
             await storageManagementClient.storageAccounts.listNext(this._nextLink) :
             await storageManagementClient.storageAccounts.list();
@@ -48,8 +48,8 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         );
     }
 
-    public async createChildImpl(context: ICreateChildImplContext): Promise<AzureTreeItem> {
-        const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.root);
+    public async createChildImpl(context: ICreateChildImplContext): Promise<AzExtTreeItem> {
+        const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.subscription);
         const defaultLocation: string | undefined = wizardContext.isCustomCloud ? undefined : 'westus';
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [

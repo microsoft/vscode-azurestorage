@@ -49,7 +49,7 @@ async function openBlobContainerInStorageExplorer(_context: IActionContext, tree
     const resourceType = 'Azure.BlobContainer';
     const resourceName = treeItem.container.name;
 
-    await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(accountId, treeItem.subscription.subscriptionId, resourceType, resourceName);
 }
 
 export async function deleteBlobContainer(context: IActionContext, treeItem?: BlobContainerTreeItem): Promise<void> {

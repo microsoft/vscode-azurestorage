@@ -7,19 +7,20 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
-import { IStorageRoot } from "../IStorageRoot";
-import { IFileShareCreateChildContext } from "./FileShareTreeItem";
+import { IStorageRoot } from '../IStorageRoot';
+import { FileShareTreeItem, IFileShareCreateChildContext } from "./FileShareTreeItem";
 import { FileTreeItem } from './FileTreeItem';
 
-export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
+export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl {
+    public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
-        parent: AzureParentTreeItem,
+        parent: FileShareTreeItem | DirectoryTreeItem,
         public readonly parentPath: string,
         public readonly directoryName: string, // directoryName should not include parent path
         public readonly shareName: string) {
@@ -30,6 +31,10 @@ export class DirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> impleme
     public label: string = this.directoryName;
     public static contextValue: string = 'azureFileShareDirectory';
     public contextValue: string = DirectoryTreeItem.contextValue;
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
+    }
 
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('folder');

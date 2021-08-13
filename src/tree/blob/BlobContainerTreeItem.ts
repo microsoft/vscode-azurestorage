@@ -9,7 +9,7 @@ import * as retry from 'p-retry';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, AzureTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
@@ -23,7 +23,7 @@ import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
 import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
-import { IStorageRoot } from "../IStorageRoot";
+import { IStorageRoot } from '../IStorageRoot';
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerGroupTreeItem } from "./BlobContainerGroupTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
@@ -34,15 +34,20 @@ export enum ChildType {
     uploadedBlob
 }
 
-export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
+export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl {
     private _continuationToken: string | undefined;
     private _websiteHostingEnabled: boolean;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
+    public parent: BlobContainerGroupTreeItem;
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
         public readonly container: azureStorageBlob.ContainerItem) {
         super(parent);
+    }
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
     }
 
     public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: azureStorageBlob.ContainerItem): Promise<BlobContainerTreeItem> {
@@ -272,7 +277,7 @@ export class BlobContainerTreeItem extends AzureParentTreeItem<IStorageRoot> imp
         return this.root.primaryEndpoints && this.root.primaryEndpoints.web;
     }
 
-    public getStorageAccountTreeItem(treeItem: AzureTreeItem): StorageAccountTreeItem {
+    public getStorageAccountTreeItem(treeItem: AzExtTreeItem): StorageAccountTreeItem {
         if (!(treeItem instanceof BlobContainerTreeItem)) {
             throw new Error(`Unexpected treeItem type: ${treeItem.contextValue}`);
         }

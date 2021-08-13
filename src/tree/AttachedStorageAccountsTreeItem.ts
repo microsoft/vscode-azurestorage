@@ -5,7 +5,7 @@
 
 import * as azureStorageBlob from '@azure/storage-blob';
 import { ThemeIcon } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureParentTreeItem, IActionContext, ISubscriptionContext, parseError, TreeItemIconPath } from "vscode-azureextensionui";
+import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ISubscriptionContext, parseError, TreeItemIconPath } from "vscode-azureextensionui";
 import { emulatorAccountName, emulatorConnectionString } from '../constants';
 import { ext } from '../extensionVariables';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
@@ -19,7 +19,7 @@ interface IPersistedAccount {
     fullId: string;
 }
 
-export class AttachedStorageAccountsTreeItem extends AzureParentTreeItem {
+export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
     public readonly contextValue: string = 'attachedStorageAccounts';
     public readonly label: string = 'Attached Storage Accounts';
     public childTypeLabel: string = 'Account';

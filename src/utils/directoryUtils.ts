@@ -6,16 +6,16 @@
 import * as azureStorageShare from "@azure/storage-file-share";
 import * as path from "path";
 import { ProgressLocation, window } from "vscode";
-import { AzureParentTreeItem, ICreateChildImplContext } from "vscode-azureextensionui";
+import { ICreateChildImplContext } from "vscode-azureextensionui";
 import { maxPageSize } from "../constants";
 import { ext } from "../extensionVariables";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
-import { IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
+import { FileShareTreeItem, IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
 import { IStorageRoot } from "../tree/IStorageRoot";
 import { createDirectoryClient, deleteFile, getFileOrDirectoryName } from "./fileUtils";
 
 // Supports both file share and directory parents
-export async function askAndCreateChildDirectory(parent: AzureParentTreeItem<IStorageRoot>, parentPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem> {
+export async function askAndCreateChildDirectory(parent: FileShareTreeItem | DirectoryTreeItem, parentPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem> {
     const dirName: string = context.childName || await getFileOrDirectoryName(context, parent, parentPath, shareName);
     return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(dirName);
@@ -75,7 +75,7 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
     ext.outputChannel.appendLog(`Deleted directory "${directory}"`);
 }
 
-export async function doesDirectoryExist(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string): Promise<boolean> {
+export async function doesDirectoryExist(parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string): Promise<boolean> {
     const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(parent.root, shareName, directoryPath);
     try {
         await directoryClient.getProperties();

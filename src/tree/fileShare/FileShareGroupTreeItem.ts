@@ -6,10 +6,12 @@
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { AzureParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from '../../utils/localize';
-import { IStorageRoot } from "../IStorageRoot";
+import { AttachedStorageAccountTreeItem } from '../AttachedStorageAccountTreeItem';
+import { IStorageRoot } from '../IStorageRoot';
+import { StorageAccountTreeItem } from '../StorageAccountTreeItem';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareTreeItem } from './FileShareTreeItem';
 import { FileTreeItem } from './FileTreeItem';
@@ -17,20 +19,25 @@ import { FileTreeItem } from './FileTreeItem';
 const minQuotaGB = 1;
 const maxQuotaGB = 5120;
 
-export class FileShareGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
+export class FileShareGroupTreeItem extends AzExtParentTreeItem {
     private _continuationToken: string | undefined;
 
     public label: string = "File Shares";
     public readonly childTypeLabel: string = "File Share";
     public static contextValue: string = 'azureFileShareGroup';
     public contextValue: string = FileShareGroupTreeItem.contextValue;
+    public parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem;
 
-    constructor(parent: AzureParentTreeItem) {
+    public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
         };
+    }
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
     }
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<FileShareTreeItem[]> {

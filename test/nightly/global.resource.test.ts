@@ -6,7 +6,7 @@
 import { ResourceManagementClient } from '@azure/arm-resources';
 import { StorageManagementClient } from '@azure/arm-storage';
 import * as vscode from 'vscode';
-import { TestAzureAccount } from 'vscode-azureextensiondev';
+import { createTestActionContext, TestAzureAccount } from 'vscode-azureextensiondev';
 import { AzExtTreeDataProvider, AzureAccountTreeItem, createAzureClient, ext } from '../../extension.bundle';
 import { longRunningTestsEnabled } from '../global.test';
 
@@ -21,7 +21,7 @@ suiteSetup(async function (this: Mocha.Context): Promise<void> {
         await testAccount.signIn();
         ext.azureAccountTreeItem = new AzureAccountTreeItem(testAccount);
         ext.tree = new AzExtTreeDataProvider(ext.azureAccountTreeItem, 'azureStorage.loadMore');
-        webSiteClient = createAzureClient(testAccount.getSubscriptionContext(), StorageManagementClient);
+        webSiteClient = createAzureClient([await createTestActionContext(), testAccount.getSubscriptionContext()], StorageManagementClient);
     }
 });
 
@@ -36,7 +36,7 @@ suiteTeardown(async function (this: Mocha.Context): Promise<void> {
 });
 
 export async function beginDeleteResourceGroup(resourceGroup: string): Promise<void> {
-    const client: ResourceManagementClient = createAzureClient(testAccount.getSubscriptionContext(), ResourceManagementClient);
+    const client: ResourceManagementClient = createAzureClient([await createTestActionContext(), testAccount.getSubscriptionContext()], ResourceManagementClient);
     if ((await client.resourceGroups.checkExistence(resourceGroup)).body) {
         console.log(`Started delete of resource group "${resourceGroup}"...`);
         await client.resourceGroups.beginDeleteMethod(resourceGroup);

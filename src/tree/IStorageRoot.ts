@@ -8,9 +8,8 @@ import * as azureStorageBlob from "@azure/storage-blob";
 import { AccountSASSignatureValues } from "@azure/storage-blob";
 import * as azureStorageShare from "@azure/storage-file-share";
 import * as azureStorage from "azure-storage";
-import { ISubscriptionContext } from "vscode-azureextensionui";
 
-export interface IStorageRoot extends ISubscriptionContext {
+export interface IStorageRoot {
     storageAccountName: string;
     storageAccountId: string;
     isEmulated: boolean;

@@ -4,19 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from '../../constants';
-import { IStorageRoot } from "../IStorageRoot";
+import { IStorageRoot } from '../IStorageRoot';
+import { TableGroupTreeItem } from './TableGroupTreeItem';
 
-export class TableTreeItem extends AzureTreeItem<IStorageRoot> {
+export class TableTreeItem extends AzExtTreeItem {
+    public parent: TableGroupTreeItem;
     constructor(
-        parent: AzureParentTreeItem,
+        parent: TableGroupTreeItem,
         public readonly tableName: string) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureTable.svg')
         };
+    }
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
     }
 
     public label: string = this.tableName;

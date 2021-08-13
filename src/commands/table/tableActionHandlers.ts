@@ -18,7 +18,7 @@ async function openTableInStorageExplorer(_context: IActionContext, treeItem: Ta
     const resourceType = "Azure.Table";
     const resourceName = treeItem.tableName;
 
-    await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(accountId, treeItem.subscription.subscriptionId, resourceType, resourceName);
 }
 
 export async function deleteTable(context: IActionContext, treeItem?: TableTreeItem): Promise<void> {

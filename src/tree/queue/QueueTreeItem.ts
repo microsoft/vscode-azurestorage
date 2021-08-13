@@ -5,19 +5,25 @@
 
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
+import { QueueGroupTreeItem } from "./QueueGroupTreeItem";
 
-export class QueueTreeItem extends AzureTreeItem<IStorageRoot> {
+export class QueueTreeItem extends AzExtTreeItem {
+    public parent: QueueGroupTreeItem;
     constructor(
-        parent: AzureParentTreeItem,
+        parent: QueueGroupTreeItem,
         public readonly queue: azureStorage.QueueService.QueueResult) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
         };
+    }
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
     }
 
     public label: string = this.queue.name;
