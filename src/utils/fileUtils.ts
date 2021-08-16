@@ -7,8 +7,9 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as mime from 'mime';
 import { posix } from 'path';
 import { ProgressLocation, window } from "vscode";
-import { AzureParentTreeItem, IActionContext, ICreateChildImplContext } from "vscode-azureextensionui";
-import { IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
+import { IActionContext, ICreateChildImplContext } from "vscode-azureextensionui";
+import { DirectoryTreeItem } from '../tree/fileShare/DirectoryTreeItem';
+import { FileShareTreeItem, IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
 import { IStorageRoot } from "../tree/IStorageRoot";
 import { doesDirectoryExist } from './directoryUtils';
@@ -30,7 +31,7 @@ export function createFileClient(root: IStorageRoot, shareName: string, director
     return directoryClient.getFileClient(fileName);
 }
 
-export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem> {
+export async function askAndCreateEmptyTextFile(parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem> {
     const fileName: string = context.childName || await getFileOrDirectoryName(context, parent, directoryPath, shareName);
     return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(fileName);
@@ -40,7 +41,7 @@ export async function askAndCreateEmptyTextFile(parent: AzureParentTreeItem<ISto
     });
 }
 
-export async function getFileOrDirectoryName(context: IActionContext, parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string, value?: string): Promise<string> {
+export async function getFileOrDirectoryName(context: IActionContext, parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string, value?: string): Promise<string> {
     return await context.ui.showInputBox({
         value,
         placeHolder: localize('enterName', 'Enter a name for the new resource'),
@@ -56,7 +57,7 @@ export async function getFileOrDirectoryName(context: IActionContext, parent: Az
     });
 }
 
-export async function doesFileExist(fileName: string, parent: AzureParentTreeItem<IStorageRoot>, directoryPath: string, shareName: string): Promise<boolean> {
+export async function doesFileExist(fileName: string, parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string): Promise<boolean> {
     const fileService: azureStorageShare.ShareFileClient = createFileClient(parent.root, shareName, directoryPath, fileName);
     try {
         await fileService.getProperties();

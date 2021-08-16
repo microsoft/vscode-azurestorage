@@ -6,17 +6,19 @@
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
 import { createFileClient, deleteFile } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
-import { IStorageRoot } from "../IStorageRoot";
-import { IDirectoryDeleteContext } from "./DirectoryTreeItem";
+import { IStorageRoot } from '../IStorageRoot';
+import { DirectoryTreeItem, IDirectoryDeleteContext } from "./DirectoryTreeItem";
+import { FileShareTreeItem } from './FileShareTreeItem';
 
-export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
+export class FileTreeItem extends AzExtTreeItem implements ICopyUrl {
+    public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
-        parent: AzureParentTreeItem,
+        parent: FileShareTreeItem | DirectoryTreeItem,
         public readonly fileName: string,
         public readonly directoryPath: string,
         public readonly shareName: string) {
@@ -27,6 +29,10 @@ export class FileTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
     public label: string = this.fileName;
     public static contextValue: string = 'azureFile';
     public contextValue: string = FileTreeItem.contextValue;
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
+    }
 
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('file');

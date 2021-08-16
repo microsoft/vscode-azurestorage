@@ -6,7 +6,7 @@
 import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError, TreeItemIconPath } from "vscode-azureextensionui";
+import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError, TreeItemIconPath } from "vscode-azureextensionui";
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
 import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
@@ -16,9 +16,10 @@ import { IStorageRoot } from "../IStorageRoot";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 
-export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> implements ICopyUrl {
+export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl {
     public static contextValue: string = 'azureBlobDirectory';
     public contextValue: string = BlobDirectoryTreeItem.contextValue;
+    public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
 
     /**
      * The name (and only the name) of the directory
@@ -40,6 +41,10 @@ export class BlobDirectoryTreeItem extends AzureParentTreeItem<IStorageRoot> imp
 
         this.dirPath = dirPath;
         this.dirName = path.basename(dirPath);
+    }
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
     }
 
     public get label(): string {

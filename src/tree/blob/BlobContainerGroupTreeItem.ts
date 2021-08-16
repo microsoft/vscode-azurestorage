@@ -6,7 +6,7 @@
 import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { createBlobContainerClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
@@ -15,13 +15,14 @@ import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 
-export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
+export class BlobContainerGroupTreeItem extends AzExtParentTreeItem {
     private _continuationToken: string | undefined;
 
     public label: string = "Blob Containers";
     public readonly childTypeLabel: string = "Blob Container";
     public static contextValue: string = 'azureBlobContainerGroup';
     public contextValue: string = BlobContainerGroupTreeItem.contextValue;
+    public parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem;
 
     public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
         super(parent);
@@ -29,6 +30,10 @@ export class BlobContainerGroupTreeItem extends AzureParentTreeItem<IStorageRoot
             light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
         };
+    }
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {

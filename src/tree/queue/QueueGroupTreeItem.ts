@@ -6,7 +6,7 @@
 import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { AzExtTreeItem, AzureParentTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from "../../utils/localize";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
@@ -14,13 +14,14 @@ import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { QueueTreeItem } from './QueueTreeItem';
 
-export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
+export class QueueGroupTreeItem extends AzExtParentTreeItem {
     private _continuationToken: azureStorage.common.ContinuationToken | undefined;
 
     public label: string = "Queues";
     public readonly childTypeLabel: string = "Queue";
     public static contextValue: string = 'azureQueueGroup';
     public contextValue: string = QueueGroupTreeItem.contextValue;
+    public parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem;
 
     public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
         super(parent);
@@ -28,6 +29,10 @@ export class QueueGroupTreeItem extends AzureParentTreeItem<IStorageRoot> {
             light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
         };
+    }
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
     }
 
     async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {

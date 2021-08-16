@@ -18,7 +18,7 @@ async function openQueueInStorageExplorer(_context: IActionContext, treeItem: Qu
     const resourceType = "Azure.Queue";
     const resourceName = treeItem.queue.name;
 
-    await storageExplorerLauncher.openResource(accountId, treeItem.root.subscriptionId, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(accountId, treeItem.subscription.subscriptionId, resourceType, resourceName);
 }
 
 export async function deleteQueue(context: IActionContext, treeItem?: QueueTreeItem): Promise<void> {

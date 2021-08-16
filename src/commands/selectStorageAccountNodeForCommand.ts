@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { AzureTreeItem, IActionContext } from "vscode-azureextensionui";
+import { AzExtTreeItem, IActionContext } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { AttachedStorageAccountTreeItem } from '../tree/AttachedStorageAccountTreeItem';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
@@ -19,7 +19,7 @@ import { localize } from '../utils/localize';
  *   4) anything else, then throw an internal error
  */
 export async function selectStorageAccountTreeItemForCommand(
-    treeItem: AzureTreeItem | undefined,
+    treeItem: AzExtTreeItem | undefined,
     context: ISelectStorageAccountContext,
     options: { mustBeWebsiteCapable: boolean, configureWebsite: boolean }
 ): Promise<StorageAccountTreeItem> {

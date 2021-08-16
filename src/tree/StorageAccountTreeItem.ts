@@ -11,7 +11,7 @@ import * as azureStorage from "azure-storage";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, MessageItem, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, AzureWizard, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
 import { createStorageClient } from '../utils/azureClients';
@@ -37,7 +37,7 @@ export type WebsiteHostingStatus = {
     errorDocument404Path?: string;
 };
 
-export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
+export class StorageAccountTreeItem extends AzExtParentTreeItem {
     public key: StorageAccountKeyWrapper;
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
@@ -49,12 +49,12 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     private _root: IStorageRoot;
 
     private constructor(
-        parent: AzureParentTreeItem,
+        parent: AzExtParentTreeItem,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly storageManagementClient: StorageManagementClient) {
         super(parent);
         this.id = this.storageAccount.id;
-        this._root = this.createRoot(parent.root);
+        this._root = this.createRoot();
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
@@ -65,7 +65,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         this._tableGroupTreeItem = new TableGroupTreeItem(this);
     }
 
-    public static async createStorageAccountTreeItem(parent: AzureParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
+    public static async createStorageAccountTreeItem(parent: AzExtParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
         const ti = new StorageAccountTreeItem(parent, storageAccount, client);
         // make sure key is initialized
         await ti.refreshKey();
@@ -81,9 +81,9 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
     public contextValue: string = StorageAccountTreeItem.contextValue;
 
     // eslint-disable-next-line @typescript-eslint/require-await
-    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzureTreeItem<IStorageRoot>[]> {
+    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
         const primaryEndpoints = this.storageAccount.primaryEndpoints;
-        const groupTreeItems: AzureTreeItem<IStorageRoot>[] = [];
+        const groupTreeItems: AzExtTreeItem[] = [];
 
         if (primaryEndpoints.blob) {
             groupTreeItems.push(this._blobContainerGroupTreeItem);
@@ -127,7 +127,7 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
             const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
-            const storageManagementClient = await createStorageClient(this.root);
+            const storageManagementClient = await createStorageClient([context, this]);
             const parsedId = this.parseAzureResourceId(this.storageAccount.id);
             const resourceGroupName = parsedId.resourceGroups;
 
@@ -144,8 +144,8 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
         }
     }
 
-    private createRoot(subRoot: ISubscriptionContext): IStorageRoot {
-        return Object.assign({}, subRoot, {
+    private createRoot(): IStorageRoot {
+        return {
             storageAccountName: this.storageAccount.name,
             storageAccountId: this.storageAccount.id,
             isEmulated: false,
@@ -172,11 +172,11 @@ export class StorageAccountTreeItem extends AzureParentTreeItem<IStorageRoot> {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 return azureStorage.createTableService(this.storageAccount.name, this.key.value, <any>this.storageAccount.primaryEndpoints.table).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
             }
-        });
+        };
     }
 
     getConnectionString(): string {
-        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${nonNullProp(this.root.environment, 'storageEndpointSuffix')}`;
+        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${nonNullProp(this.subscription.environment, 'storageEndpointSuffix')}`;
     }
 
     async getKeys(): Promise<StorageAccountKeyWrapper[]> {

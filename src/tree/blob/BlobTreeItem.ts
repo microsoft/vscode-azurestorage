@@ -8,7 +8,7 @@ import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob"
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
-import { AzureParentTreeItem, AzureTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
+import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { storageExplorerDownloadUrl } from "../../constants";
 import { ext } from "../../extensionVariables";
@@ -17,10 +17,13 @@ import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
+import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
+import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 
-export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUrl {
+export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl {
     public static contextValue: string = 'azureBlob';
     public contextValue: string = BlobTreeItem.contextValue;
+    public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
 
     /**
      * The name (and only the name) of the directory
@@ -32,11 +35,15 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
      */
     public readonly blobPath: string;
 
-    constructor(parent: AzureParentTreeItem, blobPath: string, public readonly container: azureStorageBlob.ContainerItem) {
+    constructor(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string, public readonly container: azureStorageBlob.ContainerItem) {
         super(parent);
         this.commandId = 'azureStorage.editBlob';
         this.blobPath = blobPath;
         this.blobName = path.basename(blobPath);
+    }
+
+    public get root(): IStorageRoot {
+        return this.parent.root;
     }
 
     public get label(): string {
@@ -79,7 +86,7 @@ export class BlobTreeItem extends AzureTreeItem<IStorageRoot> implements ICopyUr
         if (props.blobType && !props.blobType.toLocaleLowerCase().startsWith("block")) {
             context.telemetry.properties.invalidBlobTypeForDownload = 'true';
             const message: string = localize('pleaseUseSE', 'Please use [Storage Explorer]({0}) for blobs of type "{1}".', storageExplorerDownloadUrl, props.blobType);
-            askOpenInStorageExplorer(context, message, this.root.storageAccountId, this.root.subscriptionId, 'Azure.BlobContainer', this.container.name);
+            askOpenInStorageExplorer(context, message, this.root.storageAccountId, this.subscription.subscriptionId, 'Azure.BlobContainer', this.container.name);
         }
     }
 }
