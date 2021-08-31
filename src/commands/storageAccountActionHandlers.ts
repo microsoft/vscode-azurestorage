@@ -52,6 +52,7 @@ export async function copyConnectionString(context: IActionContext, treeItem?: S
 }
 
 export async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {
+    context.telemetry.eventVersion = 2;
     let sourcePath: string | undefined;
     let destTreeItem: StorageAccountTreeItem | BlobContainerTreeItem | undefined;
 
