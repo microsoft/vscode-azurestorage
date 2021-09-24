@@ -21,7 +21,15 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
     }
 
     public async execute(wizardContext: T, progress: NotificationProgress): Promise<void> {
-        const newLocation = await LocationListStep.getLocation(wizardContext, storageProvider);
+        const newLocation = await LocationListStep.getLocation(wizardContext, storageProvider, true);
+        let location: string = newLocation.name;
+        let extendedLocation: StorageManagementModels.ExtendedLocation | undefined;
+        if (newLocation.type === 'EdgeZone') {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            location = newLocation.metadata!.homeLocation!;
+            extendedLocation = <StorageManagementModels.ExtendedLocation>newLocation;
+        }
+
         const newName: string = nonNullProp(wizardContext, 'newStorageAccountName');
         const rgName: string = nonNullProp(nonNullProp(wizardContext, 'resourceGroup'), 'name');
         const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
@@ -35,7 +43,9 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
             {
                 sku: { name: newSkuName },
                 kind: this._defaults.kind,
-                location: newLocation.name,
+                // TODO: getting error 'Supplied location westus is not valid.'. This code seems to work for VMs, though
+                location,
+                extendedLocation,
                 enableHttpsTrafficOnly: true
             }
         );

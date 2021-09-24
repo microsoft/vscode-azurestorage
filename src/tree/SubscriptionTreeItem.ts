@@ -50,6 +50,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzExtTreeItem> {
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.subscription);
+        wizardContext.includeExtendedLocations = true;
         const defaultLocation: string | undefined = wizardContext.isCustomCloud ? undefined : 'westus';
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
