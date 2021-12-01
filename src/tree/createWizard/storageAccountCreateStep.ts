@@ -22,13 +22,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
 
     public async execute(wizardContext: T, progress: NotificationProgress): Promise<void> {
         const newLocation = await LocationListStep.getLocation(wizardContext, storageProvider, true);
-        let location: string = newLocation.name;
-        let extendedLocation: StorageManagementModels.ExtendedLocation | undefined;
-        if (newLocation.type === 'EdgeZone') {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            location = newLocation.metadata!.homeLocation!;
-            extendedLocation = <StorageManagementModels.ExtendedLocation>newLocation;
-        }
+        const { location, extendedLocation } = LocationListStep.getExtendedLocation(newLocation);
 
         const newName: string = nonNullProp(wizardContext, 'newStorageAccountName');
         const rgName: string = nonNullProp(nonNullProp(wizardContext, 'resourceGroup'), 'name');
