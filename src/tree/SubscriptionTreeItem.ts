@@ -7,10 +7,11 @@ import { StorageManagementClient } from '@azure/arm-storage';
 // eslint-disable-next-line import/no-internal-modules
 import { StorageAccountsListNextResponse } from '@azure/arm-storage/esm/models';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
+import { AzExtLocation, AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { storageProvider } from '../constants';
 import { createStorageClient } from '../utils/azureClients';
+import { localize } from '../utils/localize';
 import { nonNull, StorageAccountWrapper } from '../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
 import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigureStep';
@@ -50,6 +51,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<AzExtTreeItem> {
         const wizardContext: IStorageAccountWizardContext = Object.assign(context, this.subscription);
+        wizardContext.includeExtendedLocations = true;
         const defaultLocation: string | undefined = wizardContext.isCustomCloud ? undefined : 'westus';
         const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
         const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
@@ -64,6 +66,9 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             promptSteps.push(new ResourceGroupListStep());
             promptSteps.push(new StaticWebsiteEnableStep());
             LocationListStep.addStep(wizardContext, promptSteps);
+            LocationListStep.getQuickPickDescription = (location: AzExtLocation) => {
+                return location.metadata?.regionCategory === 'Extended' ? localize('onlyPremiumSupported', 'Only supports Premium storage accounts') : undefined;
+            }
         } else {
             executeSteps.push(new ResourceGroupCreateStep());
             Object.assign(wizardContext, {

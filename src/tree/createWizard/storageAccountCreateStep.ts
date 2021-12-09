@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { AzureWizardExecuteStep, INewStorageAccountDefaults, IStorageAccountWizardContext, LocationListStep } from 'vscode-azureextensionui';
+import { AzureWizardExecuteStep, INewStorageAccountDefaults, IStorageAccountWizardContext, LocationListStep, StorageAccountPerformance } from 'vscode-azureextensionui';
 import { NotificationProgress, storageProvider } from '../../constants';
 import { ext } from '../../extensionVariables';
 import { createStorageClient } from '../../utils/azureClients';
@@ -21,10 +21,14 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
     }
 
     public async execute(wizardContext: T, progress: NotificationProgress): Promise<void> {
-        const newLocation = await LocationListStep.getLocation(wizardContext, storageProvider);
+        const newLocation = await LocationListStep.getLocation(wizardContext, storageProvider, true);
+        const { location, extendedLocation } = LocationListStep.getExtendedLocation(newLocation);
+
+        // Edge Zones only support premium storage accounts
+        const performance: StorageAccountPerformance = extendedLocation ? StorageAccountPerformance.Premium : this._defaults.performance;
         const newName: string = nonNullProp(wizardContext, 'newStorageAccountName');
         const rgName: string = nonNullProp(nonNullProp(wizardContext, 'resourceGroup'), 'name');
-        const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${this._defaults.performance}_${this._defaults.replication}`;
+        const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${performance}_${this._defaults.replication}`;
         const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation.name}" with sku "${newSkuName}"...`;
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
@@ -35,7 +39,8 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
             {
                 sku: { name: newSkuName },
                 kind: this._defaults.kind,
-                location: newLocation.name,
+                location,
+                extendedLocation,
                 enableHttpsTrafficOnly: true
             }
         );
