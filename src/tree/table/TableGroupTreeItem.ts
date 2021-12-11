@@ -57,7 +57,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
         return tablesResponse
             .filter(tableItem => tableItem.name !== undefined)
             .map((tableItem) => {
-                return new TableTreeItem( this, tableItem.name as string);
+                return new TableTreeItem(this, tableItem.name as string);
             });
     }
 
@@ -99,7 +99,6 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
         const tableServiceClient = this.root.createTableServiceClient();
         await tableServiceClient.createTable(name);
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const tablesResponse = await this.listTables();
         let createdTable: azureDataTables.TableItem | undefined;
         for (const table of tablesResponse) {
