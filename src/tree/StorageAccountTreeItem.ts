@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import * as azureDataTables from '@azure/data-tables';
 import * as azureStorageBlob from '@azure/storage-blob';
 import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
-import * as azureStorage from "azure-storage";
+import * as azureStorageQueue from '@azure/storage-queue';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, MessageItem, window } from 'vscode';
@@ -164,13 +165,13 @@ export class StorageAccountTreeItem extends AzExtParentTreeItem {
                 const credential = new azureStorageShare.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
                 return new azureStorageShare.ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
             },
-            createQueueService: () => {
-                return azureStorage.createQueueService(this.storageAccount.name, this.key.value, this.storageAccount.primaryEndpoints.queue).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+            createQueueServiceClient: () => {
+                const credential = new azureStorageQueue.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
+                return new azureStorageQueue.QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
             },
-            createTableService: () => {
-                // The typings for createTableService are incorrect
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                return azureStorage.createTableService(this.storageAccount.name, this.key.value, <any>this.storageAccount.primaryEndpoints.table).withFilter(new azureStorage.ExponentialRetryPolicyFilter());
+            createTableServiceClient: () => {
+                const credential = new azureDataTables.AzureNamedKeyCredential(this.storageAccount.name, this.key.value);
+                return new azureDataTables.TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
             }
         };
     }

@@ -3,20 +3,20 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import * as azureDataTables from '@azure/data-tables';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from "../../utils/localize";
-import { nonNull } from "../../utils/storageWrappers";
+import { nonNull } from '../../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { TableTreeItem } from './TableTreeItem';
 
 export class TableGroupTreeItem extends AzExtParentTreeItem {
-    private _continuationToken: azureStorage.TableService.ListTablesContinuationToken | undefined;
+    private _continuationToken: string | undefined;
 
     public label: string = "Tables";
     public readonly childTypeLabel: string = "Table";
@@ -41,10 +41,9 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        let tables: azureStorage.TableService.ListTablesResponse;
+        let tablesResponse: azureDataTables.TableItemResultPage;
         try {
-            // currentToken argument typed incorrectly in SDK
-            tables = await this.listTables(<azureStorage.TableService.ListTablesContinuationToken>this._continuationToken);
+            tablesResponse = await this.listTables(this._continuationToken);
         } catch (error) {
             if (parseError(error).errorType === 'NotImplemented') {
                 throw new Error(localize('storageAccountDoesNotSupportTables', 'This storage account does not support tables.'));
@@ -53,31 +52,25 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
             }
         }
 
-        const { entries, continuationToken } = tables;
-        this._continuationToken = continuationToken;
+        this._continuationToken = tablesResponse.continuationToken;
 
-        return entries.map((table: string) => {
-            return new TableTreeItem(
-                this,
-                table);
-        });
+        return tablesResponse
+            .filter(tableItem => tableItem.name !== undefined)
+            .map((tableItem) => {
+                return new TableTreeItem( this, tableItem.name as string);
+            });
     }
 
     hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
     }
 
-    async listTables(currentToken: azureStorage.TableService.ListTablesContinuationToken): Promise<azureStorage.TableService.ListTablesResponse> {
-        return new Promise((resolve, reject) => {
-            const tableService = this.root.createTableService();
-            tableService.listTablesSegmented(currentToken, { maxResults: maxPageSize }, (err: Error | undefined, result: azureStorage.TableService.ListTablesResponse) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+    async listTables(continuationToken?: string ): Promise<azureDataTables.TableItemResultPage> {
+        const tableServiceClient = this.root.createTableServiceClient();
+        const response: AsyncIterableIterator<azureDataTables.TableItemResultPage> = tableServiceClient.listTables().byPage({ continuationToken, maxPageSize });
+
+       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+       return (await response.next()).value;
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<TableTreeItem> {
@@ -91,7 +84,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
                 context.showCreatingTreeItem(tableName);
                 progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
                 const table = await this.createTable(tableName);
-                return new TableTreeItem(this, nonNull(table.TableName, "TableName"));
+                return new TableTreeItem(this, nonNull(table.name, 'name'));
             });
         }
 
@@ -102,21 +95,25 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
         return contextValue === TableTreeItem.contextValue;
     }
 
-    private async createTable(name: string): Promise<azureStorage.TableService.TableResult> {
-        return new Promise((resolve, reject) => {
-            const tableService = this.root.createTableService();
-            tableService.createTable(name, (err: Error | undefined, result: azureStorage.TableService.TableResult) => {
-                if (err) {
-                    if (parseError(err).errorType === "TableAlreadyExists") {
-                        reject(new Error('The table specified already exists.'));
-                    } else {
-                        reject(err);
-                    }
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+    private async createTable(name: string): Promise<azureDataTables.TableItem> {
+        const tableServiceClient = this.root.createTableServiceClient();
+        await tableServiceClient.createTable(name);
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const tablesResponse = await this.listTables();
+        let createdTable: azureDataTables.TableItem | undefined;
+        for (const table of tablesResponse) {
+            if (table.name === name) {
+                createdTable = table;
+                break;
+            }
+        }
+
+        if (!createdTable) {
+            throw new Error(`Could not create table "${name}".`);
+        }
+
+        return createdTable;
     }
 
     private static validateTableName(name: string): string | undefined | null {

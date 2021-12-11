@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageQueue from '@azure/storage-queue';
 import * as path from 'path';
 import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
@@ -14,7 +14,7 @@ export class QueueTreeItem extends AzExtTreeItem {
     public parent: QueueGroupTreeItem;
     constructor(
         parent: QueueGroupTreeItem,
-        public readonly queue: azureStorage.QueueService.QueueResult) {
+        public readonly queue: azureStorageQueue.QueueItem) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
@@ -34,13 +34,8 @@ export class QueueTreeItem extends AzExtTreeItem {
         const message: string = `Are you sure you want to delete queue '${this.label}' and all its contents?`;
         const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const queueService = this.root.createQueueService();
-            await new Promise<void>((resolve, reject) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                queueService.deleteQueue(this.queue.name, (err?: any) => {
-                    err ? reject(err) : resolve();
-                });
-            });
+            const queueServiceClient = this.root.createQueueServiceClient();
+            await queueServiceClient.deleteQueue(this.queue.name);
         } else {
             throw new UserCancelledError();
         }

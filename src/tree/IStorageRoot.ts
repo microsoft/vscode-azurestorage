@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementModels } from "@azure/arm-storage";
+import * as azureDataTables from '@azure/data-tables';
 import * as azureStorageBlob from "@azure/storage-blob";
 import { AccountSASSignatureValues } from "@azure/storage-blob";
 import * as azureStorageShare from "@azure/storage-file-share";
-import * as azureStorage from "azure-storage";
+import * as azureStorageQueue from '@azure/storage-queue';
 
 export interface IStorageRoot {
     storageAccountName: string;
@@ -17,6 +18,6 @@ export interface IStorageRoot {
     generateSasToken(accountSASSignatureValues: AccountSASSignatureValues): string;
     createBlobServiceClient(): azureStorageBlob.BlobServiceClient;
     createShareServiceClient(): azureStorageShare.ShareServiceClient;
-    createQueueService(): azureStorage.QueueService;
-    createTableService(): azureStorage.TableService;
+    createQueueServiceClient(): azureStorageQueue.QueueServiceClient;
+    createTableServiceClient(): azureDataTables.TableServiceClient;
 }

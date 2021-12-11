@@ -3,10 +3,11 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import * as azureDataTables from '@azure/data-tables';
 import * as azureStorageBlob from '@azure/storage-blob';
 import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
-import * as azureStorage from "azure-storage";
+import * as azureStorageQueue from '@azure/storage-queue';
 import * as path from 'path';
 import { AzExtParentTreeItem, AzExtTreeItem } from 'vscode-azureextensionui';
 import { emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
@@ -138,11 +139,11 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         return azureStorageShare.ShareServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
-    public createQueueService(): azureStorage.QueueService {
-        return new azureStorage.QueueService(this._connectionString);
+    public createQueueServiceClient(): azureStorageQueue.QueueServiceClient {
+        return azureStorageQueue.QueueServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
-    public createTableService(): azureStorage.TableService {
-        return new azureStorage.TableService(this._connectionString);
+    public createTableServiceClient(): azureDataTables.TableServiceClient {
+        return azureDataTables.TableServiceClient.fromConnectionString(this._connectionString, { retryOptions: { maxRetries: this._serviceClientPipelineOptions.retryOptions.maxTries } });
     }
 }
