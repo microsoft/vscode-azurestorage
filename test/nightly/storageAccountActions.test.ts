@@ -158,7 +158,7 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
             });
         });
         const connectionString: string = await getConnectionString(resourceName);
-        const tableClient = new azureDataTables.TableClient(connectionString, tableName);
+        const tableClient = azureDataTables.TableClient.fromConnectionString(connectionString, tableName);
         assert.ok(await doesTableExist(tableClient));
     });
 
@@ -170,7 +170,7 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
             });
         });
         const connectionString: string = await getConnectionString(resourceName);
-        const tableClient = new azureDataTables.TableClient(connectionString, tableName);
+        const tableClient = azureDataTables.TableClient.fromConnectionString(connectionString, tableName);
         assert.ok(!(await doesTableExist(tableClient)));
     });
 
