@@ -106,7 +106,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem {
         const queueServiceClient = this.root.createQueueServiceClient();
         await queueServiceClient.createQueue(name);
 
-        const queuesResponse: azureStorageQueue.ListQueuesSegmentResponse= await this.listQueues();
+        const queuesResponse: azureStorageQueue.ListQueuesSegmentResponse = await this.listQueues();
         let createdQueue: azureStorageQueue.QueueItem | undefined;
         for (const queue of queuesResponse.queueItems || []) {
             if (queue.name === name) {
