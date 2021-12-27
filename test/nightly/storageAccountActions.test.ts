@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementModels } from '@azure/arm-storage';
+import * as azureDataTables from '@azure/data-tables';
 import * as azureStorageBlob from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
+import * as azureStorageQueue from '@azure/storage-queue';
 import * as assert from 'assert';
-import { createQueueService, createTableService, QueueService, StorageServiceClient, TableService } from 'azure-storage';
 import * as vscode from 'vscode';
 import { runWithTestActionContext } from 'vscode-azureextensiondev';
 import { copyConnectionString, copyPrimaryKey, createBlobContainer, createFileShare, createQueue, createStorageAccount, createStorageAccountAdvanced, createTable, deleteBlobContainer, deleteFileShare, deleteQueue, deleteStorageAccount, deleteTable, DialogResponses, getRandomHexString } from '../../extension.bundle';
@@ -133,9 +134,8 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
             });
         });
         const connectionString: string = await getConnectionString(resourceName);
-        const queueService: QueueService = createQueueService(connectionString);
-        const createdQueue: QueueService.QueueResult = await doesResourceExist<QueueService.QueueResult>(queueService, 'doesQueueExist', queueName);
-        assert.ok(createdQueue.exists);
+        const queueClient = new azureStorageQueue.QueueClient(connectionString, queueName);
+        assert.ok(await queueClient.exists());
     });
 
     test("deleteQueue", async () => {
@@ -146,9 +146,8 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
             });
         });
         const connectionString: string = await getConnectionString(resourceName);
-        const queueService: QueueService = createQueueService(connectionString);
-        const createdQueue: QueueService.QueueResult = await doesResourceExist<QueueService.QueueResult>(queueService, 'doesQueueExist', queueName);
-        assert.ok(!createdQueue.exists);
+        const queueClient = new azureStorageQueue.QueueClient(connectionString, queueName);
+        assert.ok(!(await queueClient.exists()));
     });
 
     test("createTable", async () => {
@@ -159,24 +158,20 @@ suite('Storage Account Actions', function (this: Mocha.Suite): void {
             });
         });
         const connectionString: string = await getConnectionString(resourceName);
-        const tableService: TableService = createTableService(connectionString);
-        const createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
-        assert.ok(createdTable.exists);
+        const tableClient = azureDataTables.TableClient.fromConnectionString(connectionString, tableName);
+        assert.ok(await doesTableExist(tableClient));
     });
 
     test("deleteTable", async () => {
         await validateAccountExists(resourceName, resourceName);
-        const connectionString: string = await getConnectionString(resourceName);
-        const tableService: TableService = createTableService(connectionString);
-        let createdTable: TableService.TableResult = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
-        assert.ok(createdTable.exists);
         await runWithTestActionContext('deleteTable', async context => {
             await context.ui.runWithInputs([attachedRegex, resourceName, tableName, DialogResponses.deleteResponse.title], async () => {
                 await deleteTable(context);
             });
         });
-        createdTable = await doesResourceExist<TableService.TableResult>(tableService, 'doesTableExist', tableName);
-        assert.ok(!createdTable.exists);
+        const connectionString: string = await getConnectionString(resourceName);
+        const tableClient = azureDataTables.TableClient.fromConnectionString(connectionString, tableName);
+        assert.ok(!(await doesTableExist(tableClient)));
     });
 
     test("deleteStorageAccount", async () => {
@@ -226,22 +221,19 @@ async function validateAccountExists(resourceGroupName: string, accountName: str
     assert.ok(createdAccount);
 }
 
-// validate the resource exists or not
-async function doesResourceExist<T>(service: StorageServiceClient, fn: string, name: string): Promise<T> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-    return new Promise((resolve, reject) => service[fn](name, (err: Error | undefined, res: T) => {
-        if (err) {
-            reject(err);
-        } else {
-            resolve(res);
-        }
-    }));
-}
-
 // validate the file share exists or not
 async function doesShareExist(shareClient: azureStorageShare.ShareClient): Promise<boolean> {
     try {
         await shareClient.getProperties();
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function doesTableExist(tableClient: azureDataTables.TableClient): Promise<boolean> {
+    try {
+        await tableClient.getAccessPolicy();
         return true;
     } catch {
         return false;

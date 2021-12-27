@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorage from "azure-storage";
+import * as azureStorageQueue from '@azure/storage-queue';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
@@ -15,7 +15,7 @@ import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { QueueTreeItem } from './QueueTreeItem';
 
 export class QueueGroupTreeItem extends AzExtParentTreeItem {
-    private _continuationToken: azureStorage.common.ContinuationToken | undefined;
+    private _continuationToken: string | undefined;
 
     public label: string = "Queues";
     public readonly childTypeLabel: string = "Queue";
@@ -40,9 +40,9 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem {
             this._continuationToken = undefined;
         }
 
-        let queues: azureStorage.QueueService.ListQueueResult;
+        let queuesResponse: azureStorageQueue.ListQueuesSegmentResponse;
         try {
-            queues = await this.listQueues(<azureStorage.common.ContinuationToken>this._continuationToken);
+            queuesResponse = await this.listQueues(this._continuationToken);
         } catch (error) {
             const errorType: string = parseError(error).errorType;
             if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
@@ -59,31 +59,25 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem {
             }
         }
 
-        const { entries, continuationToken } = queues;
-        this._continuationToken = continuationToken;
+        this._continuationToken = queuesResponse.continuationToken;
 
-        return entries.map((queue: azureStorage.QueueService.QueueResult) => {
+        return queuesResponse.queueItems?.map((queue: azureStorageQueue.QueueItem) => {
             return new QueueTreeItem(
                 this,
                 queue);
-        });
+        }) || [];
     }
 
     hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
     }
 
-    async listQueues(currentToken: azureStorage.common.ContinuationToken): Promise<azureStorage.QueueService.ListQueueResult> {
-        return new Promise((resolve, reject) => {
-            const queueService = this.root.createQueueService();
-            queueService.listQueuesSegmented(currentToken, { maxResults: maxPageSize }, (err: Error | undefined, result: azureStorage.QueueService.ListQueueResult) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+    async listQueues(continuationToken?: string): Promise<azureStorageQueue.ListQueuesSegmentResponse> {
+        const queueServiceClient = this.root.createQueueServiceClient();
+        const response: AsyncIterableIterator<azureStorageQueue.ServiceListQueuesSegmentResponse> = queueServiceClient.listQueues().byPage({ continuationToken, maxPageSize });
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return (await response.next()).value;
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<QueueTreeItem> {
@@ -96,8 +90,8 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem {
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
                 context.showCreatingTreeItem(queueName);
                 progress.report({ message: `Azure Storage: Creating queue '${queueName}'` });
-                const share = await this.createQueue(queueName);
-                return new QueueTreeItem(this, share);
+                const queueCreateResponse = await this.createQueue(queueName);
+                return new QueueTreeItem(this, queueCreateResponse);
             });
         }
 
@@ -108,24 +102,24 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem {
         return contextValue === QueueTreeItem.contextValue;
     }
 
-    private async createQueue(name: string): Promise<azureStorage.QueueService.QueueResult> {
-        return new Promise((resolve, reject) => {
-            const queueService = this.root.createQueueService();
-            queueService.createQueue(name, (err: Error | undefined, result: azureStorage.QueueService.QueueResult, response?: azureStorage.ServiceResponse) => {
-                if (err) {
-                    reject(err);
-                } else if (response && response.statusCode === 204) {
-                    // When a queue with the specified name already exists, the Queue service checks
-                    // the metadata associated with the existing queue. If the existing metadata is
-                    // identical to the metadata specified on the Create Queue request, status code
-                    // 204 (No Content) is returned.
-                    // Source: https://msdn.microsoft.com/en-us/library/azure/dd179342.aspx
-                    reject(new Error('The queue specified already exists.'));
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+    private async createQueue(name: string): Promise<azureStorageQueue.QueueItem> {
+        const queueServiceClient = this.root.createQueueServiceClient();
+        await queueServiceClient.createQueue(name);
+
+        const queuesResponse: azureStorageQueue.ListQueuesSegmentResponse = await this.listQueues();
+        let createdQueue: azureStorageQueue.QueueItem | undefined;
+        for (const queue of queuesResponse.queueItems || []) {
+            if (queue.name === name) {
+                createdQueue = queue;
+                break;
+            }
+        }
+
+        if (!createdQueue) {
+            throw new Error(localize('couldNotCreateQueue', `Could not create queue "${name}".`));
+        }
+
+        return createdQueue;
     }
 
     private static validateQueueName(name: string): string | undefined | null {

@@ -33,13 +33,8 @@ export class TableTreeItem extends AzExtTreeItem {
         const message: string = `Are you sure you want to delete table '${this.label}' and all its contents?`;
         const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const tableService = this.root.createTableService();
-            await new Promise<void>((resolve, reject) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                tableService.deleteTable(this.tableName, (err?: any) => {
-                    err ? reject(err) : resolve();
-                });
-            });
+            const tableServiceClient = this.root.createTableServiceClient();
+            await tableServiceClient.deleteTable(this.tableName);
         } else {
             throw new UserCancelledError();
         }
