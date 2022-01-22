@@ -855,7 +855,7 @@
         "mime": "^2.4.4",
         "open": "^8.0.4",
         "p-retry": "^4.2.0",
-        "vscode-azureextensionui": "^0.49.0",
+        "vscode-azureextensionui": "file:../vscode-azuretools/ui/vscode-azureextensionui-0.49.2.tgz",
         "vscode-nls": "^4.1.1",
         "winreg": "^1.2.3"
     },
