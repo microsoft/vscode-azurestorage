@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { AzureWizardExecuteStep, INewStorageAccountDefaults, IStorageAccountWizardContext, LocationListStep, StorageAccountPerformance } from 'vscode-azureextensionui';
+import { AzureWizardExecuteStep, INewStorageAccountDefaults, IStorageAccountWizardContext, LocationListStep, StorageAccountKind, StorageAccountPerformance } from 'vscode-azureextensionui';
 import { NotificationProgress, storageProvider } from '../../constants';
 import { ext } from '../../extensionVariables';
 import { createStorageClient } from '../../utils/azureClients';
@@ -38,7 +38,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
             newName,
             {
                 sku: { name: newSkuName },
-                kind: this._defaults.kind,
+                kind: performance === StorageAccountPerformance.Premium ? StorageAccountKind.BlockBlobStorage : this._defaults.kind,
                 location,
                 extendedLocation,
                 enableHttpsTrafficOnly: true
