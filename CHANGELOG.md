@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.13.0 - 2022-01-25
+
+### Added
+- Support for creating storage accounts in extended regions using Advanced create.
+
 ### Changed
 - Minimum version of VS Code is now 1.57.0
 
