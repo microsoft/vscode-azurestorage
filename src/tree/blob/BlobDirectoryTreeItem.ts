@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from "@azure/storage-blob";
+import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError, TreeItemIconPath } from "vscode-azureextensionui";
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
 import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';

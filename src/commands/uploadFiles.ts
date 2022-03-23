@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IActionContext, IParsedError, parseError } from "@microsoft/vscode-azext-utils";
 import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
-import { IActionContext, IParsedError, parseError } from "vscode-azureextensionui";
 import { NotificationProgress } from "../constants";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";

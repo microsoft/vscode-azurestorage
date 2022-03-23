@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
+import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ISubscriptionContext, parseError, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import { ThemeIcon } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ISubscriptionContext, parseError, TreeItemIconPath } from "vscode-azureextensionui";
 import { emulatorAccountName, emulatorConnectionString } from '../constants';
 import { ext } from '../extensionVariables';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';

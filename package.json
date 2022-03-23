@@ -816,7 +816,7 @@
         "all": "npm i && npm run lint && npm test"
     },
     "devDependencies": {
-        "@azure/arm-resources": "^3.0.0",
+        "@azure/arm-resources": "^5.0.0",
         "@microsoft/eslint-config-azuretools": "^0.1.0",
         "@types/fs-extra": "^8.1.0",
         "@types/gulp": "^4.0.6",
@@ -837,25 +837,26 @@
         "ts-node": "^7.0.1",
         "typescript": "^4.3.5",
         "vsce": "^1.87.0",
-        "vscode-azureextensiondev": "^0.10.0",
         "vscode-test": "^1.5.2",
         "webpack": "^5.28.0",
         "webpack-cli": "^4.6.0"
     },
     "dependencies": {
         "@azure-tools/azcopy-node": "^2.2.0",
-        "@azure/arm-storage": "^16.0.0",
+        "@azure/arm-storage": "^17.1.0",
         "@azure/arm-storage-profile-2020-09-01-hybrid": "^1.0.0",
         "@azure/data-tables": "^13.0.0",
         "@azure/storage-blob": "^12.1.1",
         "@azure/storage-file-share": "^12.1.1",
         "@azure/storage-queue": "^12.7.0",
+        "@microsoft/vscode-azext-azureutils": "^0.1.3",
+        "@microsoft/vscode-azext-dev": "^0.1.2",
+        "@microsoft/vscode-azext-utils": "^0.1.0",
         "@types/mime": "^2.0.1",
         "glob": "^7.1.2",
         "mime": "^2.4.4",
         "open": "^8.0.4",
         "p-retry": "^4.2.0",
-        "vscode-azureextensionui": "^0.49.3",
         "vscode-nls": "^4.1.1",
         "winreg": "^1.2.3"
     },

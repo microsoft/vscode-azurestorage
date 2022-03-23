@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { callWithTelemetryAndErrorHandling, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import { storageExplorerDownloadUrl } from "../constants";
 import { AzExtFsExtra } from '../utils/AzExtFsExtra';
 import { Launcher } from "../utils/launcher";

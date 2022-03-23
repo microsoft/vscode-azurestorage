@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageQueue from '@azure/storage-queue';
+import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
-import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
 import { QueueGroupTreeItem } from "./QueueGroupTreeItem";

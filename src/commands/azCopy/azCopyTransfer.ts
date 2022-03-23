@@ -8,8 +8,8 @@ import { AzCopyClient, AzCopyLocation, FromToOption, ICopyOptions, ILocalLocatio
 import { IJobInfo } from "@azure-tools/azcopy-node/dist/src/IJobInfo";
 // eslint-disable-next-line import/no-internal-modules
 import { ExitJobStatus, ITransferStatus, ProgressJobStatus } from "@azure-tools/azcopy-node/dist/src/Output/TransferStatus";
+import { IActionContext } from "@microsoft/vscode-azext-utils";
 import { CancellationToken, Uri } from 'vscode';
-import { IActionContext } from "vscode-azureextensionui";
 import { NotificationProgress } from "../../constants";
 import { ext } from '../../extensionVariables';
 import { TransferProgress } from "../../TransferProgress";

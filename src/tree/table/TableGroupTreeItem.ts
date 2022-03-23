@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureDataTables from '@azure/data-tables';
+import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from "../../utils/localize";
 import { nonNull } from '../../utils/storageWrappers';
@@ -65,12 +65,12 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
         return !!this._continuationToken;
     }
 
-    async listTables(continuationToken?: string ): Promise<azureDataTables.TableItemResultPage> {
+    async listTables(continuationToken?: string): Promise<azureDataTables.TableItemResultPage> {
         const tableServiceClient = this.root.createTableServiceClient();
         const response: AsyncIterableIterator<azureDataTables.TableItemResultPage> = tableServiceClient.listTables().byPage({ continuationToken, maxPageSize });
 
-       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-       return (await response.next()).value;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return (await response.next()).value;
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<TableTreeItem> {

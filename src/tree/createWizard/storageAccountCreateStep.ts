@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { AzureWizardExecuteStep, INewStorageAccountDefaults, IStorageAccountWizardContext, LocationListStep, StorageAccountKind, StorageAccountPerformance } from 'vscode-azureextensionui';
+import { SkuName, StorageManagementClient } from '@azure/arm-storage';
+import { INewStorageAccountDefaults, IStorageAccountWizardContext, LocationListStep, StorageAccountKind, StorageAccountPerformance } from '@microsoft/vscode-azext-azureutils';
+import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { NotificationProgress, storageProvider } from '../../constants';
 import { ext } from '../../extensionVariables';
 import { createStorageClient } from '../../utils/azureClients';
@@ -28,12 +29,12 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
         const performance: StorageAccountPerformance = extendedLocation ? StorageAccountPerformance.Premium : this._defaults.performance;
         const newName: string = nonNullProp(wizardContext, 'newStorageAccountName');
         const rgName: string = nonNullProp(nonNullProp(wizardContext, 'resourceGroup'), 'name');
-        const newSkuName: StorageManagementModels.SkuName = <StorageManagementModels.SkuName>`${performance}_${this._defaults.replication}`;
+        const newSkuName: SkuName = <SkuName>`${performance}_${this._defaults.replication}`;
         const creatingStorageAccount: string = `Creating storage account "${newName}" in location "${newLocation.name}" with sku "${newSkuName}"...`;
         ext.outputChannel.appendLog(creatingStorageAccount);
         progress.report({ message: creatingStorageAccount });
         const storageClient: StorageManagementClient = await createStorageClient(wizardContext);
-        wizardContext.storageAccount = await storageClient.storageAccounts.create(
+        wizardContext.storageAccount = (await storageClient.storageAccounts.beginCreateAndWait(
             rgName,
             newName,
             {
@@ -43,7 +44,7 @@ export class StorageAccountCreateStep<T extends IStorageAccountWizardContext> ex
                 extendedLocation,
                 enableHttpsTrafficOnly: true
             }
-        );
+        ));
         const createdStorageAccount: string = `Successfully created storage account "${newName}".`;
         ext.outputChannel.appendLog(createdStorageAccount);
     }

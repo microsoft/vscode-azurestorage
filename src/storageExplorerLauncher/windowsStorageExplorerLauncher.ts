@@ -2,8 +2,8 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
+import { callWithTelemetryAndErrorHandling, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import { MessageItem } from "vscode";
-import { callWithTelemetryAndErrorHandling, UserCancelledError } from "vscode-azureextensionui";
 import * as winreg from "winreg";
 import { storageExplorerDownloadUrl } from "../constants";
 import { AzExtFsExtra } from '../utils/AzExtFsExtra';

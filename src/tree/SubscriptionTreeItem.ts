@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementClient } from '@azure/arm-storage';
-// eslint-disable-next-line import/no-internal-modules
-import { StorageAccountsListNextResponse } from '@azure/arm-storage/esm/models';
+import { StorageAccount, StorageManagementClient } from '@azure/arm-storage';
+import { AzExtLocation, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, uiUtils, VerifyProvidersStep } from '@microsoft/vscode-azext-azureutils';
+import { AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ICreateChildImplContext } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { AzExtLocation, AzExtTreeItem, AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ICreateChildImplContext, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountKind, StorageAccountPerformance, StorageAccountReplication, SubscriptionTreeItemBase, VerifyProvidersStep } from 'vscode-azureextensionui';
 import { ISelectStorageAccountContext } from '../commands/selectStorageAccountNodeForCommand';
 import { storageProvider } from '../constants';
 import { createStorageClient } from '../utils/azureClients';
@@ -35,17 +34,13 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
         }
 
         const storageManagementClient: StorageManagementClient = await createStorageClient([context, this]);
-        const accounts: StorageAccountsListNextResponse = this._nextLink ?
-            await storageManagementClient.storageAccounts.listNext(this._nextLink) :
-            await storageManagementClient.storageAccounts.list();
-
-        this._nextLink = accounts.nextLink;
+        const accounts: StorageAccount[] = await uiUtils.listAllIterator(storageManagementClient.storageAccounts.list());
 
         return this.createTreeItemsWithErrorHandling(
             accounts,
             'invalidStorageAccount',
             async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
-            sa => sa.name
+            sa => sa.name,
         );
     }
 

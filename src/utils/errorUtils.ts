@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IParsedError, TelemetryProperties, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { IParsedError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { ext } from '../extensionVariables';
 import { localize } from './localize';
 

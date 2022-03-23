@@ -5,10 +5,10 @@
 
 import { PageSettings } from '@azure/core-paging';
 import * as azureStorageBlob from '@azure/storage-blob';
+import { AzExtTreeItem, IActionContext, ICreateChildImplContext } from '@microsoft/vscode-azext-utils';
 import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzExtTreeItem, IActionContext, ICreateChildImplContext } from 'vscode-azureextensionui';
 import { maxPageSize } from '../constants';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { BlobDirectoryTreeItem } from '../tree/blob/BlobDirectoryTreeItem';

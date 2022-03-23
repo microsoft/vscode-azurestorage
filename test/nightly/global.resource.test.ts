@@ -5,8 +5,8 @@
 
 import { ResourceManagementClient } from '@azure/arm-resources';
 import { StorageManagementClient } from '@azure/arm-storage';
+import { createTestActionContext, TestAzureAccount } from '@microsoft/vscode-azext-dev';
 import * as vscode from 'vscode';
-import { createTestActionContext, TestAzureAccount } from 'vscode-azureextensiondev';
 import { AzExtTreeDataProvider, AzureAccountTreeItem, createAzureClient, ext } from '../../extension.bundle';
 import { longRunningTestsEnabled } from '../global.test';
 
@@ -39,7 +39,7 @@ export async function beginDeleteResourceGroup(resourceGroup: string): Promise<v
     const client: ResourceManagementClient = createAzureClient([await createTestActionContext(), testAccount.getSubscriptionContext()], ResourceManagementClient);
     if ((await client.resourceGroups.checkExistence(resourceGroup)).body) {
         console.log(`Started delete of resource group "${resourceGroup}"...`);
-        await client.resourceGroups.beginDeleteMethod(resourceGroup);
+        await client.resourceGroups.beginDeleteAndWait(resourceGroup);
         console.log(`Successfully started delete of resource group "${resourceGroup}".`);
     } else {
         // If the test failed, the resource group might not actually exist

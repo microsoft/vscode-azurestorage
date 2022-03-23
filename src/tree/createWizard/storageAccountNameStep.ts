@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
-import { AzureNameStep, IStorageAccountWizardContext, ResourceGroupListStep, resourceGroupNamingRules, storageAccountNamingRules } from 'vscode-azureextensionui';
+import { CheckNameAvailabilityResult, StorageManagementClient } from '@azure/arm-storage';
+import { IStorageAccountWizardContext, ResourceGroupListStep, resourceGroupNamingRules, storageAccountNamingRules } from '@microsoft/vscode-azext-azureutils';
+import { AzureNameStep } from '@microsoft/vscode-azext-utils';
 import { createStorageClient } from '../../utils/azureClients';
 
 export class StorageAccountNameStep<T extends IStorageAccountWizardContext> extends AzureNameStep<T> {
@@ -39,7 +40,7 @@ export class StorageAccountNameStep<T extends IStorageAccountWizardContext> exte
         } else if (name.match(storageAccountNamingRules.invalidCharsRegExp) !== null) {
             return "The name can only contain lowercase letters and numbers.";
         } else {
-            const nameAvailabilityResult: StorageManagementModels.CheckNameAvailabilityResult = await client.storageAccounts.checkNameAvailability(name);
+            const nameAvailabilityResult: CheckNameAvailabilityResult = await client.storageAccounts.checkNameAvailability({ name, type: 'Microsoft.Storage/storageAccounts' });
             if (!nameAvailabilityResult.nameAvailable) {
                 return nameAvailabilityResult.message;
             } else {

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IParsedError } from "vscode-azureextensionui";
+import { IParsedError } from "@microsoft/vscode-azext-utils";
 
 export interface IAzCopyResolution {
     errors: IParsedError[];

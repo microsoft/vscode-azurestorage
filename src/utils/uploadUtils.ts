@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
+import { IActionContext } from "@microsoft/vscode-azext-utils";
 import { basename, dirname, posix } from 'path';
 import * as vscode from 'vscode';
-import { IActionContext } from "vscode-azureextensionui";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
 import { NotificationProgress } from '../constants';

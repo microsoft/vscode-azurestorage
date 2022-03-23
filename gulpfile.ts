@@ -7,7 +7,7 @@ import * as cp from 'child_process';
 import * as fs from 'fs';
 import * as gulp from 'gulp';
 import * as path from 'path';
-import { gulp_installAzureAccount, gulp_installResourceGroups, gulp_webpack } from 'vscode-azureextensiondev';
+import { gulp_installAzureAccount, gulp_installResourceGroups, gulp_webpack } from '@microsoft/vscode-azext-dev';
 
 async function prepareForWebpack(): Promise<void> {
     const mainJsPath: string = path.join(__dirname, 'main.js');

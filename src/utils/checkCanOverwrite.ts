@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DialogResponses, IActionContext } from "vscode-azureextensionui";
+import { DialogResponses, IActionContext } from "@microsoft/vscode-azext-utils";
 import { localize } from "./localize";
 import { OverwriteChoice } from "./uploadUtils";
 

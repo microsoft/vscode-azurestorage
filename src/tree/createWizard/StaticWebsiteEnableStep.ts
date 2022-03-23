@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzureWizardPromptStep, DialogResponses, IWizardOptions } from "@microsoft/vscode-azext-utils";
 import { QuickPickItem } from 'vscode';
-import { AzureWizardPromptStep, DialogResponses, IWizardOptions } from "vscode-azureextensionui";
 import { localize } from "../../utils/localize";
 import { IStaticWebsiteConfigWizardContext } from "./IStaticWebsiteConfigWizardContext";
 import { StaticWebsiteErrorDocument404Step } from "./StaticWebsiteErrorDocument404Step";

@@ -5,10 +5,10 @@
 
 import * as azureStorageBlob from "@azure/storage-blob";
 import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
+import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
-import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { storageExplorerDownloadUrl } from "../../constants";
 import { ext } from "../../extensionVariables";

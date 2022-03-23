@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { TestUserInput } from '@microsoft/vscode-azext-dev';
 import * as vscode from 'vscode';
-import { TestUserInput } from 'vscode-azureextensiondev';
 import { registerOnActionStartHandler } from "../extension.bundle";
 
 export const longRunningTestsEnabled: boolean = !/^(false|0)?$/i.test(process.env.ENABLE_LONG_RUNNING_TESTS || '');
