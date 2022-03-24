@@ -40,7 +40,7 @@ export class SubscriptionTreeItem extends SubscriptionTreeItemBase {
             accounts,
             'invalidStorageAccount',
             async sa => await StorageAccountTreeItem.createStorageAccountTreeItem(this, new StorageAccountWrapper(sa), storageManagementClient),
-            sa => sa.name,
+            sa => sa.name
         );
     }
 

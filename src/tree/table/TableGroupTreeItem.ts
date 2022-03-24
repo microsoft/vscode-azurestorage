@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureDataTables from '@azure/data-tables';
+import { uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { getResourcesPath, maxPageSize } from "../../constants";
+import { getResourcesPath } from "../../constants";
 import { localize } from "../../utils/localize";
 import { nonNull } from '../../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
@@ -65,12 +66,10 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
         return !!this._continuationToken;
     }
 
-    async listTables(continuationToken?: string): Promise<azureDataTables.TableItemResultPage> {
+    // pagination is broken for now https://github.com/Azure/azure-sdk-for-js/issues/20380
+    async listTables(_continuationToken?: string): Promise<azureDataTables.TableItemResultPage> {
         const tableServiceClient = this.root.createTableServiceClient();
-        const response: AsyncIterableIterator<azureDataTables.TableItemResultPage> = tableServiceClient.listTables().byPage({ continuationToken, maxPageSize });
-
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return (await response.next()).value;
+        return uiUtils.listAllIterator(tableServiceClient.listTables());
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<TableTreeItem> {
