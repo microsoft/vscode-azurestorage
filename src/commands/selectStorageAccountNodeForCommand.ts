@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzExtTreeItem, IActionContext } from "@microsoft/vscode-azext-utils";
 import * as assert from 'assert';
-import { AzExtTreeItem, IActionContext } from "vscode-azureextensionui";
 import { ext } from "../extensionVariables";
 import { AttachedStorageAccountTreeItem } from '../tree/AttachedStorageAccountTreeItem';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";

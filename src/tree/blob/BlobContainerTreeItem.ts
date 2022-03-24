@@ -5,11 +5,11 @@
 
 import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageBlob from '@azure/storage-blob';
+import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, parseError, TelemetryProperties, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, parseError, TelemetryProperties, UserCancelledError } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';

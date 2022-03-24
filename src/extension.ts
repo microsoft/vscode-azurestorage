@@ -5,10 +5,11 @@
 
 'use strict';
 
+import { openInPortal } from '@microsoft/vscode-azext-azureutils';
+import { AzExtTreeDataProvider, AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import { AzureExtensionApi, AzureExtensionApiProvider } from '@microsoft/vscode-azext-utils/api';
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzExtTreeDataProvider, AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, openInPortal, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from 'vscode-azureextensionui';
-import { AzureExtensionApi, AzureExtensionApiProvider } from 'vscode-azureextensionui/api';
 import { AzureStorageFS } from './AzureStorageFS';
 import { revealTreeItem } from './commands/api/revealTreeItem';
 import { registerBlobActionHandlers } from './commands/blob/blobActionHandlers';

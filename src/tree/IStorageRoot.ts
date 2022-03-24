@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementModels } from "@azure/arm-storage";
+import { Endpoints } from "@azure/arm-storage";
 import * as azureDataTables from '@azure/data-tables';
 import * as azureStorageBlob from "@azure/storage-blob";
 import { AccountSASSignatureValues } from "@azure/storage-blob";
@@ -14,7 +14,7 @@ export interface IStorageRoot {
     storageAccountName: string;
     storageAccountId: string;
     isEmulated: boolean;
-    primaryEndpoints?: StorageManagementModels.Endpoints;
+    primaryEndpoints?: Endpoints;
     generateSasToken(accountSASSignatureValues: AccountSASSignatureValues): string;
     createBlobServiceClient(): azureStorageBlob.BlobServiceClient;
     createShareServiceClient(): azureStorageShare.ShareServiceClient;

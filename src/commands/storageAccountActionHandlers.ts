@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
 import * as vscode from "vscode";
-import { IActionContext, registerCommand } from 'vscode-azureextensionui';
 import { configurationSettingsKeys, extensionPrefix } from '../constants';
 import { ext } from '../extensionVariables';
 import { storageExplorerLauncher } from '../storageExplorerLauncher/storageExplorerLauncher';

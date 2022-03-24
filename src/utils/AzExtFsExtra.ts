@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { parseError } from '@microsoft/vscode-azext-utils';
 import { dirname } from 'path';
 import { FileStat, FileType, Uri, workspace } from 'vscode';
-import { parseError } from 'vscode-azureextensionui';
 
 export namespace AzExtFsExtra {
     export async function isDirectory(resource: Uri | string): Promise<boolean> {

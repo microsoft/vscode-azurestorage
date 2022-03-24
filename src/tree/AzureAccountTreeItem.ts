@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureAccountTreeItemBase, IActionContext, ISubscriptionContext } from "vscode-azureextensionui";
+import { AzureAccountTreeItemBase } from "@microsoft/vscode-azext-azureutils";
+import { AzExtTreeItem, IActionContext, ISubscriptionContext } from "@microsoft/vscode-azext-utils";
 import { ext } from "../extensionVariables";
 import { AttachedStorageAccountsTreeItem } from "./AttachedStorageAccountsTreeItem";
 import { SubscriptionTreeItem } from "./SubscriptionTreeItem";

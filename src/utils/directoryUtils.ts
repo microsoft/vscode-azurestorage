@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageShare from "@azure/storage-file-share";
+import { ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
 import * as path from "path";
 import { ProgressLocation, window } from "vscode";
-import { ICreateChildImplContext } from "vscode-azureextensionui";
 import { maxPageSize } from "../constants";
 import { ext } from "../extensionVariables";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";

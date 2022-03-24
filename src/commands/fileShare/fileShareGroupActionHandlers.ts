@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, registerCommand } from 'vscode-azureextensionui';
+import { IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
 import { FileShareGroupTreeItem } from '../../tree/fileShare/FileShareGroupTreeItem';
 import { createChildNode } from '../commonTreeCommands';
 

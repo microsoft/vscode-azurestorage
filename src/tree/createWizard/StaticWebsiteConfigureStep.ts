@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
+import { AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
 import { window } from "vscode";
-import { AzureWizardExecuteStep } from "vscode-azureextensionui";
 import { NotificationProgress } from '../../constants';
 import { ext } from '../../extensionVariables';
 import { localize } from '../../utils/localize';

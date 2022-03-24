@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { commands, Uri, workspace, WorkspaceFolder } from 'vscode';
-import { AzureWizardExecuteStep } from 'vscode-azureextensionui';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { nonNullProp } from "../../utils/nonNull";
 import { IOpenInFileExplorerWizardContext } from './IOpenInFileExplorerWizardContext';

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtParentTreeItem, IActionContext, registerCommand } from 'vscode-azureextensionui';
+import { AzExtParentTreeItem, IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
 import { DirectoryTreeItem } from '../../tree/fileShare/DirectoryTreeItem';
 import { IFileShareCreateChildContext } from '../../tree/fileShare/FileShareTreeItem';
 

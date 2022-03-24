@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageQueue from '@azure/storage-queue';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from "../../utils/localize";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";

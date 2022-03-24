@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { IActionContext, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import { platform } from "os";
 import { window } from "vscode";
-import { IActionContext, UserCancelledError } from "vscode-azureextensionui";
 import { ResourceType } from "../storageExplorerLauncher/ResourceType";
 import { storageExplorerLauncher } from "../storageExplorerLauncher/storageExplorerLauncher";
 import { localize } from "./localize";

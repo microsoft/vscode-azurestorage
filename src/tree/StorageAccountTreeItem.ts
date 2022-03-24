@@ -3,16 +3,16 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { StorageManagementClient, StorageManagementModels } from '@azure/arm-storage';
+import { StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
 import * as azureDataTables from '@azure/data-tables';
 import * as azureStorageBlob from '@azure/storage-blob';
 import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorageQueue from '@azure/storage-queue';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DialogResponses, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { commands, MessageItem, window } from 'vscode';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath, staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
 import { createStorageClient } from '../utils/azureClients';
@@ -134,7 +134,7 @@ export class StorageAccountTreeItem extends AzExtParentTreeItem {
 
             ext.outputChannel.appendLog(deletingStorageAccount);
             await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deletingStorageAccount }, async () => {
-                await storageManagementClient.storageAccounts.deleteMethod(resourceGroupName, this.storageAccount.name);
+                await storageManagementClient.storageAccounts.delete(resourceGroupName, this.storageAccount.name);
             });
 
             const deleteSuccessful: string = localize('successfullyDeletedStorageAccount', 'Successfully deleted storage account "{0}".', this.label);
@@ -184,7 +184,7 @@ export class StorageAccountTreeItem extends AzExtParentTreeItem {
         const parsedId = this.parseAzureResourceId(this.storageAccount.id);
         const resourceGroupName = parsedId.resourceGroups;
         const keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
-        return (keyResult.keys || <StorageManagementModels.StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
+        return (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
     }
 
     parseAzureResourceId(resourceId: string): { [key: string]: string } {

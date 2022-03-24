@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
+import { AzExtTreeItem, IActionContext } from "@microsoft/vscode-azext-utils";
 import { join, posix } from "path";
 import { ProgressLocation, window } from "vscode";
-import { AzExtTreeItem, IActionContext } from "vscode-azureextensionui";
 import { configurationSettingsKeys } from "../constants";
 import { ext } from "../extensionVariables";
 import { TransferProgress } from "../TransferProgress";

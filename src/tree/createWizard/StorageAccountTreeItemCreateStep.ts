@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardExecuteStep, IStorageAccountWizardContext } from "vscode-azureextensionui";
+import { IStorageAccountWizardContext } from "@microsoft/vscode-azext-azureutils";
+import { AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
 import { createStorageClient } from "../../utils/azureClients";
 import { nonNullProp } from '../../utils/nonNull';
 import { StorageAccountWrapper } from "../../utils/storageWrappers";

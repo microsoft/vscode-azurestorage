@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
-import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from 'vscode-azureextensionui';
 import { getResourcesPath } from '../../constants';
 import { IStorageRoot } from '../IStorageRoot';
 import { TableGroupTreeItem } from './TableGroupTreeItem';

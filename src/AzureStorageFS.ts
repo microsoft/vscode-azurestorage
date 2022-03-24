@@ -5,10 +5,10 @@
 
 import { BlobClient, BlobDownloadResponseModel, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
 import { FileDownloadResponseModel, FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import * as path from "path";
 import * as querystring from "querystring";
 import * as vscode from "vscode";
-import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError, UserCancelledError } from "vscode-azureextensionui";
 import { download } from "./commands/downloadFile";
 import { maxRemoteFileEditSizeBytes, maxRemoteFileEditSizeMB } from "./constants";
 import { ext } from "./extensionVariables";

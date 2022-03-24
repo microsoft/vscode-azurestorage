@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageShare from '@azure/storage-file-share';
+import { IActionContext, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
 import * as mime from 'mime';
 import { posix } from 'path';
 import { ProgressLocation, window } from "vscode";
-import { IActionContext, ICreateChildImplContext } from "vscode-azureextensionui";
 import { DirectoryTreeItem } from '../tree/fileShare/DirectoryTreeItem';
 import { FileShareTreeItem, IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
