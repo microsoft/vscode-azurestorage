@@ -440,7 +440,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     private async lookupRoot(uri: vscode.Uri, context: IActionContext, resourceId: string): Promise<FileShareTreeItem | BlobContainerTreeItem> {
         const rootName: string = path.basename(resourceId);
         const loadingMessage: string = this.isFileShareUri(uri) ? localize('loadingFileShare', 'Loading file share "{0}"...', rootName) : localize('loadingContainer', 'Loading blob container "{0}"...', rootName);
-        const treeItem = await ext.tree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage });
+        const treeItem = await ext.rgApi.tree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage });
         if (treeItem instanceof FileShareTreeItem || treeItem instanceof BlobContainerTreeItem) {
             return treeItem;
         } else {

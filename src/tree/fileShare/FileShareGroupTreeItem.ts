@@ -7,11 +7,12 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
+import { ResolvedAppResourceTreeItem } from '../../api';
 import { getResourcesPath, maxPageSize } from "../../constants";
+import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { localize } from '../../utils/localize';
 import { AttachedStorageAccountTreeItem } from '../AttachedStorageAccountTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
-import { StorageAccountTreeItem } from '../StorageAccountTreeItem';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareTreeItem } from './FileShareTreeItem';
 import { FileTreeItem } from './FileTreeItem';
@@ -26,9 +27,9 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem {
     public readonly childTypeLabel: string = "File Share";
     public static contextValue: string = 'azureFileShareGroup';
     public contextValue: string = FileShareGroupTreeItem.contextValue;
-    public parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem;
+    public parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
 
-    public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
+    public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),

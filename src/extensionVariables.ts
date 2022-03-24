@@ -6,6 +6,7 @@
 import { AzExtTreeDataProvider, AzExtTreeItem, IAzExtOutputChannel } from "@microsoft/vscode-azext-utils";
 import { ExtensionContext, TreeView } from "vscode";
 import { AzureAccountTreeItem } from '../src/tree/AzureAccountTreeItem';
+import { AzureResourceGroupsExtensionApi } from "./api";
 import { AzureStorageFS } from "./AzureStorageFS";
 import { AttachedStorageAccountsTreeItem } from "./tree/AttachedStorageAccountsTreeItem";
 
@@ -24,4 +25,6 @@ export namespace ext {
     export let azureStorageFS: AzureStorageFS;
     export const azCopyExePath: string = 'azcopy';
     export const prefix: string = 'azureStorage';
+
+    export let rgApi: AzureResourceGroupsExtensionApi;
 }

@@ -7,12 +7,13 @@ import * as azureDataTables from '@azure/data-tables';
 import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
+import { ResolvedAppResourceTreeItem } from '../../api';
 import { getResourcesPath, maxPageSize } from "../../constants";
+import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { localize } from "../../utils/localize";
 import { nonNull } from '../../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
-import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { TableTreeItem } from './TableTreeItem';
 
 export class TableGroupTreeItem extends AzExtParentTreeItem {
@@ -22,9 +23,9 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
     public readonly childTypeLabel: string = "Table";
     public static contextValue: string = 'azureTableGroup';
     public contextValue: string = TableGroupTreeItem.contextValue;
-    public parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem;
+    public parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
 
-    public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
+    public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
