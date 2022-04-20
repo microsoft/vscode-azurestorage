@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IAzExtOutputChannel } from "@microsoft/vscode-azext-utils";
+import { AzureHostExtensionApi } from "@microsoft/vscode-azext-utils/hostapi";
 import { ExtensionContext } from "vscode";
 import { AzureAccountTreeItem } from '../src/tree/AzureAccountTreeItem';
-import { AzureResourceGroupsExtensionApi } from "./api";
 import { AzureStorageFS } from "./AzureStorageFS";
 import { AttachedStorageAccountsTreeItem } from "./tree/AttachedStorageAccountsTreeItem";
 
@@ -24,5 +24,5 @@ export namespace ext {
     export const azCopyExePath: string = 'azcopy';
     export const prefix: string = 'azureStorage';
 
-    export let rgApi: AzureResourceGroupsExtensionApi;
+    export let rgApi: AzureHostExtensionApi;
 }

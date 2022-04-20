@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeItem, IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from "vscode";
-import { ResolvedAppResourceTreeItem } from '../api';
 import { configurationSettingsKeys, extensionPrefix } from '../constants';
 import { ext } from '../extensionVariables';
 import { ResolvedStorageAccount } from '../StorageAccountResolver';
@@ -28,7 +28,7 @@ export function registerStorageAccountActionHandlers(): void {
 
 async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: ResolvedAppResourceTreeItem<ResolvedStorageAccount>): Promise<void> {
     if (!treeItem) {
-        treeItem = <ResolvedAppResourceTreeItem<ResolvedStorageAccount>>await ext.rgApi.tree.showTreeItemPicker<ResolvedAppResourceTreeItem<ResolvedStorageAccount>>(new RegExp(StorageAccountTreeItem.contextValue), context);
+        treeItem = <ResolvedAppResourceTreeItem<ResolvedStorageAccount>>await ext.rgApi.appResourceTree.showTreeItemPicker<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtTreeItem>(new RegExp(StorageAccountTreeItem.contextValue), context);
     }
 
     const accountId = treeItem.storageAccount.id;
@@ -38,7 +38,7 @@ async function openStorageAccountInStorageExplorer(context: IActionContext, tree
 
 export async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.rgApi.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
+        treeItem = <StorageAccountTreeItem>await ext.rgApi.appResourceTree.showTreeItemPicker<StorageAccountTreeItem & AzExtTreeItem>(StorageAccountTreeItem.contextValue, context);
     }
 
     await vscode.env.clipboard.writeText(treeItem.key.value);
@@ -46,7 +46,7 @@ export async function copyPrimaryKey(context: IActionContext, treeItem?: Storage
 
 export async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.rgApi.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
+        treeItem = <StorageAccountTreeItem>await ext.rgApi.appResourceTree.showTreeItemPicker<StorageAccountTreeItem & AzExtTreeItem>(StorageAccountTreeItem.contextValue, context);
     }
 
     const connectionString = treeItem.getConnectionString();

@@ -8,9 +8,9 @@
 import { openInPortal } from '@microsoft/vscode-azext-azureutils';
 import { AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '@microsoft/vscode-azext-utils/api';
+import { AzureHostExtensionApi } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
-import { AzureResourceGroupsExtensionApi } from './api';
 import { AzureStorageFS } from './AzureStorageFS';
 import { revealTreeItem } from './commands/api/revealTreeItem';
 import { registerBlobActionHandlers } from './commands/blob/blobActionHandlers';
@@ -149,7 +149,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
     const rgApiProvider = await getApiExport<AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
     if (rgApiProvider) {
-        const api = rgApiProvider.getApi<AzureResourceGroupsExtensionApi>('0.0.1');
+        const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
         ext.rgApi = api;
         api.registerApplicationResourceResolver('microsoft.storage/storageaccounts', new StorageAccountResolver());
     } else {

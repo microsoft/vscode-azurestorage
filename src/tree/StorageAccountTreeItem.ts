@@ -10,9 +10,9 @@ import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSh
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorageQueue from '@azure/storage-queue';
 import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from 'vscode';
 import { commands, MessageItem, window } from 'vscode';
-import { ResolvedAppResourceTreeItem } from '../api';
 import { staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
 import { ResolvedStorageAccount } from '../StorageAccountResolver';

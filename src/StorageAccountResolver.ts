@@ -1,7 +1,7 @@
 import { StorageAccount, StorageManagementClient } from "@azure/arm-storage";
 import * as azureStorageBlob from '@azure/storage-blob';
 import { callWithTelemetryAndErrorHandling, IActionContext, ISubscriptionContext, nonNullProp } from "@microsoft/vscode-azext-utils";
-import { AppResource, AppResourceResolver, ResolvedAppResourceBase } from "./api";
+import { AppResource, AppResourceResolver, ResolvedAppResourceBase } from "@microsoft/vscode-azext-utils/hostapi";
 import { BlobContainerTreeItem } from "./tree/blob/BlobContainerTreeItem";
 import { IStorageRoot } from "./tree/IStorageRoot";
 import { StorageAccountTreeItem, WebsiteHostingStatus } from "./tree/StorageAccountTreeItem";
