@@ -2,7 +2,7 @@
     "name": "vscode-azurestorage",
     "displayName": "Azure Storage",
     "description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
-    "version": "0.13.1-alpha",
+    "version": "0.13.1-alpha.1",
     "publisher": "ms-azuretools",
     "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
     "engines": {
@@ -124,12 +124,6 @@
             {
                 "command": "azureStorage.browseStaticWebsite",
                 "title": "Browse Static Website",
-                "category": "Azure Storage"
-            },
-            {
-                "command": "azureStorage.selectSubscriptions",
-                "title": "Select Subscriptions...",
-                "icon": "$(filter)",
                 "category": "Azure Storage"
             },
             {
@@ -322,28 +316,6 @@
             }
         ],
         "menus": {
-            "view/title": [
-                {
-                    "command": "azureStorage.createGpv2Account",
-                    "when": "view == azureStorage",
-                    "group": "navigation@1"
-                },
-                {
-                    "command": "azureStorage.deployStaticWebsite",
-                    "when": "view == azureStorage",
-                    "group": "navigation@2"
-                },
-                {
-                    "command": "azureStorage.attachStorageAccount",
-                    "when": "view == azureStorage",
-                    "group": "navigation@3"
-                },
-                {
-                    "command": "azureStorage.refresh",
-                    "when": "view == azureStorage",
-                    "group": "navigation@99"
-                }
-            ],
             "explorer/context": [
                 {
                     "command": "azureStorage.deployStaticWebsite",
