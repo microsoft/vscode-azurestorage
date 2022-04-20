@@ -72,7 +72,7 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         const accountName: string = getPropertyFromConnectionString(connectionString, 'AccountName') || emulatorAccountName;
 
         await this.attachAccount(this.createTreeItem(connectionString, accountName));
-        await ext.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
+        await ext.rgApi.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
     }
 
     public async detach(treeItem: AttachedStorageAccountTreeItem): Promise<void> {

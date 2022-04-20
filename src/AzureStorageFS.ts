@@ -384,7 +384,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         await this.lookupRoot(uri, context, resourceId);
 
         const uriPath = path.posix.join(resourceId, filePath);
-        const treeItem = await ext.tree.findTreeItem(uriPath, { ...context, loadAll: true });
+        const treeItem = await ext.rgApi.tree.findTreeItem(uriPath, { ...context, loadAll: true });
         if (!treeItem) {
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
         } else if (treeItem instanceof FileShareTreeItem || treeItem instanceof FileTreeItem || treeItem instanceof DirectoryTreeItem) {

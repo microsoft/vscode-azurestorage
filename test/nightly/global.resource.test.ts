@@ -7,7 +7,7 @@ import { ResourceManagementClient } from '@azure/arm-resources';
 import { StorageManagementClient } from '@azure/arm-storage';
 import { createTestActionContext, TestAzureAccount } from '@microsoft/vscode-azext-dev';
 import * as vscode from 'vscode';
-import { AzExtTreeDataProvider, AzureAccountTreeItem, createAzureClient, ext } from '../../extension.bundle';
+import { AzureAccountTreeItem, createAzureClient, ext } from '../../extension.bundle';
 import { longRunningTestsEnabled } from '../global.test';
 
 export let testAccount: TestAzureAccount;
@@ -20,7 +20,6 @@ suiteSetup(async function (this: Mocha.Context): Promise<void> {
         testAccount = new TestAzureAccount(vscode);
         await testAccount.signIn();
         ext.azureAccountTreeItem = new AzureAccountTreeItem(testAccount);
-        ext.tree = new AzExtTreeDataProvider(ext.azureAccountTreeItem, 'azureStorage.loadMore');
         webSiteClient = createAzureClient([await createTestActionContext(), testAccount.getSubscriptionContext()], StorageManagementClient);
     }
 });

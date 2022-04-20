@@ -33,7 +33,7 @@ export async function uploadFolder(
         }))[0];
     }
 
-    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
+    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.rgApi.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     destinationDirectory = await getDestinationDirectory(context, destinationDirectory);
 
     const sourcePath: string = uri.fsPath;
@@ -67,6 +67,6 @@ export async function uploadFolder(
         showUploadSuccessMessage(treeItem.label);
     }
 
-    await ext.tree.refresh(context, treeItem);
+    await ext.rgApi.tree.refresh(context, treeItem);
     return resolution;
 }

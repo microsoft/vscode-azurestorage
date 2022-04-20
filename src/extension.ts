@@ -6,7 +6,7 @@
 'use strict';
 
 import { openInPortal } from '@microsoft/vscode-azext-azureutils';
-import { AzExtTreeDataProvider, AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '@microsoft/vscode-azext-utils/api';
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
@@ -40,7 +40,6 @@ import { azuriteExtensionId, emulatorTimeoutMS as startEmulatorDebounce } from '
 import { ext } from './extensionVariables';
 import { getApiExport } from './getApiExport';
 import { StorageAccountResolver } from './StorageAccountResolver';
-import { AzureAccountTreeItem } from './tree/AzureAccountTreeItem';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
@@ -56,12 +55,6 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     await callWithTelemetryAndErrorHandling('activate', (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
         activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
-
-        const azureAccountTreeItem = new AzureAccountTreeItem();
-        context.subscriptions.push(azureAccountTreeItem);
-        ext.tree = new AzExtTreeDataProvider(azureAccountTreeItem, 'azureStorage.loadMore');
-        ext.treeView = vscode.window.createTreeView(ext.prefix, { treeDataProvider: ext.tree, showCollapseAll: true, canSelectMany: true });
-        context.subscriptions.push(ext.treeView);
 
         registerBlobActionHandlers();
         registerBlobContainerActionHandlers();
@@ -83,7 +76,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
         registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
             if (!treeItem) {
-                treeItem = <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
+                treeItem = <BlobContainerTreeItem | FileShareTreeItem>(await ext.rgApi.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
             }
 
             const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });
@@ -97,10 +90,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await wizard.prompt();
             await wizard.execute();
         });
-        registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(actionContext, treeItem));
-        registerCommand('azureStorage.loadMore', async (actionContext: IActionContext, treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem, actionContext));
         registerCommand('azureStorage.copyUrl', (_actionContext: IActionContext, treeItem: AzExtTreeItem & ICopyUrl) => treeItem.copyUrl());
-        registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
         registerCommand("azureStorage.openInPortal", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
             if (!treeItem) {
                 treeItem = <AzExtTreeItem>await ext.rgApi.tree.showTreeItemPicker(new RegExp(StorageAccountTreeItem.contextValue), actionContext);

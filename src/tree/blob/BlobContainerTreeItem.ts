@@ -24,7 +24,7 @@ import { getWorkspaceSetting } from '../../utils/settingsUtils';
 import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
-import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
+import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerGroupTreeItem } from "./BlobContainerGroupTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobTreeItem } from './BlobTreeItem';
@@ -277,13 +277,13 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         return this.root.primaryEndpoints && this.root.primaryEndpoints.web;
     }
 
-    public getStorageAccountTreeItem(treeItem: AzExtTreeItem): StorageAccountTreeItem {
+    public getStorageAccountTreeItem(treeItem: AzExtTreeItem): ResolvedStorageAccountTreeItem & AzExtTreeItem {
         if (!(treeItem instanceof BlobContainerTreeItem)) {
             throw new Error(`Unexpected treeItem type: ${treeItem.contextValue}`);
         }
 
         const storageAccountTreeItem = treeItem.parent && treeItem.parent.parent;
-        if (storageAccountTreeItem && storageAccountTreeItem instanceof StorageAccountTreeItem) {
+        if (storageAccountTreeItem && isResolvedStorageAccountTreeItem(storageAccountTreeItem)) {
             return storageAccountTreeItem;
         } else {
             throw new Error("Internal error: Couldn't find storage account treeItem for container");

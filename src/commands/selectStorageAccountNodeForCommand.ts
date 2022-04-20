@@ -8,7 +8,7 @@ import * as assert from 'assert';
 import { ext } from "../extensionVariables";
 import { AttachedStorageAccountTreeItem } from '../tree/AttachedStorageAccountTreeItem';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
-import { StorageAccountTreeItem } from "../tree/StorageAccountTreeItem";
+import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from "../tree/StorageAccountTreeItem";
 import { localize } from '../utils/localize';
 
 /**
@@ -22,7 +22,7 @@ export async function selectStorageAccountTreeItemForCommand(
     treeItem: AzExtTreeItem | undefined,
     context: ISelectStorageAccountContext,
     options: { mustBeWebsiteCapable: boolean, configureWebsite: boolean }
-): Promise<StorageAccountTreeItem> {
+): Promise<ResolvedStorageAccountTreeItem> {
     // treeItem should be one of:
     //   undefined
     //   a storage account treeItem
@@ -36,21 +36,21 @@ export async function selectStorageAccountTreeItemForCommand(
     context.showEnableWebsiteHostingPrompt = true;
 
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
+        treeItem = <ResolvedStorageAccountTreeItem & AzExtTreeItem>await ext.rgApi.tree.showTreeItemPicker(new RegExp(StorageAccountTreeItem.contextValue), context);
     }
 
-    const storageOrContainerTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>treeItem;
+    const storageOrContainerTreeItem = <ResolvedStorageAccountTreeItem & AzExtTreeItem | BlobContainerTreeItem>treeItem;
     assert(
-        storageOrContainerTreeItem instanceof StorageAccountTreeItem || storageOrContainerTreeItem instanceof BlobContainerTreeItem,
+        isResolvedStorageAccountTreeItem(storageOrContainerTreeItem) || storageOrContainerTreeItem instanceof BlobContainerTreeItem,
         `Internal error: Incorrect treeItem type "${storageOrContainerTreeItem.contextValue}" passed to selectStorageAccountTreeItemForCommand()`);
 
-    let accountTreeItem: StorageAccountTreeItem;
+    let accountTreeItem: ResolvedStorageAccountTreeItem & AzExtTreeItem;
     if (storageOrContainerTreeItem instanceof BlobContainerTreeItem) {
         // Currently the portal only allows configuring at the storage account level, so retrieve the storage account treeItem
         accountTreeItem = storageOrContainerTreeItem.getStorageAccountTreeItem(storageOrContainerTreeItem);
     } else {
-        assert(storageOrContainerTreeItem instanceof StorageAccountTreeItem);
-        accountTreeItem = <StorageAccountTreeItem>treeItem;
+        assert(isResolvedStorageAccountTreeItem(storageOrContainerTreeItem));
+        accountTreeItem = <ResolvedStorageAccountTreeItem & AzExtTreeItem>treeItem;
     }
 
     if (options.mustBeWebsiteCapable) {

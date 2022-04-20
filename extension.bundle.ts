@@ -35,5 +35,7 @@ export { StorageAccountTreeItem } from './src/tree/StorageAccountTreeItem';
 export { AzExtFsExtra } from './src/utils/AzExtFsExtra';
 export { delay } from './src/utils/delay';
 export { getRandomHexString } from './src/utils/stringUtils';
+export { ResolvedAppResourceTreeItem } from './src/api';
+export { ResolvedStorageAccount } from './src/StorageAccountResolver';
 
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

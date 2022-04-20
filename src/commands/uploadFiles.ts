@@ -46,7 +46,7 @@ export async function uploadFiles(
         );
     }
 
-    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
+    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.rgApi.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     destinationDirectory = await getDestinationDirectory(context, destinationDirectory);
     let urisToUpload: Uri[] = [];
     if (!calledFromUploadToAzureStorage) {

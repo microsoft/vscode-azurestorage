@@ -39,7 +39,15 @@ export type WebsiteHostingStatus = {
     errorDocument404Path?: string;
 };
 
+export type ResolvedStorageAccountTreeItem = ResolvedAppResourceTreeItem<ResolvedStorageAccount>;
+
+export function isResolvedStorageAccountTreeItem(t: unknown): t is ResolvedStorageAccountTreeItem {
+    return (t as ResolvedStorageAccountTreeItem)?.kind?.toLowerCase() === StorageAccountTreeItem.kind;
+}
+
 export class StorageAccountTreeItem implements ResolvedStorageAccount {
+    public static kind: 'microsoft.storage/storageaccounts' = 'microsoft.storage/storageaccounts';
+    public readonly kind = StorageAccountTreeItem.kind;
     public key: StorageAccountKeyWrapper;
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;

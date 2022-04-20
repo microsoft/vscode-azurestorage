@@ -39,7 +39,6 @@
         "onCommand:azureStorage.refresh",
         "onCommand:azureStorage.browseStaticWebsite",
         "onCommand:azureStorage.openInPortal",
-        "onCommand:azureStorage.selectSubscriptions",
         "onCommand:azureStorage.copyUrl",
         "onCommand:azureStorage.openBlobContainer",
         "onCommand:azureStorage.openTable",
@@ -85,14 +84,12 @@
                 "onFetch": [
                     "microsoft.storage/storageaccounts"
                 ]
-            }
-        },
-        "views": {
-            "azure": [
+            },
+            "commands": [
                 {
-                    "id": "azureStorage",
-                    "name": "Storage",
-                    "when": "config.azureStorage.showExplorer == true"
+                    "command": "azureStorage.createGpv2Account",
+                    "title": "Create Storage Account...",
+                    "type": "microsoft.storage/storageaccounts"
                 }
             ]
         },
@@ -361,30 +358,14 @@
             ],
             "view/item/context": [
                 {
-                    "$comment": "========= azureSubscription =========",
-                    "command": "azureStorage.selectSubscriptions",
-                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
-                    "group": "inline"
-                },
-                {
                     "command": "azureStorage.createGpv2Account",
-                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+                    "when": "view == azureResourceGroups && viewItem =~ /(azureextensionui.azureSubscription|(azureResourceTypeGroup.*microsoft.storage/storageaccounts))/",
                     "group": "1@1"
                 },
                 {
                     "command": "azureStorage.createGpv2AccountAdvanced",
-                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
+                    "when": "view == azureResourceGroups && viewItem =~ /(azureextensionui.azureSubscription|(azureResourceTypeGroup.*microsoft.storage/storageaccounts))/",
                     "group": "1@2"
-                },
-                {
-                    "command": "azureStorage.openInPortal",
-                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
-                    "group": "2@1"
-                },
-                {
-                    "command": "azureStorage.refresh",
-                    "when": "view == azureStorage && viewItem == azureextensionui.azureSubscription",
-                    "group": "3@1"
                 },
                 {
                     "$comment": "========= azureStorageAccount =========",
@@ -706,10 +687,6 @@
                 }
             ],
             "commandPalette": [
-                {
-                    "command": "azureStorage.selectSubscriptions",
-                    "when": "never"
-                },
                 {
                     "command": "azureStorage.copyUrl",
                     "when": "never"

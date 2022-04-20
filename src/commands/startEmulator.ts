@@ -14,7 +14,7 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
     if (isAzuriteExtensionInstalled()) {
         // Use the Azurite extension
         await vscode.commands.executeCommand(`azurite.start_${emulatorType}`);
-        await ext.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
+        await ext.rgApi.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
     } else if (await isAzuriteCliInstalled()) {
         // Use the Azurite CLI
 
@@ -26,7 +26,7 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
             setTimeout(resolve, emulatorTimeoutMS);
         });
 
-        await ext.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
+        await ext.rgApi.tree.refresh(context, ext.attachedStorageAccountsTreeItem);
     } else {
         warnAzuriteNotInstalled(context);
     }
