@@ -16,7 +16,7 @@ export class StorageWorkspaceProvider implements WorkspaceResourceProvider {
 
     public async provideResources(parent: AzExtParentTreeItem): Promise<AzExtTreeItem[] | null | undefined> {
 
-        return await callWithTelemetryAndErrorHandling('AzureAccountTreeItemWithProjects.provideResources', async (_context: IActionContext) => {
+        return await callWithTelemetryAndErrorHandling('StorageWorkspaceProvider.provideResources', async (_context: IActionContext) => {
             ext.attachedStorageAccountsTreeItem = new AttachedStorageAccountsTreeItem(parent)
             return [ext.attachedStorageAccountsTreeItem];
         });
