@@ -7,9 +7,10 @@ import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } fr
 import * as path from 'path';
 import { getResourcesPath } from '../../constants';
 import { IStorageRoot } from '../IStorageRoot';
+import { IStorageTreeItem } from '../IStorageTreeItem';
 import { TableGroupTreeItem } from './TableGroupTreeItem';
 
-export class TableTreeItem extends AzExtTreeItem {
+export class TableTreeItem extends AzExtTreeItem implements IStorageTreeItem {
     public parent: TableGroupTreeItem;
     constructor(
         parent: TableGroupTreeItem,

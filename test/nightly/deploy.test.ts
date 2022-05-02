@@ -33,7 +33,7 @@ suite('Deploy', function (this: Mocha.Suite): void {
                 await deployStaticWebsite(context);
             });
             const createdAccount: StorageAccount = await webSiteClient.storageAccounts.getProperties(resourceName, resourceName);
-            const webUrl: string | undefined = (<ResolvedAppResourceTreeItem<ResolvedStorageAccount>>await ext.rgApi.tree.findTreeItem<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtTreeItem>(<string>createdAccount.id, context)).root.primaryEndpoints?.web;
+            const webUrl: string | undefined = (<ResolvedAppResourceTreeItem<ResolvedStorageAccount>>await ext.rgApi.appResourceTree.findTreeItem<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtTreeItem>(<string>createdAccount.id, context)).root.primaryEndpoints?.web;
             const client: ServiceClient = await createGenericClient(context, undefined);
             await validateWebSite(webUrl, client, 60 * 1000, 1000);
         });

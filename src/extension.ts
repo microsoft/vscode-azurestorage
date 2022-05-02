@@ -40,9 +40,12 @@ import { azuriteExtensionId, emulatorTimeoutMS as startEmulatorDebounce } from '
 import { ext } from './extensionVariables';
 import { getApiExport } from './getApiExport';
 import { StorageAccountResolver } from './StorageAccountResolver';
+import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
+import { IStorageTreeItem } from './tree/IStorageTreeItem';
+import { refreshTreeItem } from './tree/refreshTreeItem';
 import { StorageAccountTreeItem } from './tree/StorageAccountTreeItem';
 
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
@@ -70,13 +73,15 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerTableGroupActionHandlers();
 
         ext.azureStorageFS = new AzureStorageFS();
+        ext.azureStorageWorkspaceFS = new AzureStorageFS();
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', ext.azureStorageFS, { isCaseSensitive: true }));
         context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('azurestorage', ext.azureStorageFS));
 
+        registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
         registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
         registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
             if (!treeItem) {
-                treeItem = <BlobContainerTreeItem | FileShareTreeItem>(await ext.rgApi.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
+                treeItem = <BlobContainerTreeItem | FileShareTreeItem>(await ext.rgApi.appResourceTree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
             }
 
             const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });
@@ -93,7 +98,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerCommand('azureStorage.copyUrl', (_actionContext: IActionContext, treeItem: AzExtTreeItem & ICopyUrl) => treeItem.copyUrl());
         registerCommand("azureStorage.openInPortal", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
             if (!treeItem) {
-                treeItem = <AzExtTreeItem>await ext.rgApi.tree.showTreeItemPicker(new RegExp(StorageAccountTreeItem.contextValue), actionContext);
+                treeItem = <AzExtTreeItem>await ext.rgApi.appResourceTree.showTreeItemPicker(new RegExp(StorageAccountTreeItem.contextValue), actionContext);
             }
 
             await openInPortal(treeItem, treeItem.fullId);
@@ -152,6 +157,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
         ext.rgApi = api;
         api.registerApplicationResourceResolver('microsoft.storage/storageaccounts', new StorageAccountResolver());
+        ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-cosmosdb', new StorageWorkspaceProvider());
     } else {
         throw new Error('Could not find the Azure Resource Groups extension');
     }

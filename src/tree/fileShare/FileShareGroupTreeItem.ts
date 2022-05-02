@@ -13,6 +13,7 @@ import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { localize } from '../../utils/localize';
 import { AttachedStorageAccountTreeItem } from '../AttachedStorageAccountTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
+import { IStorageTreeItem } from '../IStorageTreeItem';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareTreeItem } from './FileShareTreeItem';
 import { FileTreeItem } from './FileTreeItem';
@@ -20,7 +21,7 @@ import { FileTreeItem } from './FileTreeItem';
 const minQuotaGB = 1;
 const maxQuotaGB = 5120;
 
-export class FileShareGroupTreeItem extends AzExtParentTreeItem {
+export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
 
     public label: string = "File Shares";
