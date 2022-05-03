@@ -8,9 +8,10 @@ import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } fr
 import * as path from 'path';
 import { getResourcesPath } from "../../constants";
 import { IStorageRoot } from "../IStorageRoot";
+import { IStorageTreeItem } from '../IStorageTreeItem';
 import { QueueGroupTreeItem } from "./QueueGroupTreeItem";
 
-export class QueueTreeItem extends AzExtTreeItem {
+export class QueueTreeItem extends AzExtTreeItem implements IStorageTreeItem {
     public parent: QueueGroupTreeItem;
     constructor(
         parent: QueueGroupTreeItem,

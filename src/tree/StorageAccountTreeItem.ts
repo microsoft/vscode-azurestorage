@@ -29,6 +29,7 @@ import { StaticWebsiteErrorDocument404Step } from './createWizard/StaticWebsiteE
 import { StaticWebsiteIndexDocumentStep } from './createWizard/StaticWebsiteIndexDocumentStep';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
+import { IStorageTreeItem } from './IStorageTreeItem';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
@@ -45,7 +46,7 @@ export function isResolvedStorageAccountTreeItem(t: unknown): t is ResolvedStora
     return (t as ResolvedStorageAccountTreeItem)?.kind?.toLowerCase() === StorageAccountTreeItem.kind;
 }
 
-export class StorageAccountTreeItem implements ResolvedStorageAccount {
+export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageTreeItem {
     public static kind: 'microsoft.storage/storageaccounts' = 'microsoft.storage/storageaccounts';
     public readonly kind = StorageAccountTreeItem.kind;
     public key: StorageAccountKeyWrapper;
@@ -226,7 +227,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount {
 
         // Currently only the child with the name "$web" is supported for hosting websites
         const id = `${this.storageAccount.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${staticWebsiteContainerName}`;
-        const containerTreeItem = <BlobContainerTreeItem>await ext.rgApi.tree.findTreeItem(id, context);
+        const containerTreeItem = <BlobContainerTreeItem>await ext.rgApi.appResourceTree.findTreeItem(id, context);
         return containerTreeItem;
     }
 
@@ -293,7 +294,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount {
             const props = { staticWebsite: { enabled: false } };
             await this.setWebsiteHostingProperties(props);
             void window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
-            await ext.rgApi.tree.refresh(context, this as unknown as AzExtTreeItem);
+            await ext.rgApi.appResourceTree.refresh(context, this as unknown as AzExtTreeItem);
         }
     }
 

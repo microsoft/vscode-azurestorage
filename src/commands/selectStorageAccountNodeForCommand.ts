@@ -36,7 +36,7 @@ export async function selectStorageAccountTreeItemForCommand(
     context.showEnableWebsiteHostingPrompt = true;
 
     if (!treeItem) {
-        treeItem = <ResolvedStorageAccountTreeItem & AzExtTreeItem>await ext.rgApi.tree.showTreeItemPicker(new RegExp(StorageAccountTreeItem.contextValue), context);
+        treeItem = <ResolvedStorageAccountTreeItem & AzExtTreeItem>await ext.rgApi.appResourceTree.showTreeItemPicker(new RegExp(StorageAccountTreeItem.contextValue), context);
     }
 
     const storageOrContainerTreeItem = <ResolvedStorageAccountTreeItem & AzExtTreeItem | BlobContainerTreeItem>treeItem;

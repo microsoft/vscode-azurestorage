@@ -26,7 +26,7 @@ export function registerBlobContainerActionHandlers(): void {
         let dirParentTreeItem: BlobDirectoryTreeItem | BlobContainerTreeItem = parent;
 
         for (const dirName of dirNames) {
-            const treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | undefined = await ext.rgApi.tree.findTreeItem(`${dirParentTreeItem.fullId}/${dirName}`, context);
+            const treeItem: BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem | undefined = await ext.rgApi.appResourceTree.findTreeItem(`${dirParentTreeItem.fullId}/${dirName}`, context);
             if (!treeItem) {
                 // This directory doesn't exist yet
                 dirParentTreeItem = await dirParentTreeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobDirectoryTreeItem.contextValue, childName: dirName });

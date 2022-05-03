@@ -2,7 +2,7 @@
     "name": "vscode-azurestorage",
     "displayName": "Azure Storage",
     "description": "Manage your Azure Storage accounts including Blob Containers, File Shares, Tables and Queues",
-    "version": "0.13.1-alpha.2",
+    "version": "0.13.1-alpha.3",
     "publisher": "ms-azuretools",
     "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
     "engines": {
@@ -73,7 +73,8 @@
         "onCommand:azureStorage.detachStorageAccount",
         "onCommand:azureStorage.startBlobEmulator",
         "onCommand:azureStorage.startQueueEmulator",
-        "onCommand:azureStorage.reportIssue"
+        "onCommand:azureStorage.reportIssue",
+        "onView:azureWorkspace"
     ],
     "main": "main",
     "icon": "resources/storageAccount.png",
@@ -341,319 +342,319 @@
                 {
                     "$comment": "========= azureStorageAccount =========",
                     "command": "azureStorage.openStorageAccount",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount && !isWeb && !isLinux",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/ && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
                     "command": "azureStorage.openInPortal",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "navigation@2"
                 },
                 {
                     "command": "azureStorage.openInFileExplorer",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare || viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare || viewItem == azureBlobContainer",
                     "group": "navigation@3"
                 },
                 {
                     "command": "azureStorage.openInFileExplorer",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare || viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare || viewItem == azureBlobContainer",
                     "group": "inline"
                 },
                 {
                     "command": "azureStorage.copyConnectionString",
-                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
+                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem =~ /azureStorageAccount/",
                     "group": "5_cutcopypaste@1"
                 },
                 {
                     "command": "azureStorage.copyPrimaryKey",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "5_cutcopypaste@2"
                 },
                 {
                     "command": "azureStorage.browseStaticWebsite",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "6_staticwebsites@1"
                 },
                 {
                     "command": "azureStorage.deployStaticWebsite",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "6_staticwebsites@2"
                 },
                 {
                     "command": "azureStorage.configureStaticWebsite",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "6_staticwebsites@3"
                 },
                 {
                     "command": "azureStorage.disableStaticWebsite",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "6_staticwebsites@4"
                 },
                 {
                     "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "9_refresh"
                 },
                 {
                     "$comment": "========= azureBlobContainerGroup =========",
                     "command": "azureStorage.createBlobContainer",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainerGroup",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainerGroup",
                     "group": "2_create"
                 },
                 {
                     "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainerGroup",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainerGroup",
                     "group": "9_refresh"
                 },
                 {
                     "$comment": "========= azureBlobContainer =========",
                     "command": "azureStorage.openBlobContainer",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer && !isWeb && !isLinux",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
                     "command": "azureStorage.createBlockBlob",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "2_create@1"
                 },
                 {
                     "command": "azureStorage.uploadFiles",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "2_create@2"
                 },
                 {
                     "command": "azureStorage.uploadFolder",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "2_create@3"
                 },
                 {
                     "command": "azureStorage.copyUrl",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "5_cutcopypaste"
                 },
                 {
                     "command": "azureStorage.browseStaticWebsite",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "6_staticwebsites@1"
                 },
                 {
                     "command": "azureStorage.deployStaticWebsite",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "6_staticwebsites@2"
                 },
                 {
                     "command": "azureStorage.configureStaticWebsite",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "6_staticwebsites@3"
                 },
                 {
                     "command": "azureStorage.disableStaticWebsite",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "6_staticwebsites@4"
                 },
                 {
                     "command": "azureStorage.deleteBlobContainer",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "9_refresh"
                 },
                 {
                     "$comment": "========= azureBlob =========",
                     "command": "azureStorage.deleteBlob",
-                    "when": "view == azureResourceGroups && viewItem == azureBlob",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob",
                     "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.download",
-                    "when": "view == azureResourceGroups && viewItem == azureBlob",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob",
                     "group": "3_download"
                 },
                 {
                     "command": "azureStorage.copyUrl",
-                    "when": "view == azureResourceGroups && viewItem == azureBlob",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob",
                     "group": "5_cutcopypaste"
                 },
                 {
                     "$comment": "========= azureBlobDirectory =========",
                     "command": "azureStorage.deleteBlobDirectory",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
                     "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.download",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
                     "group": "3_download"
                 },
                 {
                     "command": "azureStorage.copyUrl",
-                    "when": "view == azureResourceGroups && viewItem == azureBlobDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
                     "group": "5_cutcopypaste"
                 },
                 {
                     "$comment": "========= azureFileShareGroup =========",
                     "command": "azureStorage.createFileShare",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShareGroup",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareGroup",
                     "group": "2_create"
                 },
                 {
                     "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShareGroup",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareGroup",
                     "group": "9_refresh"
                 },
                 {
                     "$comment": "========= azureFileShare =========",
                     "command": "azureStorage.openFileShare",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare && !isWeb && !isLinux",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
                     "command": "azureStorage.createFile",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
                     "group": "2_create@1"
                 },
                 {
                     "command": "azureStorage.createDirectory",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
                     "group": "2_create@2"
                 },
                 {
                     "command": "azureStorage.uploadFiles",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
                     "group": "2_create@3"
                 },
                 {
                     "command": "azureStorage.uploadFolder",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
                     "group": "2_create@4"
                 },
                 {
                     "command": "azureStorage.copyUrl",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
                     "group": "5_cutcopypaste"
                 },
                 {
                     "command": "azureStorage.deleteFileShare",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
                     "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.deleteStorageAccount",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShare",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
                     "group": "9_refresh"
                 },
                 {
                     "$comment": "========= azureFile =========",
                     "command": "azureStorage.download",
-                    "when": "view == azureResourceGroups && viewItem == azureFile",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile",
                     "group": "3_download"
                 },
                 {
                     "command": "azureStorage.copyUrl",
-                    "when": "view == azureResourceGroups && viewItem == azureFile",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile",
                     "group": "5_cutcopypaste"
                 },
                 {
                     "command": "azureStorage.deleteFile",
-                    "when": "view == azureResourceGroups && viewItem == azureFile",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile",
                     "group": "7_modification"
                 },
                 {
                     "$comment": "========= azureFileShareDirectory =========",
                     "command": "azureStorage.createFile",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShareDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
                     "group": "2_create@1"
                 },
                 {
                     "command": "azureStorage.download",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShareDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
                     "group": "3_download"
                 },
                 {
                     "command": "azureStorage.createSubdirectory",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShareDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
                     "group": "2_create@2"
                 },
                 {
                     "command": "azureStorage.copyUrl",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShareDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
                     "group": "5_cutcopypaste"
                 },
                 {
                     "command": "azureStorage.deleteDirectory",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShareDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
                     "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem == azureFileShareDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
                     "group": "9_refresh"
                 },
                 {
                     "$comment": "========= azureQueueGroup =========",
                     "command": "azureStorage.createQueue",
-                    "when": "view == azureResourceGroups && viewItem == azureQueueGroup",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureQueueGroup",
                     "group": "2_create"
                 },
                 {
                     "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem == azureQueueGroup",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureQueueGroup",
                     "group": "9_refresh"
                 },
                 {
                     "$comment": "========= azureQueue =========",
                     "command": "azureStorage.openQueue",
-                    "when": "view == azureResourceGroups && viewItem == azureQueue && !isWeb && !isLinux",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureQueue && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
                     "command": "azureStorage.deleteQueue",
-                    "when": "view == azureResourceGroups && viewItem == azureQueue",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureQueue",
                     "group": "7_modification"
                 },
                 {
                     "$comment": "========= azureTableGroup =========",
                     "command": "azureStorage.createTable",
-                    "when": "view == azureResourceGroups && viewItem == azureTableGroup",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureTableGroup",
                     "group": "2_create"
                 },
                 {
                     "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem == azureTableGroup",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureTableGroup",
                     "group": "9_refresh"
                 },
                 {
                     "$comment": "========= azureTable =========",
                     "command": "azureStorage.openTable",
-                    "when": "view == azureResourceGroups && viewItem == azureTable && !isWeb && !isLinux",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureTable && !isWeb && !isLinux",
                     "group": "navigation@1"
                 },
                 {
                     "command": "azureStorage.deleteTable",
-                    "when": "view == azureResourceGroups && viewItem == azureTable",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureTable",
                     "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.attachStorageAccount",
-                    "when": "view == azureResourceGroups && viewItem == attachedStorageAccounts",
+                    "when": "view == azureWorkspace && viewItem == attachedStorageAccounts",
                     "group": "2_create"
                 },
                 {
                     "command": "azureStorage.detachStorageAccount",
-                    "when": "view == azureResourceGroups && viewItem == azureStorageAccount-attached",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureStorageAccount-attached",
                     "group": "7_modification"
                 },
                 {
                     "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem == attachedStorageAccounts",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == attachedStorageAccounts",
                     "group": "9_refresh"
                 }
             ],

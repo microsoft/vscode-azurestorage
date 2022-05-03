@@ -9,6 +9,7 @@ import { NotificationProgress } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
+import { refreshTreeItem } from '../tree/refreshTreeItem';
 import { isAzCopyError } from '../utils/errorUtils';
 import { nonNullValue } from '../utils/nonNull';
 import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessageWithSource, showUploadSuccessMessage, upload, uploadLocalFolder } from '../utils/uploadUtils';
@@ -33,7 +34,7 @@ export async function uploadFolder(
         }))[0];
     }
 
-    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.rgApi.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
+    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.rgApi.appResourceTree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
     destinationDirectory = await getDestinationDirectory(context, destinationDirectory);
 
     const sourcePath: string = uri.fsPath;
@@ -67,6 +68,6 @@ export async function uploadFolder(
         showUploadSuccessMessage(treeItem.label);
     }
 
-    await ext.rgApi.tree.refresh(context, treeItem);
+    await refreshTreeItem(context, treeItem);
     return resolution;
 }

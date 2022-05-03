@@ -14,10 +14,11 @@ import { createBlobContainerClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
+import { IStorageTreeItem } from "../IStorageTreeItem";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 
-export class BlobContainerGroupTreeItem extends AzExtParentTreeItem {
+export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
 
     public label: string = "Blob Containers";

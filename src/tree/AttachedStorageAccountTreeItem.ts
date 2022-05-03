@@ -17,11 +17,12 @@ import { AttachedAccountRoot } from './AttachedStorageAccountsTreeItem';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
+import { IStorageTreeItem } from './IStorageTreeItem';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
-export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem {
+export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
     public static baseContextValue: string = `${StorageAccountTreeItem.contextValue}-attached`;
