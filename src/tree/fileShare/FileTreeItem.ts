@@ -12,10 +12,11 @@ import { ext } from "../../extensionVariables";
 import { createFileClient, deleteFile } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
+import { IStorageTreeItem } from '../IStorageTreeItem';
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./DirectoryTreeItem";
 import { FileShareTreeItem } from './FileShareTreeItem';
 
-export class FileTreeItem extends AzExtTreeItem implements ICopyUrl {
+export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTreeItem {
     public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,

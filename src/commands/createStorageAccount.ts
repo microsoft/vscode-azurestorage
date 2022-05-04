@@ -20,7 +20,7 @@ import { ISelectStorageAccountContext } from './selectStorageAccountNodeForComma
 
 export async function createStorageAccount(context: IActionContext & Partial<ICreateChildImplContext>, treeItem?: SubscriptionTreeItem): Promise<StorageAccountTreeItem> {
     if (!treeItem) {
-        treeItem = <SubscriptionTreeItem>await ext.rgApi.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue, context);
+        treeItem = <SubscriptionTreeItem>await ext.rgApi.appResourceTree.showTreeItemPicker(SubscriptionTreeItem.contextValue, context);
     }
 
     const wizardContext: IStorageAccountWizardContext = Object.assign(context, {

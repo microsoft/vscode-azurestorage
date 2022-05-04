@@ -13,9 +13,10 @@ import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { localize } from "../../utils/localize";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
+import { IStorageTreeItem } from '../IStorageTreeItem';
 import { QueueTreeItem } from './QueueTreeItem';
 
-export class QueueGroupTreeItem extends AzExtParentTreeItem {
+export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
 
     public label: string = "Queues";

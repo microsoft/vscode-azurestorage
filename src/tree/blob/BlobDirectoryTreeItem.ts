@@ -13,10 +13,11 @@ import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildC
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from "../ICopyUrl";
 import { IStorageRoot } from "../IStorageRoot";
+import { IStorageTreeItem } from "../IStorageTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 
-export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl {
+export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
     public static contextValue: string = 'azureBlobDirectory';
     public contextValue: string = BlobDirectoryTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;

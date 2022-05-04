@@ -14,9 +14,10 @@ import { localize } from "../../utils/localize";
 import { nonNull } from '../../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
+import { IStorageTreeItem } from '../IStorageTreeItem';
 import { TableTreeItem } from './TableTreeItem';
 
-export class TableGroupTreeItem extends AzExtParentTreeItem {
+export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
 
     public label: string = "Tables";

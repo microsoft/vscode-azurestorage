@@ -14,10 +14,11 @@ import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDire
 import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
+import { IStorageTreeItem } from '../IStorageTreeItem';
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./FileShareTreeItem";
 import { FileTreeItem } from './FileTreeItem';
 
-export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl {
+export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
     public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,
