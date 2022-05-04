@@ -37,7 +37,6 @@
         "onCommand:azureStorage.disableStaticWebsite",
         "onCommand:azureStorage.refresh",
         "onCommand:azureStorage.browseStaticWebsite",
-        "onCommand:azureStorage.openInPortal",
         "onCommand:azureStorage.copyUrl",
         "onCommand:azureStorage.openBlobContainer",
         "onCommand:azureStorage.openTable",
@@ -104,11 +103,6 @@
                 "command": "azureStorage.refresh",
                 "title": "Refresh",
                 "icon": "$(refresh)",
-                "category": "Azure Storage"
-            },
-            {
-                "command": "azureStorage.openInPortal",
-                "title": "Open in Portal",
                 "category": "Azure Storage"
             },
             {
@@ -346,11 +340,6 @@
                     "group": "navigation@1"
                 },
                 {
-                    "command": "azureStorage.openInPortal",
-                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
-                    "group": "navigation@2"
-                },
-                {
                     "command": "azureStorage.openInFileExplorer",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare || viewItem == azureBlobContainer",
                     "group": "navigation@3"
@@ -389,11 +378,6 @@
                     "command": "azureStorage.disableStaticWebsite",
                     "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "6_staticwebsites@4"
-                },
-                {
-                    "command": "azureStorage.refresh",
-                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
-                    "group": "9_refresh"
                 },
                 {
                     "$comment": "========= azureBlobContainerGroup =========",
@@ -805,10 +789,10 @@
         "@azure/storage-blob": "^12.1.1",
         "@azure/storage-file-share": "^12.1.1",
         "@azure/storage-queue": "^12.7.0",
-        "@microsoft/vscode-azext-azureappservice": "^0.2.0",
+        "@microsoft/vscode-azext-azureappservice": "^0.4.3",
         "@microsoft/vscode-azext-azureutils": "^0.2.0",
         "@microsoft/vscode-azext-dev": "^0.1.2",
-        "@microsoft/vscode-azext-utils": "^0.2.0",
+        "@microsoft/vscode-azext-utils": "^0.2.4",
         "@types/mime": "^2.0.1",
         "glob": "^7.1.2",
         "mime": "^2.4.4",
