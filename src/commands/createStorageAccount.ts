@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtLocation, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountCreateStep, StorageAccountKind, StorageAccountNameStep, StorageAccountPerformance, StorageAccountReplication, VerifyProvidersStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ICreateChildImplContext, nonNullProp } from '@microsoft/vscode-azext-utils';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, ExecuteActivityContext, IActionContext, ICreateChildImplContext, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { storageProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { StaticWebsiteConfigureStep } from '../tree/createWizard/StaticWebsiteConfigureStep';
@@ -23,7 +23,7 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
         treeItem = <SubscriptionTreeItem>await ext.rgApi.appResourceTree.showTreeItemPicker(SubscriptionTreeItem.contextValue, context);
     }
 
-    const wizardContext: IStorageAccountWizardContext = Object.assign(context, {
+    const wizardContext: IStorageAccountWizardContext & ExecuteActivityContext = Object.assign(context, {
         ...treeItem.subscription,
         ...(await createActivityContext())
     });
@@ -76,10 +76,12 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
 
     await wizard.execute();
 
+    await ext.rgApi.appResourceTree.refresh(context);
+
     // In case this account has been created via a deploy or browse command, the enable website hosting prompt shouldn't be shown
     (<ISelectStorageAccountContext>context).showEnableWebsiteHostingPrompt = false;
 
-    return (<IStorageAccountTreeItemCreateContext>wizardContext).accountTreeItem;
+    return (wizardContext as unknown as IStorageAccountTreeItemCreateContext).accountTreeItem;
 }
 
 export async function createStorageAccountAdvanced(actionContext: IActionContext, treeItem?: SubscriptionTreeItem): Promise<StorageAccountTreeItem> {
