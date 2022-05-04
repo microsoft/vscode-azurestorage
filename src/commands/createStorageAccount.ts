@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtLocation, IStorageAccountWizardContext, LocationListStep, ResourceGroupCreateStep, ResourceGroupListStep, StorageAccountCreateStep, StorageAccountKind, StorageAccountNameStep, StorageAccountPerformance, StorageAccountReplication, VerifyProvidersStep } from '@microsoft/vscode-azext-azureutils';
-import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ICreateChildImplContext } from '@microsoft/vscode-azext-utils';
-import * as vscode from 'vscode';
+import { AzureWizard, AzureWizardExecuteStep, AzureWizardPromptStep, IActionContext, ICreateChildImplContext, nonNullProp } from '@microsoft/vscode-azext-utils';
 import { storageProvider } from '../constants';
 import { ext } from '../extensionVariables';
 import { StaticWebsiteConfigureStep } from '../tree/createWizard/StaticWebsiteConfigureStep';
@@ -15,6 +14,7 @@ import { StaticWebsiteIndexDocumentStep } from '../tree/createWizard/StaticWebsi
 import { IStorageAccountTreeItemCreateContext, StorageAccountTreeItemCreateStep } from '../tree/createWizard/StorageAccountTreeItemCreateStep';
 import { StorageAccountTreeItem } from '../tree/StorageAccountTreeItem';
 import { SubscriptionTreeItem } from '../tree/SubscriptionTreeItem';
+import { createActivityContext } from '../utils/activityUtils';
 import { localize } from '../utils/localize';
 import { ISelectStorageAccountContext } from './selectStorageAccountNodeForCommand';
 
@@ -23,7 +23,10 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
         treeItem = <SubscriptionTreeItem>await ext.rgApi.tree.showTreeItemPicker(SubscriptionTreeItem.contextValue, context);
     }
 
-    const wizardContext: IStorageAccountWizardContext = Object.assign(context, treeItem.subscription);
+    const wizardContext: IStorageAccountWizardContext = Object.assign(context, {
+        ...treeItem.subscription,
+        ...(await createActivityContext())
+    });
     wizardContext.includeExtendedLocations = true;
     const defaultLocation: string | undefined = wizardContext.isCustomCloud ? undefined : 'westus';
     const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
@@ -68,10 +71,10 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
         wizardContext.newResourceGroupName = await wizardContext.relatedNameTask;
     }
 
-    await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async () => {
-        // context.showCreatingTreeItem(nonNull(wizardContext.newStorageAccountName));
-        await wizard.execute();
-    });
+    const newStorageAccountName = nonNullProp(wizardContext, 'newStorageAccountName');
+    wizardContext.activityTitle = localize('createStorageAccount', 'Create storage account "{0}"', newStorageAccountName);
+
+    await wizard.execute();
 
     // In case this account has been created via a deploy or browse command, the enable website hosting prompt shouldn't be shown
     (<ISelectStorageAccountContext>context).showEnableWebsiteHostingPrompt = false;

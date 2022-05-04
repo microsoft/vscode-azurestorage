@@ -9,14 +9,15 @@ import * as azureStorageBlob from '@azure/storage-blob';
 import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorageQueue from '@azure/storage-queue';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
-import * as vscode from 'vscode';
 import { commands, MessageItem, window } from 'vscode';
+import { DeleteStorageAccountStep } from '../commands/deleteStorageAccount/DeleteStorageAccountStep';
+import { DeleteStorageAccountWizardContext } from '../commands/deleteStorageAccount/DeleteStorageAccountWizardContext';
 import { staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
 import { ResolvedStorageAccount } from '../StorageAccountResolver';
-import { createStorageClient } from '../utils/azureClients';
+import { createActivityContext } from '../utils/activityUtils';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -128,26 +129,22 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount {
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
+        const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
+        const wizardContext: DeleteStorageAccountWizardContext = Object.assign(context, {
+            storageAccount: this.storageAccount,
+            subscription: this._subscription,
+            ...(await createActivityContext()),
+            activityTitle: deletingStorageAccount
+        });
+
         const message: string = `Are you sure you want to delete account "${this.label}" and all its contents?`;
-        // Use ext.ui to emulate user input by TestUserInput() method so that the tests can work
-        const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        if (result === DialogResponses.deleteResponse) {
-            const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
-            const storageManagementClient = await createStorageClient([context, this._subscription]);
-            const parsedId = this.parseAzureResourceId(this.storageAccount.id);
-            const resourceGroupName = parsedId.resourceGroups;
+        const wizard = new AzureWizard(wizardContext, {
+            promptSteps: [new DeleteConfirmationStep(message)],
+            executeSteps: [new DeleteStorageAccountStep()]
+        });
 
-            ext.outputChannel.appendLog(deletingStorageAccount);
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deletingStorageAccount }, async () => {
-                await storageManagementClient.storageAccounts.delete(resourceGroupName, this.storageAccount.name);
-            });
-
-            const deleteSuccessful: string = localize('successfullyDeletedStorageAccount', 'Successfully deleted storage account "{0}".', this.label);
-            ext.outputChannel.appendLog(deleteSuccessful);
-            void window.showInformationMessage(deleteSuccessful);
-        } else {
-            throw new UserCancelledError();
-        }
+        await wizard.prompt();
+        await wizard.execute();
     }
 
     private createRoot(): IStorageRoot {
@@ -186,13 +183,13 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount {
     }
 
     async getKeys(): Promise<StorageAccountKeyWrapper[]> {
-        const parsedId = this.parseAzureResourceId(this.storageAccount.id);
+        const parsedId = StorageAccountTreeItem.parseAzureResourceId(this.storageAccount.id);
         const resourceGroupName = parsedId.resourceGroups;
         const keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
         return (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
     }
 
-    parseAzureResourceId(resourceId: string): { [key: string]: string } {
+    public static parseAzureResourceId(resourceId: string): { [key: string]: string } {
         const invalidIdErr = new Error('Invalid Account ID.');
         const result = {};
 

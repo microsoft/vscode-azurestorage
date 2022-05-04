@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { openInPortal } from '@microsoft/vscode-azext-azureutils';
+import { registerAzureUtilsExtensionVariables } from '@microsoft/vscode-azext-azureutils';
 import { AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '@microsoft/vscode-azext-utils/api';
 import { AzureHostExtensionApi } from '@microsoft/vscode-azext-utils/hostapi';
@@ -43,7 +43,6 @@ import { StorageAccountResolver } from './StorageAccountResolver';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
-import { StorageAccountTreeItem } from './tree/StorageAccountTreeItem';
 
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
     ext.context = context;
@@ -51,6 +50,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     ext.outputChannel = createAzExtOutputChannel('Azure Storage', ext.prefix);
     context.subscriptions.push(ext.outputChannel);
     registerUIExtensionVariables(ext);
+    registerAzureUtilsExtensionVariables(ext);
 
     await callWithTelemetryAndErrorHandling('activate', (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
@@ -91,13 +91,6 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await wizard.execute();
         });
         registerCommand('azureStorage.copyUrl', (_actionContext: IActionContext, treeItem: AzExtTreeItem & ICopyUrl) => treeItem.copyUrl());
-        registerCommand("azureStorage.openInPortal", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
-            if (!treeItem) {
-                treeItem = <AzExtTreeItem>await ext.rgApi.tree.showTreeItemPicker(new RegExp(StorageAccountTreeItem.contextValue), actionContext);
-            }
-
-            await openInPortal(treeItem, treeItem.fullId);
-        });
         registerCommand("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
             const accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
