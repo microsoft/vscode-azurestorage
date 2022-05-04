@@ -5,6 +5,7 @@
 
 import { AzExtTreeItem, IActionContext } from "@microsoft/vscode-azext-utils";
 import * as assert from 'assert';
+import { storageFilter } from "../constants";
 import { ext } from "../extensionVariables";
 import { AttachedStorageAccountTreeItem } from '../tree/AttachedStorageAccountTreeItem';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
@@ -36,7 +37,10 @@ export async function selectStorageAccountTreeItemForCommand(
     context.showEnableWebsiteHostingPrompt = true;
 
     if (!treeItem) {
-        treeItem = <ResolvedStorageAccountTreeItem & AzExtTreeItem>await ext.rgApi.appResourceTree.showTreeItemPicker(new RegExp(StorageAccountTreeItem.contextValue), context);
+        treeItem = await ext.rgApi.pickAppResource<ResolvedStorageAccountTreeItem & AzExtTreeItem>(context, {
+            filter: storageFilter,
+            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
+        });
     }
 
     const storageOrContainerTreeItem = <ResolvedStorageAccountTreeItem & AzExtTreeItem | BlobContainerTreeItem>treeItem;

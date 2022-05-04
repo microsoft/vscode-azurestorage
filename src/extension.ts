@@ -36,7 +36,7 @@ import { registerTableGroupActionHandlers } from './commands/table/tableGroupAct
 import { uploadFiles } from './commands/uploadFiles';
 import { uploadFolder } from './commands/uploadFolder';
 import { uploadToAzureStorage } from './commands/uploadToAzureStorage';
-import { azuriteExtensionId, emulatorTimeoutMS as startEmulatorDebounce } from './constants';
+import { azuriteExtensionId, emulatorTimeoutMS as startEmulatorDebounce, storageFilter } from './constants';
 import { ext } from './extensionVariables';
 import { getApiExport } from './getApiExport';
 import { StorageAccountResolver } from './StorageAccountResolver';
@@ -81,7 +81,10 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
         registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
             if (!treeItem) {
-                treeItem = <BlobContainerTreeItem | FileShareTreeItem>(await ext.rgApi.appResourceTree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
+                treeItem = await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(actionContext, {
+                    filter: storageFilter,
+                    expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
+                });
             }
 
             const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });

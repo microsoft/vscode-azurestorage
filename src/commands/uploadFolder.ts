@@ -5,7 +5,7 @@
 
 import { IActionContext, IParsedError, parseError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { NotificationProgress } from '../constants';
+import { NotificationProgress, storageFilter } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
@@ -34,7 +34,10 @@ export async function uploadFolder(
         }))[0];
     }
 
-    treeItem = treeItem || <BlobContainerTreeItem | FileShareTreeItem>(await ext.rgApi.appResourceTree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context));
+    treeItem = treeItem || await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(context, {
+        filter: storageFilter,
+        expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
+    });
     destinationDirectory = await getDestinationDirectory(context, destinationDirectory);
 
     const sourcePath: string = uri.fsPath;
