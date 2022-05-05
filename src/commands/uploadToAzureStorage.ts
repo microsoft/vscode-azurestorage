@@ -5,6 +5,7 @@
 
 import { IActionContext, IParsedError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
+import { storageFilter } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
@@ -18,7 +19,10 @@ import { uploadFiles } from './uploadFiles';
 import { uploadFolder } from './uploadFolder';
 
 export async function uploadToAzureStorage(context: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
-    const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.rgApi.appResourceTree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context);
+    const treeItem = await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(context, {
+        filter: storageFilter,
+        expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
+    });
     const destinationDirectory: string = await promptForDestinationDirectory(context);
     const allFolderUris: vscode.Uri[] = [];
     const allFileUris: vscode.Uri[] = [];
