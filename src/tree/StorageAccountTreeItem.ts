@@ -130,7 +130,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
-        const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
+        const deletingStorageAccount: string = localize('deleteStorageAccount', 'Delete storage account "{0}"', this.label);
         const wizardContext: DeleteStorageAccountWizardContext = Object.assign(context, {
             storageAccount: this.storageAccount,
             subscription: this._subscription,
