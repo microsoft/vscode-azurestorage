@@ -42,7 +42,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         if (resourceId.startsWith('/attachedStorageAccounts')) {
             idRegExp = /(\/attachedStorageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
         } else {
-            idRegExp = /(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
+            idRegExp = /(\/subscriptions\/[^\/]+\/[^\/]+\/[^\/]+\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
         }
 
         let matches: RegExpMatchArray | null = resourceId.match(idRegExp);
