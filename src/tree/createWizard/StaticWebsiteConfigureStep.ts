@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from '@azure/storage-blob';
-import { AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
 import { window } from "vscode";
 import { NotificationProgress } from '../../constants';
 import { ext } from '../../extensionVariables';
@@ -46,7 +46,7 @@ export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageA
         void window.showInformationMessage(msg);
 
         if (newStatus.staticWebsite && this.previouslyEnabled !== newStatus.staticWebsite.enabled) {
-            await ext.tree.refresh(wizardContext, this.accountTreeItem);
+            await ext.rgApi.appResourceTree.refresh(wizardContext, this.accountTreeItem as unknown as AzExtTreeItem);
         }
     }
 

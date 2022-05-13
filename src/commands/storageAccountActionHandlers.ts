@@ -3,13 +3,15 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from "vscode";
-import { configurationSettingsKeys, extensionPrefix } from '../constants';
+import { configurationSettingsKeys, extensionPrefix, storageFilter } from '../constants';
 import { ext } from '../extensionVariables';
+import { ResolvedStorageAccount } from '../StorageAccountResolver';
 import { storageExplorerLauncher } from '../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
-import { StorageAccountTreeItem } from '../tree/StorageAccountTreeItem';
+import { ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from '../tree/StorageAccountTreeItem';
 import { isPathEqual, isSubpath } from '../utils/fs';
 import { localize } from "../utils/localize";
 import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
@@ -24,9 +26,12 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommand("azureStorage.deleteStorageAccount", deleteStorageAccount);
 }
 
-async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
+async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: ResolvedAppResourceTreeItem<ResolvedStorageAccount>): Promise<void> {
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
+        treeItem = await ext.rgApi.pickAppResource<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtTreeItem>(context, {
+            filter: storageFilter,
+            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
+        });
     }
 
     const accountId = treeItem.storageAccount.id;
@@ -36,7 +41,10 @@ async function openStorageAccountInStorageExplorer(context: IActionContext, tree
 
 export async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
+        treeItem = await ext.rgApi.pickAppResource<StorageAccountTreeItem & AzExtTreeItem>(context, {
+            filter: storageFilter,
+            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
+        });
     }
 
     await vscode.env.clipboard.writeText(treeItem.key.value);
@@ -44,7 +52,10 @@ export async function copyPrimaryKey(context: IActionContext, treeItem?: Storage
 
 export async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, context);
+        treeItem = await ext.rgApi.pickAppResource<StorageAccountTreeItem & AzExtTreeItem>(context, {
+            filter: storageFilter,
+            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
+        });
     }
 
     const connectionString = treeItem.getConnectionString();
@@ -54,7 +65,7 @@ export async function copyConnectionString(context: IActionContext, treeItem?: S
 export async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {
     context.telemetry.eventVersion = 2;
     let sourcePath: string | undefined;
-    let destTreeItem: StorageAccountTreeItem | BlobContainerTreeItem | undefined;
+    let destTreeItem: (StorageAccountTreeItem & AzExtTreeItem) | BlobContainerTreeItem | undefined;
 
     // Disambiguate context this was executed from
     if (target instanceof vscode.Uri) {
@@ -68,7 +79,7 @@ export async function deployStaticWebsite(context: IActionContext, target?: vsco
         context.telemetry.properties.contextValue = 'Folder';
     } else {
         // Command called from command palette or from storage account/container treeItem
-        destTreeItem = <StorageAccountTreeItem | BlobContainerTreeItem>target;
+        destTreeItem = <(StorageAccountTreeItem & AzExtTreeItem) | BlobContainerTreeItem>target;
         context.telemetry.properties.contextValue = (destTreeItem && destTreeItem.contextValue) || 'CommandPalette';
     }
 
@@ -78,7 +89,7 @@ export async function deployStaticWebsite(context: IActionContext, target?: vsco
     }
 
     // Ask for destination account
-    const destAccountTreeItem: StorageAccountTreeItem = await selectStorageAccountTreeItemForCommand(
+    const destAccountTreeItem: ResolvedStorageAccountTreeItem = await selectStorageAccountTreeItemForCommand(
         destTreeItem,
         context,
         {
@@ -132,6 +143,6 @@ function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vsc
     }
 }
 
-export async function deleteStorageAccount(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
-    await deleteNode(context, StorageAccountTreeItem.contextValue, treeItem);
+export async function deleteStorageAccount(context: IActionContext, treeItem?: StorageAccountTreeItem & AzExtTreeItem): Promise<void> {
+    await deleteNode(context, new RegExp(StorageAccountTreeItem.contextValue), treeItem);
 }

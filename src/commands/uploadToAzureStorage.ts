@@ -5,9 +5,11 @@
 
 import { IActionContext, IParsedError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
+import { storageFilter } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
+import { refreshTreeItem } from '../tree/refreshTreeItem';
 import { AzExtFsExtra } from '../utils/AzExtFsExtra';
 import { multipleAzCopyErrorsMessage, throwIfCanceled } from '../utils/errorUtils';
 import { isSubpath } from '../utils/fs';
@@ -17,7 +19,10 @@ import { uploadFiles } from './uploadFiles';
 import { uploadFolder } from './uploadFolder';
 
 export async function uploadToAzureStorage(context: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
-    const treeItem: BlobContainerTreeItem | FileShareTreeItem = await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], context);
+    const treeItem = await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(context, {
+        filter: storageFilter,
+        expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
+    });
     const destinationDirectory: string = await promptForDestinationDirectory(context);
     const allFolderUris: vscode.Uri[] = [];
     const allFileUris: vscode.Uri[] = [];
@@ -94,5 +99,5 @@ export async function uploadToAzureStorage(context: IActionContext, _firstSelect
         showUploadSuccessMessage(treeItem.label);
     }
 
-    await ext.tree.refresh(context, treeItem);
+    await refreshTreeItem(context, treeItem);
 }

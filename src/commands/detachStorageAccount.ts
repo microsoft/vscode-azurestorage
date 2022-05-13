@@ -9,9 +9,9 @@ import { AttachedStorageAccountTreeItem } from "../tree/AttachedStorageAccountTr
 
 export async function detachStorageAccount(actionContext: IActionContext, treeItem?: AttachedStorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = <AttachedStorageAccountTreeItem>await ext.tree.showTreeItemPicker(AttachedStorageAccountTreeItem.baseContextValue, actionContext);
+        treeItem = <AttachedStorageAccountTreeItem>await ext.rgApi.workspaceResourceTree.showTreeItemPicker(AttachedStorageAccountTreeItem.baseContextValue, actionContext);
     }
 
     await ext.attachedStorageAccountsTreeItem.detach(treeItem);
-    await ext.tree.refresh(actionContext, ext.attachedStorageAccountsTreeItem);
+    await ext.rgApi.workspaceResourceTree.refresh(actionContext, ext.attachedStorageAccountsTreeItem);
 }

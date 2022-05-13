@@ -39,3 +39,7 @@ export type NotificationProgress = Progress<{
 }>;
 
 export const storageProvider: string = 'Microsoft.Storage';
+
+export const storageFilter = {
+    type: 'Microsoft.Storage/storageAccounts',
+}

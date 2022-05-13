@@ -4,28 +4,29 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureDataTables from '@azure/data-tables';
-import { uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { getResourcesPath } from "../../constants";
+import { getResourcesPath, maxPageSize } from "../../constants";
+import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { localize } from "../../utils/localize";
 import { nonNull } from '../../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
-import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
+import { IStorageTreeItem } from '../IStorageTreeItem';
 import { TableTreeItem } from './TableTreeItem';
 
-export class TableGroupTreeItem extends AzExtParentTreeItem {
+export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
 
     public label: string = "Tables";
     public readonly childTypeLabel: string = "Table";
     public static contextValue: string = 'azureTableGroup';
     public contextValue: string = TableGroupTreeItem.contextValue;
-    public parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem;
+    public parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
 
-    public constructor(parent: StorageAccountTreeItem | AttachedStorageAccountTreeItem) {
+    public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
@@ -66,10 +67,12 @@ export class TableGroupTreeItem extends AzExtParentTreeItem {
         return !!this._continuationToken;
     }
 
-    // pagination is broken for now https://github.com/Azure/azure-sdk-for-js/issues/20380
-    async listTables(_continuationToken?: string): Promise<azureDataTables.TableItemResultPage> {
+    async listTables(continuationToken?: string): Promise<azureDataTables.TableItemResultPage> {
         const tableServiceClient = this.root.createTableServiceClient();
-        return uiUtils.listAllIterator(tableServiceClient.listTables());
+        const response: AsyncIterableIterator<azureDataTables.TableItemResultPage> = tableServiceClient.listTables().byPage({ continuationToken, maxPageSize });
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return (await response.next()).value;
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<TableTreeItem> {

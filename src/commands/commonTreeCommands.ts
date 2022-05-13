@@ -4,11 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext } from '@microsoft/vscode-azext-utils';
+import { storageFilter } from '../constants';
 import { ext } from '../extensionVariables';
 
-export async function deleteNode(context: IActionContext, expectedContextValue: string, node?: AzExtTreeItem): Promise<void> {
+export async function deleteNode(context: IActionContext, expectedContextValue: string | RegExp, node?: AzExtTreeItem): Promise<void> {
     if (!node) {
-        node = await ext.tree.showTreeItemPicker(expectedContextValue, { ...context, suppressCreatePick: true });
+        node = await ext.rgApi.pickAppResource({ ...context, suppressCreatePick: true }, {
+            filter: storageFilter,
+            expectedChildContextValue: expectedContextValue
+        });
     }
 
     await node.deleteTreeItem(context);
@@ -16,7 +20,10 @@ export async function deleteNode(context: IActionContext, expectedContextValue: 
 
 export async function createChildNode(context: IActionContext, expectedContextValue: string, node?: AzExtParentTreeItem): Promise<void> {
     if (!node) {
-        node = await ext.tree.showTreeItemPicker<AzExtParentTreeItem>(expectedContextValue, context);
+        node = await ext.rgApi.pickAppResource<AzExtParentTreeItem>(context, {
+            filter: storageFilter,
+            expectedChildContextValue: expectedContextValue
+        });
     }
 
     await node.createChild(context);

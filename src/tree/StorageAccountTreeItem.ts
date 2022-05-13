@@ -9,13 +9,15 @@ import * as azureStorageBlob from '@azure/storage-blob';
 import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorageQueue from '@azure/storage-queue';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DialogResponses, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
-import * as path from 'path';
-import * as vscode from 'vscode';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import { commands, MessageItem, window } from 'vscode';
-import { getResourcesPath, staticWebsiteContainerName } from '../constants';
+import { DeleteStorageAccountStep } from '../commands/deleteStorageAccount/DeleteStorageAccountStep';
+import { DeleteStorageAccountWizardContext } from '../commands/deleteStorageAccount/DeleteStorageAccountWizardContext';
+import { staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
-import { createStorageClient } from '../utils/azureClients';
+import { ResolvedStorageAccount } from '../StorageAccountResolver';
+import { createActivityContext } from '../utils/activityUtils';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -28,6 +30,7 @@ import { StaticWebsiteErrorDocument404Step } from './createWizard/StaticWebsiteE
 import { StaticWebsiteIndexDocumentStep } from './createWizard/StaticWebsiteIndexDocumentStep';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
+import { IStorageTreeItem } from './IStorageTreeItem';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
@@ -38,36 +41,34 @@ export type WebsiteHostingStatus = {
     errorDocument404Path?: string;
 };
 
-export class StorageAccountTreeItem extends AzExtParentTreeItem {
+export type ResolvedStorageAccountTreeItem = ResolvedAppResourceTreeItem<ResolvedStorageAccount>;
+
+export function isResolvedStorageAccountTreeItem(t: unknown): t is ResolvedStorageAccountTreeItem {
+    return (t as ResolvedStorageAccountTreeItem)?.kind?.toLowerCase() === StorageAccountTreeItem.kind;
+}
+
+export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageTreeItem {
+    public static kind: 'microsoft.storage/storageaccounts' = 'microsoft.storage/storageaccounts';
+    public readonly kind = StorageAccountTreeItem.kind;
     public key: StorageAccountKeyWrapper;
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
 
-    private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
-    private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
-    private readonly _queueGroupTreeItem: QueueGroupTreeItem;
-    private readonly _tableGroupTreeItem: TableGroupTreeItem;
+    private _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
+    private _fileShareGroupTreeItem: FileShareGroupTreeItem;
+    private _queueGroupTreeItem: QueueGroupTreeItem;
+    private _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot;
 
     private constructor(
-        parent: AzExtParentTreeItem,
+        private readonly _subscription: ISubscriptionContext,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly storageManagementClient: StorageManagementClient) {
-        super(parent);
-        this.id = this.storageAccount.id;
         this._root = this.createRoot();
-        this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
-        };
-        this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
-        this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
-        this._queueGroupTreeItem = new QueueGroupTreeItem(this);
-        this._tableGroupTreeItem = new TableGroupTreeItem(this);
     }
 
-    public static async createStorageAccountTreeItem(parent: AzExtParentTreeItem, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
-        const ti = new StorageAccountTreeItem(parent, storageAccount, client);
+    public static async createStorageAccountTreeItem(subscription: ISubscriptionContext, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
+        const ti = new StorageAccountTreeItem(subscription, storageAccount, client);
         // make sure key is initialized
         await ti.refreshKey();
         return ti;
@@ -79,10 +80,16 @@ export class StorageAccountTreeItem extends AzExtParentTreeItem {
 
     public label: string = this.storageAccount.name;
     public static contextValue: string = 'azureStorageAccount';
-    public contextValue: string = StorageAccountTreeItem.contextValue;
+    public contextValuesToAdd: string[] = [StorageAccountTreeItem.contextValue];
 
     // eslint-disable-next-line @typescript-eslint/require-await
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
+
+        this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
+        this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
+        this._queueGroupTreeItem = new QueueGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
+        this._tableGroupTreeItem = new TableGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
+
         const primaryEndpoints = this.storageAccount.primaryEndpoints;
         const groupTreeItems: AzExtTreeItem[] = [];
 
@@ -123,26 +130,22 @@ export class StorageAccountTreeItem extends AzExtParentTreeItem {
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
+        const deletingStorageAccount: string = localize('deleteStorageAccount', 'Delete storage account "{0}"', this.label);
+        const wizardContext: DeleteStorageAccountWizardContext = Object.assign(context, {
+            storageAccount: this.storageAccount,
+            subscription: this._subscription,
+            ...(await createActivityContext()),
+            activityTitle: deletingStorageAccount
+        });
+
         const message: string = `Are you sure you want to delete account "${this.label}" and all its contents?`;
-        // Use ext.ui to emulate user input by TestUserInput() method so that the tests can work
-        const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        if (result === DialogResponses.deleteResponse) {
-            const deletingStorageAccount: string = localize('deletingStorageAccount', 'Deleting storage account "{0}"...', this.label);
-            const storageManagementClient = await createStorageClient([context, this]);
-            const parsedId = this.parseAzureResourceId(this.storageAccount.id);
-            const resourceGroupName = parsedId.resourceGroups;
+        const wizard = new AzureWizard(wizardContext, {
+            promptSteps: [new DeleteConfirmationStep(message)],
+            executeSteps: [new DeleteStorageAccountStep()]
+        });
 
-            ext.outputChannel.appendLog(deletingStorageAccount);
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: deletingStorageAccount }, async () => {
-                await storageManagementClient.storageAccounts.delete(resourceGroupName, this.storageAccount.name);
-            });
-
-            const deleteSuccessful: string = localize('successfullyDeletedStorageAccount', 'Successfully deleted storage account "{0}".', this.label);
-            ext.outputChannel.appendLog(deleteSuccessful);
-            void window.showInformationMessage(deleteSuccessful);
-        } else {
-            throw new UserCancelledError();
-        }
+        await wizard.prompt();
+        await wizard.execute();
     }
 
     private createRoot(): IStorageRoot {
@@ -177,17 +180,17 @@ export class StorageAccountTreeItem extends AzExtParentTreeItem {
     }
 
     getConnectionString(): string {
-        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${nonNullProp(this.subscription.environment, 'storageEndpointSuffix')}`;
+        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${nonNullProp(this._subscription.environment, 'storageEndpointSuffix')}`;
     }
 
     async getKeys(): Promise<StorageAccountKeyWrapper[]> {
-        const parsedId = this.parseAzureResourceId(this.storageAccount.id);
+        const parsedId = StorageAccountTreeItem.parseAzureResourceId(this.storageAccount.id);
         const resourceGroupName = parsedId.resourceGroups;
         const keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
         return (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
     }
 
-    parseAzureResourceId(resourceId: string): { [key: string]: string } {
+    public static parseAzureResourceId(resourceId: string): { [key: string]: string } {
         const invalidIdErr = new Error('Invalid Account ID.');
         const result = {};
 
@@ -217,11 +220,11 @@ export class StorageAccountTreeItem extends AzExtParentTreeItem {
 
     public async getWebsiteCapableContainer(context: IActionContext): Promise<BlobContainerTreeItem | undefined> {
         // Refresh the storage account first to make sure $web has been picked up if new
-        await this.refresh(context);
+        await (this as unknown as (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem)).refresh(context);
 
         // Currently only the child with the name "$web" is supported for hosting websites
-        const id = `${this.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${staticWebsiteContainerName}`;
-        const containerTreeItem = <BlobContainerTreeItem>await this.treeDataProvider.findTreeItem(id, context);
+        const id = `${this.storageAccount.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${staticWebsiteContainerName}`;
+        const containerTreeItem = <BlobContainerTreeItem>await ext.rgApi.appResourceTree.findTreeItem(id, context);
         return containerTreeItem;
     }
 
@@ -288,7 +291,7 @@ export class StorageAccountTreeItem extends AzExtParentTreeItem {
             const props = { staticWebsite: { enabled: false } };
             await this.setWebsiteHostingProperties(props);
             void window.showInformationMessage(`Static website hosting has been disabled for account ${this.label}.`);
-            await ext.tree.refresh(context, this);
+            await ext.rgApi.appResourceTree.refresh(context, this as unknown as AzExtTreeItem);
         }
     }
 

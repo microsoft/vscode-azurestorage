@@ -5,9 +5,10 @@
 
 'use strict';
 
-import { openInPortal } from '@microsoft/vscode-azext-azureutils';
-import { AzExtTreeDataProvider, AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import { registerAzureUtilsExtensionVariables } from '@microsoft/vscode-azext-azureutils';
+import { AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '@microsoft/vscode-azext-utils/api';
+import { AzureHostExtensionApi } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { AzureStorageFS } from './AzureStorageFS';
@@ -35,13 +36,16 @@ import { registerTableGroupActionHandlers } from './commands/table/tableGroupAct
 import { uploadFiles } from './commands/uploadFiles';
 import { uploadFolder } from './commands/uploadFolder';
 import { uploadToAzureStorage } from './commands/uploadToAzureStorage';
-import { azuriteExtensionId, emulatorTimeoutMS as startEmulatorDebounce } from './constants';
+import { azuriteExtensionId, emulatorTimeoutMS as startEmulatorDebounce, storageFilter } from './constants';
 import { ext } from './extensionVariables';
-import { AzureAccountTreeItem } from './tree/AzureAccountTreeItem';
+import { getApiExport } from './getApiExport';
+import { StorageAccountResolver } from './StorageAccountResolver';
+import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
-import { StorageAccountTreeItem } from './tree/StorageAccountTreeItem';
+import { IStorageTreeItem } from './tree/IStorageTreeItem';
+import { refreshTreeItem } from './tree/refreshTreeItem';
 
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
     ext.context = context;
@@ -49,16 +53,11 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     ext.outputChannel = createAzExtOutputChannel('Azure Storage', ext.prefix);
     context.subscriptions.push(ext.outputChannel);
     registerUIExtensionVariables(ext);
+    registerAzureUtilsExtensionVariables(ext);
 
     await callWithTelemetryAndErrorHandling('activate', (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
         activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
-
-        const azureAccountTreeItem = new AzureAccountTreeItem();
-        context.subscriptions.push(azureAccountTreeItem);
-        ext.tree = new AzExtTreeDataProvider(azureAccountTreeItem, 'azureStorage.loadMore');
-        ext.treeView = vscode.window.createTreeView(ext.prefix, { treeDataProvider: ext.tree, showCollapseAll: true, canSelectMany: true });
-        context.subscriptions.push(ext.treeView);
 
         registerBlobActionHandlers();
         registerBlobContainerActionHandlers();
@@ -74,13 +73,18 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerTableGroupActionHandlers();
 
         ext.azureStorageFS = new AzureStorageFS();
+        ext.azureStorageWorkspaceFS = new AzureStorageFS();
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', ext.azureStorageFS, { isCaseSensitive: true }));
         context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('azurestorage', ext.azureStorageFS));
 
+        registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
         registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
         registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
             if (!treeItem) {
-                treeItem = <BlobContainerTreeItem | FileShareTreeItem>(await ext.tree.showTreeItemPicker([BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue], actionContext));
+                treeItem = await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(actionContext, {
+                    filter: storageFilter,
+                    expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
+                });
             }
 
             const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });
@@ -94,17 +98,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await wizard.prompt();
             await wizard.execute();
         });
-        registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => ext.tree.refresh(actionContext, treeItem));
-        registerCommand('azureStorage.loadMore', async (actionContext: IActionContext, treeItem: AzExtTreeItem) => await ext.tree.loadMore(treeItem, actionContext));
         registerCommand('azureStorage.copyUrl', (_actionContext: IActionContext, treeItem: AzExtTreeItem & ICopyUrl) => treeItem.copyUrl());
-        registerCommand('azureStorage.selectSubscriptions', () => commands.executeCommand("azure-account.selectSubscriptions"));
-        registerCommand("azureStorage.openInPortal", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
-            if (!treeItem) {
-                treeItem = <StorageAccountTreeItem>await ext.tree.showTreeItemPicker(StorageAccountTreeItem.contextValue, actionContext);
-            }
-
-            await openInPortal(treeItem, treeItem.fullId);
-        });
         registerCommand("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
             const accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
@@ -153,6 +147,16 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     registerCommand('azureStorage.startBlobEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.blob); }, startEmulatorDebounce);
     registerCommand('azureStorage.startQueueEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.queue); }, startEmulatorDebounce);
     registerCommand('azureStorage.showAzuriteExtension', async () => { await commands.executeCommand('extension.open', azuriteExtensionId); });
+
+    const rgApiProvider = await getApiExport<AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
+    if (rgApiProvider) {
+        const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
+        ext.rgApi = api;
+        api.registerApplicationResourceResolver('microsoft.storage/storageaccounts', new StorageAccountResolver());
+        ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-cosmosdb', new StorageWorkspaceProvider());
+    } else {
+        throw new Error('Could not find the Azure Resource Groups extension');
+    }
 
     return createApiProvider([<AzureExtensionApi>{
         revealTreeItem,
