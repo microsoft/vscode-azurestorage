@@ -6,7 +6,7 @@
 'use strict';
 
 import { registerAzureUtilsExtensionVariables } from '@microsoft/vscode-azext-azureutils';
-import { AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '@microsoft/vscode-azext-utils/api';
 import { AzureHostExtensionApi } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from 'vscode';
@@ -153,7 +153,11 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
         ext.rgApi = api;
         api.registerApplicationResourceResolver('microsoft.storage/storageaccounts', new StorageAccountResolver());
-        ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-cosmosdb', new StorageWorkspaceProvider());
+
+        const workspaceRootTreeItem = (await ext.rgApi.workspaceResourceTree.getChildren())[0] as AzExtParentTreeItem;
+        const storageWorkspaceProvider = new StorageWorkspaceProvider(workspaceRootTreeItem);
+
+        ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-cosmosdb', storageWorkspaceProvider);
     } else {
         throw new Error('Could not find the Azure Resource Groups extension');
     }

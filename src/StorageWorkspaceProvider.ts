@@ -14,10 +14,13 @@ export class StorageWorkspaceProvider implements WorkspaceResourceProvider {
 
     public disposables: Disposable[] = [];
 
-    public async provideResources(parent: AzExtParentTreeItem): Promise<AzExtTreeItem[] | null | undefined> {
+    constructor(parent: AzExtParentTreeItem) {
+        ext.attachedStorageAccountsTreeItem = new AttachedStorageAccountsTreeItem(parent);
+    }
+
+    public async provideResources(): Promise<AzExtTreeItem[] | null | undefined> {
 
         return await callWithTelemetryAndErrorHandling('StorageWorkspaceProvider.provideResources', async (_context: IActionContext) => {
-            ext.attachedStorageAccountsTreeItem = new AttachedStorageAccountsTreeItem(parent)
             return [ext.attachedStorageAccountsTreeItem];
         });
     }
