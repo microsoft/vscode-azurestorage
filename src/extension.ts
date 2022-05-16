@@ -153,7 +153,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
         ext.rgApi = api;
         api.registerApplicationResourceResolver('microsoft.storage/storageaccounts', new StorageAccountResolver());
-        ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-cosmosdb', new StorageWorkspaceProvider());
+        ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-azurestorage', new StorageWorkspaceProvider());
     } else {
         throw new Error('Could not find the Azure Resource Groups extension');
     }
