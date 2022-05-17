@@ -156,8 +156,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         const workspaceRootTreeItem = (await ext.rgApi.workspaceResourceTree.getChildren())[0] as AzExtParentTreeItem;
         const storageWorkspaceProvider = new StorageWorkspaceProvider(workspaceRootTreeItem);
-
-        ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-cosmosdb', storageWorkspaceProvider);
+        ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-azurestorage', storageWorkspaceProvider);
     } else {
         throw new Error('Could not find the Azure Resource Groups extension');
     }
