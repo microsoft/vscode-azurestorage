@@ -28,7 +28,6 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
         ...(await createActivityContext())
     });
     wizardContext.includeExtendedLocations = true;
-    const defaultLocation: string | undefined = wizardContext.isCustomCloud ? undefined : 'westus';
     const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
     const executeSteps: AzureWizardExecuteStep<IStorageAccountWizardContext>[] = [
         new StorageAccountCreateStep({ kind: wizardContext.isCustomCloud ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
@@ -41,10 +40,6 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
     if (context.advancedCreation) {
         promptSteps.push(new ResourceGroupListStep());
         promptSteps.push(new StaticWebsiteEnableStep());
-        LocationListStep.addStep(wizardContext, promptSteps);
-        LocationListStep.getQuickPickDescription = (location: AzExtLocation) => {
-            return location.metadata?.regionCategory === 'Extended' ? localize('onlyPremiumSupported', 'Only supports Premium storage accounts') : undefined;
-        }
     } else {
         executeSteps.push(new ResourceGroupCreateStep());
         Object.assign(wizardContext, {
@@ -52,11 +47,11 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
             indexDocument: wizardContext.isCustomCloud ? "" : StaticWebsiteIndexDocumentStep.defaultIndexDocument,
             errorDocument404Path: wizardContext.isCustomCloud ? "" : StaticWebsiteErrorDocument404Step.defaultErrorDocument404Path
         });
-        if (defaultLocation) {
-            await LocationListStep.setLocation(wizardContext, defaultLocation);
-        } else {
-            LocationListStep.addStep(wizardContext, promptSteps);
-        }
+    }
+
+    LocationListStep.addStep(wizardContext, promptSteps);
+    LocationListStep.getQuickPickDescription = (location: AzExtLocation) => {
+        return location.metadata?.regionCategory === 'Extended' ? localize('onlyPremiumSupported', 'Only supports Premium storage accounts') : undefined;
     }
 
     const wizard = new AzureWizard(wizardContext, {
