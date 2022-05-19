@@ -18,6 +18,7 @@ import { BlobTreeItem } from "./tree/blob/BlobTreeItem";
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./tree/fileShare/DirectoryTreeItem";
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "./tree/fileShare/FileTreeItem";
+import { getAppResourceIdFromId } from "./utils/azureUtils";
 import { createBlobClient, createBlockBlobClient, createOrUpdateBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
 import { createFileClient, doesFileExist, updateFileFromText } from "./utils/fileUtils";
 import { localize } from "./utils/localize";
@@ -440,6 +441,14 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     private async lookupRoot(uri: vscode.Uri, context: IActionContext, resourceId: string): Promise<FileShareTreeItem | BlobContainerTreeItem> {
         const rootName: string = path.basename(resourceId);
         const loadingMessage: string = this.isFileShareUri(uri) ? localize('loadingFileShare', 'Loading file share "{0}"...', rootName) : localize('loadingContainer', 'Loading blob container "{0}"...', rootName);
+
+        // the storage account needs to be resolved for the file system to read the files
+        const appResourceId = getAppResourceIdFromId(resourceId);
+        if (appResourceId) {
+            const appResource = await ext.rgApi.appResourceTree.findTreeItem(appResourceId, { ...context, loadAll: true }) as unknown as { resolve: () => Promise<void> }
+            await appResource.resolve();
+        }
+
         const treeItem = resourceId.includes('attachedStorageAccounts') ?
             await ext.rgApi.workspaceResourceTree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage }) :
             await ext.rgApi.appResourceTree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage });
