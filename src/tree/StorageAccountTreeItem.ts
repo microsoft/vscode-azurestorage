@@ -220,10 +220,12 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     public async getWebsiteCapableContainer(context: IActionContext): Promise<BlobContainerTreeItem | undefined> {
         // Refresh the storage account first to make sure $web has been picked up if new
-        await (this as unknown as (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem)).refresh(context);
+        await (this as unknown as (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem)).getCachedChildren(context);
 
         // Currently only the child with the name "$web" is supported for hosting websites
-        const id = `${this.storageAccount.id}/${this._blobContainerGroupTreeItem.id || this._blobContainerGroupTreeItem.label}/${staticWebsiteContainerName}`;
+        // Ensure that the children are loaded
+        await this._blobContainerGroupTreeItem.getCachedChildren(context);
+        const id = `${this._blobContainerGroupTreeItem.fullId || this._blobContainerGroupTreeItem.label}/${staticWebsiteContainerName}`;
         const containerTreeItem = <BlobContainerTreeItem>await ext.rgApi.appResourceTree.findTreeItem(id, context);
         return containerTreeItem;
     }
