@@ -55,7 +55,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     registerUIExtensionVariables(ext);
     registerAzureUtilsExtensionVariables(ext);
 
-    await callWithTelemetryAndErrorHandling('activate', (activateContext: IActionContext) => {
+    await callWithTelemetryAndErrorHandling('activate', async (activateContext: IActionContext) => {
         activateContext.telemetry.properties.isActivationEvent = 'true';
         activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
@@ -135,6 +135,19 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         // Suppress "Report an Issue" button for all errors in favor of the command
         registerErrorHandler(c => c.errorHandling.suppressReportIssue = true);
         registerReportIssueCommand('azureStorage.reportIssue');
+
+        const rgApiProvider = await getApiExport<AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
+        if (rgApiProvider) {
+            const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
+            ext.rgApi = api;
+            api.registerApplicationResourceResolver('microsoft.storage/storageaccounts', new StorageAccountResolver());
+
+            const workspaceRootTreeItem = (ext.rgApi.workspaceResourceTree as unknown as { _rootTreeItem: AzExtParentTreeItem })._rootTreeItem;
+            const storageWorkspaceProvider = new StorageWorkspaceProvider(workspaceRootTreeItem);
+            ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-azurestorage', storageWorkspaceProvider);
+        } else {
+            throw new Error('Could not find the Azure Resource Groups extension');
+        }
     });
     registerCommand("azureStorage.uploadFiles", uploadFiles);
     registerCommand("azureStorage.uploadFolder", uploadFolder);
@@ -147,19 +160,6 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     registerCommand('azureStorage.startBlobEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.blob); }, startEmulatorDebounce);
     registerCommand('azureStorage.startQueueEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.queue); }, startEmulatorDebounce);
     registerCommand('azureStorage.showAzuriteExtension', async () => { await commands.executeCommand('extension.open', azuriteExtensionId); });
-
-    const rgApiProvider = await getApiExport<AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
-    if (rgApiProvider) {
-        const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
-        ext.rgApi = api;
-        api.registerApplicationResourceResolver('microsoft.storage/storageaccounts', new StorageAccountResolver());
-
-        const workspaceRootTreeItem = (await ext.rgApi.workspaceResourceTree.getChildren())[0] as AzExtParentTreeItem;
-        const storageWorkspaceProvider = new StorageWorkspaceProvider(workspaceRootTreeItem);
-        ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-azurestorage', storageWorkspaceProvider);
-    } else {
-        throw new Error('Could not find the Azure Resource Groups extension');
-    }
 
     return createApiProvider([<AzureExtensionApi>{
         revealTreeItem,
