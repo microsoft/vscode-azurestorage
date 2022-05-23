@@ -30,24 +30,30 @@ Azure Storage is a Microsoft-managed service providing cloud storage that is hig
 
 ## Deploy your Single Page App to Azure Storage
 
-Once you are signed in to your Azure account and you have your app open in Visual Studio Code, click the deploy button in the Azure Storage explorer - it's the blue up arrow - to deploy your app.
+Once you are signed in to your Azure account and you have your app open in Visual Studio Code, right click the Storage accounts item and select "Create Storage Account... (Advanced)"
 
-![Deploy from Storage](resources/storage-deploy.png)
+![Deploy from Storage](resources/readme/createAdvanced.png)
+
+1. Type a globally unique name for your Storage Account and press Enter. Valid characters for an storage account name are 'a-z' and '0-9'
+2. Create a new Resource Group and accept the default name
+3. Choose a location in a [region](https://azure.microsoft.com/en-us/global-infrastructure/regions/) near you or near other services you may need to access
+    > It may take up to a minute for the account to be created
+4. When prompted, choose "Enable website hosting" to configure your storage account for static site hosting
+5. Enter 'index.html' for the index document path
+6. Enter 'index.html' for the 404 error document path
+    > Index.html is used for the error document because modern Single Page Applications (SPAs) such as React will handle errors in the client. For classic static websites, use the error document to customize your 404 page.
+
+![Activity Log](resources/readme/activityLog.png)
+
+Once you have created your Storage Account, right click on the Storage Account and select "Deploy to Static Website via Azure Storage...".
+
+![Deploy from Storage](resources/readme/deploy.png)
 
 > Tip: Looking for a sample app to deploy? Run `npx create-react-app my-react-app` to create one
 
 Make sure you've compiled your app (run `npm run build` if you created a sample from create-react-app) prior to deploying it to Azure.
 
-1. Choose **Create New Storage Account**
-2. Type a globally unique name for your Storage Account and press Enter. Valid characters for an storage account name are 'a-z' and '0-9'
-3. Create a new Resource Group and accept the default name
-4. Choose a location in a [region](https://azure.microsoft.com/en-us/global-infrastructure/regions/) near you or near other services you may need to access
-    > It may take up to a minute for the account to be created
-5. When prompted, choose "Enable website hosting" to configure your storage account for static site hosting
-6. Enter 'index.html' for the index document path
-7. Enter 'index.html' for the 404 error document path
-    > Index.html is used for the error document because modern Single Page Applications (SPAs) such as React will handle errors in the client. For classic static websites, use the error document to customize your 404 page.
-8. Select the build output from your current workspace if you have your app open already or browse to the directory containing your compiled application code
+Select the build output from your current workspace if you have your app open already or browse to the directory containing your compiled application code
     > If you have a `build`, `out`, or `dist` directory, you'll see it as an option to deploy from.
 
 Once the deployment completes, click **Browse to Website** in the prompt to view your freshly deployed website.
