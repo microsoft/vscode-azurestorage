@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.14.1 - 2022-06-01
+
+### Changed
+- Update @vscode/extension-telemetry to 0.5.2 [#1069](https://github.com/microsoft/vscode-azurestorage/pull/1069)
+
 ## 0.14.0 - 2022-05-24
 
 We've made some large design changes to the Azure extensions for VS Code. [View App Centric release notes](https://aka.ms/AzCode/AppCentric)
