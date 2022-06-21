@@ -96,7 +96,7 @@ export async function uploadToAzureStorage(context: IActionContext, _firstSelect
     } else if (errors.length > 1) {
         throw new Error(multipleAzCopyErrorsMessage);
     } else {
-        showUploadSuccessMessage(treeItem.label);
+        showUploadSuccessMessage(treeItem);
     }
 
     await refreshTreeItem(context, treeItem);

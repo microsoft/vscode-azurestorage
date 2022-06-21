@@ -54,10 +54,13 @@ export function getUploadingMessageWithSource(sourcePath: string, treeItemLabel:
     return localize('uploadingFromTo', 'Uploading from "{0}" to "{1}"', sourcePath, treeItemLabel);
 }
 
-export function showUploadSuccessMessage(treeItemLabel: string): void {
-    const success: string = localize('uploadSuccess', 'Successfully uploaded to "{0}"', treeItemLabel);
+export function showUploadSuccessMessage(treeItem: BlobContainerTreeItem | FileShareTreeItem): void {
+    const success: string = localize('uploadSuccess', 'Successfully uploaded to "{0}"', treeItem.label);
+    const blobUrl: string = localize('outputBlobUrl', 'Blob URL: {0}', treeItem.getUrl());
     ext.outputChannel.appendLog(success);
     void vscode.window.showInformationMessage(success);
+    ext.outputChannel.appendLog(blobUrl);
+    void vscode.window.showInformationMessage(blobUrl);
 }
 
 export async function checkCanUpload(

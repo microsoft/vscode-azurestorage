@@ -68,7 +68,7 @@ export async function uploadFolder(
     }
 
     if (!calledFromUploadToAzureStorage) {
-        showUploadSuccessMessage(treeItem.label);
+        showUploadSuccessMessage(treeItem);
     }
 
     await refreshTreeItem(context, treeItem);

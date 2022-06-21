@@ -79,7 +79,7 @@ export async function uploadFiles(
         });
 
         if (!calledFromUploadToAzureStorage) {
-            showUploadSuccessMessage(treeItem.label);
+            showUploadSuccessMessage(treeItem);
         }
 
         return resolution;

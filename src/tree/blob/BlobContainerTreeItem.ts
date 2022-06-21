@@ -164,9 +164,13 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         return child;
     }
 
-    public async copyUrl(): Promise<void> {
+    public getUrl(): string {
         const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
-        const url: string = containerClient.url;
+        return containerClient.url;
+    }
+
+    public async copyUrl(): Promise<void> {
+        const url: string = this.getUrl();
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLog(`Container URL copied to clipboard: ${url}`);
