@@ -81,7 +81,7 @@ export async function uploadFiles(
         });
 
         if (!calledFromUploadToAzureStorage) {
-            outputAndCopyUploadedFileUrls(treeItem.getUrl(), fileEndings);
+            void outputAndCopyUploadedFileUrls(treeItem.getUrl(), fileEndings);
         }
 
         return resolution;
