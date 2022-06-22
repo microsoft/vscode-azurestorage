@@ -12,7 +12,7 @@ import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { AzExtFsExtra } from "../utils/AzExtFsExtra";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
-import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, showUploadedFileUrls, showUploadSuccessMessage, upload } from "../utils/uploadUtils";
+import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, outputUploadedFileUrls, OverwriteChoice, showUploadSuccessMessage, upload } from "../utils/uploadUtils";
 import { IAzCopyResolution } from "./azCopy/IAzCopyResolution";
 
 let lastUriUpload: Uri | undefined;
@@ -82,7 +82,7 @@ export async function uploadFiles(
 
         if (!calledFromUploadToAzureStorage) {
             showUploadSuccessMessage(treeItem.label);
-            showUploadedFileUrls(treeItem.getUrl(), fileEndings);
+            outputUploadedFileUrls(treeItem.getUrl(), fileEndings);
         }
 
         return resolution;

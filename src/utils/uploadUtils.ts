@@ -54,10 +54,10 @@ export function getUploadingMessageWithSource(sourcePath: string, treeItemLabel:
     return localize('uploadingFromTo', 'Uploading from "{0}" to "{1}"', sourcePath, treeItemLabel);
 }
 
-export function showUploadedFileUrls(parentUrl: string, fileUrls: string[]): void {
+export function outputUploadedFileUrls(parentUrl: string, fileUrls: string[]): void {
     for (const fileUrl of fileUrls) {
-        const blobUrl: string = localize('outputBlobUrl', 'Blob URL: {0}', `${parentUrl}/${fileUrl}`);
-        ext.outputChannel.appendLog(blobUrl);
+        const url: string = localize('uploadedFileUrl', 'Blob URL: {0}', `${parentUrl}/${fileUrl}`);
+        ext.outputChannel.appendLog(url);
     }
 }
 
