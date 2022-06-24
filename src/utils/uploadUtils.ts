@@ -55,8 +55,6 @@ export function getUploadingMessageWithSource(sourcePath: string, treeItemLabel:
 }
 
 export async function outputAndCopyUploadedFileUrls(parentUrl: string, fileUrls: string[]): Promise<void> {
-    ext.outputChannel.show();
-
     for (const fileUrl of fileUrls) {
         const url: string = localize('uploadedFileUrl', 'Uploaded file URL: {0}', `${parentUrl}/${fileUrl}`);
         ext.outputChannel.appendLog(url);
