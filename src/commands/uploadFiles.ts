@@ -12,7 +12,7 @@ import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { AzExtFsExtra } from "../utils/AzExtFsExtra";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
-import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, OverwriteChoice, showUploadSuccessMessage, upload } from "../utils/uploadUtils";
+import { checkCanUpload, convertLocalPathToRemotePath, getDestinationDirectory, getUploadingMessage, outputAndCopyUploadedFileUrls, OverwriteChoice, upload } from "../utils/uploadUtils";
 import { IAzCopyResolution } from "./azCopy/IAzCopyResolution";
 
 let lastUriUpload: Uri | undefined;
@@ -52,6 +52,7 @@ export async function uploadFiles(
     });
     destinationDirectory = await getDestinationDirectory(context, destinationDirectory);
     let urisToUpload: Uri[] = [];
+    const fileEndings: string[] = [];
     if (!calledFromUploadToAzureStorage) {
         const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
         for (const uri of uris) {
@@ -59,6 +60,7 @@ export async function uploadFiles(
             if (!await AzExtFsExtra.isDirectory(uri) && await checkCanUpload(context, destPath, overwriteChoice, treeItem)) {
                 // Don't allow directories to sneak in https://github.com/microsoft/vscode-azurestorage/issues/803
                 urisToUpload.push(uri);
+                fileEndings.push(destPath);
             }
         }
     } else {
@@ -79,7 +81,7 @@ export async function uploadFiles(
         });
 
         if (!calledFromUploadToAzureStorage) {
-            showUploadSuccessMessage(treeItem.label);
+            outputAndCopyUploadedFileUrls(treeItem.getUrl(), fileEndings);
         }
 
         return resolution;

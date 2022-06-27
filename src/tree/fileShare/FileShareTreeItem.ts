@@ -87,11 +87,16 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         return ti1.label.localeCompare(ti2.label);
     }
 
-    public async copyUrl(): Promise<void> {
+    public getUrl(): string {
         const shareClient: azureStorageShare.ShareClient = createShareClient(this.root, this.shareName);
-        await vscode.env.clipboard.writeText(shareClient.url);
+        return shareClient.url;
+    }
+
+    public async copyUrl(): Promise<void> {
+        const url: string = this.getUrl();
+        await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Share URL copied to clipboard: ${shareClient.url}`);
+        ext.outputChannel.appendLog(`Share URL copied to clipboard: ${url}`);
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {

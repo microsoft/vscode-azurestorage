@@ -54,6 +54,25 @@ export function getUploadingMessageWithSource(sourcePath: string, treeItemLabel:
     return localize('uploadingFromTo', 'Uploading from "{0}" to "{1}"', sourcePath, treeItemLabel);
 }
 
+export function outputAndCopyUploadedFileUrls(parentUrl: string, fileUrls: string[]): void {
+    for (const fileUrl of fileUrls) {
+        const url: string = localize('uploadedFileUrl', 'Uploaded file URL: {0}', `${parentUrl}/${fileUrl}`);
+        ext.outputChannel.appendLog(url);
+    }
+
+    void vscode.window.showInformationMessage(
+        `Finished uploading ${fileUrls.length} file(s).`,
+        "Copy to Clipboard"
+    ).then(async (result) => {
+        const shouldCopy: boolean = !!result;
+        if (shouldCopy) {
+            const lastFileUrl: string = `${parentUrl}/${fileUrls[fileUrls.length - 1]}`;
+            await vscode.env.clipboard.writeText(lastFileUrl);
+            ext.outputChannel.appendLog(`File URL copied to clipboard: ${lastFileUrl}`);
+        }
+    });
+}
+
 export function showUploadSuccessMessage(treeItemLabel: string): void {
     const success: string = localize('uploadSuccess', 'Successfully uploaded to "{0}"', treeItemLabel);
     ext.outputChannel.appendLog(success);
