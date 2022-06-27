@@ -60,12 +60,17 @@ export async function outputAndCopyUploadedFileUrls(parentUrl: string, fileUrls:
         ext.outputChannel.appendLog(url);
     }
 
-    const shouldCopy: boolean = !!(await vscode.window.showInformationMessage(`Finished uploading ${fileUrls.length} file(s).`, "Copy to Clipboard"));
-    if (shouldCopy) {
-        const lastFileUrl: string = `${parentUrl}/${fileUrls[fileUrls.length - 1]}`;
-        await vscode.env.clipboard.writeText(lastFileUrl);
-        ext.outputChannel.appendLog(`File URL copied to clipboard: ${lastFileUrl}`);
-    }
+    void vscode.window.showInformationMessage(
+        `Finished uploading ${fileUrls.length} file(s).`,
+        "Copy to Clipboard"
+    ).then(async (result) => {
+        const shouldCopy: boolean = !!result;
+        if (shouldCopy) {
+            const lastFileUrl: string = `${parentUrl}/${fileUrls[fileUrls.length - 1]}`;
+            await vscode.env.clipboard.writeText(lastFileUrl);
+            ext.outputChannel.appendLog(`File URL copied to clipboard: ${lastFileUrl}`);
+        }
+    });
 }
 
 export function showUploadSuccessMessage(treeItemLabel: string): void {
