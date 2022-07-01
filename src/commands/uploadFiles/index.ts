@@ -33,14 +33,8 @@ export async function uploadFiles(
         ...context, ...await createActivityContext(), destinationDirectory,
     };
     const wizardOptions: IWizardOptions<IUploadFilesWizardContext> = {
-        title: 'We chillin',
-        promptSteps: [new GetDestinationDirectoryStep()],
-        executeSteps: [new UploadFilesStep(
-            treeItem,
-            uris,
-            notificationProgress,
-            cancellationToken
-        )],
+        promptSteps: [new GetDestinationDirectoryStep(), new GetDestinationDirectoryStep()],
+        executeSteps: [new UploadFilesStep(treeItem, uris, notificationProgress, cancellationToken)],
     };
     const wizard: AzureWizard<IUploadFilesWizardContext> = new AzureWizard(wizardContext, wizardOptions);
     await wizard.prompt();
