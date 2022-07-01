@@ -76,11 +76,11 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
         }
 
         if (this.notificationProgress && this.cancellationToken) {
-            context.resolution = await uploadFilesHelper(context, this.treeItem, urisToUpload, this.notificationProgress, this.cancellationToken, <string>context.destinationDirectory, calledFromUploadToAzureStorage);
+            context.resolution = await uploadFilesStepHelper(context, this.treeItem, urisToUpload, this.notificationProgress, this.cancellationToken, <string>context.destinationDirectory, calledFromUploadToAzureStorage);
         } else {
             const title: string = getUploadingMessage(this.treeItem.label);
             const resolution: IAzCopyResolution = await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-                return await uploadFilesHelper(context, nonNullValue(this.treeItem as BlobContainerTreeItem | FileShareTreeItem), urisToUpload, newNotificationProgress, newCancellationToken, nonNullValue(<string>context.destinationDirectory), calledFromUploadToAzureStorage);
+                return await uploadFilesStepHelper(context, nonNullValue(this.treeItem as BlobContainerTreeItem | FileShareTreeItem), urisToUpload, newNotificationProgress, newCancellationToken, nonNullValue(<string>context.destinationDirectory), calledFromUploadToAzureStorage);
             });
 
             if (!calledFromUploadToAzureStorage) {
@@ -96,7 +96,7 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
     }
 }
 
-export async function uploadFilesHelper(
+async function uploadFilesStepHelper(
     context: IActionContext,
     treeItem: BlobContainerTreeItem | FileShareTreeItem,
     uris: Uri[],
