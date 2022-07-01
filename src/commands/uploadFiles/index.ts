@@ -19,8 +19,6 @@ export * from "./IExistingFileContext";
 export * from "./IUploadFilesWizardContext";
 export * from "./UploadFilesStep";
 
-export let lastFileUriUpload: Uri | undefined;
-
 export async function uploadFiles(
     context: IActionContext,
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
