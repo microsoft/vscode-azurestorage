@@ -49,7 +49,7 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
                 }
             );
         }
-
+        context.activityTitle = `Uploading ${this.uris?.length ?? ''} file(s) to ${this.treeItem?.label ? `"${this.treeItem.label}"` : 'storage'}`;
         this.treeItem = this.treeItem || await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(context, {
             filter: storageFilter,
             expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
