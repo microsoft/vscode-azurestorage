@@ -14,11 +14,6 @@ import { GetDestinationDirectoryStep } from './GetDestinationDirectoryStep';
 import { IUploadFilesWizardContext } from "./IUploadFilesWizardContext";
 import { UploadFilesStep } from "./UploadFilesStep";
 
-export * from "./GetDestinationDirectoryStep";
-export * from "./IExistingFileContext";
-export * from "./IUploadFilesWizardContext";
-export * from "./UploadFilesStep";
-
 export async function uploadFiles(
     context: IActionContext,
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
