@@ -9,6 +9,7 @@ import { NotificationProgress } from "../../constants";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { createActivityContext } from "../../utils/activityUtils";
+import { localize } from "../../utils/localize";
 import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";
 import { GetDestinationDirectoryStep } from './GetDestinationDirectoryStep';
 import { IUploadFilesWizardContext } from "./IUploadFilesWizardContext";
@@ -26,7 +27,7 @@ export async function uploadFiles(
         ...context, ...await createActivityContext(), destinationDirectory,
     };
     const wizardOptions: IWizardOptions<IUploadFilesWizardContext> = {
-        title: `Uploading file(s)`,
+        title: localize('uploadingFiles', 'Uploading file(s)'),
         promptSteps: [new GetDestinationDirectoryStep()],
         executeSteps: [new UploadFilesStep(treeItem, uris, notificationProgress, cancellationToken)],
     };
