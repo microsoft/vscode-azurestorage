@@ -11,6 +11,7 @@ import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { AzExtFsExtra } from "../../utils/AzExtFsExtra";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../../utils/errorUtils";
+import { localize } from "../../utils/localize";
 import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, outputAndCopyUploadedFileUrls, OverwriteChoice, upload } from "../../utils/uploadUtils";
 import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";
 import { IExistingFileContext } from "./IExistingFileContext";
@@ -49,7 +50,7 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
                 }
             );
         }
-        context.activityTitle = `Uploading ${this.uris?.length ?? ''} file(s) to ${this.treeItem?.label ? `"${this.treeItem.label}"` : 'storage'}`;
+        context.activityTitle = localize('activityLogUploadingFiles', `Uploading ${this.uris?.length ?? ''} file(s) to ${this.treeItem?.label ? `"${this.treeItem.label}"` : 'storage'}`);
         this.treeItem = this.treeItem || await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(context, {
             filter: storageFilter,
             expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
