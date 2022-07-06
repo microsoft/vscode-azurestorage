@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.14.2 - 2022-07-05
+
+### Added
+- Automatically log uploaded file URLs to output + quick copy functionality [#1076](https://github.com/microsoft/vscode-azurestorage/pull/1076)
+
+### Changed
+- Update @vscode/extension-telemetry to 0.6.2 [#1078](https://github.com/microsoft/vscode-azurestorage/pull/1078)
+
 ## 0.14.1 - 2022-06-01
 
 ### Changed
