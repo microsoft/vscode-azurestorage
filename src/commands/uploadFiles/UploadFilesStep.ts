@@ -21,21 +21,18 @@ let lastUriUpload: Uri | undefined;
 
 export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardContext> {
     public priority: number = 100;
-    public treeItem?: BlobContainerTreeItem | FileShareTreeItem;
-    public uris?: Uri[];
-    public notificationProgress?: NotificationProgress;
-    public cancellationToken?: CancellationToken;
 
-    public constructor(treeItem?: BlobContainerTreeItem | FileShareTreeItem, uris?: Uri[], notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken) {
+    public constructor(
+        private treeItem?: BlobContainerTreeItem | FileShareTreeItem,
+        private uris?: Uri[],
+        private readonly notificationProgress?: NotificationProgress,
+        private readonly cancellationToken?: CancellationToken
+    ) {
         super();
-        this.treeItem = treeItem;
-        this.uris = uris;
-        this.notificationProgress = notificationProgress;
-        this.cancellationToken = cancellationToken;
     }
 
     public async execute(context: IUploadFilesWizardContext, _progress: NotificationProgress): Promise<void> {
-        const calledFromUploadToAzureStorage: boolean = this.uris !== undefined;
+        const calledFromUploadToAzureStorage: boolean = !!this.uris?.length;
         if (this.uris === undefined) {
             this.uris = await context.ui.showOpenDialog(
                 {
