@@ -5,66 +5,41 @@
 
 import { AzureWizardExecuteStep, IActionContext, IParsedError, nonNullValue, parseError } from "@microsoft/vscode-azext-utils";
 import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
-import { NotificationProgress, storageFilter } from '../../constants';
+import { NotificationProgress } from '../../constants';
 import { ext } from "../../extensionVariables";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { AzExtFsExtra } from "../../utils/AzExtFsExtra";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../../utils/errorUtils";
-import { localize } from "../../utils/localize";
-import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, outputAndCopyUploadedFileUrls, OverwriteChoice, upload } from "../../utils/uploadUtils";
+import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, outputAndCopyUploadedFileUrls, OverwriteChoice } from "../../utils/uploadUtils";
 import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";
 import { IExistingFileContext } from "./IExistingFileContext";
 import { IUploadFilesWizardContext } from './IUploadFilesWizardContext';
-
-let lastUriUpload: Uri | undefined;
 
 export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardContext> {
     public priority: number = 100;
 
     public constructor(
-        private treeItem?: BlobContainerTreeItem | FileShareTreeItem,
-        private uris?: Uri[],
-        private readonly notificationProgress?: NotificationProgress,
         private readonly cancellationToken?: CancellationToken
     ) {
         super();
     }
 
-    public async execute(context: IUploadFilesWizardContext, _progress: NotificationProgress): Promise<void> {
-        const calledFromUploadToAzureStorage: boolean = !!this.uris?.length;
-        if (this.uris === undefined) {
-            this.uris = await context.ui.showOpenDialog(
-                {
-                    canSelectFiles: true,
-                    canSelectFolders: false,
-                    canSelectMany: true,
-                    defaultUri: lastUriUpload,
-                    filters: {
-                        "All files": ['*']
-                    },
-                    openLabel: upload
-                }
-            );
-        }
-        this.treeItem = this.treeItem || await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(context, {
-            filter: storageFilter,
-            expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
-        });
+    public async execute(context: Required<IUploadFilesWizardContext>, notificationProgress: NotificationProgress): Promise<void> {
         let urisToUpload: Uri[] = [];
         const fileEndings: string[] = [];
-        if (!calledFromUploadToAzureStorage) {
+        if (!context.calledFromUploadToAzureStorage) {
             const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
-            for (const uri of this.uris) {
-                const destPath: string = convertLocalPathToRemotePath(uri.fsPath, context.destinationDirectory as string);
-                if (!await AzExtFsExtra.isDirectory(uri) && await checkCanUpload(context, destPath, overwriteChoice, this.treeItem)) {
+            for (const uri of context.uris) {
+                const destPath: string = convertLocalPathToRemotePath(uri.fsPath, context.destinationDirectory);
+                if (!await AzExtFsExtra.isDirectory(uri) && await checkCanUpload(context, destPath, overwriteChoice, context.treeItem)) {
                     // Don't allow directories to sneak in https://github.com/microsoft/vscode-azurestorage/issues/803
                     urisToUpload.push(uri);
                     fileEndings.push(destPath);
                 }
             }
         } else {
-            urisToUpload = this.uris;
+            urisToUpload = context.uris;
         }
 
         if (!urisToUpload.length) {
@@ -72,25 +47,19 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
             context.resolution = { errors: [] };
         }
 
-        if (this.notificationProgress && this.cancellationToken) {
-            context.resolution = await uploadFilesStepHelper(context, this.treeItem, urisToUpload, this.notificationProgress, this.cancellationToken, <string>context.destinationDirectory, calledFromUploadToAzureStorage);
+        if (notificationProgress && this.cancellationToken) {
+            context.resolution = await uploadFilesStepHelper(context, context.treeItem, urisToUpload, notificationProgress, this.cancellationToken, context.destinationDirectory, context.calledFromUploadToAzureStorage);
         } else {
-            const title: string = getUploadingMessage(this.treeItem.label);
+            const title: string = getUploadingMessage(context.treeItem.label);
             const resolution: IAzCopyResolution = await window.withProgress({ cancellable: true, location: ProgressLocation.Notification, title }, async (newNotificationProgress, newCancellationToken) => {
-                return await uploadFilesStepHelper(context, nonNullValue(this.treeItem as BlobContainerTreeItem | FileShareTreeItem), urisToUpload, newNotificationProgress, newCancellationToken, nonNullValue(<string>context.destinationDirectory), calledFromUploadToAzureStorage);
+                return await uploadFilesStepHelper(context, nonNullValue(context.treeItem), urisToUpload, newNotificationProgress, newCancellationToken, nonNullValue(context.destinationDirectory), context.calledFromUploadToAzureStorage);
             });
 
-            if (!calledFromUploadToAzureStorage) {
-                outputAndCopyUploadedFileUrls(this.treeItem.getUrl(), fileEndings);
+            if (!context.calledFromUploadToAzureStorage) {
+                outputAndCopyUploadedFileUrls(context.treeItem.getUrl(), fileEndings);
             }
 
             context.resolution = resolution;
-        }
-
-        if (this.uris.length === 1) {
-            context.activityTitle = localize('activityLogUploadFiles', `Upload "${fileEndings[fileEndings.length - 1]}" to "${this.treeItem.label}"`);
-        } else {
-            context.activityTitle = localize('activityLogUploadFiles', `Upload ${this.uris.length} files to "${this.treeItem.label}"`);
         }
     }
 
@@ -108,7 +77,7 @@ async function uploadFilesStepHelper(
     destinationDirectory: string,
     calledFromUploadToAzureStorage: boolean,
 ): Promise<IAzCopyResolution> {
-    lastUriUpload = uris[0];
+    ext.lastUriUpload = uris[0];
     const resolution: IAzCopyResolution = { errors: [] };
     for (const uri of uris) {
         throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadFiles');

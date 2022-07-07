@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizard, IActionContext, IWizardOptions } from "@microsoft/vscode-azext-utils";
+import { AzureWizard, IActionContext, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
+import { basename } from "path";
 import { CancellationToken, Uri } from "vscode";
-import { NotificationProgress } from "../../constants";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { createActivityContext } from "../../utils/activityUtils";
@@ -19,21 +19,29 @@ export async function uploadFiles(
     context: IActionContext,
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
     uris?: Uri[],
-    notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken,
     destinationDirectory?: string
 ): Promise<IAzCopyResolution> {
     const wizardContext: IUploadFilesWizardContext = {
-        ...context, ...await createActivityContext(), destinationDirectory,
+        ...context, ...await createActivityContext(), destinationDirectory, treeItem, uris,
+        calledFromUploadToAzureStorage: !!uris?.length
     };
     const wizardOptions: IWizardOptions<IUploadFilesWizardContext> = {
-        title: localize('uploadFiles', 'Upload file(s)'),
+        title: localize('uploadFiles', 'Upload files'),
         promptSteps: [new GetDestinationDirectoryStep()],
-        executeSteps: [new UploadFilesStep(treeItem, uris, notificationProgress, cancellationToken)],
+        executeSteps: [new UploadFilesStep(cancellationToken)],
     };
-
     const wizard: AzureWizard<IUploadFilesWizardContext> = new AzureWizard(wizardContext, wizardOptions);
     await wizard.prompt();
+
+    const nUris: Uri[] = nonNullProp(wizardContext, "uris");
+    const nTreeItem: BlobContainerTreeItem | FileShareTreeItem = nonNullProp(wizardContext, "treeItem");
+    if (nUris.length === 1) {
+        wizardContext.activityTitle = localize('activityLogUploadFiles', `Upload "${basename(nUris[0].path)}" to "${nTreeItem.label}"`);
+    } else {
+        wizardContext.activityTitle = localize('activityLogUploadFiles', `Upload ${nUris.length} files to "${nTreeItem.label}"`);
+    }
+
     await wizard.execute();
     return wizardContext.resolution as IAzCopyResolution;
 }

@@ -88,7 +88,7 @@ export async function uploadToAzureStorage(context: IActionContext, _firstSelect
             errors.push(...(await uploadFolder(context, treeItem, folderUri, notificationProgress, cancellationToken, destinationDirectory)).errors);
         }
 
-        errors.push(...(await uploadFiles(context, treeItem, fileUrisToUpload, notificationProgress, cancellationToken, destinationDirectory)).errors);
+        errors.push(...(await uploadFiles(context, treeItem, fileUrisToUpload, cancellationToken, destinationDirectory)).errors);
     });
 
     if (errors.length === 1) {
