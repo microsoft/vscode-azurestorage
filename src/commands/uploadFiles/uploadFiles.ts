@@ -27,7 +27,7 @@ export async function uploadFiles(
         ...context, ...await createActivityContext(), destinationDirectory,
     };
     const wizardOptions: IWizardOptions<IUploadFilesWizardContext> = {
-        title: localize('uploadingFiles', 'Uploading file(s)'),
+        title: localize('uploadFiles', 'Upload file(s)'),
         promptSteps: [new GetDestinationDirectoryStep()],
         executeSteps: [new UploadFilesStep(treeItem, uris, notificationProgress, cancellationToken)],
     };

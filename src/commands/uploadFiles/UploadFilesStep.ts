@@ -47,7 +47,6 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
                 }
             );
         }
-        context.activityTitle = localize('activityLogUploadingFiles', `Uploading ${this.uris?.length ?? ''} file(s) to ${this.treeItem?.label ? `"${this.treeItem.label}"` : 'storage'}`);
         this.treeItem = this.treeItem || await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(context, {
             filter: storageFilter,
             expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
@@ -86,6 +85,12 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
             }
 
             context.resolution = resolution;
+        }
+
+        if (this.uris.length === 1) {
+            context.activityTitle = localize('activityLogUploadFiles', `Upload "${fileEndings[fileEndings.length - 1]}" to "${this.treeItem.label}"`);
+        } else {
+            context.activityTitle = localize('activityLogUploadFiles', `Upload ${this.uris.length} files to "${this.treeItem.label}"`);
         }
     }
 
