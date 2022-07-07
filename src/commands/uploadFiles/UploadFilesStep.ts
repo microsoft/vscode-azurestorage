@@ -19,9 +19,7 @@ import { IUploadFilesWizardContext } from './IUploadFilesWizardContext';
 export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardContext> {
     public priority: number = 100;
 
-    public constructor(
-        private readonly cancellationToken?: CancellationToken
-    ) {
+    public constructor(private readonly cancellationToken?: CancellationToken) {
         super();
     }
 
