@@ -27,7 +27,6 @@ export async function uploadFiles(
         calledFromUploadToAzureStorage: !!uris?.length
     };
     const wizardOptions: IWizardOptions<IUploadFilesWizardContext> = {
-        title: localize('uploadFiles', 'Upload files'),
         promptSteps: [new GetDestinationDirectoryStep()],
         executeSteps: [new UploadFilesStep(cancellationToken)],
     };
