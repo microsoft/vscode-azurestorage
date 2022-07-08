@@ -46,6 +46,8 @@ import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
 import { IStorageTreeItem } from './tree/IStorageTreeItem';
 import { refreshTreeItem } from './tree/refreshTreeItem';
+import { StorageAccountBranchDataProvider } from './tree/StorageAccountBranchDataProvider';
+import { V2AzureResourcesApi } from './vscode-azureresourcegroups.api.v2';
 
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
     ext.context = context;
@@ -148,7 +150,16 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         } else {
             throw new Error('Could not find the Azure Resource Groups extension');
         }
+
+        if (rgApiProvider) {
+            const api = rgApiProvider.getApi<V2AzureResourcesApi>('2');
+
+            api.registerApplicationResourceBranchDataProvider('microsoft.storage/storageaccounts', new StorageAccountBranchDataProvider());
+        } else {
+            throw new Error('Could not find the Azure Resource Groups extension');
+        }
     });
+
     registerCommand("azureStorage.uploadFiles", uploadFiles);
     registerCommand("azureStorage.uploadFolder", uploadFolder);
     registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
