@@ -34,7 +34,7 @@ export class GetDestinationDirectoryStep extends AzureWizardPromptStep<IUploadFi
         });
     }
 
-    public shouldPrompt(_context: IUploadFilesWizardContext): boolean {
+    public shouldPrompt(): boolean {
         return true;
     }
 }

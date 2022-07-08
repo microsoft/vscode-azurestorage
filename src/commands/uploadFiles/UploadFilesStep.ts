@@ -61,7 +61,7 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
         }
     }
 
-    public shouldExecute(_context: IUploadFilesWizardContext): boolean {
+    public shouldExecute(): boolean {
         return true;
     }
 }
