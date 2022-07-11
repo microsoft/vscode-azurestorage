@@ -33,7 +33,7 @@ import { EmulatorType, startEmulator } from './commands/startEmulator';
 import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
 import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
 import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
-import { uploadFiles } from './commands/uploadFiles';
+import { uploadFiles } from './commands/uploadFiles/uploadFiles';
 import { uploadFolder } from './commands/uploadFolder';
 import { uploadToAzureStorage } from './commands/uploadToAzureStorage';
 import { azuriteExtensionId, emulatorTimeoutMS as startEmulatorDebounce, storageFilter } from './constants';

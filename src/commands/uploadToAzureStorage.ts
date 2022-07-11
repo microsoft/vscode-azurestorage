@@ -15,7 +15,7 @@ import { multipleAzCopyErrorsMessage, throwIfCanceled } from '../utils/errorUtil
 import { isSubpath } from '../utils/fs';
 import { localize } from '../utils/localize';
 import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, OverwriteChoice, promptForDestinationDirectory, showUploadSuccessMessage } from '../utils/uploadUtils';
-import { uploadFiles } from './uploadFiles';
+import { uploadFiles } from './uploadFiles/uploadFiles';
 import { uploadFolder } from './uploadFolder';
 
 export async function uploadToAzureStorage(context: IActionContext, _firstSelection: vscode.Uri, uris: vscode.Uri[]): Promise<void> {
@@ -88,7 +88,7 @@ export async function uploadToAzureStorage(context: IActionContext, _firstSelect
             errors.push(...(await uploadFolder(context, treeItem, folderUri, notificationProgress, cancellationToken, destinationDirectory)).errors);
         }
 
-        errors.push(...(await uploadFiles(context, treeItem, fileUrisToUpload, notificationProgress, cancellationToken, destinationDirectory)).errors);
+        errors.push(...(await uploadFiles(context, treeItem, fileUrisToUpload, cancellationToken, destinationDirectory)).errors);
     });
 
     if (errors.length === 1) {
