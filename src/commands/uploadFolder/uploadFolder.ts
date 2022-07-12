@@ -35,7 +35,7 @@ export async function uploadFolder(
 
     const nTreeItem: BlobContainerTreeItem | FileShareTreeItem = nonNullProp(wizardContext, "treeItem");
     const nUri: vscode.Uri = nonNullProp(wizardContext, "uri");
-    wizardContext.activityTitle = localize('activityLogUploadFolder', `Upload "${basename(nUri.path)}/" to "${nTreeItem.label}"`);
+    wizardContext.activityTitle = localize('activityLogUploadFolder', `Upload "${basename(nUri.path)}" folder to "${nTreeItem.label}"`);
 
     await wizard.execute();
     return wizardContext.resolution as IAzCopyResolution;
