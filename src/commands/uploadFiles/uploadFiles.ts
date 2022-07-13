@@ -11,7 +11,7 @@ import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { createActivityContext } from "../../utils/activityUtils";
 import { localize } from "../../utils/localize";
 import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";
-import { GetDestinationDirectoryStep } from './GetDestinationDirectoryStep';
+import { GetFileDestinationDirectoryStep } from './GetFileDestinationDirectoryStep';
 import { IUploadFilesWizardContext } from "./IUploadFilesWizardContext";
 import { UploadFilesStep } from "./UploadFilesStep";
 
@@ -27,7 +27,7 @@ export async function uploadFiles(
         calledFromUploadToAzureStorage: !!uris?.length
     };
     const wizardOptions: IWizardOptions<IUploadFilesWizardContext> = {
-        promptSteps: [new GetDestinationDirectoryStep()],
+        promptSteps: [new GetFileDestinationDirectoryStep()],
         executeSteps: [new UploadFilesStep(cancellationToken)],
     };
     const wizard: AzureWizard<IUploadFilesWizardContext> = new AzureWizard(wizardContext, wizardOptions);
