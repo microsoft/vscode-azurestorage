@@ -61,7 +61,7 @@ export function outputAndCopyUploadedFileUrls(parentUrl: string, fileUrls: strin
     }
 
     void vscode.window.showInformationMessage(
-        `Finished uploading ${fileUrls.length} file(s).`,
+        `Finished uploading ${fileUrls.length === 1 ? 'file' : `${fileUrls.length} files`}.`,
         "Copy to Clipboard"
     ).then(async (result) => {
         const shouldCopy: boolean = !!result;
