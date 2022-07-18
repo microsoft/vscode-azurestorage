@@ -61,14 +61,15 @@ export function outputAndCopyUploadedFileUrls(parentUrl: string, fileUrls: strin
     }
 
     void vscode.window.showInformationMessage(
-        localize('outputAndCopyFinished', `Finished uploading ${fileUrls.length} ${fileUrls.length === 1 ? 'file' : 'files'}.`),
+        localize('outputAndCopyFinished', 'Finished uploading {0} {1}.', fileUrls.length, fileUrls.length === 1 ? 'file' : 'files'),
         localize('copyToClipboard', 'Copy to Clipboard')
     ).then(async (result) => {
         const shouldCopy: boolean = !!result;
         if (shouldCopy) {
             const lastFileUrl: string = `${parentUrl}/${fileUrls[fileUrls.length - 1]}`;
+            const success: string = localize('copiedToClipboard', 'File URL copied to clipboard: {0}', lastFileUrl);
             await vscode.env.clipboard.writeText(lastFileUrl);
-            ext.outputChannel.appendLog(`File URL copied to clipboard: ${lastFileUrl}`);
+            ext.outputChannel.appendLog(success);
         }
     });
 }

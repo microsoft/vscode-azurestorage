@@ -36,9 +36,9 @@ export async function uploadFiles(
     const nUris: Uri[] = nonNullProp(wizardContext, "uris");
     const nTreeItem: BlobContainerTreeItem | FileShareTreeItem = nonNullProp(wizardContext, "treeItem");
     if (nUris.length === 1) {
-        wizardContext.activityTitle = localize('activityLogUploadFiles', `Upload "${basename(nUris[0].path)}" to "${nTreeItem.label}"`);
+        wizardContext.activityTitle = localize('activityLogUploadFiles', 'Upload "{0}" to "{1}"', basename(nUris[0].path), nTreeItem.label);
     } else {
-        wizardContext.activityTitle = localize('activityLogUploadFiles', `Upload ${nUris.length} files to "${nTreeItem.label}"`);
+        wizardContext.activityTitle = localize('activityLogUploadFiles', 'Upload {0} files to "{1}"', nUris.length, nTreeItem.label);
     }
 
     await wizard.execute();
