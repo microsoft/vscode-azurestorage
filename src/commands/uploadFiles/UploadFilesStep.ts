@@ -43,6 +43,7 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
         if (!urisToUpload.length) {
             // No URIs to upload and no errors to report
             context.resolution = { errors: [] };
+            return;
         }
 
         if (notificationProgress && this.cancellationToken) {

@@ -11,7 +11,7 @@ import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { createActivityContext } from "../../utils/activityUtils";
 import { localize } from "../../utils/localize";
 import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";
-import { GetDestinationDirectoryStep } from './GetDestinationDirectoryStep';
+import { GetFileDestinationDirectoryStep } from './GetFileDestinationDirectoryStep';
 import { IUploadFilesWizardContext } from "./IUploadFilesWizardContext";
 import { UploadFilesStep } from "./UploadFilesStep";
 
@@ -27,7 +27,7 @@ export async function uploadFiles(
         calledFromUploadToAzureStorage: !!uris?.length
     };
     const wizardOptions: IWizardOptions<IUploadFilesWizardContext> = {
-        promptSteps: [new GetDestinationDirectoryStep()],
+        promptSteps: [new GetFileDestinationDirectoryStep()],
         executeSteps: [new UploadFilesStep(cancellationToken)],
     };
     const wizard: AzureWizard<IUploadFilesWizardContext> = new AzureWizard(wizardContext, wizardOptions);
@@ -36,9 +36,9 @@ export async function uploadFiles(
     const nUris: Uri[] = nonNullProp(wizardContext, "uris");
     const nTreeItem: BlobContainerTreeItem | FileShareTreeItem = nonNullProp(wizardContext, "treeItem");
     if (nUris.length === 1) {
-        wizardContext.activityTitle = localize('activityLogUploadFiles', `Upload "${basename(nUris[0].path)}" to "${nTreeItem.label}"`);
+        wizardContext.activityTitle = localize('activityLogUploadFiles', 'Upload "{0}" to "{1}"', basename(nUris[0].path), nTreeItem.label);
     } else {
-        wizardContext.activityTitle = localize('activityLogUploadFiles', `Upload ${nUris.length} files to "${nTreeItem.label}"`);
+        wizardContext.activityTitle = localize('activityLogUploadFiles', 'Upload {0} files to "{1}"', nUris.length, nTreeItem.label);
     }
 
     await wizard.execute();

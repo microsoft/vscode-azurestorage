@@ -11,7 +11,7 @@ import { FileShareTreeItem } from '../../tree/fileShare/FileShareTreeItem';
 import { getDestinationDirectory, upload } from '../../utils/uploadUtils';
 import { IUploadFilesWizardContext } from './IUploadFilesWizardContext';
 
-export class GetDestinationDirectoryStep extends AzureWizardPromptStep<IUploadFilesWizardContext> {
+export class GetFileDestinationDirectoryStep extends AzureWizardPromptStep<IUploadFilesWizardContext> {
     public async prompt(context: IUploadFilesWizardContext): Promise<void> {
         context.destinationDirectory = await getDestinationDirectory(context, context.destinationDirectory);
         if (context.uris === undefined) {
