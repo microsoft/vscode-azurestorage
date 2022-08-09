@@ -6,7 +6,10 @@ import { getResourceGroupFromId } from '../utils/azureUtils';
 import { StorageAccountWrapper } from '../utils/storageWrappers';
 import { ApplicationResource } from '../vscode-azureresourcegroups.api.v2';
 import { BlobContainerGroupItem } from './blob/BlobContainerGroupItem';
+import { FileShareGroupItem } from './fileShare/FileShareGroupItem';
+import { QueueGroupItem } from './queue/QueueGroupItem';
 import { StorageAccountModel } from './StorageAccountModel';
+import { TableGroupItem } from './table/TableGroupItem';
 
 export class StorageAccountItem implements StorageAccountModel {
     constructor(private readonly resource: ApplicationResource) {
@@ -34,19 +37,17 @@ export class StorageAccountItem implements StorageAccountModel {
                     groupTreeItems.push(new BlobContainerGroupItem());
                 }
 
-                /*
                 if (primaryEndpoints.file) {
-                    groupTreeItems.push(this._fileShareGroupTreeItem);
+                    groupTreeItems.push(new FileShareGroupItem());
                 }
 
                 if (primaryEndpoints.queue) {
-                    groupTreeItems.push(this._queueGroupTreeItem);
+                    groupTreeItems.push(new QueueGroupItem());
                 }
 
                 if (primaryEndpoints.table) {
-                    groupTreeItems.push(this._tableGroupTreeItem);
+                    groupTreeItems.push(new TableGroupItem());
                 }
-                */
 
                 return groupTreeItems;
             });
