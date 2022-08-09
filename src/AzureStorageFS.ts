@@ -107,6 +107,8 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
         return await callWithTelemetryAndErrorHandling('stat', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
 
             if (uri.path.endsWith('/')) {
                 // Ignore trailing forward slashes
@@ -117,13 +119,20 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             const treeItem: AzureStorageTreeItem = await this.lookup(uri, context);
             const fileType: vscode.FileType = treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem ? vscode.FileType.Directory : vscode.FileType.File;
             let props: (BlobGetPropertiesResponse & FileGetPropertiesResponse) | undefined;
-
-            if (treeItem instanceof BlobTreeItem) {
-                const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
-                props = await blockBlobClient.getProperties();
-            } else if (treeItem instanceof FileTreeItem) {
-                const fileClient: ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
-                props = await fileClient.getProperties();
+            try {
+                if (treeItem instanceof BlobTreeItem) {
+                    const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
+                    props = await blockBlobClient.getProperties();
+                } else if (treeItem instanceof FileTreeItem) {
+                    const fileClient: ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+                    props = await fileClient.getProperties();
+                }
+            } catch (error) {
+                const pe = parseError(error);
+                if (pe.errorType === '404') {
+                    throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
+                }
+                throw error;
             }
 
             ctime = props?.createdOn?.valueOf() || props?.fileCreatedOn?.valueOf() || 0;
@@ -210,10 +219,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         let client: ShareFileClient | BlobClient;
         let downloaded: FileDownloadResponseModel | BlobDownloadResponseModel;
         return await callWithTelemetryAndErrorHandling('readFile', async (context) => {
-            context.telemetry.suppressIfSuccessful = true;
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
-
             let result: string | undefined;
             const parsedUri = this.parseUri(uri);
             const treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
@@ -228,7 +233,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 result = await this.streamToString(downloaded.readableStreamBody);
             } catch (error) {
                 const pe = parseError(error);
-                if (pe.errorType === 'BlobNotFound' || pe.errorType === 'ResourceNotFound') {
+                if (pe.errorType === '404') {
                     throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
                 }
                 throw error;
