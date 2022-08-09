@@ -1,4 +1,5 @@
 import * as azureStorageBlob from "@azure/storage-blob";
+import * as azureStorageShare from '@azure/storage-file-share';
 import { StorageAccount, StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
 import { callWithTelemetryAndErrorHandling, IActionContext, ISubscriptionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
@@ -39,17 +40,20 @@ export class StorageAccountItem implements StorageAccountModel {
                 const sa: StorageAccount = await storageManagementClient.storageAccounts.getProperties(getResourceGroupFromId(nonNullProp(this.resource, 'id')), nonNullProp(this.resource, 'name'));
                 const wrapper = new StorageAccountWrapper(sa);
                 const key = await this.getKey(wrapper, storageManagementClient);
-                const blobServiceClientFactory = () => this.createBlobServiceClient(wrapper, key);
-                const getWebSiteHostingStatus = () => this.getActualWebsiteHostingStatus(blobServiceClientFactory());
                 const primaryEndpoints = wrapper.primaryEndpoints;
                 const groupTreeItems: StorageAccountModel[] = [];
 
                 if (primaryEndpoints.blob) {
+                    const blobServiceClientFactory = () => this.createBlobServiceClient(wrapper, key);
+                    const getWebSiteHostingStatus = () => this.getActualWebsiteHostingStatus(blobServiceClientFactory());
+
                     groupTreeItems.push(new BlobContainerGroupItem(blobServiceClientFactory, getWebSiteHostingStatus));
                 }
 
                 if (primaryEndpoints.file) {
-                    groupTreeItems.push(new FileShareGroupItem());
+                    const shareServiceClientFactory = () => this.createShareServiceClient(wrapper, key);
+
+                    groupTreeItems.push(new FileShareGroupItem(shareServiceClientFactory));
                 }
 
                 if (primaryEndpoints.queue) {
@@ -121,6 +125,11 @@ export class StorageAccountItem implements StorageAccountModel {
     private createBlobServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageBlob.BlobServiceClient {
         const credential = new azureStorageBlob.StorageSharedKeyCredential(storageAccount.name, key.value);
         return new azureStorageBlob.BlobServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'blob'), credential);
+    }
+
+    private createShareServiceClient (storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageShare.ShareServiceClient {
+        const credential = new azureStorageShare.StorageSharedKeyCredential(storageAccount.name, key.value);
+        return new azureStorageShare.ShareServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'file'), credential);
     }
 
     private async getActualWebsiteHostingStatus(serviceClient: azureStorageBlob.BlobServiceClient): Promise<WebSiteHostingStatus> {
