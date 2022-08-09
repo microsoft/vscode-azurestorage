@@ -22,6 +22,7 @@ export class BlobContainerItem implements StorageAccountModel {
 
         const treeItem = new vscode.TreeItem(this.container.name);
 
+        treeItem.contextValue = 'azureBlobContainer';
         treeItem.iconPath = {
             light: path.join(getResourcesPath(), 'light', `${iconFileName}.svg`),
             dark: path.join(getResourcesPath(), 'dark', `${iconFileName}.svg`)

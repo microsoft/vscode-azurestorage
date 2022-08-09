@@ -21,6 +21,7 @@ export class TableGroupItem implements StorageAccountModel {
     getTreeItem(): vscode.TreeItem {
         const treeItem = new vscode.TreeItem('Tables', vscode.TreeItemCollapsibleState.Collapsed);
 
+        treeItem.contextValue = 'azureTableGroup';
         treeItem.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureTable.svg')

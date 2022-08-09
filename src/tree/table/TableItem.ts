@@ -14,6 +14,7 @@ export class TableItem implements StorageAccountModel {
     getTreeItem(): vscode.TreeItem {
         const treeItem = new vscode.TreeItem(this.tableName);
 
+        treeItem.contextValue = 'azureTable';
         treeItem.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureTable.svg')

@@ -21,6 +21,7 @@ export class BlobContainerGroupItem implements StorageAccountModel {
     getTreeItem(): vscode.TreeItem {
         const treeItem = new vscode.TreeItem('Blob Containers', vscode.TreeItemCollapsibleState.Collapsed);
 
+        treeItem.contextValue = 'azureBlobContainerGroup';
         treeItem.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')

@@ -28,4 +28,11 @@ export class StorageAccountBranchDataProvider extends vscode.Disposable implemen
     getTreeItem(element: StorageAccountModel): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element.getTreeItem();
     }
+
+    refresh(element: StorageAccountModel): void {
+        this.onDidChangeTreeDataEmitter.fire(element);
+    }
 }
+
+export const branchDataProvider = new StorageAccountBranchDataProvider();
+

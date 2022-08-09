@@ -15,6 +15,7 @@ export class QueueItem implements StorageAccountModel {
     getTreeItem(): vscode.TreeItem {
         const treeItem = new vscode.TreeItem(this.queue.name);
 
+        treeItem.contextValue = 'azureQueue';
         treeItem.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')

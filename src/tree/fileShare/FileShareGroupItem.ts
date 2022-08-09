@@ -21,6 +21,7 @@ export class FileShareGroupItem implements StorageAccountModel {
     getTreeItem(): vscode.TreeItem {
         const treeItem = new vscode.TreeItem('File Shares', vscode.TreeItemCollapsibleState.Collapsed);
 
+        treeItem.contextValue = 'azureFileShareGroup';
         treeItem.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
