@@ -1,5 +1,6 @@
 import * as azureStorageBlob from "@azure/storage-blob";
 import * as azureStorageShare from '@azure/storage-file-share';
+import * as azureStorageQueue from '@azure/storage-queue';
 import { StorageAccount, StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
 import { callWithTelemetryAndErrorHandling, IActionContext, ISubscriptionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
@@ -57,7 +58,9 @@ export class StorageAccountItem implements StorageAccountModel {
                 }
 
                 if (primaryEndpoints.queue) {
-                    groupTreeItems.push(new QueueGroupItem());
+                    const queueServiceClientFactory = () => this.createQueueServiceClient(wrapper, key);
+
+                    groupTreeItems.push(new QueueGroupItem(queueServiceClientFactory));
                 }
 
                 if (primaryEndpoints.table) {
@@ -127,10 +130,15 @@ export class StorageAccountItem implements StorageAccountModel {
         return new azureStorageBlob.BlobServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'blob'), credential);
     }
 
-    private createShareServiceClient (storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageShare.ShareServiceClient {
+    private createShareServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageShare.ShareServiceClient {
         const credential = new azureStorageShare.StorageSharedKeyCredential(storageAccount.name, key.value);
         return new azureStorageShare.ShareServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'file'), credential);
     }
+
+    private createQueueServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageQueue.QueueServiceClient {
+        const credential = new azureStorageQueue.StorageSharedKeyCredential(storageAccount.name, key.value);
+        return new azureStorageQueue.QueueServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'queue'), credential);
+}
 
     private async getActualWebsiteHostingStatus(serviceClient: azureStorageBlob.BlobServiceClient): Promise<WebSiteHostingStatus> {
         const properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
