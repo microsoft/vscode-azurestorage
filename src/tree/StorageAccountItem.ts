@@ -1,6 +1,7 @@
 import * as azureStorageBlob from "@azure/storage-blob";
-import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorageQueue from '@azure/storage-queue';
+import * as azureStorageShare from '@azure/storage-file-share';
+import * as azureDataTables from '@azure/data-tables';
 import { StorageAccount, StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
 import { callWithTelemetryAndErrorHandling, IActionContext, ISubscriptionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
@@ -64,7 +65,9 @@ export class StorageAccountItem implements StorageAccountModel {
                 }
 
                 if (primaryEndpoints.table) {
-                    groupTreeItems.push(new TableGroupItem());
+                    const tableServiceClientFactory = () => this.createTableServiceClient(wrapper, key);
+
+                    groupTreeItems.push(new TableGroupItem(tableServiceClientFactory));
                 }
 
                 return groupTreeItems;
@@ -138,7 +141,12 @@ export class StorageAccountItem implements StorageAccountModel {
     private createQueueServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageQueue.QueueServiceClient {
         const credential = new azureStorageQueue.StorageSharedKeyCredential(storageAccount.name, key.value);
         return new azureStorageQueue.QueueServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'queue'), credential);
-}
+    }
+
+    private createTableServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureDataTables.TableServiceClient {
+        const credential = new azureDataTables.AzureNamedKeyCredential(storageAccount.name, key.value);
+        return new azureDataTables.TableServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'table'), credential);
+    }
 
     private async getActualWebsiteHostingStatus(serviceClient: azureStorageBlob.BlobServiceClient): Promise<WebSiteHostingStatus> {
         const properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();

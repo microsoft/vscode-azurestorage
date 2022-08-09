@@ -26,7 +26,7 @@ export class QueueGroupItem implements StorageAccountModel {
         return treeItem;
     }
 
-    async listAllQueues(): Promise<azureStorageQueue.QueueItem[]> {
+    private async listAllQueues(): Promise<azureStorageQueue.QueueItem[]> {
         let response: azureStorageQueue.ListQueuesSegmentResponse | undefined;
 
         const queues: azureStorageQueue.QueueItem[] = [];
