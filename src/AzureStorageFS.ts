@@ -107,9 +107,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
         return await callWithTelemetryAndErrorHandling('stat', async (context) => {
             context.telemetry.suppressIfSuccessful = true;
-            context.errorHandling.rethrow = true;
-            context.errorHandling.suppressDisplay = true;
-
             if (uri.path.endsWith('/')) {
                 // Ignore trailing forward slashes
                 // https://github.com/microsoft/vscode-azurestorage/issues/576
