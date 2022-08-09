@@ -1,15 +1,25 @@
+import * as azureStorageBlob from "@azure/storage-blob";
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { getResourcesPath } from '../../constants';
+import { getResourcesPath, maxPageSize } from '../../constants';
 import { StorageAccountModel } from "../StorageAccountModel";
+import { BlobContainerItem } from "./BlobContainerItem";
+import { WebSiteHostingStatus } from "../StorageAccountItem";
 
 export class BlobContainerGroupItem implements StorageAccountModel {
-    getChildren(): vscode.ProviderResult<StorageAccountModel[]> {
-        return undefined;
+    constructor(
+        private readonly blobServiceClientFactory: () => azureStorageBlob.BlobServiceClient,
+        private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>) {
+    }
+
+    async getChildren(): Promise<StorageAccountModel[]> {
+        const containers = await this.listAllContainers();
+
+        return containers.map(container => new BlobContainerItem(container, this.getWebSiteHostingStatus));
     }
 
     getTreeItem(): vscode.TreeItem {
-        const treeItem = new vscode.TreeItem('Blob Containers');
+        const treeItem = new vscode.TreeItem('Blob Containers', vscode.TreeItemCollapsibleState.Collapsed);
 
         treeItem.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
@@ -17,5 +27,29 @@ export class BlobContainerGroupItem implements StorageAccountModel {
         };
 
         return treeItem;
+    }
+
+    async listAllContainers(): Promise<azureStorageBlob.ContainerItem[]> {
+        let response: azureStorageBlob.ListContainersSegmentResponse | undefined;
+
+        const containers: azureStorageBlob.ContainerItem[] = [];
+
+        do {
+            response = await this.listContainers(response?.continuationToken);
+
+            if (response.containerItems) {
+                containers.push(...response.containerItems);
+            }
+        } while (response.continuationToken);
+
+        return containers;
+    }
+
+    async listContainers(continuationToken?: string): Promise<azureStorageBlob.ListContainersSegmentResponse> {
+        const blobServiceClient: azureStorageBlob.BlobServiceClient = this.blobServiceClientFactory();
+        const response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize });
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        return (await response.next()).value;
     }
 }
