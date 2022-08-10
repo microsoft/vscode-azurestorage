@@ -9,7 +9,6 @@ import { ThemeIcon } from 'vscode';
 import { emulatorAccountName, emulatorConnectionString } from '../constants';
 import { ext } from '../extensionVariables';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
-import { KeyTar, tryGetKeyTar } from '../utils/keytar';
 import { localize } from '../utils/localize';
 import { AttachedStorageAccountTreeItem } from './AttachedStorageAccountTreeItem';
 import { StorageAccountTreeItem } from './StorageAccountTreeItem';
@@ -27,13 +26,11 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
     private _root: ISubscriptionContext;
     private _attachedAccounts: AttachedStorageAccountTreeItem[] | undefined;
     private _loadPersistedAccountsTask: Promise<AttachedStorageAccountTreeItem[]>;
-    private _keytar: KeyTar | undefined;
-    private readonly _serviceName: string = "ms-azuretools.vscode-azurestorage.connectionStrings";
+    private readonly _serviceName: string = "ms-azuretools.vscode-azurestorage.connectionStrings2";
 
     constructor(parent: AzExtParentTreeItem) {
         super(parent);
         this.id = 'attachedStorageAccounts';
-        this._keytar = tryGetKeyTar();
         this._root = new AttachedAccountRoot();
         this._loadPersistedAccountsTask = this.loadPersistedAccounts();
     }
@@ -81,10 +78,8 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         const index = attachedAccounts.findIndex((account) => account.fullId === treeItem.fullId);
         if (index !== -1) {
             attachedAccounts.splice(index, 1);
-            if (this._keytar) {
-                await this._keytar.deletePassword(this._serviceName, treeItem.fullId);
-                await this.persistIds(attachedAccounts);
-            }
+            await ext.context.secrets.delete(this.getAccountKey(treeItem));
+            await this.persistIds(attachedAccounts);
         }
     }
 
@@ -109,8 +104,8 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         } else {
             attachedAccounts.push(treeItem);
 
-            if (this._keytar && treeItem.root.storageAccountName !== emulatorAccountName) {
-                await this._keytar.setPassword(this._serviceName, treeItem.fullId, treeItem.getConnectionString());
+            if (treeItem.root.storageAccountName !== emulatorAccountName) {
+                await ext.context.secrets.store(this.getAccountKey(treeItem), treeItem.getConnectionString());
                 await this.persistIds(attachedAccounts);
             }
         }
@@ -121,10 +116,10 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         const value: string | undefined = ext.context.globalState.get(this._serviceName);
         let connectionString: string;
 
-        if (value && this._keytar) {
+        if (value) {
             const accounts: IPersistedAccount[] = <IPersistedAccount[]>JSON.parse(value);
             await Promise.all(accounts.map(async account => {
-                connectionString = <string>(this._keytar && await this._keytar.getPassword(this._serviceName, account.fullId));
+                connectionString = <string>await ext.context.secrets.get(this.getAccountKey(account));
                 const accountName: string | undefined = getPropertyFromConnectionString(connectionString, 'AccountName');
 
                 if (accountName) {
@@ -175,6 +170,10 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         }
 
         return localize('connectionStringMustMatchFormat', 'Connection string must match format "DefaultEndpointsProtocol=...;AccountName=...;AccountKey=...;"');
+    }
+
+    private getAccountKey(account: IPersistedAccount): string {
+        return this._serviceName + account.fullId;
     }
 }
 
