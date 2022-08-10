@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureDataTables from '@azure/data-tables';
-import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
@@ -38,7 +38,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         return this.parent.root;
     }
 
-    async loadMoreChildrenImpl(clearCache: boolean): Promise<TableTreeItem[]> {
+    async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
         if (clearCache) {
             this._continuationToken = undefined;
         }
@@ -47,8 +47,16 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         try {
             tablesResponse = await this.listTables(this._continuationToken);
         } catch (error) {
-            if (parseError(error).errorType === 'NotImplemented') {
+            const errorType: string = parseError(error).errorType;
+            if (errorType === 'NotImplemented') {
                 throw new Error(localize('storageAccountDoesNotSupportTables', 'This storage account does not support tables.'));
+            } else if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
+                return [new GenericTreeItem(this, {
+                    contextValue: 'startTableEmulator',
+                    label: 'Start Table Emulator',
+                    commandId: 'azureStorage.startTableEmulator',
+                    includeInTreeItemPicker: false
+                })];
             } else {
                 throw error;
             }
