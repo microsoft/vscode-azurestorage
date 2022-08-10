@@ -762,7 +762,6 @@
         "@microsoft/vscode-azext-dev": "^0.1.4",
         "@types/fs-extra": "^8.1.0",
         "@types/gulp": "^4.0.6",
-        "@types/keytar": "4.0.1",
         "@types/mocha": "^7.0.2",
         "@types/node": "^14.0.0",
         "@types/p-retry": "^3.0.1",
