@@ -34,5 +34,6 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
 
 export enum EmulatorType {
     blob = 'blob',
-    queue = 'queue'
+    queue = 'queue',
+    table = 'table'
 }
