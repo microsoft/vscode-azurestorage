@@ -78,7 +78,7 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         const index = attachedAccounts.findIndex((account) => account.fullId === treeItem.fullId);
         if (index !== -1) {
             attachedAccounts.splice(index, 1);
-            await ext.context.secrets.delete(this._serviceName + treeItem.fullId);
+            await ext.context.secrets.delete(this.getAccountKey(treeItem));
             await this.persistIds(attachedAccounts);
         }
     }
@@ -105,7 +105,7 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
             attachedAccounts.push(treeItem);
 
             if (treeItem.root.storageAccountName !== emulatorAccountName) {
-                await ext.context.secrets.store(this._serviceName + treeItem.fullId, treeItem.getConnectionString());
+                await ext.context.secrets.store(this.getAccountKey(treeItem), treeItem.getConnectionString());
                 await this.persistIds(attachedAccounts);
             }
         }
@@ -119,7 +119,7 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         if (value) {
             const accounts: IPersistedAccount[] = <IPersistedAccount[]>JSON.parse(value);
             await Promise.all(accounts.map(async account => {
-                connectionString = <string>await ext.context.secrets.get(this._serviceName + account.fullId);
+                connectionString = <string>await ext.context.secrets.get(this.getAccountKey(account));
                 const accountName: string | undefined = getPropertyFromConnectionString(connectionString, 'AccountName');
 
                 if (accountName) {
@@ -170,6 +170,10 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         }
 
         return localize('connectionStringMustMatchFormat', 'Connection string must match format "DefaultEndpointsProtocol=...;AccountName=...;AccountKey=...;"');
+    }
+
+    private getAccountKey(account: IPersistedAccount): string {
+        return this._serviceName + account.fullId;
     }
 }
 
