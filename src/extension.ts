@@ -159,6 +159,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
     registerCommand('azureStorage.detachStorageAccount', detachStorageAccount);
     registerCommand('azureStorage.startBlobEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.blob); }, startEmulatorDebounce);
     registerCommand('azureStorage.startQueueEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.queue); }, startEmulatorDebounce);
+    registerCommand('azureStorage.startTableEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.table); }, startEmulatorDebounce);
     registerCommand('azureStorage.showAzuriteExtension', async () => { await commands.executeCommand('extension.open', azuriteExtensionId); });
 
     return createApiProvider([<AzureExtensionApi>{

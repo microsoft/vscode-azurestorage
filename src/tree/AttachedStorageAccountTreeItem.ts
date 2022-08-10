@@ -67,10 +67,10 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
 
     // eslint-disable-next-line @typescript-eslint/require-await
     public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
-        const groupTreeItems: AzExtTreeItem[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem];
+        const groupTreeItems: AzExtTreeItem[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem, this._tableGroupTreeItem];
 
         if (!this.root.isEmulated) {
-            groupTreeItems.push(this._fileShareGroupTreeItem, this._tableGroupTreeItem);
+            groupTreeItems.push(this._fileShareGroupTreeItem);
         }
 
         return groupTreeItems;
