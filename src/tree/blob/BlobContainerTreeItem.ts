@@ -154,7 +154,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
             context.showCreatingTreeItem(context.remoteFilePath);
             await this.uploadLocalFile(context, context.localFilePath, context.remoteFilePath);
             child = new BlobTreeItem(this, context.remoteFilePath, this.container);
-        } else if (context.childName && context.childType === BlobDirectoryTreeItem.contextValue) {
+        } else if ((context.childName !== undefined) && context.childType === BlobDirectoryTreeItem.contextValue) {
             child = new BlobDirectoryTreeItem(this, context.childName, this.container);
         } else {
             child = await createChildAsNewBlockBlob(this, context);
