@@ -29,7 +29,7 @@ export function registerStorageAccountActionHandlers(): void {
 async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: ResolvedAppResourceTreeItem<ResolvedStorageAccount>): Promise<void> {
     if (vscode.env.remoteName) {
         const noRemoteSupport: string = localize('noRemoteSupport', 'This feature is not supported on remote workspaces.');
-        void vscode.window.showInformationMessage(noRemoteSupport);
+        void context.ui.showWarningMessage(noRemoteSupport);
         return;
     }
 
