@@ -27,6 +27,12 @@ export function registerStorageAccountActionHandlers(): void {
 }
 
 async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: ResolvedAppResourceTreeItem<ResolvedStorageAccount>): Promise<void> {
+    if (vscode.env.remoteName) {
+        const noRemoteSupport: string = localize('noRemoteSupport', 'This feature is not supported on remote workspaces.');
+        void vscode.window.showInformationMessage(noRemoteSupport);
+        return;
+    }
+
     if (!treeItem) {
         treeItem = await ext.rgApi.pickAppResource<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtTreeItem>(context, {
             filter: storageFilter,
@@ -35,7 +41,6 @@ async function openStorageAccountInStorageExplorer(context: IActionContext, tree
     }
 
     const accountId = treeItem.storageAccount.id;
-
     await storageExplorerLauncher.openResource(accountId, treeItem.subscription.subscriptionId);
 }
 
