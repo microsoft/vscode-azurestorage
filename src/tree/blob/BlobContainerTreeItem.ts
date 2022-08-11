@@ -38,7 +38,7 @@ export enum ChildType {
 export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
     private _continuationToken: string | undefined;
     private _websiteHostingEnabled: boolean;
-    private _openInFileExplorerString: string = 'Open in File Explorer...';
+    private _openInFileExplorerString: string = 'Open in Explorer...';
     public parent: BlobContainerGroupTreeItem;
 
     private constructor(

@@ -28,7 +28,7 @@ import { FileTreeItem } from './FileTreeItem';
 export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
     public parent: FileShareGroupTreeItem;
     private _continuationToken: string | undefined;
-    private _openInFileExplorerString: string = 'Open in File Explorer...';
+    private _openInFileExplorerString: string = 'Open in Explorer...';
 
     constructor(
         parent: FileShareGroupTreeItem,
