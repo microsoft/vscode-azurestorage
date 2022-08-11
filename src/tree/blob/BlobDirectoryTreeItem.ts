@@ -124,7 +124,7 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
         let errors: boolean = false;
 
         while (dirPath) {
-            const children: AzExtTreeItem[] = await dirPath.getCachedChildren(context);
+            const children: AzExtTreeItem[] = await dirPath.loadAllChildren(context);
             for (const child of children) {
                 if (child instanceof BlobTreeItem) {
                     try {
