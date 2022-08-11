@@ -3,7 +3,7 @@ import * as azureStorageQueue from '@azure/storage-queue';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureDataTables from '@azure/data-tables';
 import { StorageAccount, StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
-import { callWithTelemetryAndErrorHandling, IActionContext, ISubscriptionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
+import { callWithTelemetryAndErrorHandling, IActionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { createStorageClient } from '../utils/azureClients';
 import { getResourceGroupFromId } from '../utils/azureUtils';
@@ -14,6 +14,7 @@ import { FileShareGroupItem } from './fileShare/FileShareGroupItem';
 import { QueueGroupItem } from './queue/QueueGroupItem';
 import { StorageAccountModel } from './StorageAccountModel';
 import { TableGroupItem } from './table/TableGroupItem';
+import { createSubscriptionContext } from "../utils/v2/credentialsUtils";
 
 export type WebSiteHostingStatus = {
     capable: boolean;
@@ -30,41 +31,7 @@ export class StorageAccountItem implements StorageAccountModel {
         return callWithTelemetryAndErrorHandling(
             'getChildren',
             async (context: IActionContext) => {
-                const subContext: ISubscriptionContext = {
-                    subscriptionDisplayName: '',
-                    subscriptionPath: '',
-                    tenantId: '',
-                    userId: '',
-                    ...this.resource.subscription,
-                    credentials: {
-                        getToken: async (scopes?: string | string[]) => {
-                            if (typeof scopes === 'string') {
-                                scopes = [ scopes ];
-                            } else if (!scopes) {
-                                scopes = [];
-                            } else {
-                                scopes = [...scopes];
-                            }
-
-                            if (scopes.find(s => s === 'offline_access') === undefined) {
-                                scopes.push('offline_access');
-                            }
-
-                            const session = await this.resource.subscription.authentication.getSession(scopes);
-
-                            if (session) {
-                                return {
-                                    token: session.accessToken
-                                };
-                            } else {
-                                return null;
-                            }
-                        },
-                        signRequest: async () => {
-                            throw new Error('TODO: Not yet supported (or localized)');
-                        }
-                    }
-                };
+                const subContext = createSubscriptionContext(this.resource.subscription);
 
                 const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
                 const sa: StorageAccount = await storageManagementClient.storageAccounts.getProperties(getResourceGroupFromId(nonNullProp(this.resource, 'id')), nonNullProp(this.resource, 'name'));
