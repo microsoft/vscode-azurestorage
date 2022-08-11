@@ -15,7 +15,16 @@ export class BlobContainerGroupItem implements StorageAccountModel {
     async getChildren(): Promise<StorageAccountModel[]> {
         const containers = await this.listAllContainers();
 
-        return containers.map(container => new BlobContainerItem(container, this.getWebSiteHostingStatus));
+        return containers.map(
+            container =>
+                new BlobContainerItem(
+                    container,
+                    () => {
+                        const blobServiceClient = this.blobServiceClientFactory();
+                        return blobServiceClient.getContainerClient(container.name);
+                    },
+                    /* isEmulated: TODO: fix */ false,
+                    this.getWebSiteHostingStatus));
     }
 
     getTreeItem(): vscode.TreeItem {
