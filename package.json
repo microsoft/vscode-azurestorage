@@ -96,7 +96,7 @@
         "commands": [
             {
                 "command": "azureStorage.openInFileExplorer",
-                "title": "Open in File Explorer...",
+                "title": "Open in Explorer...",
                 "icon": "$(file-symlink-directory)",
                 "category": "Azure Storage"
             },
