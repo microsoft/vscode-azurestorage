@@ -35,7 +35,35 @@ export class StorageAccountItem implements StorageAccountModel {
                     subscriptionPath: '',
                     tenantId: '',
                     userId: '',
-                    ...this.resource.subscription
+                    ...this.resource.subscription,
+                    credentials: {
+                        getToken: async (scopes?: string | string[]) => {
+                            if (typeof scopes === 'string') {
+                                scopes = [ scopes ];
+                            } else if (!scopes) {
+                                scopes = [];
+                            } else {
+                                scopes = [...scopes];
+                            }
+
+                            if (scopes.find(s => s === 'offline_access') === undefined) {
+                                scopes.push('offline_access');
+                            }
+
+                            const session = await this.resource.subscription.authentication.getSession(scopes);
+
+                            if (session) {
+                                return {
+                                    token: session.accessToken
+                                };
+                            } else {
+                                return null;
+                            }
+                        },
+                        signRequest: async () => {
+                            throw new Error('TODO: Not yet supported (or localized)');
+                        }
+                    }
                 };
 
                 const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
