@@ -198,11 +198,6 @@
                 "category": "Azure Storage"
             },
             {
-                "command": "azureStorage.deleteBlobDirectory",
-                "title": "Delete...",
-                "category": "Azure Storage"
-            },
-            {
                 "command": "azureStorage.download",
                 "title": "Download...",
                 "category": "Azure Storage"
@@ -450,7 +445,7 @@
                 {
                     "$comment": "========= azureBlob =========",
                     "command": "azureStorage.deleteBlob",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob || viewItem == azureBlobDirectory",
                     "group": "7_modification"
                 },
                 {
@@ -464,12 +459,7 @@
                     "group": "5_cutcopypaste"
                 },
                 {
-                    "$comment": "========= azureBlobDirectory =========",
-                    "command": "azureStorage.deleteBlobDirectory",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
-                    "group": "7_modification"
-                },
-                {
+                    "$comment": "========= azureBlobDirectory ==========",
                     "command": "azureStorage.download",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
                     "group": "3_download"
@@ -658,10 +648,6 @@
                 },
                 {
                     "command": "azureStorage.deleteBlob",
-                    "when": "never"
-                },
-                {
-                    "command": "azureStorage.deleteBlobDirectory",
                     "when": "never"
                 },
                 {
