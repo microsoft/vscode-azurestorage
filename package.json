@@ -337,7 +337,7 @@
                 {
                     "$comment": "========= azureStorageAccount =========",
                     "command": "azureStorage.openStorageAccount",
-                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/ && !isWeb && !isLinux",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/ && !isWeb && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -711,6 +711,10 @@
                 {
                     "command": "azureStorage.uploadToAzureStorage",
                     "when": "never"
+                },
+                {
+                    "command": "azureStorage.openStorageAccount",
+                    "when": "!remoteName"
                 }
             ]
         },
