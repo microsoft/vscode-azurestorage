@@ -7,6 +7,8 @@ import { IActionContext, registerCommand } from "@microsoft/vscode-azext-utils";
 import { ext } from "../../extensionVariables";
 import { BlobDirectoryTreeItem } from "../../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../../tree/blob/BlobTreeItem";
+import { isTreeItemDirectory } from "../../utils/directoryUtils";
+import { isSubpath } from "../../utils/fs";
 
 export function registerBlobActionHandlers(): void {
     registerCommand("azureStorage.deleteBlob", deleteBlob);
@@ -22,7 +24,17 @@ export async function deleteBlob(context: IActionContext, treeItem: BlobTreeItem
         return;
     }
 
-    for (const node of selection) {
+    for (const [n, node] of selection.entries()) {
+        // When deleting a directory, go through the remaining selections and check to see if it's a child we've already deleted
+        if (isTreeItemDirectory(node)) {
+            for (let i = n + 1; i < selection.length; i++) {
+                const unverifiedNode = selection[i];
+                if (isSubpath(node.fullId, unverifiedNode.fullId)) {
+                    selection.splice(i, 1);
+                    i--;
+                }
+            }
+        }
         await node.deleteTreeItem(context);
     }
 }
