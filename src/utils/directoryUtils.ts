@@ -86,6 +86,5 @@ export async function doesDirectoryExist(parent: FileShareTreeItem | DirectoryTr
 }
 
 export function isTreeItemDirectory(node: AzExtTreeItem): boolean {
-    const dirRegEx = /directory/i;
-    return (node.contextValue.match(dirRegEx)) ? true : false;
+    return /directory/i.test(node.contextValue);
 }

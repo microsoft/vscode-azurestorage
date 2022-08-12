@@ -14,9 +14,7 @@ export function registerBlobActionHandlers(): void {
     registerCommand("azureStorage.deleteBlob", deleteBlob);
 }
 
-export async function deleteBlob(context: IActionContext, treeItem: BlobTreeItem | BlobDirectoryTreeItem): Promise<void> {
-    const { selection } = ext.rgApi.appResourceTreeView;
-
+export async function deleteBlob(context: IActionContext, treeItem: BlobTreeItem | BlobDirectoryTreeItem, selection: (BlobTreeItem | BlobDirectoryTreeItem)[] = []): Promise<void> {
     // Covers both single selection and an edge case where the node you delete from isn't part of the selection
     if (!selection.some(s => s === treeItem)) {
         await ext.rgApi.appResourceTreeView.reveal(treeItem);
