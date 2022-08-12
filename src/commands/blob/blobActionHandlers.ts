@@ -22,16 +22,20 @@ export async function deleteBlob(context: IActionContext, treeItem: BlobTreeItem
         return;
     }
 
-    for (const [n, node] of selection.entries()) {
-        // When deleting a directory, go through the remaining selections and check to see if it's a child we've already deleted
-        if (isTreeItemDirectory(node)) {
-            for (let i = n + 1; i < selection.length; i++) {
-                const unverifiedNode = selection[i];
-                if (isSubpath(node.fullId, unverifiedNode.fullId)) {
-                    selection.splice(i, 1);
-                    i--;
-                }
+    // When deleting a directory, go through the remaining selections and check to see if it's a child we've already deleted
+    const dirPaths: string[] = [];
+    let shouldContinue;
+    for (const node of selection) {
+        shouldContinue = false;
+        for (const dirPath of dirPaths) {
+            if (isSubpath(dirPath, node.fullId)) {
+                shouldContinue = true;
+                break;
             }
+        }
+        if (shouldContinue) continue;
+        if (isTreeItemDirectory(node)) {
+            dirPaths.push(node.fullId);
         }
         await node.deleteTreeItem(context);
     }
