@@ -22,11 +22,12 @@ export async function deleteBlob(context: IActionContext, treeItem: BlobTreeItem
         return;
     }
 
-    // When deleting a directory, go through the remaining selections and check to see if it's a child we've already deleted
     const dirPaths: string[] = [];
     let shouldContinue;
     for (const node of selection) {
         shouldContinue = false;
+
+        // Check to see if it's a child we've already deleted
         for (const dirPath of dirPaths) {
             if (isSubpath(dirPath, node.fullId)) {
                 shouldContinue = true;
