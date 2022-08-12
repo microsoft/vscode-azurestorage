@@ -23,18 +23,18 @@ export async function deleteBlob(context: IActionContext, treeItem: BlobTreeItem
     }
 
     const dirPaths: string[] = [];
-    let shouldContinue;
+    let shouldSkip;
     for (const node of selection) {
-        shouldContinue = false;
+        shouldSkip = false;
 
-        // Check to see if it's a child we've already deleted
+        // Check to see if it's a resource we've already deleted
         for (const dirPath of dirPaths) {
             if (isSubpath(dirPath, node.fullId)) {
-                shouldContinue = true;
+                shouldSkip = true;
                 break;
             }
         }
-        if (shouldContinue) continue;
+        if (shouldSkip) continue;
         if (isTreeItemDirectory(node)) {
             dirPaths.push(node.fullId);
         }
