@@ -15,7 +15,9 @@ export class FileShareGroupItem implements StorageAccountModel {
     async getChildren(): Promise<StorageAccountModel[]> {
         const shares = await this.listAllShares();
 
-        return shares.map(share => new FileShareItem(share.name));
+        return shares.map(share => new FileShareItem(
+            directory => this.shareServiceClientFactory().getShareClient(share.name).getDirectoryClient(directory ?? ''),
+            share.name));
     }
 
     getTreeItem(): vscode.TreeItem {

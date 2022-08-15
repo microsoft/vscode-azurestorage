@@ -1,18 +1,23 @@
+import * as azureStorageShare from '@azure/storage-file-share';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { getResourcesPath } from '../../constants';
-import { StorageAccountModel } from "../StorageAccountModel";
+import { FileParentItem } from './FileParentItem';
+import { DirectoryItem } from './DirectoryItem';
 
-export class FileShareItem implements StorageAccountModel {
-    constructor(private readonly shareName: string) {
-    }
-
-    getChildren(): vscode.ProviderResult<StorageAccountModel[]> {
-        return undefined;
+export class FileShareItem extends FileParentItem {
+    constructor(
+        directoryClientFactory: (directory: string | undefined) => azureStorageShare.ShareDirectoryClient,
+        private readonly shareName: string) {
+        super(
+            /* directory: */ undefined,
+            d => new DirectoryItem(d, directoryClientFactory),
+            directoryClientFactory
+        )
     }
 
     getTreeItem(): vscode.TreeItem {
-        const treeItem = new vscode.TreeItem(this.shareName);
+        const treeItem = new vscode.TreeItem(this.shareName, vscode.TreeItemCollapsibleState.Collapsed);
 
         treeItem.contextValue = 'azureFileShare';
         treeItem.iconPath = {
