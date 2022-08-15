@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
-import { FileTreeItem } from '../../tree/fileShare/FileTreeItem';
+import { registerCommand } from '@microsoft/vscode-azext-utils';
+import { deleteFilesAndDirectories } from '../deleteFilesAndDirectories';
 
 export function registerFileActionHandlers(): void {
-    registerCommand("azureStorage.deleteFile", async (context: IActionContext, treeItem: FileTreeItem) => await treeItem.deleteTreeItem(context));
+    registerCommand("azureStorage.deleteFile", deleteFilesAndDirectories);
 }
