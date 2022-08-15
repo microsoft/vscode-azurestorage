@@ -50,7 +50,6 @@
         "onCommand:azureStorage.createBlockBlob",
         "onCommand:azureStorage.uploadFiles",
         "onCommand:azureStorage.uploadFolder",
-        "onCommand:azureStorage.deleteBlob",
         "onCommand:azureStorage.download",
         "onCommand:azureStorage.createFileShare",
         "onCommand:azureStorage.deleteFileShare",
@@ -190,11 +189,6 @@
             {
                 "command": "azureStorage.uploadFolder",
                 "title": "Upload Folder...",
-                "category": "Azure Storage"
-            },
-            {
-                "command": "azureStorage.deleteBlob",
-                "title": "Delete...",
                 "category": "Azure Storage"
             },
             {
@@ -443,19 +437,13 @@
                     "group": "9_refresh"
                 },
                 {
-                    "$comment": "========= azureBlob =========",
-                    "command": "azureStorage.deleteBlob",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob || viewItem == azureBlobDirectory",
-                    "group": "7_modification"
-                },
-                {
                     "command": "azureStorage.download",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobFile",
                     "group": "3_download"
                 },
                 {
                     "command": "azureStorage.copyUrl",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobFile",
                     "group": "5_cutcopypaste"
                 },
                 {
@@ -539,7 +527,7 @@
                 },
                 {
                     "command": "azureStorage.deleteFile",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile || viewItem == azureBlobFile",
                     "group": "7_modification"
                 },
                 {
@@ -565,7 +553,7 @@
                 },
                 {
                     "command": "azureStorage.deleteDirectory",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory || viewItem == azureBlobDirectory",
                     "group": "7_modification"
                 },
                 {
@@ -644,10 +632,6 @@
                 },
                 {
                     "command": "azureStorage.createBlockBlob",
-                    "when": "never"
-                },
-                {
-                    "command": "azureStorage.deleteBlob",
                     "when": "never"
                 },
                 {
