@@ -44,7 +44,7 @@ export class StorageAccountItem implements StorageAccountModel {
                     const blobServiceClientFactory = () => this.createBlobServiceClient(wrapper, key);
                     const getWebSiteHostingStatus = () => this.getActualWebsiteHostingStatus(blobServiceClientFactory());
 
-                    groupTreeItems.push(new BlobContainerGroupItem(blobServiceClientFactory, getWebSiteHostingStatus));
+                    groupTreeItems.push(new BlobContainerGroupItem(blobServiceClientFactory, getWebSiteHostingStatus, this.resource.id, this.resource.subscription.subscriptionId));
                 }
 
                 if (primaryEndpoints.file) {

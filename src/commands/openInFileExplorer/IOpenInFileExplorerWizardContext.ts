@@ -4,11 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext } from "@microsoft/vscode-azext-utils";
-import { BlobContainerTreeItem } from '../../tree/blob/BlobContainerTreeItem';
-import { FileShareTreeItem } from '../../tree/fileShare/FileShareTreeItem';
 
 export interface IOpenInFileExplorerWizardContext extends IActionContext {
-    treeItem: BlobContainerTreeItem | FileShareTreeItem;
+    fullId: string;
     openBehavior?: OpenBehavior;
 }
 

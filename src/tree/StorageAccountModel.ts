@@ -1,7 +1,6 @@
-import * as vscode from 'vscode';
-import { ResourceModelBase } from "../vscode-azureresourcegroups.api.v2";
+import { VisitedResourceModel } from '../utils/v2/treeutils';
 
-export interface StorageAccountModel extends ResourceModelBase {
-    getChildren(): vscode.ProviderResult<StorageAccountModel[]>;
-    getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem>;
+// TODO: Do we need our own interface?
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface StorageAccountModel extends VisitedResourceModel {
 }

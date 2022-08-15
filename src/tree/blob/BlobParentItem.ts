@@ -10,7 +10,7 @@ export abstract class BlobParentItem implements StorageAccountModel {
     constructor(
         private readonly blobContainerClientFactory: () => azureStorageBlob.ContainerClient,
         private readonly parentItemFactory: (dirPath: string) => BlobParentItem,
-        private readonly isEmulated: boolean,
+        public readonly isEmulated: boolean,
         private readonly prefix: string | undefined) {
     }
 

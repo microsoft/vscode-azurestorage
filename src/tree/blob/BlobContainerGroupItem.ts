@@ -9,7 +9,9 @@ import { WebSiteHostingStatus } from "../StorageAccountItem";
 export class BlobContainerGroupItem implements StorageAccountModel {
     constructor(
         private readonly blobServiceClientFactory: () => azureStorageBlob.BlobServiceClient,
-        private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>) {
+        private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>,
+        private readonly storageAccountId: string,
+        private readonly subscriptionId: string) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
@@ -24,7 +26,9 @@ export class BlobContainerGroupItem implements StorageAccountModel {
                         return blobServiceClient.getContainerClient(container.name);
                     },
                     /* isEmulated: TODO: fix */ false,
-                    this.getWebSiteHostingStatus));
+                    this.getWebSiteHostingStatus,
+                    this.storageAccountId,
+                    this.subscriptionId));
     }
 
     getTreeItem(): vscode.TreeItem {

@@ -41,6 +41,7 @@ import { ext } from './extensionVariables';
 import { getApiExport } from './getApiExport';
 import { StorageAccountResolver } from './StorageAccountResolver';
 import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
+import { BlobContainerItem } from './tree/blob/BlobContainerItem';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
@@ -81,16 +82,28 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
         registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
-        registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
+        registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerItem | BlobContainerTreeItem | FileShareTreeItem) => {
             if (!treeItem) {
+                // TODO: Use v2 picker API when available.
                 treeItem = await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(actionContext, {
                     filter: storageFilter,
                     expectedChildContextValue: [BlobContainerTreeItem.contextValue, FileShareTreeItem.contextValue]
                 });
             }
 
-            const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { treeItem });
-            if (treeItem.root.isEmulated) {
+            let fullId: string;
+            let isEmulated: boolean;
+
+            if (treeItem instanceof BlobContainerItem) {
+                fullId = `/subscriptions/${treeItem.subscriptionId}/microsoft.storage/storageaccounts${treeItem.storageAccountId}/Blob Containers/${treeItem.containerName}`;
+                isEmulated = treeItem.isEmulated;
+            } else {
+                fullId = treeItem.fullId;
+                isEmulated = treeItem.root.isEmulated;
+            }
+
+            const wizardContext: IOpenInFileExplorerWizardContext = Object.assign(actionContext, { fullId });
+            if (isEmulated) {
                 wizardContext.openBehavior = 'OpenInNewWindow';
             }
             const wizard: AzureWizard<IOpenInFileExplorerWizardContext> = new AzureWizard(wizardContext, {
