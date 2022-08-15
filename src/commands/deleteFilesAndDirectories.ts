@@ -5,14 +5,23 @@
 
 import { AzExtTreeItem, IActionContext } from "@microsoft/vscode-azext-utils";
 import { ext } from "../extensionVariables";
+import { BlobContainerGroupTreeItem } from "../tree/blob/BlobContainerGroupTreeItem";
+import { FileShareGroupTreeItem } from "../tree/fileShare/FileShareGroupTreeItem";
 import { isTreeItemDirectory } from "../utils/directoryUtils";
 import { isSubpath } from "../utils/fs";
+import { treeUtils } from "../utils/treeUtils";
 
 export async function deleteFilesAndDirectories(context: IActionContext, treeItem: AzExtTreeItem, selection: AzExtTreeItem[] = []): Promise<void> {
+    const parentContainer = treeUtils.findNearestParent(treeItem, [
+        BlobContainerGroupTreeItem.prototype,
+        FileShareGroupTreeItem.prototype
+    ]);
+
     // Covers both single selection and an edge case where the node you delete from isn't part of the selection
     if (!selection.some(s => s === treeItem)) {
         await ext.rgApi.appResourceTreeView.reveal(treeItem);
         await treeItem.deleteTreeItem(context);
+        await parentContainer.refresh(context);
         return;
     }
 
@@ -34,4 +43,5 @@ export async function deleteFilesAndDirectories(context: IActionContext, treeIte
         }
         await node.deleteTreeItem(context);
     }
+    await parentContainer.refresh(context);
 }
