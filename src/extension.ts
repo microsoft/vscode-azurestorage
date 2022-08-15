@@ -48,6 +48,7 @@ import { ICopyUrl } from './tree/ICopyUrl';
 import { IStorageTreeItem } from './tree/IStorageTreeItem';
 import { refreshTreeItem } from './tree/refreshTreeItem';
 import { branchDataProvider } from './tree/StorageAccountBranchDataProvider';
+import { registerBranchCommand } from './utils/v2/commandUtils';
 import { V2AzureResourcesApi } from './vscode-azureresourcegroups.api.v2';
 
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
@@ -82,7 +83,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
         registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
-        registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerItem | BlobContainerTreeItem | FileShareTreeItem) => {
+        registerBranchCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerItem | BlobContainerTreeItem | FileShareTreeItem) => {
             if (!treeItem) {
                 // TODO: Use v2 picker API when available.
                 treeItem = await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(actionContext, {
