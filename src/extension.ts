@@ -37,6 +37,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         // Suppress "Report an Issue" button for all errors in favor of the command
         registerErrorHandler(c => c.errorHandling.suppressReportIssue = true);
+        registerCommands();
         registerReportIssueCommand('azureStorage.reportIssue');
 
         const rgApiProvider = await getApiExport<AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
@@ -52,7 +53,6 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             throw new Error('Could not find the Azure Resource Groups extension');
         }
 
-        registerCommands();
     });
 
     return createApiProvider([<AzureExtensionApi>{
