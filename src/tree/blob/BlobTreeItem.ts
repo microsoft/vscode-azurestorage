@@ -22,7 +22,7 @@ import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 
 export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTreeItem {
-    public static contextValue: string = 'azureBlob';
+    public static contextValue: string = 'azureBlobFile';
     public contextValue: string = BlobTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
 

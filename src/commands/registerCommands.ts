@@ -12,7 +12,6 @@ import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { ICopyUrl } from "../tree/ICopyUrl";
 import { IStorageTreeItem } from "../tree/IStorageTreeItem";
 import { refreshTreeItem } from "../tree/refreshTreeItem";
-import { registerBlobActionHandlers } from "./blob/blobActionHandlers";
 import { registerBlobContainerActionHandlers } from "./blob/blobContainerActionHandlers";
 import { registerBlobContainerGroupActionHandlers } from "./blob/blobContainerGroupActionHandlers";
 import { createStorageAccount, createStorageAccountAdvanced } from "./createStorageAccount";
@@ -37,8 +36,6 @@ import { uploadFolder } from "./uploadFolder/uploadFolder";
 import { uploadToAzureStorage } from "./uploadToAzureStorage";
 
 export function registerCommands(): void {
-
-    registerBlobActionHandlers();
     registerBlobContainerActionHandlers();
     registerBlobContainerGroupActionHandlers();
     registerFileActionHandlers();
