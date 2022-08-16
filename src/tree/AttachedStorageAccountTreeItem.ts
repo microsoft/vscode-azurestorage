@@ -16,8 +16,8 @@ import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnect
 import { localize } from '../utils/localize';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
-import type { IStorageRoot } from './IStorageRoot';
-import type { IStorageTreeItem } from './IStorageTreeItem';
+import { IStorageRoot } from './IStorageRoot';
+import { IStorageTreeItem } from './IStorageTreeItem';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
