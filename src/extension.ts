@@ -13,7 +13,6 @@ import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { AzureStorageFS } from './AzureStorageFS';
 import { revealTreeItem } from './commands/api/revealTreeItem';
-import { registerBlobActionHandlers } from './commands/blob/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './commands/blob/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './commands/blob/blobContainerGroupActionHandlers';
 import { createStorageAccount, createStorageAccountAdvanced } from './commands/createStorageAccount';
@@ -59,7 +58,6 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         activateContext.telemetry.properties.isActivationEvent = 'true';
         activateContext.telemetry.measurements.mainFileLoad = (perfStats.loadEndTime - perfStats.loadStartTime) / 1000;
 
-        registerBlobActionHandlers();
         registerBlobContainerActionHandlers();
         registerBlobContainerGroupActionHandlers();
         registerFileActionHandlers();
