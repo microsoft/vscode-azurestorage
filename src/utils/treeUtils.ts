@@ -7,9 +7,13 @@ import { AzExtTreeItem } from "@microsoft/vscode-azext-utils";
 import { localize } from "./localize";
 
 export namespace treeUtils {
-    export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parents: T[]): T {
+    export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parents: T | T[]): T {
         const notFoundMessage: string = localize('parentNotFound', 'Could not find a valid nearest parent.');
-        if (!parents?.length) throw new Error(notFoundMessage);
+        if (!parents) throw new Error(notFoundMessage);
+        if (!Array.isArray(parents)) {
+            parents = [parents];
+        }
+        if (!parents.length) throw new Error(notFoundMessage);
 
         const parentInstances: Set<string> = new Set();
         parents.forEach(p => { parentInstances.add(p.constructor.name) });
