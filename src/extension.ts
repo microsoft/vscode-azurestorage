@@ -12,19 +12,7 @@ import { AzureHostExtensionApi } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from './AzureStorageFS';
 import { revealTreeItem } from './commands/api/revealTreeItem';
-import { registerBlobActionHandlers } from './commands/blob/blobActionHandlers';
-import { registerBlobContainerActionHandlers } from './commands/blob/blobContainerActionHandlers';
-import { registerBlobContainerGroupActionHandlers } from './commands/blob/blobContainerGroupActionHandlers';
-import { registerDirectoryActionHandlers } from './commands/fileShare/directoryActionHandlers';
-import { registerFileActionHandlers } from './commands/fileShare/fileActionHandlers';
-import { registerFileShareActionHandlers } from './commands/fileShare/fileShareActionHandlers';
-import { registerFileShareGroupActionHandlers } from './commands/fileShare/fileShareGroupActionHandlers';
-import { registerQueueActionHandlers } from './commands/queue/queueActionHandlers';
-import { registerQueueGroupActionHandlers } from './commands/queue/queueGroupActionHandlers';
 import { registerCommands } from './commands/registerCommands';
-import { registerStorageAccountActionHandlers } from './commands/storageAccountActionHandlers';
-import { registerTableActionHandlers } from './commands/table/tableActionHandlers';
-import { registerTableGroupActionHandlers } from './commands/table/tableGroupActionHandlers';
 import { ext } from './extensionVariables';
 import { getApiExport } from './getApiExport';
 import { StorageAccountResolver } from './StorageAccountResolver';
@@ -52,19 +40,6 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         registerReportIssueCommand('azureStorage.reportIssue');
 
         registerCommands();
-
-        registerBlobActionHandlers();
-        registerBlobContainerActionHandlers();
-        registerBlobContainerGroupActionHandlers();
-        registerFileActionHandlers();
-        registerDirectoryActionHandlers();
-        registerFileShareActionHandlers();
-        registerFileShareGroupActionHandlers();
-        registerQueueActionHandlers();
-        registerQueueGroupActionHandlers();
-        registerStorageAccountActionHandlers();
-        registerTableActionHandlers();
-        registerTableGroupActionHandlers();
 
         const rgApiProvider = await getApiExport<AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
         if (rgApiProvider) {

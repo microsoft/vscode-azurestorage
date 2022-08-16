@@ -12,19 +12,45 @@ import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { ICopyUrl } from "../tree/ICopyUrl";
 import { IStorageTreeItem } from "../tree/IStorageTreeItem";
 import { refreshTreeItem } from "../tree/refreshTreeItem";
+import { registerBlobActionHandlers } from "./blob/blobActionHandlers";
+import { registerBlobContainerActionHandlers } from "./blob/blobContainerActionHandlers";
+import { registerBlobContainerGroupActionHandlers } from "./blob/blobContainerGroupActionHandlers";
 import { createStorageAccount, createStorageAccountAdvanced } from "./createStorageAccount";
 import { detachStorageAccount } from "./detachStorageAccount";
 import { download } from "./downloadFile";
+import { registerDirectoryActionHandlers } from "./fileShare/directoryActionHandlers";
+import { registerFileActionHandlers } from "./fileShare/fileActionHandlers";
+import { registerFileShareActionHandlers } from "./fileShare/fileShareActionHandlers";
+import { registerFileShareGroupActionHandlers } from "./fileShare/fileShareGroupActionHandlers";
 import { IOpenInFileExplorerWizardContext } from "./openInFileExplorer/IOpenInFileExplorerWizardContext";
 import { OpenBehaviorStep } from "./openInFileExplorer/OpenBehaviorStep";
 import { OpenTreeItemStep } from "./openInFileExplorer/OpenTreeItemStep";
+import { registerQueueActionHandlers } from "./queue/queueActionHandlers";
+import { registerQueueGroupActionHandlers } from "./queue/queueGroupActionHandlers";
 import { selectStorageAccountTreeItemForCommand } from "./selectStorageAccountNodeForCommand";
 import { EmulatorType, startEmulator } from "./startEmulator";
+import { registerStorageAccountActionHandlers } from "./storageAccountActionHandlers";
+import { registerTableActionHandlers } from "./table/tableActionHandlers";
+import { registerTableGroupActionHandlers } from "./table/tableGroupActionHandlers";
 import { uploadFiles } from "./uploadFiles/uploadFiles";
 import { uploadFolder } from "./uploadFolder/uploadFolder";
 import { uploadToAzureStorage } from "./uploadToAzureStorage";
 
 export function registerCommands(): void {
+
+    registerBlobActionHandlers();
+    registerBlobContainerActionHandlers();
+    registerBlobContainerGroupActionHandlers();
+    registerFileActionHandlers();
+    registerDirectoryActionHandlers();
+    registerFileShareActionHandlers();
+    registerFileShareGroupActionHandlers();
+    registerQueueActionHandlers();
+    registerQueueGroupActionHandlers();
+    registerStorageAccountActionHandlers();
+    registerTableActionHandlers();
+    registerTableGroupActionHandlers();
+
     registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
     registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
     registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
