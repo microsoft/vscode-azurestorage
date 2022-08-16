@@ -17,6 +17,7 @@ import { ext } from './extensionVariables';
 import { getApiExport } from './getApiExport';
 import { StorageAccountResolver } from './StorageAccountResolver';
 import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
+import './tree/AttachedStorageAccountTreeItem';
 
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
     ext.context = context;
