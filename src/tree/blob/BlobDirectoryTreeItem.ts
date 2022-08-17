@@ -4,11 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from "@azure/storage-blob";
-import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, parseError, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, ICreateChildImplContext, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
+import { DeleteBlobDirectoryConfirmationStep } from '../../commands/deleteBlobDirectory/DeleteBlobDirectoryConfirmationStep';
+import { DeleteBlobDirectoryStep } from '../../commands/deleteBlobDirectory/DeleteBlobDirectoryStep';
+import { IDeleteBlobDirectoryWizardContext } from "../../commands/deleteBlobDirectory/IDeleteBlobDirectoryWizardContext";
 import { ext } from "../../extensionVariables";
+import { createActivityContext } from "../../utils/activityUtils";
 import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from "../ICopyUrl";
@@ -16,6 +20,7 @@ import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from "../IStorageTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
+
 
 export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
     public static contextValue: string = 'azureBlobDirectory';
@@ -90,57 +95,22 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {
-        if (!context.suppressMessage) {
-            const message: string = localize('deleteBlobDir', "Are you sure you want to delete the blob directory '{0}' and all its contents?", this.label);
-            await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        }
-
-        await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-            progress.report({ message: localize('deletingDirectory', 'Deleting directory "{0}"...', this.dirName) });
-            const errors: boolean = await this.deleteFolder(context);
-
-            if (errors) {
-                ext.outputChannel.appendLog('Please refresh the viewlet to see the changes made.');
-
-                const viewOutput: vscode.MessageItem = { title: 'View Errors' };
-                const errorMessage: string = `Errors occurred when deleting "${this.dirName}".`;
-                void vscode.window.showWarningMessage(errorMessage, viewOutput).then((result: vscode.MessageItem | undefined) => {
-                    if (result === viewOutput) {
-                        ext.outputChannel.show();
-                    }
-                });
-
-                throw new Error(`Errors occurred when deleting "${this.dirName}".`);
-            }
+        const deletingDirectory: string = localize('deleteDirectory', 'Delete directory "{0}"', this.dirName);
+        const wizardContext: IDeleteBlobDirectoryWizardContext = Object.assign(context, {
+            dirName: this.dirName,
+            blobDirectory: this,
+            suppress: context.suppressMessage,
+            ...(await createActivityContext()),
+            activityTitle: deletingDirectory
         });
 
+        const wizard = new AzureWizard(wizardContext, {
+            promptSteps: [new DeleteBlobDirectoryConfirmationStep()],
+            executeSteps: [new DeleteBlobDirectoryStep()]
+        });
+        await wizard.prompt();
+        await wizard.execute();
+
         AzureStorageFS.fireDeleteEvent(this);
-    }
-
-    private async deleteFolder(context: IActionContext): Promise<boolean> {
-        const dirPaths: BlobDirectoryTreeItem[] = [];
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
-        let dirPath: BlobDirectoryTreeItem | undefined = this;
-        let errors: boolean = false;
-
-        while (dirPath) {
-            const children: AzExtTreeItem[] = await dirPath.getCachedChildren(context);
-            for (const child of children) {
-                if (child instanceof BlobTreeItem) {
-                    try {
-                        await child.deleteTreeItemImpl(<ISuppressMessageContext>{ ...context, suppressMessage: true });
-                    } catch (error) {
-                        ext.outputChannel.appendLog(`Cannot delete ${child.blobPath}. ${parseError(error).message}`);
-                        errors = true;
-                    }
-                } else if (child instanceof BlobDirectoryTreeItem) {
-                    dirPaths.push(child);
-                }
-            }
-
-            dirPath = dirPaths.pop();
-        }
-
-        return errors;
     }
 }
