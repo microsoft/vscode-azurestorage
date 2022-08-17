@@ -76,6 +76,12 @@
     ],
     "main": "main",
     "icon": "resources/storageAccount.png",
+    "capabilities": {
+        "virtualWorkspaces": {
+            "supported": "limited",
+            "description": "In virtual workspaces, uploading files or folders to Azure Storage is not supported."
+        }
+    },
     "contributes": {
         "x-azResources": {
             "activation": {
