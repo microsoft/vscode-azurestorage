@@ -301,9 +301,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                         const parent = await this.lookupAsDirectory(parentUri, context, parsedUri.resourceId, parsedUri.parentDirPath);
 
                         if (writeToFileShare) {
-                            await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFile', childName: parsedUri.baseName });
+                            await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue, childName: parsedUri.baseName });
                         } else {
-                            await parent.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlob', childName: parsedUri.filePath });
+                            await parent.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobTreeItem.contextValue, childName: parsedUri.filePath });
                         }
                     }
                 });

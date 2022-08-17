@@ -11,18 +11,18 @@ import { AzureStorageFS } from "../../AzureStorageFS";
 import { DeleteBlobDirectoryConfirmationStep } from '../../commands/deleteBlobDirectory/DeleteBlobDirectoryConfirmationStep';
 import { DeleteBlobDirectoryStep } from '../../commands/deleteBlobDirectory/DeleteBlobDirectoryStep';
 import { IDeleteBlobDirectoryWizardContext } from "../../commands/deleteBlobDirectory/IDeleteBlobDirectoryWizardContext";
-import { ext } from "../../extensionVariables";
 import { createActivityContext } from "../../utils/activityUtils";
 import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { copyAndShowToast } from "../../utils/copyAndShowToast";
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from "../ICopyUrl";
+import { IDownloadableTreeItem } from "../IDownloadableTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
-import { IStorageTreeItem } from "../IStorageTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 
 
-export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
     public static contextValue: string = 'azureBlobDirectory';
     public contextValue: string = BlobDirectoryTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
@@ -51,6 +51,10 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
 
     public get root(): IStorageRoot {
         return this.parent.root;
+    }
+
+    public get remoteFilePath(): string {
+        return this.dirPath;
     }
 
     public get label(): string {
@@ -89,9 +93,7 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
     public async copyUrl(): Promise<void> {
         const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.dirPath);
         const url = blobClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Blob Directory URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Blob Directory URL');
     }
 
     public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {

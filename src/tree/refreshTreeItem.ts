@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeItem, IActionContext } from "@microsoft/vscode-azext-utils";
+import { AttachedAccountRoot } from "../AttachedAccountRoot";
 import { ext } from "../extensionVariables";
-import { AttachedAccountRoot } from "./AttachedStorageAccountsTreeItem";
 import { IStorageTreeItem } from "./IStorageTreeItem";
 
 export async function refreshTreeItem(actionContext: IActionContext, node: (AzExtTreeItem & IStorageTreeItem) | undefined): Promise<void> {

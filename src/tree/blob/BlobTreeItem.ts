@@ -11,18 +11,18 @@ import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { storageExplorerDownloadUrl } from "../../constants";
-import { ext } from "../../extensionVariables";
 import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
+import { copyAndShowToast } from "../../utils/copyAndShowToast";
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from "../IDownloadableTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
-import { IStorageTreeItem } from "../IStorageTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 
-export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTreeItem {
-    public static contextValue: string = 'azureBlob';
+export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadableTreeItem {
+    public static contextValue: string = 'azureBlobFile';
     public contextValue: string = BlobTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
 
@@ -47,6 +47,10 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
         return this.parent.root;
     }
 
+    public get remoteFilePath(): string {
+        return this.blobPath;
+    }
+
     public get label(): string {
         return this.blobName;
     }
@@ -59,9 +63,7 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
         // Use this.blobPath here instead of this.blobName. Otherwise the blob's containing directory/directories aren't displayed
         const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
         const url = blobClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Blob URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Blob URL');
     }
 
     public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {

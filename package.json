@@ -50,7 +50,6 @@
         "onCommand:azureStorage.createBlockBlob",
         "onCommand:azureStorage.uploadFiles",
         "onCommand:azureStorage.uploadFolder",
-        "onCommand:azureStorage.deleteBlob",
         "onCommand:azureStorage.download",
         "onCommand:azureStorage.createFileShare",
         "onCommand:azureStorage.deleteFileShare",
@@ -73,10 +72,17 @@
         "onCommand:azureStorage.startBlobEmulator",
         "onCommand:azureStorage.startQueueEmulator",
         "onCommand:azureStorage.reportIssue",
+        "onCommand:azureStorage.generateSASUrl",
         "onView:azureWorkspace"
     ],
     "main": "main",
     "icon": "resources/storageAccount.png",
+    "capabilities": {
+        "virtualWorkspaces": {
+            "supported": "limited",
+            "description": "In virtual workspaces, uploading files or folders to Azure Storage is not supported."
+        }
+    },
     "contributes": {
         "x-azResources": {
             "activation": {
@@ -96,7 +102,7 @@
         "commands": [
             {
                 "command": "azureStorage.openInFileExplorer",
-                "title": "Open in File Explorer...",
+                "title": "Open in Explorer...",
                 "icon": "$(file-symlink-directory)",
                 "category": "Azure Storage"
             },
@@ -190,16 +196,6 @@
             {
                 "command": "azureStorage.uploadFolder",
                 "title": "Upload Folder...",
-                "category": "Azure Storage"
-            },
-            {
-                "command": "azureStorage.deleteBlob",
-                "title": "Delete...",
-                "category": "Azure Storage"
-            },
-            {
-                "command": "azureStorage.deleteBlobDirectory",
-                "title": "Delete...",
                 "category": "Azure Storage"
             },
             {
@@ -308,6 +304,11 @@
                 "command": "azureStorage.reportIssue",
                 "title": "Report Issue...",
                 "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.generateSASUrl",
+                "title": "Generate & Copy SAS Token and URL",
+                "category": "Azure Storage"
             }
         ],
         "menus": {
@@ -337,7 +338,7 @@
                 {
                     "$comment": "========= azureStorageAccount =========",
                     "command": "azureStorage.openStorageAccount",
-                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/ && !isWeb && !isLinux",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/ && !isWeb && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -352,7 +353,7 @@
                 },
                 {
                     "command": "azureStorage.copyConnectionString",
-                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem =~ /azureStorageAccount/",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "5_cutcopypaste@1"
                 },
                 {
@@ -413,9 +414,19 @@
                     "group": "2_create@3"
                 },
                 {
+                    "command": "azureStorage.download",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
+                    "group": "3_download"
+                },
+                {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "5_cutcopypaste"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "command": "azureStorage.browseStaticWebsite",
@@ -448,28 +459,22 @@
                     "group": "9_refresh"
                 },
                 {
-                    "$comment": "========= azureBlob =========",
-                    "command": "azureStorage.deleteBlob",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob",
-                    "group": "7_modification"
-                },
-                {
                     "command": "azureStorage.download",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobFile",
                     "group": "3_download"
                 },
                 {
                     "command": "azureStorage.copyUrl",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlob",
-                    "group": "5_cutcopypaste"
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobFile",
+                    "group": "5_cutcopypaste@1"
                 },
                 {
-                    "$comment": "========= azureBlobDirectory =========",
-                    "command": "azureStorage.deleteBlobDirectory",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
-                    "group": "7_modification"
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view == azureResourceGroups && viewItem == azureBlobFile",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
+                    "$comment": "========= azureBlobDirectory ==========",
                     "command": "azureStorage.download",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
                     "group": "3_download"
@@ -477,7 +482,12 @@
                 {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
-                    "group": "5_cutcopypaste"
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view == azureResourceGroups && viewItem == azureBlobDirectory",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "$comment": "========= azureFileShareGroup =========",
@@ -517,9 +527,19 @@
                     "group": "2_create@4"
                 },
                 {
+                    "command": "azureStorage.download",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
+                    "group": "3_download"
+                },
+                {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
-                    "group": "5_cutcopypaste"
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view == azureResourceGroups && viewItem == azureFileShare",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "command": "azureStorage.deleteFileShare",
@@ -545,11 +565,16 @@
                 {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile",
-                    "group": "5_cutcopypaste"
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view == azureResourceGroups && viewItem == azureFile",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "command": "azureStorage.deleteFile",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile || viewItem == azureBlobFile",
                     "group": "7_modification"
                 },
                 {
@@ -571,11 +596,16 @@
                 {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
-                    "group": "5_cutcopypaste"
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view == azureResourceGroups && viewItem == azureFileShareDirectory",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "command": "azureStorage.deleteDirectory",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory || viewItem == azureBlobDirectory",
                     "group": "7_modification"
                 },
                 {
@@ -657,14 +687,6 @@
                     "when": "never"
                 },
                 {
-                    "command": "azureStorage.deleteBlob",
-                    "when": "never"
-                },
-                {
-                    "command": "azureStorage.deleteBlobDirectory",
-                    "when": "never"
-                },
-                {
                     "command": "azureStorage.download",
                     "when": "never"
                 },
@@ -711,6 +733,10 @@
                 {
                     "command": "azureStorage.uploadToAzureStorage",
                     "when": "never"
+                },
+                {
+                    "command": "azureStorage.openStorageAccount",
+                    "when": "!remoteName"
                 }
             ]
         },
@@ -793,7 +819,7 @@
         "@azure/storage-queue": "^12.7.0",
         "@microsoft/vscode-azext-azureappservice": "^0.7.0",
         "@microsoft/vscode-azext-azureutils": "^0.3.4",
-        "@microsoft/vscode-azext-utils": "^0.3.8",
+        "@microsoft/vscode-azext-utils": "^0.3.14",
         "glob": "^7.1.2",
         "mime": "^2.4.4",
         "open": "^8.0.4",

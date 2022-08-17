@@ -6,6 +6,7 @@
 import * as azureStorageBlob from '@azure/storage-blob';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ISubscriptionContext, parseError, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import { ThemeIcon } from 'vscode';
+import { AttachedAccountRoot } from '../AttachedAccountRoot';
 import { emulatorAccountName, emulatorConnectionString } from '../constants';
 import { ext } from '../extensionVariables';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
@@ -174,41 +175,5 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
 
     private getAccountKey(account: IPersistedAccount): string {
         return this._serviceName + account.fullId;
-    }
-}
-
-export class AttachedAccountRoot implements ISubscriptionContext {
-    private _error: Error = new Error(localize('cannotRetrieveAzureSubscriptionInfoForAttachedAccount', 'Cannot retrieve Azure subscription information for an attached account.'));
-
-    public get credentials(): never {
-        throw this._error;
-    }
-
-    public get subscriptionDisplayName(): never {
-        throw this._error;
-    }
-
-    public get subscriptionId(): never {
-        throw this._error;
-    }
-
-    public get subscriptionPath(): never {
-        throw this._error;
-    }
-
-    public get tenantId(): never {
-        throw this._error;
-    }
-
-    public get userId(): never {
-        throw this._error;
-    }
-
-    public get environment(): never {
-        throw this._error;
-    }
-
-    public get isCustomCloud(): never {
-        throw this._error;
     }
 }
