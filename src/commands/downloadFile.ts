@@ -5,14 +5,16 @@
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 import { IActionContext } from "@microsoft/vscode-azext-utils";
-import { join } from "path";
+import { join, posix } from "path";
 import { ProgressLocation, window } from "vscode";
 import { configurationSettingsKeys } from "../constants";
 import { ext } from "../extensionVariables";
 import { TransferProgress } from "../TransferProgress";
+import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { BlobDirectoryTreeItem } from "../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../tree/blob/BlobTreeItem";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
+import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
 import { IDownloadableTreeItem } from "../tree/IDownloadableTreeItem";
 import { AzExtFsExtra } from "../utils/AzExtFsExtra";
@@ -30,7 +32,7 @@ interface IAzCopyDownload {
     localFilePath: string;
     fromTo: FromToOption;
     isDirectory: boolean;
-    treeItem: BlobTreeItem | BlobDirectoryTreeItem | FileTreeItem | DirectoryTreeItem;
+    treeItem: IDownloadableTreeItem;
 }
 
 export async function download(context: IActionContext, treeItem: IDownloadableTreeItem, treeItems?: IDownloadableTreeItem[]): Promise<void> {
@@ -65,7 +67,8 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
     const allFileDownloads: IAzCopyDownload[] = [];
 
     for (const treeItem of treeItems) {
-        const remoteFilePath = treeItem.remoteFilePath;
+        // if there is no remoteFilePath, then it is the root
+        const remoteFilePath = treeItem.remoteFilePath ?? `${posix.sep}`;
         if (treeItem instanceof BlobTreeItem) {
             await treeItem.checkCanDownload(context);
             allFileDownloads.push({
@@ -85,6 +88,15 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 isDirectory: true,
                 treeItem
             });
+        } else if (treeItem instanceof BlobContainerTreeItem) {
+            allFolderDownloads.push({
+                remoteFileName: treeItem.container.name,
+                remoteFilePath,
+                localFilePath: join(destinationFolder, treeItem.container.name),
+                fromTo: 'BlobLocal',
+                isDirectory: true,
+                treeItem
+            });
         } else if (treeItem instanceof FileTreeItem) {
             allFileDownloads.push({
                 remoteFileName: treeItem.fileName,
@@ -99,6 +111,15 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 remoteFileName: treeItem.directoryName,
                 remoteFilePath,
                 localFilePath: join(destinationFolder, treeItem.directoryName),
+                fromTo: 'FileLocal',
+                isDirectory: true,
+                treeItem
+            });
+        } else if (treeItem instanceof FileShareTreeItem) {
+            allFolderDownloads.push({
+                remoteFileName: treeItem.shareName,
+                remoteFilePath,
+                localFilePath: join(destinationFolder, treeItem.shareName),
                 fromTo: 'FileLocal',
                 isDirectory: true,
                 treeItem

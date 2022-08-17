@@ -408,6 +408,11 @@
                     "group": "2_create@3"
                 },
                 {
+                    "command": "azureStorage.download",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
+                    "group": "3_download"
+                },
+                {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "5_cutcopypaste"
@@ -514,6 +519,11 @@
                     "command": "azureStorage.uploadFolder",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
                     "group": "2_create@4"
+                },
+                {
+                    "command": "azureStorage.download",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
+                    "group": "3_download"
                 },
                 {
                     "command": "azureStorage.copyUrl",
