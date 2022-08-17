@@ -5,7 +5,7 @@
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 import { AzExtTreeItem, IActionContext } from "@microsoft/vscode-azext-utils";
-import { join, posix } from "path";
+import { join } from "path";
 import { ProgressLocation, window } from "vscode";
 import { configurationSettingsKeys } from "../constants";
 import { ext } from "../extensionVariables";
@@ -68,7 +68,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
             await treeItem.checkCanDownload(context);
             allFileDownloads.push({
                 remoteFileName: treeItem.blobName,
-                remoteFilePath: treeItem.blobPath,
+                remoteFilePath: treeItem.remoteFilePath,
                 localFilePath: join(destinationFolder, treeItem.blobName),
                 fromTo: 'BlobLocal',
                 isDirectory: false,
@@ -77,7 +77,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
         } else if (treeItem instanceof BlobDirectoryTreeItem) {
             allFolderDownloads.push({
                 remoteFileName: treeItem.dirName,
-                remoteFilePath: treeItem.dirPath,
+                remoteFilePath: treeItem.remoteFilePath,
                 localFilePath: join(destinationFolder, treeItem.dirName),
                 fromTo: 'BlobLocal',
                 isDirectory: true,
@@ -86,7 +86,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
         } else if (treeItem instanceof FileTreeItem) {
             allFileDownloads.push({
                 remoteFileName: treeItem.fileName,
-                remoteFilePath: posix.join(treeItem.directoryPath, treeItem.fileName),
+                remoteFilePath: treeItem.remoteFilePath,
                 localFilePath: join(destinationFolder, treeItem.fileName),
                 fromTo: 'FileLocal',
                 isDirectory: false,
