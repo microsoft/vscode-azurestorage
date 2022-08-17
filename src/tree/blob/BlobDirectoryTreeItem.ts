@@ -10,6 +10,7 @@ import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
 import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { copyAndShowToast } from "../../utils/copyAndShowToast";
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from "../ICopyUrl";
 import { IDownloadableTreeItem } from "../IDownloadableTreeItem";
@@ -88,9 +89,7 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
     public async copyUrl(): Promise<void> {
         const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.dirPath);
         const url = blobClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Blob Directory URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Blob Directory URL');
     }
 
     public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {

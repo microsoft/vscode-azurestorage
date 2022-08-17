@@ -5,8 +5,8 @@
 
 import { IActionContext } from '@microsoft/vscode-azext-utils';
 import { posix } from 'path';
-import { env } from 'vscode';
 import { IDownloadableTreeItem } from '../../tree/IDownloadableTreeItem';
+import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { getResourceUri } from './getResourceUri';
 import { getSasToken } from './getSasToken';
 
@@ -15,6 +15,6 @@ export async function generateSASUrl(_context: IActionContext, treeItem: IDownlo
     const sasToken = getSasToken(treeItem.root);
 
     const sasUrl: string = `${resourceUri}${posix.sep}${treeItem.remoteFilePath}?${sasToken}`;
-    await env.clipboard.writeText(sasUrl);
+    await copyAndShowToast(sasUrl, 'SAS Token and URL');
     return sasUrl;
 }

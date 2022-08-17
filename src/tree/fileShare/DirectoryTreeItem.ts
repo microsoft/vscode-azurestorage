@@ -11,6 +11,7 @@ import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
+import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
@@ -75,9 +76,7 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         // Use this.fullPath here instead of this.directoryName. Otherwise only the leaf directory is displayed in the URL
         const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, this.fullPath);
         const url = directoryClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Directory URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Directory URL');
     }
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {
