@@ -7,7 +7,6 @@ import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageShare from '@azure/storage-file-share';
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
-import { posix } from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
@@ -46,7 +45,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
     }
 
     public get remoteFilePath(): string {
-        return `.${posix.sep}`;
+        return '';
     }
 
     public label: string = this.shareName;

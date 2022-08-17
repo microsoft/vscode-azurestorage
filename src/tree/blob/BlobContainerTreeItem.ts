@@ -8,7 +8,6 @@ import * as azureStorageBlob from '@azure/storage-blob';
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, parseError, TelemetryProperties, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
 import * as path from 'path';
-import { posix } from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
@@ -53,7 +52,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     public get remoteFilePath(): string {
-        return `.${posix.sep}`;
+        return '';
     }
 
     public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: azureStorageBlob.ContainerItem): Promise<BlobContainerTreeItem> {
