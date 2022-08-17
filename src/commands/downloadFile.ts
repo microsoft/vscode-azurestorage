@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
-import { IActionContext } from "@microsoft/vscode-azext-utils";
+import { AzExtFsExtra, IActionContext } from "@microsoft/vscode-azext-utils";
 import { join, posix } from "path";
 import { ProgressLocation, window } from "vscode";
 import { configurationSettingsKeys } from "../constants";
@@ -17,7 +17,6 @@ import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
 import { IDownloadableTreeItem } from "../tree/IDownloadableTreeItem";
-import { AzExtFsExtra } from "../utils/AzExtFsExtra";
 import { checkCanOverwrite } from "../utils/checkCanOverwrite";
 import { isSubpath } from "../utils/fs";
 import { localize } from "../utils/localize";

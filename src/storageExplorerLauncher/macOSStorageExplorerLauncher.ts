@@ -3,11 +3,10 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { callWithTelemetryAndErrorHandling, UserCancelledError } from "@microsoft/vscode-azext-utils";
+import { AzExtFsExtra, callWithTelemetryAndErrorHandling, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { storageExplorerDownloadUrl } from "../constants";
-import { AzExtFsExtra } from '../utils/AzExtFsExtra';
 import { Launcher } from "../utils/launcher";
 import { openUrl } from "../utils/openUrl";
 import { getSingleRootWorkspace } from "../utils/workspaceUtils";
