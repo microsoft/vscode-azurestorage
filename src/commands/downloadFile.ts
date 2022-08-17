@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
-import { AzExtTreeItem, IActionContext } from "@microsoft/vscode-azext-utils";
+import { IActionContext } from "@microsoft/vscode-azext-utils";
 import { join } from "path";
 import { ProgressLocation, window } from "vscode";
 import { configurationSettingsKeys } from "../constants";
@@ -14,6 +14,7 @@ import { BlobDirectoryTreeItem } from "../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../tree/blob/BlobTreeItem";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
+import { IDownloadableTreeItem } from "../tree/IDownloadableTreeItem";
 import { AzExtFsExtra } from "../utils/AzExtFsExtra";
 import { checkCanOverwrite } from "../utils/checkCanOverwrite";
 import { isSubpath } from "../utils/fs";
@@ -32,7 +33,7 @@ interface IAzCopyDownload {
     treeItem: BlobTreeItem | BlobDirectoryTreeItem | FileTreeItem | DirectoryTreeItem;
 }
 
-export async function download(context: IActionContext, treeItem: AzExtTreeItem, treeItems?: AzExtTreeItem[]): Promise<void> {
+export async function download(context: IActionContext, treeItem: IDownloadableTreeItem, treeItems?: IDownloadableTreeItem[]): Promise<void> {
     treeItems = treeItems || [treeItem];
 
     const placeHolderString: string = localize('selectFolderForDownload', 'Select destination folder for download');
@@ -59,16 +60,17 @@ export async function download(context: IActionContext, treeItem: AzExtTreeItem,
     ext.outputChannel.appendLog(localize('successfullyDownloaded', 'Successfully downloaded to "{0}".', destinationFolder));
 }
 
-async function getAzCopyDownloads(context: IActionContext, destinationFolder: string, treeItems: AzExtTreeItem[]): Promise<IAzCopyDownload[]> {
+async function getAzCopyDownloads(context: IActionContext, destinationFolder: string, treeItems: IDownloadableTreeItem[]): Promise<IAzCopyDownload[]> {
     const allFolderDownloads: IAzCopyDownload[] = [];
     const allFileDownloads: IAzCopyDownload[] = [];
 
     for (const treeItem of treeItems) {
+        const remoteFilePath = treeItem.remoteFilePath;
         if (treeItem instanceof BlobTreeItem) {
             await treeItem.checkCanDownload(context);
             allFileDownloads.push({
                 remoteFileName: treeItem.blobName,
-                remoteFilePath: treeItem.remoteFilePath,
+                remoteFilePath,
                 localFilePath: join(destinationFolder, treeItem.blobName),
                 fromTo: 'BlobLocal',
                 isDirectory: false,
@@ -77,7 +79,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
         } else if (treeItem instanceof BlobDirectoryTreeItem) {
             allFolderDownloads.push({
                 remoteFileName: treeItem.dirName,
-                remoteFilePath: treeItem.remoteFilePath,
+                remoteFilePath,
                 localFilePath: join(destinationFolder, treeItem.dirName),
                 fromTo: 'BlobLocal',
                 isDirectory: true,
@@ -86,7 +88,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
         } else if (treeItem instanceof FileTreeItem) {
             allFileDownloads.push({
                 remoteFileName: treeItem.fileName,
-                remoteFilePath: treeItem.remoteFilePath,
+                remoteFilePath,
                 localFilePath: join(destinationFolder, treeItem.fileName),
                 fromTo: 'FileLocal',
                 isDirectory: false,
@@ -95,7 +97,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
         } else if (treeItem instanceof DirectoryTreeItem) {
             allFolderDownloads.push({
                 remoteFileName: treeItem.directoryName,
-                remoteFilePath: treeItem.remoteFilePath,
+                remoteFilePath,
                 localFilePath: join(destinationFolder, treeItem.directoryName),
                 fromTo: 'FileLocal',
                 isDirectory: true,
