@@ -414,7 +414,7 @@
                 },
                 {
                     "command": "azureStorage.generateSASUrl",
-                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureBlobContainer",
+                    "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
                     "group": "5_cutcopypaste@2"
                 },
                 {

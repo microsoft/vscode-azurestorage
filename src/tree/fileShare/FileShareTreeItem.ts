@@ -15,6 +15,7 @@ import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileCo
 import { getResourcesPath, NotificationProgress } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
+import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
 import { getUploadingMessageWithSource } from '../../utils/uploadUtils';
@@ -98,9 +99,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
     public async copyUrl(): Promise<void> {
         const url: string = this.getUrl();
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Share URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Share URL');
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {

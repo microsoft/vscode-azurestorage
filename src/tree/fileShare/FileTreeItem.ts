@@ -9,7 +9,7 @@ import { posix } from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { ext } from "../../extensionVariables";
+import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { createFileClient, deleteFile } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
@@ -47,9 +47,7 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadab
     public async copyUrl(): Promise<void> {
         const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);
         const url = fileClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`File URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'File URL');
     }
 
     public async deleteTreeItemImpl(context: IActionContext & IDirectoryDeleteContext): Promise<void> {

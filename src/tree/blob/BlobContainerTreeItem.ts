@@ -18,6 +18,7 @@ import { configurationSettingsKeys, getResourcesPath, NotificationProgress, stat
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
@@ -175,9 +176,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
     public async copyUrl(): Promise<void> {
         const url: string = this.getUrl();
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Container URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Container URL');
     }
 
     public async deployStaticWebsite(context: IActionContext, sourceFolderPath: string): Promise<void> {
