@@ -3,13 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardExecuteStep, IActionContext, IParsedError, nonNullValue, parseError } from "@microsoft/vscode-azext-utils";
+import { AzExtFsExtra, AzureWizardExecuteStep, IActionContext, IParsedError, nonNullValue, parseError } from "@microsoft/vscode-azext-utils";
 import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
 import { NotificationProgress } from '../../constants';
 import { ext } from "../../extensionVariables";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
-import { AzExtFsExtra } from "../../utils/AzExtFsExtra";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../../utils/errorUtils";
 import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, outputAndCopyUploadedFileUrls, OverwriteChoice } from "../../utils/uploadUtils";
 import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";

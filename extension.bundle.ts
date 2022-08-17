@@ -33,7 +33,6 @@ export { ext } from './src/extensionVariables';
 export { ResolvedStorageAccount } from './src/StorageAccountResolver';
 export { AzureAccountTreeItem } from './src/tree/AzureAccountTreeItem';
 export { StorageAccountTreeItem } from './src/tree/StorageAccountTreeItem';
-export { AzExtFsExtra } from './src/utils/AzExtFsExtra';
 export { delay } from './src/utils/delay';
 export { getRandomHexString } from './src/utils/stringUtils';
 
