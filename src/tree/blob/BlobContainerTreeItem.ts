@@ -8,6 +8,7 @@ import * as azureStorageBlob from '@azure/storage-blob';
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, parseError, TelemetryProperties, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
 import * as path from 'path';
+import { posix } from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
@@ -23,8 +24,8 @@ import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
 import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
-import { IStorageTreeItem } from '../IStorageTreeItem';
 import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerGroupTreeItem } from "./BlobContainerGroupTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
@@ -35,7 +36,7 @@ export enum ChildType {
     uploadedBlob
 }
 
-export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
     private _continuationToken: string | undefined;
     private _websiteHostingEnabled: boolean;
     private _openInFileExplorerString: string = 'Open in Explorer...';
@@ -49,6 +50,10 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
     public get root(): IStorageRoot {
         return this.parent.root;
+    }
+
+    public get remoteFilePath(): string {
+        return `.${posix.sep}`;
     }
 
     public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: azureStorageBlob.ContainerItem): Promise<BlobContainerTreeItem> {

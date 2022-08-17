@@ -5,18 +5,19 @@
 
 import * as azureStorageShare from '@azure/storage-file-share';
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { posix } from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
 import { createFileClient, deleteFile } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
-import { IStorageTreeItem } from '../IStorageTreeItem';
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./DirectoryTreeItem";
 import { FileShareTreeItem } from './FileShareTreeItem';
 
-export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTreeItem {
+export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadableTreeItem {
     public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,
@@ -33,6 +34,10 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
 
     public get root(): IStorageRoot {
         return this.parent.root;
+    }
+
+    public get remoteFilePath(): string {
+        return posix.join(this.directoryPath, this.fileName);
     }
 
     public get iconPath(): TreeItemIconPath {

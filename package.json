@@ -72,6 +72,7 @@
         "onCommand:azureStorage.startBlobEmulator",
         "onCommand:azureStorage.startQueueEmulator",
         "onCommand:azureStorage.reportIssue",
+        "onCommand:azureStorage.generateSASUrl",
         "onView:azureWorkspace"
     ],
     "main": "main",
@@ -297,6 +298,11 @@
                 "command": "azureStorage.reportIssue",
                 "title": "Report Issue...",
                 "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.generateSASUrl",
+                "title": "Generate & Copy SAS Token and URL",
+                "category": "Azure Storage"
             }
         ],
         "menus": {
@@ -407,6 +413,11 @@
                     "group": "5_cutcopypaste"
                 },
                 {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureBlobContainer",
+                    "group": "5_cutcopypaste@2"
+                },
+                {
                     "command": "azureStorage.browseStaticWebsite",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "6_staticwebsites@1"
@@ -444,7 +455,12 @@
                 {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobFile",
-                    "group": "5_cutcopypaste"
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureBlobFile",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "$comment": "========= azureBlobDirectory ==========",
@@ -455,7 +471,12 @@
                 {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
-                    "group": "5_cutcopypaste"
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureBlobDirectory",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "$comment": "========= azureFileShareGroup =========",
@@ -497,7 +518,12 @@
                 {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
-                    "group": "5_cutcopypaste"
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureFileShare",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "command": "azureStorage.deleteFileShare",
@@ -523,7 +549,12 @@
                 {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile",
-                    "group": "5_cutcopypaste"
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureFile",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "command": "azureStorage.deleteFile",
@@ -549,7 +580,12 @@
                 {
                     "command": "azureStorage.copyUrl",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
-                    "group": "5_cutcopypaste"
+                    "group": "5_cutcopypaste@1"
+                },
+                {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureFileShareDirectory",
+                    "group": "5_cutcopypaste@2"
                 },
                 {
                     "command": "azureStorage.deleteDirectory",

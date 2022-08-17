@@ -95,7 +95,7 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
         } else if (treeItem instanceof DirectoryTreeItem) {
             allFolderDownloads.push({
                 remoteFileName: treeItem.directoryName,
-                remoteFilePath: posix.join(treeItem.parentPath, treeItem.directoryName),
+                remoteFilePath: treeItem.remoteFilePath,
                 localFilePath: join(destinationFolder, treeItem.directoryName),
                 fromTo: 'FileLocal',
                 isDirectory: true,

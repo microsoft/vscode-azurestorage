@@ -16,12 +16,12 @@ import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from "../IDownloadableTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
-import { IStorageTreeItem } from "../IStorageTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 
-export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTreeItem {
+export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadableTreeItem {
     public static contextValue: string = 'azureBlobFile';
     public contextValue: string = BlobTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
@@ -45,6 +45,10 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
 
     public get root(): IStorageRoot {
         return this.parent.root;
+    }
+
+    public get remoteFilePath(): string {
+        return this.blobPath;
     }
 
     public get label(): string {

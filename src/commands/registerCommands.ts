@@ -17,6 +17,7 @@ import { registerBlobContainerGroupActionHandlers } from "./blob/blobContainerGr
 import { createStorageAccount, createStorageAccountAdvanced } from "./createStorageAccount";
 import { detachStorageAccount } from "./detachStorageAccount";
 import { download } from "./downloadFile";
+import { generateSASUrl } from "./downloadFiles/generateSasUrl";
 import { registerDirectoryActionHandlers } from "./fileShare/directoryActionHandlers";
 import { registerFileActionHandlers } from "./fileShare/fileActionHandlers";
 import { registerFileShareActionHandlers } from "./fileShare/fileShareActionHandlers";
@@ -107,6 +108,7 @@ export function registerCommands(): void {
     registerCommand("azureStorage.uploadFolder", uploadFolder);
     registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
     registerCommand('azureStorage.download', download);
+    registerCommand('azureStorage.generateSASUrl', generateSASUrl);
     registerCommand("azureStorage.attachStorageAccount", async (actionContext: IActionContext) => {
         await ext.attachedStorageAccountsTreeItem.attachWithConnectionString(actionContext);
     });

@@ -7,6 +7,7 @@ import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageShare from '@azure/storage-file-share';
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
+import { posix } from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
@@ -19,13 +20,13 @@ import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } 
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
 import { getUploadingMessageWithSource } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
-import { IStorageTreeItem } from '../IStorageTreeItem';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareGroupTreeItem } from './FileShareGroupTreeItem';
 import { FileTreeItem } from './FileTreeItem';
 
-export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
     public parent: FileShareGroupTreeItem;
     private _continuationToken: string | undefined;
     private _openInFileExplorerString: string = 'Open in Explorer...';
@@ -42,6 +43,10 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
     public get root(): IStorageRoot {
         return this.parent.root;
+    }
+
+    public get remoteFilePath(): string {
+        return `.${posix.sep}`;
     }
 
     public label: string = this.shareName;
