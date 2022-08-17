@@ -12,6 +12,7 @@ import { ResolvedStorageAccount } from '../StorageAccountResolver';
 import { storageExplorerLauncher } from '../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from '../tree/StorageAccountTreeItem';
+import { copyAndShowToast } from '../utils/copyAndShowToast';
 import { isPathEqual, isSubpath } from '../utils/fs';
 import { localize } from "../utils/localize";
 import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
@@ -47,7 +48,7 @@ export async function copyPrimaryKey(context: IActionContext, treeItem?: Storage
         });
     }
 
-    await vscode.env.clipboard.writeText(treeItem.key.value);
+    await copyAndShowToast(treeItem.key.value, 'Primary key');
 }
 
 export async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
@@ -59,7 +60,7 @@ export async function copyConnectionString(context: IActionContext, treeItem?: S
     }
 
     const connectionString = treeItem.getConnectionString();
-    await vscode.env.clipboard.writeText(connectionString);
+    await copyAndShowToast(connectionString, 'Connection string');
 }
 
 export async function deployStaticWebsite(context: IActionContext, target?: vscode.Uri | StorageAccountTreeItem | BlobContainerTreeItem): Promise<void> {

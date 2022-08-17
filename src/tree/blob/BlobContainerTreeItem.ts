@@ -18,13 +18,14 @@ import { configurationSettingsKeys, getResourcesPath, NotificationProgress, stat
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
 import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
-import { IStorageTreeItem } from '../IStorageTreeItem';
 import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerGroupTreeItem } from "./BlobContainerGroupTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
@@ -35,7 +36,7 @@ export enum ChildType {
     uploadedBlob
 }
 
-export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
     private _continuationToken: string | undefined;
     private _websiteHostingEnabled: boolean;
     private _openInFileExplorerString: string = 'Open in Explorer...';
@@ -49,6 +50,10 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
     public get root(): IStorageRoot {
         return this.parent.root;
+    }
+
+    public get remoteFilePath(): string {
+        return '';
     }
 
     public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: azureStorageBlob.ContainerItem): Promise<BlobContainerTreeItem> {
@@ -171,9 +176,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
     public async copyUrl(): Promise<void> {
         const url: string = this.getUrl();
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Container URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Container URL');
     }
 
     public async deployStaticWebsite(context: IActionContext, sourceFolderPath: string): Promise<void> {
