@@ -92,7 +92,6 @@ async function startAndWaitForTransfer(
 ): Promise<IJobInfo> {
     const copyClient: AzCopyClient = new AzCopyClient();
     const jobId: string = await copyClient.copy(location.src, location.dst, options);
-    copyClient.copy
 
     // Directory transfers always have `useWildCard` set
     const displayWorkAsTotalTransfers: boolean = location.src.useWildCard;
