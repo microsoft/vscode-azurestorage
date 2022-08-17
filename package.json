@@ -347,7 +347,7 @@
                 },
                 {
                     "command": "azureStorage.copyConnectionString",
-                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem =~ /azureStorageAccount/",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureStorageAccount/",
                     "group": "5_cutcopypaste@1"
                 },
                 {
@@ -459,7 +459,7 @@
                 },
                 {
                     "command": "azureStorage.generateSASUrl",
-                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureBlobFile",
+                    "when": "view == azureResourceGroups && viewItem == azureBlobFile",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -475,7 +475,7 @@
                 },
                 {
                     "command": "azureStorage.generateSASUrl",
-                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureBlobDirectory",
+                    "when": "view == azureResourceGroups && viewItem == azureBlobDirectory",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -522,7 +522,7 @@
                 },
                 {
                     "command": "azureStorage.generateSASUrl",
-                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureFileShare",
+                    "when": "view == azureResourceGroups && viewItem == azureFileShare",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -553,7 +553,7 @@
                 },
                 {
                     "command": "azureStorage.generateSASUrl",
-                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureFile",
+                    "when": "view == azureResourceGroups && viewItem == azureFile",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -584,7 +584,7 @@
                 },
                 {
                     "command": "azureStorage.generateSASUrl",
-                    "when": "view =~ /azure(ResourceGroups|Workspace)/i && viewItem == azureFileShareDirectory",
+                    "when": "view == azureResourceGroups && viewItem == azureFileShareDirectory",
                     "group": "5_cutcopypaste@2"
                 },
                 {
