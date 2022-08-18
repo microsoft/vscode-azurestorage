@@ -16,6 +16,7 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { doesBlobDirectoryExist, doesBlobExist } from './blobUtils';
 import { checkCanOverwrite } from './checkCanOverwrite';
+import { copyAndShowToast } from './copyAndShowToast';
 import { doesDirectoryExist } from './directoryUtils';
 import { doesFileExist } from './fileUtils';
 import { localize } from './localize';
@@ -67,9 +68,7 @@ export function outputAndCopyUploadedFileUrls(parentUrl: string, fileUrls: strin
         const shouldCopy: boolean = !!result;
         if (shouldCopy) {
             const lastFileUrl: string = `${parentUrl}/${fileUrls[fileUrls.length - 1]}`;
-            const success: string = localize('copiedToClipboard', 'File URL copied to clipboard: {0}', lastFileUrl);
-            await vscode.env.clipboard.writeText(lastFileUrl);
-            ext.outputChannel.appendLog(success);
+            await copyAndShowToast(lastFileUrl, 'File URL');
         }
     });
 }

@@ -15,17 +15,18 @@ import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileCo
 import { getResourcesPath, NotificationProgress } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
+import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
 import { getUploadingMessageWithSource } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
-import { IStorageTreeItem } from '../IStorageTreeItem';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareGroupTreeItem } from './FileShareGroupTreeItem';
 import { FileTreeItem } from './FileTreeItem';
 
-export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
     public parent: FileShareGroupTreeItem;
     private _continuationToken: string | undefined;
     private _openInFileExplorerString: string = 'Open in Explorer...';
@@ -42,6 +43,10 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
     public get root(): IStorageRoot {
         return this.parent.root;
+    }
+
+    public get remoteFilePath(): string {
+        return '';
     }
 
     public label: string = this.shareName;
@@ -94,9 +99,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
     public async copyUrl(): Promise<void> {
         const url: string = this.getUrl();
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Share URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Share URL');
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {

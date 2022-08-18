@@ -5,18 +5,19 @@
 
 import * as azureStorageShare from '@azure/storage-file-share';
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { posix } from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { ext } from "../../extensionVariables";
+import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { createFileClient, deleteFile } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
-import { IStorageTreeItem } from '../IStorageTreeItem';
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./DirectoryTreeItem";
 import { FileShareTreeItem } from './FileShareTreeItem';
 
-export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTreeItem {
+export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadableTreeItem {
     public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,
@@ -35,6 +36,10 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
         return this.parent.root;
     }
 
+    public get remoteFilePath(): string {
+        return posix.join(this.directoryPath, this.fileName);
+    }
+
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('file');
     }
@@ -42,9 +47,7 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
     public async copyUrl(): Promise<void> {
         const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);
         const url = fileClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`File URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'File URL');
     }
 
     public async deleteTreeItemImpl(context: IActionContext & IDirectoryDeleteContext): Promise<void> {
