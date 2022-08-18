@@ -12,9 +12,9 @@ import { isSubpath } from "../utils/fs";
 import { treeUtils } from "../utils/treeUtils";
 
 export async function deleteFilesAndDirectories(context: IActionContext, treeItem: AzExtTreeItem, selection: AzExtTreeItem[] = []): Promise<void> {
-    const parentContainer = treeUtils.findNearestParent(treeItem, [
-        BlobContainerGroupTreeItem.prototype,
-        FileShareGroupTreeItem.prototype
+    const parentContainer = treeUtils.findNearestParent<BlobContainerGroupTreeItem | FileShareGroupTreeItem>(treeItem, [
+        BlobContainerGroupTreeItem.contextValue,
+        FileShareGroupTreeItem.contextValue
     ]);
 
     // Covers both single selection and an edge case where the node you delete from isn't part of the selection

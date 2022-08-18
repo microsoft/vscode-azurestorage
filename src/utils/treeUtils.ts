@@ -7,28 +7,25 @@ import { AzExtTreeItem } from "@microsoft/vscode-azext-utils";
 import { localize } from "./localize";
 
 export namespace treeUtils {
-    export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parents: T | T[]): T {
-        const notFoundMessage: string = localize('parentNotFound', 'Could not find a valid nearest parent.');
-        if (!parents) throw new Error(notFoundMessage);
-        if (!Array.isArray(parents)) {
-            parents = [parents];
-        }
-        if (!parents.length) throw new Error(notFoundMessage);
+    export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parentContextValues: string | RegExp | (string | RegExp)[]): T {
+        const parentNotFound: string = localize('parentNotFound', 'Could not find a matching nearest parent.');
+        parentContextValues = (Array.isArray(parentContextValues) ? parentContextValues : [parentContextValues]);
+        if (!parentContextValues.length) throw new Error(parentNotFound);
 
-        const parentInstances: Set<string> = new Set();
-        parents.forEach(p => { parentInstances.add(p.constructor.name) });
-        let foundParent: boolean = false;
         let currentNode: AzExtTreeItem = node;
+        let foundParent: boolean = false;
         while (currentNode.parent) {
-            if (parentInstances.has(currentNode.constructor.name)) {
-                foundParent = true;
-                break;
+            for (const contextValue of parentContextValues) {
+                const parentRegex: RegExp = contextValue instanceof RegExp ? contextValue : new RegExp(contextValue);
+                if (parentRegex.test(currentNode.contextValue)) {
+                    foundParent = true;
+                    break;
+                }
             }
+            if (foundParent) break;
             currentNode = currentNode.parent;
         }
-        if (!foundParent) {
-            throw new Error(notFoundMessage);
-        }
+        if (!foundParent) throw new Error(parentNotFound);
         return currentNode as T;
     }
 }
