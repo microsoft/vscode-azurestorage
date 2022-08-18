@@ -29,14 +29,9 @@ export class StorageAccountResolver implements AppResourceResolver {
     public async resolveResource(subContext: ISubscriptionContext, resource: AppResource): Promise<ResolvedStorageAccount | null> {
         return await callWithTelemetryAndErrorHandling('resolveResource', async (context: IActionContext) => {
             context.telemetry.properties.isActivationEvent = 'true';
-            try {
-                const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
-                const sa: StorageAccount = await storageManagementClient.storageAccounts.getProperties(getResourceGroupFromId(nonNullProp(resource, 'id')), nonNullProp(resource, 'name'));
-                return StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
-            } catch (e) {
-                console.error({ ...context, ...subContext });
-                throw e;
-            }
+            const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
+            const sa: StorageAccount = await storageManagementClient.storageAccounts.getProperties(getResourceGroupFromId(nonNullProp(resource, 'id')), nonNullProp(resource, 'name'));
+            return StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
         }) ?? null;
     }
 
