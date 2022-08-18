@@ -1,14 +1,13 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.md in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from "@azure/storage-blob";
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, ICreateChildImplContext, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, ICreateChildImplContext, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { DeleteBlobDirectoryConfirmationStep } from '../../commands/deleteBlobDirectory/DeleteBlobDirectoryConfirmationStep';
 import { DeleteBlobDirectoryStep } from '../../commands/deleteBlobDirectory/DeleteBlobDirectoryStep';
 import { IDeleteBlobDirectoryWizardContext } from "../../commands/deleteBlobDirectory/IDeleteBlobDirectoryWizardContext";
 import { createActivityContext } from "../../utils/activityUtils";
@@ -101,16 +100,19 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
         const wizardContext: IDeleteBlobDirectoryWizardContext = Object.assign(context, {
             dirName: this.dirName,
             blobDirectory: this,
-            suppress: context.suppressMessage,
             ...(await createActivityContext()),
             activityTitle: deletingDirectory
         });
 
+        const message: string = localize('deleteBlobDir', "Are you sure you want to delete the blob directory '{0}' and all its contents?", this.dirName);
         const wizard = new AzureWizard(wizardContext, {
-            promptSteps: [new DeleteBlobDirectoryConfirmationStep()],
+            promptSteps: [new DeleteConfirmationStep(message)],
             executeSteps: [new DeleteBlobDirectoryStep()]
         });
-        await wizard.prompt();
+
+        if(!context.suppressMessage) {
+            await wizard.prompt();
+        }
         await wizard.execute();
 
         AzureStorageFS.fireDeleteEvent(this);
