@@ -8,7 +8,7 @@ import { localize } from "./localize";
 
 export namespace treeUtils {
     export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parentContextValues: string | RegExp | (string | RegExp)[]): T {
-        const parentNotFound: string = localize('parentNotFound', 'Could not find a matching nearest parent.');
+        const parentNotFound: string = localize('parentNotFound', 'Could not find a matching parent.');
         parentContextValues = (Array.isArray(parentContextValues) ? parentContextValues : [parentContextValues]);
         if (!parentContextValues.length) throw new Error(parentNotFound);
 
