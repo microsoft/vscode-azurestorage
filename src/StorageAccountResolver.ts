@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
+
 import { StorageAccount, StorageManagementClient } from "@azure/arm-storage";
 import * as azureStorageBlob from '@azure/storage-blob';
 import { getResourceGroupFromId } from "@microsoft/vscode-azext-azureutils";
@@ -25,17 +30,12 @@ export interface ResolvedStorageAccount extends ResolvedAppResourceBase {
 
 export class StorageAccountResolver implements AppResourceResolver {
 
-    // possibly pass down the full tree item, but for now try to get away with just the AppResource
     public async resolveResource(subContext: ISubscriptionContext, resource: AppResource): Promise<ResolvedStorageAccount | null> {
         return await callWithTelemetryAndErrorHandling('resolveResource', async (context: IActionContext) => {
-            try {
-                const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
-                const sa: StorageAccount = await storageManagementClient.storageAccounts.getProperties(getResourceGroupFromId(nonNullProp(resource, 'id')), nonNullProp(resource, 'name'));
-                return StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
-            } catch (e) {
-                console.error({ ...context, ...subContext });
-                throw e;
-            }
+            context.telemetry.properties.isActivationEvent = 'true';
+            const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
+            const sa: StorageAccount = await storageManagementClient.storageAccounts.getProperties(getResourceGroupFromId(nonNullProp(resource, 'id')), nonNullProp(resource, 'name'));
+            return StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
         }) ?? null;
     }
 
