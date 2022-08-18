@@ -15,6 +15,7 @@ import { QueueGroupItem } from './queue/QueueGroupItem';
 import { StorageAccountModel } from './StorageAccountModel';
 import { TableGroupItem } from './table/TableGroupItem';
 import { createSubscriptionContext } from "../utils/v2/credentialsUtils";
+import { createFileShareItemFactory } from "./fileShare/FileShareItem";
 
 export type WebSiteHostingStatus = {
     capable: boolean;
@@ -49,8 +50,18 @@ export class StorageAccountItem implements StorageAccountModel {
 
                 if (primaryEndpoints.file) {
                     const shareServiceClientFactory = () => this.createShareServiceClient(wrapper, key);
+                    const shareClientFactory = (shareName: string) => shareServiceClientFactory().getShareClient(shareName);
+                    const fileShareItemFactory = createFileShareItemFactory(
+                        shareClientFactory,
+                        {
+                            id: this.resource.id,
+                            isEmulated: false, // TODO: Determine if this is an emulator
+                            subscriptionId: this.resource.subscription.subscriptionId });
 
-                    groupTreeItems.push(new FileShareGroupItem(shareServiceClientFactory));
+                    groupTreeItems.push(
+                        new FileShareGroupItem(
+                            fileShareItemFactory,
+                            shareServiceClientFactory));
                 }
 
                 if (primaryEndpoints.queue) {

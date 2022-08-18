@@ -4,16 +4,44 @@ import * as path from 'path';
 import { getResourcesPath } from '../../constants';
 import { FileParentItem } from './FileParentItem';
 import { DirectoryItem } from './DirectoryItem';
+import { StorageAccountModel } from '../StorageAccountModel';
+import { GenericItem } from '../../utils/v2/treeutils';
+
+export type ShareClientFactory = (shareName: string) => azureStorageShare.ShareClient;
+export type StorageAccountInfo = { id: string, isEmulated: boolean, subscriptionId: string };
 
 export class FileShareItem extends FileParentItem {
     constructor(
-        directoryClientFactory: (directory: string | undefined) => azureStorageShare.ShareDirectoryClient,
-        private readonly shareName: string) {
+        shareClientFactory: ShareClientFactory,
+        public readonly shareName: string,
+        public readonly storageAccount: StorageAccountInfo) {
+        const directoryClientFactory = (directory: string) => shareClientFactory(shareName).getDirectoryClient(directory ?? '');
+
         super(
             /* directory: */ undefined,
             d => new DirectoryItem(d, directoryClientFactory),
             directoryClientFactory
         )
+    }
+
+    async getChildren(): Promise<StorageAccountModel[]> {
+        const children = await super.getChildren();
+
+        return [
+            new GenericItem(
+                () => {
+                    const treeItem = new vscode.TreeItem('Open in File Explorer...');
+
+                    treeItem.command = {
+                        arguments: [ this ],
+                        command: 'azureStorage.openInFileExplorer',
+                        title: '' };
+                    treeItem.contextValue = 'openInFileExplorer';
+
+                    return treeItem;
+                }),
+            ...children
+        ];
     }
 
     getTreeItem(): vscode.TreeItem {
@@ -27,4 +55,10 @@ export class FileShareItem extends FileParentItem {
 
         return treeItem;
     }
+}
+
+export type FileShareItemFactory = (shareName: string) => FileShareItem;
+
+export function createFileShareItemFactory(shareClientFactory: ShareClientFactory, storageAccount: StorageAccountInfo): FileShareItemFactory {
+    return (shareName: string) => new FileShareItem(shareClientFactory, shareName, storageAccount);
 }

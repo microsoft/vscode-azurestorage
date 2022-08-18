@@ -5,19 +5,18 @@ import { getResourcesPath, maxPageSize } from '../../constants';
 import { StorageAccountModel } from "../StorageAccountModel";
 import { parseError } from '@microsoft/vscode-azext-utils';
 import { localize } from '../../utils/localize';
-import { FileShareItem } from './FileShareItem';
+import { FileShareItemFactory } from './FileShareItem';
 
 export class FileShareGroupItem implements StorageAccountModel {
     constructor(
+        private readonly fileShareItemFactory: FileShareItemFactory,
         private readonly shareServiceClientFactory: () => azureStorageShare.ShareServiceClient) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
         const shares = await this.listAllShares();
 
-        return shares.map(share => new FileShareItem(
-            directory => this.shareServiceClientFactory().getShareClient(share.name).getDirectoryClient(directory ?? ''),
-            share.name));
+        return shares.map(share => this.fileShareItemFactory(share.name));
     }
 
     getTreeItem(): vscode.TreeItem {

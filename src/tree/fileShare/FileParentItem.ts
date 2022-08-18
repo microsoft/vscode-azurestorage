@@ -5,11 +5,13 @@ import { maxPageSize } from '../../constants';
 import { StorageAccountModel } from '../StorageAccountModel';
 import { FileItem } from './FileItem';
 
+export type ShareDirectoryClientFactory = (directory: string | undefined) => azureStorageShare.ShareDirectoryClient;
+
 export abstract class FileParentItem implements StorageAccountModel {
     constructor(
         private readonly directory: string | undefined,
         private readonly parentItemFactory: (directory: string) => FileParentItem,
-        private readonly shareClientFactory: (directory: string | undefined) => azureStorageShare.ShareDirectoryClient) {
+        private readonly shareClientFactory: ShareDirectoryClientFactory) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {

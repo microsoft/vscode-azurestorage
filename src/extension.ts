@@ -43,6 +43,7 @@ import { StorageAccountResolver } from './StorageAccountResolver';
 import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
 import { BlobContainerItem } from './tree/blob/BlobContainerItem';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
+import { FileShareItem } from './tree/fileShare/FileShareItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
 import { IStorageTreeItem } from './tree/IStorageTreeItem';
@@ -83,7 +84,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
         registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
-        registerBranchCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerItem | BlobContainerTreeItem | FileShareTreeItem) => {
+        registerBranchCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerItem | BlobContainerTreeItem | FileShareItem | FileShareTreeItem) => {
             if (!treeItem) {
                 // TODO: Use v2 picker API when available.
                 treeItem = await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(actionContext, {
@@ -98,6 +99,9 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             if (treeItem instanceof BlobContainerItem) {
                 fullId = `/subscriptions/${treeItem.subscriptionId}/microsoft.storage/storageaccounts${treeItem.storageAccountId}/Blob Containers/${treeItem.containerName}`;
                 isEmulated = treeItem.isEmulated;
+            } else if (treeItem instanceof FileShareItem) {
+                fullId = `/subscriptions/${treeItem.storageAccount.subscriptionId}/microsoft.storage/storageaccounts${treeItem.storageAccount.id}/File Shares/${treeItem.shareName}`;
+                isEmulated = treeItem.storageAccount.isEmulated;
             } else {
                 fullId = treeItem.fullId;
                 isEmulated = treeItem.root.isEmulated;
