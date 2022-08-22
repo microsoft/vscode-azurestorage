@@ -15,10 +15,6 @@ export function registerQueueGroupActionHandlers(): void {
 }
 
 export async function createQueue(context: IActionContext, node?: QueueGroupTreeItem): Promise<void> {
-    if (node?.root.isEmulated && !(await isAzuriteInstalled())) {
-        warnAzuriteNotInstalled(context);
-    }
-
     if (!node) {
         node = await ext.rgApi.pickAppResource<QueueGroupTreeItem>(context, {
             filter: storageFilter,
@@ -26,6 +22,10 @@ export async function createQueue(context: IActionContext, node?: QueueGroupTree
             workspaceRootContextValue: AttachedStorageAccountsTreeItem.contextValue,
             expectedWorkspaceContextValue: QueueGroupTreeItem.contextValue
         });
+    }
+
+    if (node.root.isEmulated && !(await isAzuriteInstalled())) {
+        warnAzuriteNotInstalled(context);
     }
 
     await node.createChild(context);
