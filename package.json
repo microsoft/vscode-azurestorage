@@ -327,12 +327,12 @@
             "view/item/context": [
                 {
                     "command": "azureStorage.createGpv2Account",
-                    "when": "view == azureResourceGroups && viewItem =~ /azureResourceTypeGroup.*microsoft.storage/storageaccounts/",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureResourceTypeGroup/ && viewItem =~ /StorageAccounts/",
                     "group": "1@1"
                 },
                 {
                     "command": "azureStorage.createGpv2AccountAdvanced",
-                    "when": "view == azureResourceGroups && viewItem =~ /azureResourceTypeGroup.*microsoft.storage/storageaccounts/",
+                    "when": "view == azureResourceGroups && viewItem =~ /azureResourceTypeGroup/ && viewItem =~ /StorageAccounts/",
                     "group": "1@2"
                 },
                 {
