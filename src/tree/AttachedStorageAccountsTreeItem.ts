@@ -20,7 +20,8 @@ interface IPersistedAccount {
 }
 
 export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
-    public readonly contextValue: string = 'attachedStorageAccounts';
+    public static readonly contextValue: string = 'attachedStorageAccounts';
+    public readonly contextValue: string = AttachedStorageAccountsTreeItem.contextValue;
     public readonly label: string = 'Attached Storage Accounts';
     public childTypeLabel: string = 'Account';
 
