@@ -3,14 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem } from "@microsoft/vscode-azext-utils";
-import { localize } from "./localize";
+import { AzExtTreeItem, NoResourceFoundError } from "@microsoft/vscode-azext-utils";
 
 export namespace treeUtils {
     export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parentContextValues: string | RegExp | (string | RegExp)[]): T {
-        const parentNotFound: string = localize('parentNotFound', 'Could not find a matching parent.');
-        parentContextValues = (Array.isArray(parentContextValues) ? parentContextValues : [parentContextValues]);
-        if (!parentContextValues.length) throw new Error(parentNotFound);
+        parentContextValues = Array.isArray(parentContextValues) ? parentContextValues : [parentContextValues];
+        if (!parentContextValues.length) throw new NoResourceFoundError()
 
         let currentNode: AzExtTreeItem = node;
         let foundParent: boolean = false;
@@ -25,7 +23,7 @@ export namespace treeUtils {
             if (foundParent) break;
             currentNode = currentNode.parent;
         }
-        if (!foundParent) throw new Error(parentNotFound);
+        if (!foundParent) throw new NoResourceFoundError();
         return currentNode as T;
     }
 }
