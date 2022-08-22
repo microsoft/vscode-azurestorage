@@ -8,7 +8,7 @@ import { AzExtTreeItem, NoResourceFoundError } from "@microsoft/vscode-azext-uti
 export namespace treeUtils {
     export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parentContextValues: string | RegExp | (string | RegExp)[]): T {
         parentContextValues = Array.isArray(parentContextValues) ? parentContextValues : [parentContextValues];
-        if (!parentContextValues.length) throw new NoResourceFoundError()
+        if (!parentContextValues.length) throw new NoResourceFoundError();
 
         let currentNode: AzExtTreeItem = node;
         let foundParent: boolean = false;
