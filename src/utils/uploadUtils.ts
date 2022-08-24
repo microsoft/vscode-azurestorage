@@ -40,8 +40,9 @@ export async function uploadLocalFolder(
     messagePrefix?: string,
 ): Promise<void> {
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
+    const uri = vscode.Uri.file(sourcePath);
     let useWildCard: boolean = true;
-    if(!doesDirectoryContainFiles(sourcePath)){
+    if(!(await doesDirectoryContainFiles(uri))){
         useWildCard = false;
         destPath = dirname(destPath);
         if(destPath === '.')

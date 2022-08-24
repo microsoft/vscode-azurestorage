@@ -5,9 +5,8 @@
 
 import * as azureStorageShare from "@azure/storage-file-share";
 import { AzExtTreeItem, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
-import { readdirSync } from "fs";
 import * as path from "path";
-import { ProgressLocation, window } from "vscode";
+import { ProgressLocation, Uri, window, workspace } from "vscode";
 import { maxPageSize } from "../constants";
 import { ext } from "../extensionVariables";
 import { DirectoryTreeItem } from "../tree/fileShare/DirectoryTreeItem";
@@ -90,9 +89,9 @@ export function isTreeItemDirectory(node: AzExtTreeItem): boolean {
     return /directory/i.test(node.contextValue);
 }
 
-export function doesDirectoryContainFiles(srcPath: string) : boolean {
-    const files = readdirSync(srcPath);
-    if (files.length > 0) {
+export async function doesDirectoryContainFiles(uri: Uri) : Promise<boolean> {
+    const files = workspace.fs.readDirectory(uri);
+    if ((await files).length > 0) {
         return true;
     }
     return false;
