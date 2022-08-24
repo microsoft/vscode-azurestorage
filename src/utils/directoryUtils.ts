@@ -90,8 +90,8 @@ export function isTreeItemDirectory(node: AzExtTreeItem): boolean {
 }
 
 export async function doesDirectoryContainFiles(uri: Uri) : Promise<boolean> {
-    const files = workspace.fs.readDirectory(uri);
-    if ((await files).length > 0) {
+    const files = await workspace.fs.readDirectory(uri);
+    if (files.length > 0) {
         return true;
     }
     return false;
