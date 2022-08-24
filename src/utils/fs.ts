@@ -16,7 +16,7 @@ export function isSubpath(expectedParent: string, expectedChild: string): boolea
     return relativePath !== '' && !relativePath.startsWith('..') && relativePath !== expectedChild;
 }
 
-export async function isEmptyDirectory (uri: Uri) : Promise<boolean> {
+export async function isEmptyDirectory(uri: Uri): Promise<boolean> {
     const files = await workspace.fs.readDirectory(uri);
     if (files.length === 0) {
         return true;
