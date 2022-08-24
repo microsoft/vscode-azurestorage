@@ -43,9 +43,8 @@ export async function uploadLocalFolder(
     let useWildCard: boolean = true;
     if(!doesDirectoryContainFiles(sourcePath)){
         useWildCard = false;
-        var path = require('path');
-        destPath = path.dirname(destPath);
-        if(destPath == '.')
+        destPath = dirname(destPath);
+        if(destPath === '.')
         {
             destPath = '';
         }

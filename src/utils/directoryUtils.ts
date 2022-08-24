@@ -5,6 +5,7 @@
 
 import * as azureStorageShare from "@azure/storage-file-share";
 import { AzExtTreeItem, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
+import { readdirSync } from "fs";
 import * as path from "path";
 import { ProgressLocation, window } from "vscode";
 import { maxPageSize } from "../constants";
@@ -90,13 +91,7 @@ export function isTreeItemDirectory(node: AzExtTreeItem): boolean {
 }
 
 export function doesDirectoryContainFiles(srcPath: string) : boolean {
-    const fs = require('fs');
-    let files: [];
-    try {
-        files = fs.readdirSync(srcPath);
-    } catch(err) {
-        throw err;
-    }
+    const files = readdirSync(srcPath);
     if (files.length > 0) {
         return true;
     }
