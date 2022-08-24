@@ -17,7 +17,7 @@ import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { doesBlobDirectoryExist, doesBlobExist } from './blobUtils';
 import { checkCanOverwrite } from './checkCanOverwrite';
 import { copyAndShowToast } from './copyAndShowToast';
-import { doesDirectoryExist } from './directoryUtils';
+import { doesDirectoryContainFiles, doesDirectoryExist } from './directoryUtils';
 import { doesFileExist } from './fileUtils';
 import { localize } from './localize';
 
@@ -40,7 +40,18 @@ export async function uploadLocalFolder(
     messagePrefix?: string,
 ): Promise<void> {
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
-    const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, true);
+    let useWildCard: boolean = true;
+    if(!doesDirectoryContainFiles(sourcePath)){
+        useWildCard = false;
+        var path = require('path');
+        destPath = path.dirname(destPath);
+        if(destPath == '.')
+        {
+            destPath = '';
+        }
+    }
+    const src: ILocalLocation =
+    createAzCopyLocalLocation(sourcePath, useWildCard);
     const dst: IRemoteSasLocation = createAzCopyRemoteLocation(destTreeItem, destPath);
     const transferProgress: TransferProgress = new TransferProgress('files', messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
