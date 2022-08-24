@@ -43,16 +43,15 @@ export async function uploadLocalFolder(
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
     const uri = vscode.Uri.file(sourcePath);
     let useWildCard: boolean = true;
-    if(await isEmptyDirectory(uri)){
+    if (await isEmptyDirectory(uri)) {
         useWildCard = false;
         destPath = dirname(destPath);
-        if(destPath === '.')
-        {
+        if (destPath === '.') {
             destPath = '';
         }
     }
     const src: ILocalLocation =
-    createAzCopyLocalLocation(sourcePath, useWildCard);
+        createAzCopyLocalLocation(sourcePath, useWildCard);
     const dst: IRemoteSasLocation = createAzCopyRemoteLocation(destTreeItem, destPath);
     const transferProgress: TransferProgress = new TransferProgress('files', messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
