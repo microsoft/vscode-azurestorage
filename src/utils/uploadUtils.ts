@@ -17,8 +17,9 @@ import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { doesBlobDirectoryExist, doesBlobExist } from './blobUtils';
 import { checkCanOverwrite } from './checkCanOverwrite';
 import { copyAndShowToast } from './copyAndShowToast';
-import { doesDirectoryContainFiles, doesDirectoryExist } from './directoryUtils';
+import { doesDirectoryExist } from './directoryUtils';
 import { doesFileExist } from './fileUtils';
+import { isEmptyDirectory } from './fs';
 import { localize } from './localize';
 
 export const upload: string = localize('upload', 'Upload');
@@ -42,7 +43,7 @@ export async function uploadLocalFolder(
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
     const uri = vscode.Uri.file(sourcePath);
     let useWildCard: boolean = true;
-    if(!(await doesDirectoryContainFiles(uri))){
+    if(await isEmptyDirectory(uri)){
         useWildCard = false;
         destPath = dirname(destPath);
         if(destPath === '.')
