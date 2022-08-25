@@ -50,8 +50,7 @@ export async function uploadLocalFolder(
             destPath = '';
         }
     }
-    const src: ILocalLocation =
-        createAzCopyLocalLocation(sourcePath, useWildCard);
+    const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, useWildCard);
     const dst: IRemoteSasLocation = createAzCopyRemoteLocation(destTreeItem, destPath);
     const transferProgress: TransferProgress = new TransferProgress('files', messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
