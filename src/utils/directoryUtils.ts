@@ -88,17 +88,3 @@ export async function doesDirectoryExist(parent: FileShareTreeItem | DirectoryTr
 export function isTreeItemDirectory(node: AzExtTreeItem): boolean {
     return /directory/i.test(node.contextValue);
 }
-
-export function doesDirectoryContainFiles(srcPath: string) : boolean {
-    const fs = require('fs');
-    let files: [];
-    try {
-        files = fs.readdirSync(srcPath);
-    } catch(err) {
-        throw err;
-    }
-    if (files.length > 0) {
-        return true;
-    }
-    return false;
-}
