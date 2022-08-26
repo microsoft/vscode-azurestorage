@@ -90,6 +90,10 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         });
 
         if (tableName) {
+            const currentChildren = await this.getCachedChildren(context);
+            if (currentChildren.some(child => child.label === tableName)) {
+                throw new Error(localize('tableAlreadyExists', 'The table "{0}" already exists', tableName));
+            }
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
                 context.showCreatingTreeItem(tableName);
                 progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
