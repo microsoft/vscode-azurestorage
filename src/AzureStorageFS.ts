@@ -5,7 +5,7 @@
 
 import { BlobClient, BlobDownloadResponseModel, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
 import { FileDownloadResponseModel, FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
-import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError, UserCancelledError } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling, callWithTelemetryAndErrorHandlingSync, IActionContext, parseError, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import * as path from "path";
 import * as querystring from "querystring";
 import * as vscode from "vscode";
@@ -215,7 +215,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         let client: ShareFileClient | BlobClient;
         let downloaded: FileDownloadResponseModel | BlobDownloadResponseModel;
-        return await callWithTelemetryAndErrorHandling('readFile', async (context) => {
+        return await callWithTelemetryAndErrorHandlingSync('readFile', async (context) => {
             let result: string | undefined;
             const parsedUri = this.parseUri(uri);
             const treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
