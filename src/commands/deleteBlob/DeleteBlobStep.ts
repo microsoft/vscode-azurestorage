@@ -24,7 +24,9 @@ export class DeleteBlobStep extends AzureWizardExecuteStep<IDeleteBlobWizardCont
         await blobClient.delete();
         const deleteSuccessful: string = localize('successfullyDeletedBlob', 'Successfully deleted blob "{0}".', blobName);
         ext.outputChannel.appendLog(deleteSuccessful);
-        void window.showInformationMessage(deleteSuccessful);
+        if (!wizardContext.suppressNotification) {
+            void window.showInformationMessage(deleteSuccessful);
+        }
     }
 
     public shouldExecute(): boolean {
