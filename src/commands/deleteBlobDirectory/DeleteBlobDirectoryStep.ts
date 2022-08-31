@@ -35,7 +35,10 @@ export class DeleteBlobDirectoryStep extends AzureWizardExecuteStep<IDeleteBlobD
         }
         const deleteSuccessful: string = localize('successfullyDeletedBlobDirectory', 'Successfully deleted directory "{0}".', directoryName);
         ext.outputChannel.appendLog(deleteSuccessful);
-        void window.showInformationMessage(deleteSuccessful);
+
+        if (!wizardContext.suppressNotification) {
+            void window.showInformationMessage(deleteSuccessful);
+        }
     }
 
     public shouldExecute(): boolean {
