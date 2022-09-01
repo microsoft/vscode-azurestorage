@@ -216,7 +216,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         let client: ShareFileClient | BlobClient;
         let downloaded: FileDownloadResponseModel | BlobDownloadResponseModel;
         return await callWithTelemetryAndErrorHandling('readFile', async (context) => {
-            context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
             let result: string | undefined;
             const parsedUri = this.parseUri(uri);
