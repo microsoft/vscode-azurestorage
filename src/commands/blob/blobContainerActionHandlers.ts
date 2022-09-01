@@ -60,5 +60,5 @@ export async function deleteBlobContainer(context: IActionContext, treeItem?: Bl
  * Normalize and remove leading slash from path if present
  */
 function normalizeBlobPathInput(blobPath: string): string {
-    return path.normalize(blobPath).replace(/^\/|\/$/g, '');
+    return path.posix.normalize(blobPath).replace(/^\/|\/$/g, '');
 }
