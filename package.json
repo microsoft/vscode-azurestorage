@@ -691,6 +691,10 @@
                     "when": "never"
                 },
                 {
+                    "command": "azureStorage.generateSASUrl",
+                    "when": "never"
+                },
+                {
                     "command": "azureStorage.openTable",
                     "when": "never"
                 },
