@@ -18,6 +18,7 @@
 
 ### Fixed
 - [Bugs fixed](https://github.com/microsoft/vscode-azurestorage/issues?q=is%3Aclosed+is%3Aissue+milestone%3A0.15.0)
+- Errors associated with Attached Storage Accounts [#1045](https://github.com/microsoft/vscode-azurestorage/issues/1045)
 
 ## 0.14.2 - 2022-07-05
 
