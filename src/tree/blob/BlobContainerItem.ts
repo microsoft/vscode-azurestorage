@@ -11,11 +11,10 @@ import { BlobParentItem } from "./BlobParentItem";
 export class BlobContainerItem extends BlobParentItem {
     constructor(
         private readonly container: azureStorageBlob.ContainerItem,
+        public readonly context: { storageAccountId: string, subscriptionId: string },
         blobContainerClientFactory: () => azureStorageBlob.ContainerClient,
         isEmulated: boolean,
-        private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>,
-        public readonly storageAccountId: string,
-        public readonly subscriptionId: string) {
+        private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>) {
         super(
             blobContainerClientFactory,
             (dirPath: string) => new BlobDirectoryItem(blobContainerClientFactory, isEmulated, dirPath),

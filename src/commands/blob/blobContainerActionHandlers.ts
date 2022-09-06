@@ -14,10 +14,11 @@ import { BlobDirectoryTreeItem } from '../../tree/blob/BlobDirectoryTreeItem';
 import { BlobTreeItem } from '../../tree/blob/BlobTreeItem';
 import { getBlobPath, IBlobContainerCreateChildContext } from '../../utils/blobUtils';
 import { localize } from '../../utils/localize';
+import { registerBranchCommand } from '../../utils/v2/commandUtils';
 import { deleteNode } from '../commonTreeCommands';
 
 export function registerBlobContainerActionHandlers(): void {
-    registerCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
+    registerBranchCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
     registerCommand("azureStorage.editBlob", async (context: IActionContext, treeItem: BlobTreeItem) => AzureStorageFS.showEditor(context, treeItem), 250);
     registerCommand("azureStorage.deleteBlobContainer", deleteBlobContainer);
     registerCommand("azureStorage.createBlockBlob", async (context: IActionContext, parent: BlobContainerTreeItem) => {

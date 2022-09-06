@@ -2,7 +2,7 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { getResourcesPath } from '../../constants';
-import { FileParentItem } from './FileParentItem';
+import { FileParentItem, ShareDirectoryClientFactory } from './FileParentItem';
 import { DirectoryItem } from './DirectoryItem';
 import { StorageAccountModel } from '../StorageAccountModel';
 import { GenericItem } from '../../utils/v2/treeutils';
@@ -12,15 +12,14 @@ export type StorageAccountInfo = { id: string, isEmulated: boolean, subscription
 
 export class FileShareItem extends FileParentItem {
     constructor(
-        shareClientFactory: ShareClientFactory,
+        shareDirectoryClientFactory: ShareDirectoryClientFactory,
         public readonly shareName: string,
         public readonly storageAccount: StorageAccountInfo) {
-        const directoryClientFactory = (directory: string) => shareClientFactory(shareName).getDirectoryClient(directory ?? '');
 
         super(
             /* directory: */ undefined,
-            d => new DirectoryItem(d, directoryClientFactory),
-            directoryClientFactory
+            d => new DirectoryItem(d, shareDirectoryClientFactory),
+            shareDirectoryClientFactory
         )
     }
 
@@ -60,5 +59,9 @@ export class FileShareItem extends FileParentItem {
 export type FileShareItemFactory = (shareName: string) => FileShareItem;
 
 export function createFileShareItemFactory(shareClientFactory: ShareClientFactory, storageAccount: StorageAccountInfo): FileShareItemFactory {
-    return (shareName: string) => new FileShareItem(shareClientFactory, shareName, storageAccount);
+    return (shareName: string) => {
+        const directoryClientFactory = (directory: string) => shareClientFactory(shareName).getDirectoryClient(directory ?? '');
+
+        return new FileShareItem(directoryClientFactory, shareName, storageAccount);
+    }
 }

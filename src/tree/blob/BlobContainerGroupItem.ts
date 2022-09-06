@@ -21,14 +21,13 @@ export class BlobContainerGroupItem implements StorageAccountModel {
             container =>
                 new BlobContainerItem(
                     container,
+                    { storageAccountId: this.storageAccountId, subscriptionId: this.subscriptionId },
                     () => {
                         const blobServiceClient = this.blobServiceClientFactory();
                         return blobServiceClient.getContainerClient(container.name);
                     },
                     /* isEmulated: TODO: fix */ false,
-                    this.getWebSiteHostingStatus,
-                    this.storageAccountId,
-                    this.subscriptionId));
+                    this.getWebSiteHostingStatus));
     }
 
     getTreeItem(): vscode.TreeItem {
