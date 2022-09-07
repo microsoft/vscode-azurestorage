@@ -23,7 +23,7 @@ export class SasUrlPromptStep extends AzureWizardPromptStep<IActionContext> {
         });
     }
 
-    public shouldPrompt(_wizardContext: ISasDownloadContext): boolean {
+    public shouldPrompt(): boolean {
         return true;
     }
 

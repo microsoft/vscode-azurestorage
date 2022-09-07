@@ -79,7 +79,7 @@ export async function downloadSasUrl(context: ISasDownloadContext): Promise<void
     return await download(context, nonNullProp(context, 'sasUrl'));
 }
 export async function downloadTreeItems(context: IActionContext, treeItem: IDownloadableTreeItem, treeItems?: IDownloadableTreeItem[]): Promise<void> {
-    treeItems = treeItems || [treeItem];
+    treeItems ??= [treeItem];
     await download(context, treeItems);
 }
 
