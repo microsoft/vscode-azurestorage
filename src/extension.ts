@@ -49,6 +49,7 @@ import { ICopyUrl } from './tree/ICopyUrl';
 import { IStorageTreeItem } from './tree/IStorageTreeItem';
 import { refreshTreeItem } from './tree/refreshTreeItem';
 import { branchDataProvider } from './tree/StorageAccountBranchDataProvider';
+import { StorageWorkspaceBranchDataProvider } from './tree/workspace/StorageWorkspaceBranchDataProvider';
 import { StorageWorkspaceResourceProvider } from './tree/workspace/StorageWorkspaceResourceProvider';
 import { registerBranchCommand } from './utils/v2/commandUtils';
 import { AzureResourcesApiManager, GetApiOptions, V2AzureResourcesApi } from './vscode-azureresourcegroups.api.v2';
@@ -181,6 +182,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
             v2Api.registerApplicationResourceBranchDataProvider('microsoft.storage/storageaccounts', branchDataProvider);
             v2Api.registerWorkspaceResourceProvider('ms-azuretools.vscode-azurestorage', new StorageWorkspaceResourceProvider());
+            v2Api.registerWorkspaceResourceBranchDataProvider('ms-azuretools.vscode-azurestorage', new StorageWorkspaceBranchDataProvider());
         } else {
             throw new Error('Could not find the Azure Resource Groups extension');
         }

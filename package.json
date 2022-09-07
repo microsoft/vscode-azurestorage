@@ -112,6 +112,11 @@
                     {
                         "type": "ms-azuretools.vscode-azurestorage"
                     }
+                ],
+                "branches": [
+                    {
+                        "type": "ms-azuretools.vscode-azurestorage"
+                    }
                 ]
             }
         },
