@@ -73,7 +73,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             const message: string = localize('failedToOpen', 'Failed to open "{0}". Cannot edit remote files larger than {1}MB.', uri.fsPath, maxRemoteFileEditSizeMB);
             const result: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(message, downloadInstead);
             if (result === downloadInstead) {
-                await download(context, treeItem);
+                await download(context, [treeItem]);
             }
             throw new UserCancelledError(message);
         }

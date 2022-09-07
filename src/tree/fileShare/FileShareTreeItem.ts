@@ -11,6 +11,8 @@ import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
+import { getResourceUri } from '../../commands/downloadFiles/getResourceUri';
+import { getSasToken } from '../../commands/downloadFiles/getSasToken';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
 import { getResourcesPath, NotificationProgress } from "../../constants";
 import { ext } from "../../extensionVariables";
@@ -154,7 +156,9 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
         const transferProgress: TransferProgress = new TransferProgress('bytes', destFilePath);
         const src: ILocalLocation = createAzCopyLocalLocation(sourceFilePath);
-        const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, destFilePath);
+        const resourceUri = getResourceUri(this);
+        const sasToken = getSasToken(this.root);
+        const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, destFilePath);
         await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress, notificationProgress, cancellationToken);
     }
 }

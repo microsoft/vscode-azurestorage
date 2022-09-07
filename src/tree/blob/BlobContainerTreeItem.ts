@@ -13,6 +13,8 @@ import { ProgressLocation, Uri } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
+import { getResourceUri } from '../../commands/downloadFiles/getResourceUri';
+import { getSasToken } from '../../commands/downloadFiles/getSasToken';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
 import { configurationSettingsKeys, getResourcesPath, NotificationProgress, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
@@ -338,7 +340,9 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     ): Promise<void> {
         ext.outputChannel.appendLog(getUploadingMessageWithSource(filePath, this.label));
         const src: ILocalLocation = createAzCopyLocalLocation(filePath);
-        const dst: IRemoteSasLocation = createAzCopyRemoteLocation(this, blobPath);
+        const resourceUri = getResourceUri(this);
+        const sasToken = getSasToken(this.root);
+        const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, blobPath);
         const transferProgress: TransferProgress = new TransferProgress('bytes', blobPath);
         await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress, notificationProgress, cancellationToken);
     }
