@@ -106,7 +106,14 @@
                     "type": "microsoft.storage/storageaccounts",
                     "detail": "For file storage and static file hosting."
                 }
-            ]
+            ],
+            "workspace": {
+                "resources": [
+                    {
+                        "type": "ms-azuretools.vscode-azurestorage"
+                    }
+                ]
+            }
         },
         "commands": [
             {
