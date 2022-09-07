@@ -5,12 +5,14 @@
 
 import * as azureStorageBlob from "@azure/storage-blob";
 import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
-import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, AzureWizard, DeleteConfirmationStep, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
+import { DeleteBlobStep } from "../../commands/deleteBlob/DeleteBlobStep";
+import { IDeleteBlobWizardContext } from "../../commands/deleteBlob/IDeleteBlobWizardContext";
 import { storageExplorerDownloadUrl } from "../../constants";
+import { createActivityContext } from "../../utils/activityUtils";
 import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
 import { copyAndShowToast } from "../../utils/copyAndShowToast";
@@ -67,18 +69,26 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadab
     }
 
     public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {
-        let result: MessageItem | undefined;
         if (!context.suppressMessage) {
-            const message: string = `Are you sure you want to delete the blob '${this.label}'?`;
-            result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        }
-        if (result === DialogResponses.deleteResponse || context.suppressMessage) {
+            const deletingBlob: string = localize('deleteBlob', 'Delete blob "{0}"', this.label);
+            const wizardContext: IDeleteBlobWizardContext = Object.assign(context, {
+                blobName: this.label,
+                blob: this,
+                root: this.root,
+                ...(await createActivityContext()),
+                activityTitle: deletingBlob,
+            });
+            const message: string = localize('deleteBlob', "Are you sure you want to delete the blob '{0}'?", this.label);
+            const wizard = new AzureWizard(wizardContext, {
+                promptSteps: [new DeleteConfirmationStep(message)],
+                executeSteps: [new DeleteBlobStep()]
+            });
+            await wizard.prompt();
+            await wizard.execute();
+        } else {
             const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
             await blobClient.delete();
-        } else {
-            throw new UserCancelledError();
         }
-
         AzureStorageFS.fireDeleteEvent(this);
     }
 

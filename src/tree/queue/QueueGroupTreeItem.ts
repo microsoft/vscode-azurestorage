@@ -89,6 +89,10 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         });
 
         if (queueName) {
+            const currentChildren = await this.getCachedChildren(context);
+            if (currentChildren.some(child => child.label === queueName)) {
+                throw new Error(localize('queueAlreadyExists', 'The queue "{0}" already exists', queueName));
+            }
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
                 context.showCreatingTreeItem(queueName);
                 progress.report({ message: `Azure Storage: Creating queue '${queueName}'` });

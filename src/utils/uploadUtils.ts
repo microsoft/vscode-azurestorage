@@ -21,6 +21,7 @@ import { checkCanOverwrite } from './checkCanOverwrite';
 import { copyAndShowToast } from './copyAndShowToast';
 import { doesDirectoryExist } from './directoryUtils';
 import { doesFileExist } from './fileUtils';
+import { isEmptyDirectory } from './fs';
 import { localize } from './localize';
 
 export const upload: string = localize('upload', 'Upload');
@@ -42,7 +43,18 @@ export async function uploadLocalFolder(
     messagePrefix?: string,
 ): Promise<void> {
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
-    const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, true);
+    const uri = vscode.Uri.file(sourcePath);
+    let useWildCard: boolean = true;
+    if (await isEmptyDirectory(uri)) {
+        useWildCard = false;
+        destPath = dirname(destPath);
+        if (destPath === '.') {
+            destPath = '';
+        }
+    }
+
+    const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, useWildCard);
+
     const resourceUri = getResourceUri(destTreeItem);
     const sasToken = getSasToken(destTreeItem.root);
     const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, destPath, true);
