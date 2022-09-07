@@ -70,7 +70,7 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadab
 
     public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {
         if (!context.suppressMessage) {
-            const deletingBlob: string = localize('deleteBlob', 'Delete Blob "{0}"', this.label);
+            const deletingBlob: string = localize('deleteBlob', 'Delete blob "{0}"', this.label);
             const wizardContext: IDeleteBlobWizardContext = Object.assign(context, {
                 blobName: this.label,
                 blob: this,
