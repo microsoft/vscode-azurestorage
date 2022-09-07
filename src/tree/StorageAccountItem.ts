@@ -25,6 +25,8 @@ export type WebSiteHostingStatus = {
 };
 
 export class StorageAccountItem implements StorageAccountModel {
+    public static contextValue: string = 'azureStorageAccount';
+
     constructor(private readonly resource: ApplicationResource) {
     }
 
