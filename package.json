@@ -50,7 +50,8 @@
         "onCommand:azureStorage.createBlockBlob",
         "onCommand:azureStorage.uploadFiles",
         "onCommand:azureStorage.uploadFolder",
-        "onCommand:azureStorage.download",
+        "onCommand:azureStorage.downloadTreeItems",
+        "onCommand:azureStorage.downloadSasUrl",
         "onCommand:azureStorage.createFileShare",
         "onCommand:azureStorage.deleteFileShare",
         "onCommand:azureStorage.deleteStorageAccount",
@@ -72,7 +73,7 @@
         "onCommand:azureStorage.startBlobEmulator",
         "onCommand:azureStorage.startQueueEmulator",
         "onCommand:azureStorage.reportIssue",
-        "onCommand:azureStorage.generateSASUrl",
+        "onCommand:azureStorage.generateSasUrl",
         "onView:azureWorkspace"
     ],
     "main": "main",
@@ -199,9 +200,15 @@
                 "category": "Azure Storage"
             },
             {
-                "command": "azureStorage.download",
+                "command": "azureStorage.downloadTreeItems",
                 "title": "Download...",
                 "category": "Azure Storage"
+            },
+            {
+                "command": "azureStorage.downloadSasUrl",
+                "title": "Download by SAS Url...",
+                "category": "Azure Storage",
+                "icon": "$(cloud-download)"
             },
             {
                 "command": "azureStorage.createFileShare",
@@ -306,12 +313,19 @@
                 "category": "Azure Storage"
             },
             {
-                "command": "azureStorage.generateSASUrl",
+                "command": "azureStorage.generateSasUrl",
                 "title": "Generate & Copy SAS Token and URL",
                 "category": "Azure Storage"
             }
         ],
         "menus": {
+            "view/title": [
+                {
+                    "command": "azureStorage.downloadSasUrl",
+                    "when": "view == azureWorkspace",
+                    "group": "navigation@4"
+                }
+            ],
             "explorer/context": [
                 {
                     "command": "azureStorage.deployStaticWebsite",
@@ -414,7 +428,7 @@
                     "group": "2_create@3"
                 },
                 {
-                    "command": "azureStorage.download",
+                    "command": "azureStorage.downloadTreeItems",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer",
                     "group": "3_download"
                 },
@@ -424,7 +438,7 @@
                     "group": "5_cutcopypaste"
                 },
                 {
-                    "command": "azureStorage.generateSASUrl",
+                    "command": "azureStorage.generateSasUrl",
                     "when": "view == azureResourceGroups && viewItem == azureBlobContainer",
                     "group": "5_cutcopypaste@2"
                 },
@@ -459,7 +473,7 @@
                     "group": "9_refresh"
                 },
                 {
-                    "command": "azureStorage.download",
+                    "command": "azureStorage.downloadTreeItems",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobFile",
                     "group": "3_download"
                 },
@@ -469,13 +483,13 @@
                     "group": "5_cutcopypaste@1"
                 },
                 {
-                    "command": "azureStorage.generateSASUrl",
+                    "command": "azureStorage.generateSasUrl",
                     "when": "view == azureResourceGroups && viewItem == azureBlobFile",
                     "group": "5_cutcopypaste@2"
                 },
                 {
                     "$comment": "========= azureBlobDirectory ==========",
-                    "command": "azureStorage.download",
+                    "command": "azureStorage.downloadTreeItems",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobDirectory",
                     "group": "3_download"
                 },
@@ -485,7 +499,7 @@
                     "group": "5_cutcopypaste@1"
                 },
                 {
-                    "command": "azureStorage.generateSASUrl",
+                    "command": "azureStorage.generateSasUrl",
                     "when": "view == azureResourceGroups && viewItem == azureBlobDirectory",
                     "group": "5_cutcopypaste@2"
                 },
@@ -527,7 +541,7 @@
                     "group": "2_create@4"
                 },
                 {
-                    "command": "azureStorage.download",
+                    "command": "azureStorage.downloadTreeItems",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare",
                     "group": "3_download"
                 },
@@ -537,7 +551,7 @@
                     "group": "5_cutcopypaste@1"
                 },
                 {
-                    "command": "azureStorage.generateSASUrl",
+                    "command": "azureStorage.generateSasUrl",
                     "when": "view == azureResourceGroups && viewItem == azureFileShare",
                     "group": "5_cutcopypaste@2"
                 },
@@ -558,7 +572,7 @@
                 },
                 {
                     "$comment": "========= azureFile =========",
-                    "command": "azureStorage.download",
+                    "command": "azureStorage.downloadTreeItems",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFile",
                     "group": "3_download"
                 },
@@ -568,7 +582,7 @@
                     "group": "5_cutcopypaste@1"
                 },
                 {
-                    "command": "azureStorage.generateSASUrl",
+                    "command": "azureStorage.generateSasUrl",
                     "when": "view == azureResourceGroups && viewItem == azureFile",
                     "group": "5_cutcopypaste@2"
                 },
@@ -584,7 +598,7 @@
                     "group": "2_create@1"
                 },
                 {
-                    "command": "azureStorage.download",
+                    "command": "azureStorage.downloadTreeItems",
                     "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShareDirectory",
                     "group": "3_download"
                 },
@@ -599,7 +613,7 @@
                     "group": "5_cutcopypaste@1"
                 },
                 {
-                    "command": "azureStorage.generateSASUrl",
+                    "command": "azureStorage.generateSasUrl",
                     "when": "view == azureResourceGroups && viewItem == azureFileShareDirectory",
                     "group": "5_cutcopypaste@2"
                 },
@@ -687,7 +701,7 @@
                     "when": "never"
                 },
                 {
-                    "command": "azureStorage.download",
+                    "command": "azureStorage.downloadTreeItems",
                     "when": "never"
                 },
                 {

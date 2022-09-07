@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
-import { AzExtFsExtra, IActionContext } from "@microsoft/vscode-azext-utils";
-import { join, posix } from "path";
+import { AzExtFsExtra, AzureWizard, IActionContext, nonNullProp } from "@microsoft/vscode-azext-utils";
+import { basename, join, posix } from "path";
 import { ProgressLocation, window } from "vscode";
 import { configurationSettingsKeys } from "../constants";
 import { ext } from "../extensionVariables";
@@ -24,6 +24,10 @@ import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
 import { OverwriteChoice } from "../utils/uploadUtils";
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from "./azCopy/azCopyLocations";
 import { azCopyTransfer } from "./azCopy/azCopyTransfer";
+import { getResourceUri } from "./downloadFiles/getResourceUri";
+import { getSasToken } from "./downloadFiles/getSasToken";
+import { ISasDownloadContext } from "./downloadFiles/ISasDownloadContext";
+import { SasUrlPromptStep } from "./downloadFiles/SASUrlPromptStep";
 
 interface IAzCopyDownload {
     remoteFileName: string;
@@ -31,16 +35,20 @@ interface IAzCopyDownload {
     localFilePath: string;
     fromTo: FromToOption;
     isDirectory: boolean;
-    treeItem: IDownloadableTreeItem;
+    resourceUri: string;
+    sasToken: string;
 }
 
-export async function download(context: IActionContext, treeItem: IDownloadableTreeItem, treeItems?: IDownloadableTreeItem[]): Promise<void> {
-    treeItems = treeItems || [treeItem];
-
+export async function download(context: IActionContext, targets: IDownloadableTreeItem[] | string): Promise<void> {
     const placeHolderString: string = localize('selectFolderForDownload', 'Select destination folder for download');
     const destinationFolder: string = await showWorkspaceFoldersQuickPick(placeHolderString, context, configurationSettingsKeys.deployPath);
 
-    const azCopyDownloads: IAzCopyDownload[] = await getAzCopyDownloads(context, destinationFolder, treeItems);
+    const { allFolderDownloads, allFileDownloads } = typeof targets === 'string' ?
+        await getDownloadFromSasUrl(targets, destinationFolder) :
+        await getAzCopyDownloads(context, destinationFolder, targets)
+
+    const azCopyDownloads: IAzCopyDownload[] = await checkForDuplicates(context, allFolderDownloads, allFileDownloads);
+
     if (azCopyDownloads.length === 0) {
         // Nothing to download
         return;
@@ -50,7 +58,7 @@ export async function download(context: IActionContext, treeItem: IDownloadableT
     ext.outputChannel.appendLog(title);
     await window.withProgress({ title, location: ProgressLocation.Notification }, async (notificationProgress, cancellationToken) => {
         for (const azCopyDownload of azCopyDownloads) {
-            const src: IRemoteSasLocation = createAzCopyRemoteLocation(azCopyDownload.treeItem, azCopyDownload.remoteFilePath, azCopyDownload.isDirectory);
+            const src: IRemoteSasLocation = createAzCopyRemoteLocation(azCopyDownload.resourceUri, azCopyDownload.sasToken, azCopyDownload.remoteFilePath, azCopyDownload.isDirectory);
             const dst: ILocalLocation = createAzCopyLocalLocation(azCopyDownload.localFilePath);
             const units: 'files' | 'bytes' = azCopyDownload.isDirectory ? 'files' : 'bytes';
             const transferProgress: TransferProgress = new TransferProgress(units, azCopyDownload.remoteFileName);
@@ -61,13 +69,30 @@ export async function download(context: IActionContext, treeItem: IDownloadableT
     ext.outputChannel.appendLog(localize('successfullyDownloaded', 'Successfully downloaded to "{0}".', destinationFolder));
 }
 
-async function getAzCopyDownloads(context: IActionContext, destinationFolder: string, treeItems: IDownloadableTreeItem[]): Promise<IAzCopyDownload[]> {
+export async function downloadSasUrl(context: ISasDownloadContext): Promise<void> {
+    const wizard: AzureWizard<ISasDownloadContext> = new AzureWizard(context, {
+        promptSteps: [new SasUrlPromptStep()],
+        executeSteps: []
+    });
+
+    await wizard.prompt();
+    return await download(context, nonNullProp(context, 'sasUrl'));
+}
+export async function downloadTreeItems(context: IActionContext, treeItem: IDownloadableTreeItem, treeItems?: IDownloadableTreeItem[]): Promise<void> {
+    treeItems = treeItems || [treeItem];
+    await download(context, treeItems);
+}
+
+async function getAzCopyDownloads(context: IActionContext, destinationFolder: string, treeItems: IDownloadableTreeItem[]):
+    Promise<{ allFolderDownloads: IAzCopyDownload[], allFileDownloads: IAzCopyDownload[] }> {
     const allFolderDownloads: IAzCopyDownload[] = [];
     const allFileDownloads: IAzCopyDownload[] = [];
 
     for (const treeItem of treeItems) {
         // if there is no remoteFilePath, then it is the root
         const remoteFilePath = treeItem.remoteFilePath ?? `${posix.sep}`;
+        const resourceUri: string = getResourceUri(treeItem);
+        const sasToken: string = getSasToken(treeItem.root);
         if (treeItem instanceof BlobTreeItem) {
             await treeItem.checkCanDownload(context);
             allFileDownloads.push({
@@ -76,7 +101,8 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 localFilePath: join(destinationFolder, treeItem.blobName),
                 fromTo: 'BlobLocal',
                 isDirectory: false,
-                treeItem,
+                resourceUri,
+                sasToken
             });
         } else if (treeItem instanceof BlobDirectoryTreeItem) {
             allFolderDownloads.push({
@@ -85,7 +111,8 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 localFilePath: join(destinationFolder, treeItem.dirName),
                 fromTo: 'BlobLocal',
                 isDirectory: true,
-                treeItem
+                resourceUri,
+                sasToken
             });
         } else if (treeItem instanceof BlobContainerTreeItem) {
             allFolderDownloads.push({
@@ -94,7 +121,8 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 localFilePath: join(destinationFolder, treeItem.container.name),
                 fromTo: 'BlobLocal',
                 isDirectory: true,
-                treeItem
+                resourceUri,
+                sasToken
             });
         } else if (treeItem instanceof FileTreeItem) {
             allFileDownloads.push({
@@ -103,7 +131,8 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 localFilePath: join(destinationFolder, treeItem.fileName),
                 fromTo: 'FileLocal',
                 isDirectory: false,
-                treeItem,
+                resourceUri,
+                sasToken,
             });
         } else if (treeItem instanceof DirectoryTreeItem) {
             allFolderDownloads.push({
@@ -112,7 +141,8 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 localFilePath: join(destinationFolder, treeItem.directoryName),
                 fromTo: 'FileLocal',
                 isDirectory: true,
-                treeItem
+                resourceUri,
+                sasToken
             });
         } else if (treeItem instanceof FileShareTreeItem) {
             allFolderDownloads.push({
@@ -121,11 +151,16 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
                 localFilePath: join(destinationFolder, treeItem.shareName),
                 fromTo: 'FileLocal',
                 isDirectory: true,
-                treeItem
+                resourceUri,
+                sasToken
             });
         }
     }
 
+    return { allFolderDownloads, allFileDownloads };
+}
+
+async function checkForDuplicates(context: IActionContext, allFolderDownloads: IAzCopyDownload[], allFileDownloads: IAzCopyDownload[]): Promise<IAzCopyDownload[]> {
     let hasParent: boolean;
     const overwriteChoice: { choice: OverwriteChoice | undefined } = { choice: undefined };
     const foldersToDownload: IAzCopyDownload[] = [];
@@ -165,4 +200,29 @@ async function getAzCopyDownloads(context: IActionContext, destinationFolder: st
 
 async function checkCanDownload(context: IActionContext, destPath: string, overwriteChoice: { choice: OverwriteChoice | undefined }): Promise<boolean> {
     return await checkCanOverwrite(context, destPath, overwriteChoice, async () => await AzExtFsExtra.pathExists(destPath));
+}
+
+async function getDownloadFromSasUrl(sasUrl: string, destinationFolder: string):
+    Promise<{ allFolderDownloads: IAzCopyDownload[], allFileDownloads: IAzCopyDownload[] }> {
+    const allFolderDownloads: IAzCopyDownload[] = [];
+    const allFileDownloads: IAzCopyDownload[] = [];
+
+    const url = new URL(sasUrl);
+    const pathArgs = url.pathname.split('/');
+    pathArgs.shift();
+    const resourceName = pathArgs.shift();
+
+    const download = {
+        fromTo: url.origin.includes('blob.core') ? 'BlobLocal' : 'FileLocal' as FromToOption,
+        isDirectory: pathArgs.slice(-1)[0] === '',
+        remoteFileName: basename(url.pathname),
+        remoteFilePath: pathArgs.join('/'),
+        localFilePath: join(destinationFolder, basename(url.pathname)),
+        resourceUri: `${url.origin}/${resourceName}`,
+        sasToken: url.search.substring(1),
+    };
+
+    download.isDirectory ? allFolderDownloads.push(download) : allFileDownloads.push(download);
+
+    return { allFolderDownloads, allFileDownloads };
 }

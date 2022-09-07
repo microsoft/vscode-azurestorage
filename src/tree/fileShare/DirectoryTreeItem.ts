@@ -40,7 +40,7 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
     }
 
     public get remoteFilePath(): string {
-        return posix.join(this.parentPath, this.directoryName);
+        return posix.join(this.parentPath, this.directoryName, '/');
     }
 
     public get iconPath(): TreeItemIconPath {
