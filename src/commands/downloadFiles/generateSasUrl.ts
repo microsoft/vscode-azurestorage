@@ -10,7 +10,7 @@ import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { getResourceUri } from './getResourceUri';
 import { getSasToken } from './getSasToken';
 
-export async function generateSASUrl(_context: IActionContext, treeItem: IDownloadableTreeItem): Promise<string> {
+export async function generateSasUrl(_context: IActionContext, treeItem: IDownloadableTreeItem): Promise<string> {
     const resourceUri = getResourceUri(treeItem);
     const sasToken = getSasToken(treeItem.root);
 

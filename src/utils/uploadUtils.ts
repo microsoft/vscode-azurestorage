@@ -9,6 +9,8 @@ import { basename, dirname, posix } from 'path';
 import * as vscode from 'vscode';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
+import { getResourceUri } from '../commands/downloadFiles/getResourceUri';
+import { getSasToken } from '../commands/downloadFiles/getSasToken';
 import { NotificationProgress } from '../constants';
 import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
@@ -50,8 +52,12 @@ export async function uploadLocalFolder(
             destPath = '';
         }
     }
+
     const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, useWildCard);
-    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(destTreeItem, destPath);
+
+    const resourceUri = getResourceUri(destTreeItem);
+    const sasToken = getSasToken(destTreeItem.root);
+    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, destPath, true);
     const transferProgress: TransferProgress = new TransferProgress('files', messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
