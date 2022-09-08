@@ -12,6 +12,12 @@ import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSh
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorageQueue from '@azure/storage-queue';
 import { StorageAccountModel } from './StorageAccountModel';
+import { FileShareGroupItem } from './fileShare/FileShareGroupItem';
+import { BlobContainerGroupItem } from './blob/BlobContainerGroupItem';
+import { QueueGroupItem } from './queue/QueueGroupItem';
+import { TableGroupItem } from './table/TableGroupItem';
+import { WebsiteHostingStatus } from './StorageAccountTreeItem';
+import { createFileShareItemFactory } from './fileShare/FileShareItem';
 
 export class AttachedStorageAccountItem implements StorageAccountModel {
     public static baseContextValue: string = `${StorageAccountItem.contextValue}-attached`;
@@ -26,11 +32,38 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
     }
 
     getChildren(): vscode.ProviderResult<StorageAccountModel[]> {
-        return [];
+        const children: StorageAccountModel[] = [
+            new BlobContainerGroupItem(
+                () => this.root.createBlobServiceClient(),
+                () => this.getActualWebsiteHostingStatus(),
+                this.root,
+                'TODO: subscription ID'),
+            new QueueGroupItem(() => this.root.createQueueServiceClient())
+        ];
+
+        if (!this.root.isEmulated) {
+            const shareClientFactory = (shareName: string) => this.root.createShareServiceClient().getShareClient(shareName);
+            const fileShareItemFactory = createFileShareItemFactory(
+                shareClientFactory,
+                {
+                    id: this.root.storageAccountId,
+                    isEmulated: this.root.isEmulated,
+                    subscriptionId: 'TODO: What subscription ID'
+                });
+
+            children.push(
+                new FileShareGroupItem(
+                    fileShareItemFactory,
+                    () => this.root.createShareServiceClient()),
+                new TableGroupItem(() => this.root.createTableServiceClient())
+            );
+        }
+
+        return children;
     }
 
     getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
-        const treeItem = new vscode.TreeItem(this.root.isEmulated ? localize('localEmulator', 'Local Emulator') : this.storageAccountName);
+        const treeItem = new vscode.TreeItem(this.root.isEmulated ? localize('localEmulator', 'Local Emulator') : this.storageAccountName, vscode.TreeItemCollapsibleState.Collapsed);
 
         treeItem.contextValue = this.root.isEmulated ? AttachedStorageAccountItem.emulatedContextValue : AttachedStorageAccountItem.baseContextValue;
         treeItem.iconPath = {
@@ -39,6 +72,20 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
         };
 
         return treeItem;
+    }
+
+    private async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
+        // Does NOT update treeItem's _webHostingEnabled.
+        const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+        const properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
+        const staticWebsite: azureStorageBlob.StaticWebsite | undefined = properties.staticWebsite;
+
+        return {
+            capable: !!staticWebsite,
+            enabled: !!staticWebsite && staticWebsite.enabled,
+            indexDocument: staticWebsite && staticWebsite.indexDocument,
+            errorDocument404Path: staticWebsite && staticWebsite.errorDocument404Path
+        };
     }
 }
 

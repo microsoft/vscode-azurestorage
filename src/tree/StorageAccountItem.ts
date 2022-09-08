@@ -16,6 +16,7 @@ import { StorageAccountModel } from './StorageAccountModel';
 import { TableGroupItem } from './table/TableGroupItem';
 import { createSubscriptionContext } from "../utils/v2/credentialsUtils";
 import { createFileShareItemFactory } from "./fileShare/FileShareItem";
+import { IStorageRoot } from "./IStorageRoot";
 
 export type WebSiteHostingStatus = {
     capable: boolean;
@@ -40,6 +41,7 @@ export class StorageAccountItem implements StorageAccountModel {
                 const sa: StorageAccount = await storageManagementClient.storageAccounts.getProperties(getResourceGroupFromId(nonNullProp(this.resource, 'id')), nonNullProp(this.resource, 'name'));
                 const wrapper = new StorageAccountWrapper(sa);
                 const key = await this.getKey(wrapper, storageManagementClient);
+                const storageRoot = this.createRoot(wrapper, key);
                 const primaryEndpoints = wrapper.primaryEndpoints;
                 const groupTreeItems: StorageAccountModel[] = [];
 
@@ -47,7 +49,7 @@ export class StorageAccountItem implements StorageAccountModel {
                     const blobServiceClientFactory = () => this.createBlobServiceClient(wrapper, key);
                     const getWebSiteHostingStatus = () => this.getActualWebsiteHostingStatus(blobServiceClientFactory());
 
-                    groupTreeItems.push(new BlobContainerGroupItem(blobServiceClientFactory, getWebSiteHostingStatus, this.resource.id, this.resource.subscription.subscriptionId));
+                    groupTreeItems.push(new BlobContainerGroupItem(blobServiceClientFactory, getWebSiteHostingStatus, storageRoot, this.resource.subscription.subscriptionId));
                 }
 
                 if (primaryEndpoints.file) {
@@ -134,6 +136,37 @@ export class StorageAccountItem implements StorageAccountModel {
         }
 
         return result;
+    }
+
+    private createRoot(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): IStorageRoot {
+        return {
+            storageAccountName: storageAccount.name,
+            storageAccountId: storageAccount.id,
+            isEmulated: false,
+            primaryEndpoints: storageAccount.primaryEndpoints,
+            generateSasToken: (accountSASSignatureValues: azureStorageBlob.AccountSASSignatureValues) => {
+                return azureStorageBlob.generateAccountSASQueryParameters(
+                    accountSASSignatureValues,
+                    new azureStorageBlob.StorageSharedKeyCredential(storageAccount.name, key.value)
+                ).toString();
+            },
+            createBlobServiceClient: () => {
+                const credential = new azureStorageBlob.StorageSharedKeyCredential(storageAccount.name, key.value);
+                return new azureStorageBlob.BlobServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'blob'), credential);
+            },
+            createShareServiceClient: () => {
+                const credential = new azureStorageShare.StorageSharedKeyCredential(storageAccount.name, key.value);
+                return new azureStorageShare.ShareServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'file'), credential);
+            },
+            createQueueServiceClient: () => {
+                const credential = new azureStorageQueue.StorageSharedKeyCredential(storageAccount.name, key.value);
+                return new azureStorageQueue.QueueServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'queue'), credential);
+            },
+            createTableServiceClient: () => {
+                const credential = new azureDataTables.AzureNamedKeyCredential(storageAccount.name, key.value);
+                return new azureDataTables.TableServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'table'), credential);
+            }
+        };
     }
 
     private createBlobServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageBlob.BlobServiceClient {

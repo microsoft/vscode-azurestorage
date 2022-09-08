@@ -5,12 +5,13 @@ import { getResourcesPath, maxPageSize } from '../../constants';
 import { StorageAccountModel } from "../StorageAccountModel";
 import { BlobContainerItem } from "./BlobContainerItem";
 import { WebSiteHostingStatus } from "../StorageAccountItem";
+import { IStorageRoot } from "../IStorageRoot";
 
 export class BlobContainerGroupItem implements StorageAccountModel {
     constructor(
         private readonly blobServiceClientFactory: () => azureStorageBlob.BlobServiceClient,
         private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>,
-        private readonly storageAccountId: string,
+        private readonly storageRoot: IStorageRoot,
         private readonly subscriptionId: string) {
     }
 
@@ -21,12 +22,12 @@ export class BlobContainerGroupItem implements StorageAccountModel {
             container =>
                 new BlobContainerItem(
                     container,
-                    { storageAccountId: this.storageAccountId, subscriptionId: this.subscriptionId },
+                    { storageAccountId: this.storageRoot.storageAccountId, subscriptionId: this.subscriptionId },
                     () => {
                         const blobServiceClient = this.blobServiceClientFactory();
                         return blobServiceClient.getContainerClient(container.name);
                     },
-                    /* isEmulated: TODO: fix */ false,
+                    this.storageRoot.isEmulated,
                     this.getWebSiteHostingStatus));
     }
 
