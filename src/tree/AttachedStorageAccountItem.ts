@@ -1,19 +1,19 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../../constants';
-import { StorageWorkspaceModel } from './StorageWorkspaceModel';
-import { localize } from '../../utils/localize';
-import { StorageAccountItem } from '../StorageAccountItem';
-import { IStorageRoot } from '../IStorageRoot';
-import { AttachedAccountRoot } from '../AttachedStorageAccountsTreeItem';
-import { getPropertyFromConnectionString } from '../../utils/getPropertyFromConnectionString';
+import { emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
+import { localize } from '../utils/localize';
+import { StorageAccountItem } from './StorageAccountItem';
+import { IStorageRoot } from './IStorageRoot';
+import { AttachedAccountRoot } from './AttachedStorageAccountsTreeItem';
+import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
 import * as azureDataTables from '@azure/data-tables';
 import * as azureStorageBlob from '@azure/storage-blob';
 import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorageQueue from '@azure/storage-queue';
+import { StorageAccountModel } from './StorageAccountModel';
 
-export class AttachedStorageAccountItem implements StorageWorkspaceModel {
+export class AttachedStorageAccountItem implements StorageAccountModel {
     public static baseContextValue: string = `${StorageAccountItem.contextValue}-attached`;
     public static emulatedContextValue: string = `${AttachedStorageAccountItem.baseContextValue}-emulated`;
 
@@ -25,7 +25,7 @@ export class AttachedStorageAccountItem implements StorageWorkspaceModel {
         this.root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
     }
 
-    getChildren(): vscode.ProviderResult<StorageWorkspaceModel[]> {
+    getChildren(): vscode.ProviderResult<StorageAccountModel[]> {
         return [];
     }
 

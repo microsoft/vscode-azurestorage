@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { BranchDataProvider, WorkspaceResource } from '../../vscode-azureresourcegroups.api.v2';
-import { AttachedStorageAccountsItem } from './AttachedStorageAccountsItem';
-import { StorageWorkspaceModel } from './StorageWorkspaceModel';
+import { StorageAccountModel } from '../StorageAccountModel';
+import { AttachedStorageAccountsItem } from '../AttachedStorageAccountsItem';
 
-export class StorageWorkspaceBranchDataProvider extends vscode.Disposable implements BranchDataProvider<WorkspaceResource, StorageWorkspaceModel> {
-    private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<void | StorageWorkspaceModel | null | undefined>();
+export class StorageWorkspaceBranchDataProvider extends vscode.Disposable implements BranchDataProvider<WorkspaceResource, StorageAccountModel> {
+    private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<void | StorageAccountModel | null | undefined>();
 
     constructor() {
         super(
@@ -15,15 +15,15 @@ export class StorageWorkspaceBranchDataProvider extends vscode.Disposable implem
 
     onDidChangeTreeData = this.onDidChangeTreeDataEmitter.event;
 
-    getChildren(element: StorageWorkspaceModel): vscode.ProviderResult<StorageWorkspaceModel[]> {
+    getChildren(element: StorageAccountModel): vscode.ProviderResult<StorageAccountModel[]> {
         return element.getChildren();
     }
 
-    getTreeItem(element: StorageWorkspaceModel): vscode.TreeItem | Thenable<vscode.TreeItem> {
+    getTreeItem(element: StorageAccountModel): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element.getTreeItem();
     }
 
-    getResourceItem(_element: WorkspaceResource): StorageWorkspaceModel | Thenable<StorageWorkspaceModel> {
+    getResourceItem(_element: WorkspaceResource): StorageAccountModel | Thenable<StorageAccountModel> {
         return new AttachedStorageAccountsItem();
     }
 }

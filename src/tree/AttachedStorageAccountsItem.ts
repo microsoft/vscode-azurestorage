@@ -1,17 +1,17 @@
 import * as vscode from 'vscode';
-import { StorageWorkspaceModel } from './StorageWorkspaceModel';
-import { localize } from '../../utils/localize';
+import { localize } from '../utils/localize';
 import { AttachedStorageAccountItem } from './AttachedStorageAccountItem';
-import { KeyTar, tryGetKeyTar } from '../../utils/keytar';
-import { getPropertyFromConnectionString } from '../../utils/getPropertyFromConnectionString';
-import { emulatorAccountName, emulatorConnectionString } from '../../constants';
-import { ext } from '../../extensionVariables';
+import { KeyTar, tryGetKeyTar } from '../utils/keytar';
+import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
+import { emulatorAccountName, emulatorConnectionString } from '../constants';
+import { ext } from '../extensionVariables';
+import { StorageAccountModel } from './StorageAccountModel';
 
 interface IPersistedAccount {
     fullId: string;
 }
 
-export class AttachedStorageAccountsItem implements StorageWorkspaceModel {
+export class AttachedStorageAccountsItem implements StorageAccountModel {
     private readonly _serviceName: string = "ms-azuretools.vscode-azurestorage.connectionStrings";
     private readonly _keytar: KeyTar | undefined;
 
@@ -19,7 +19,7 @@ export class AttachedStorageAccountsItem implements StorageWorkspaceModel {
         this._keytar = tryGetKeyTar();
     }
 
-    getChildren(): vscode.ProviderResult<StorageWorkspaceModel[]> {
+    getChildren(): vscode.ProviderResult<StorageAccountModel[]> {
         return this.getAttachedAccounts();
     }
 
