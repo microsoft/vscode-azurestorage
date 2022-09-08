@@ -46,6 +46,6 @@ export class SasUrlPromptStep extends AzureWizardPromptStep<IActionContext> {
             return localize('enterValidSasUrl', 'The URL "{0}" is not valid. Enter a valid URL', value);
         }
 
-        return;
+        return undefined;
     }
 }
