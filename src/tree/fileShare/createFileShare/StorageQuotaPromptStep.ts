@@ -26,7 +26,7 @@ export class StorageQuotaPromptStep extends AzureWizardPromptStep<IFileShareWiza
     private validateQuota(input: string): string | undefined {
         const value = Number(input);
         if (isNaN(value)) {
-            return localize('quotaNum', "Input must be a number");
+            return localize('quotaNum', 'Value must be a number');
         } else if (value < minQuotaGB || value > maxQuotaGB) {
             return localize('quotaBetween', 'Value must be between {0} and {1}', minQuotaGB, maxQuotaGB);
         }
