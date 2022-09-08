@@ -705,7 +705,7 @@
                     "when": "never"
                 },
                 {
-                    "command": "azureStorage.generateSASUrl",
+                    "command": "azureStorage.generateSasUrl",
                     "when": "never"
                 },
                 {

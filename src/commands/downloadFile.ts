@@ -27,7 +27,7 @@ import { azCopyTransfer } from "./azCopy/azCopyTransfer";
 import { getResourceUri } from "./downloadFiles/getResourceUri";
 import { getSasToken } from "./downloadFiles/getSasToken";
 import { ISasDownloadContext } from "./downloadFiles/ISasDownloadContext";
-import { SasUrlPromptStep } from "./downloadFiles/SASUrlPromptStep";
+import { SasUrlPromptStep } from "./downloadFiles/SasUrlPromptStep";
 
 interface IAzCopyDownload {
     remoteFileName: string;
