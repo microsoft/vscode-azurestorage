@@ -25,7 +25,7 @@ export class FileShareNameStep extends AzureWizardPromptStep<IFileShareWizardCon
         if (!name) {
             return localize('shareNameEmpty', "Share name cannot be empty");
         }
-        if (name.indexOf(" ") >= 0) {
+        if (/\s/.test(name)) {
             return localize('shareNameSpaces', "Share name cannot contain spaces");
         }
         if (name.length < validLength.min || name.length > validLength.max) {
