@@ -63,6 +63,9 @@ export async function download(context: IActionContext, targets: IDownloadableTr
             const units: 'files' | 'bytes' = azCopyDownload.isDirectory ? 'files' : 'bytes';
             const transferProgress: TransferProgress = new TransferProgress(units, azCopyDownload.remoteFileName);
             await azCopyTransfer(context, azCopyDownload.fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
+            if (azCopyDownload.isDirectory) {
+                await AzExtFsExtra.ensureDir(azCopyDownload.localFilePath);
+            }
         }
     });
 
