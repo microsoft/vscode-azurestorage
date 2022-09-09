@@ -10,6 +10,7 @@
 - Support for emulated tables [#1105](https://github.com/microsoft/vscode-azurestorage/pull/1105)
 - Uploaded files to blob containers automatically log file URL's to output [#1076](https://github.com/microsoft/vscode-azurestorage/pull/1076)
 - Activity log support when deleting a folder in a blob container [#1123](https://github.com/microsoft/vscode-azurestorage/pull/1123)
+- Download from Sas url command to Local Workspace view [#1151](https://github.com/microsoft/vscode-azurestorage/pull/1151)
 
 ### Changed
 - "Open in File Explorer" command changed to "Open in Explorer" [#1110](https://github.com/microsoft/vscode-azurestorage/pull/1110)
