@@ -4,13 +4,43 @@ import * as path from 'path';
 import { getResourcesPath, maxPageSize } from '../../constants';
 import { StorageAccountModel } from "../StorageAccountModel";
 import { QueueItem } from './QueueItem';
+import { IStorageRoot } from '../IStorageRoot';
+import { localize } from "../../utils/localize";
+import { GenericItem } from '../../utils/v2/treeutils';
+import { parseError } from '@microsoft/vscode-azext-utils';
 
 export class QueueGroupItem implements StorageAccountModel {
-    constructor(private readonly queueServiceClientFactory: () => azureStorageQueue.QueueServiceClient) {
+    constructor(
+        private readonly queueServiceClientFactory: () => azureStorageQueue.QueueServiceClient,
+        private readonly root: IStorageRoot) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
-        const queues = await this.listAllQueues();
+        let queues: azureStorageQueue.QueueItem[];
+
+        try {
+            queues = await this.listAllQueues();
+        } catch (error) {
+            const errorType: string = parseError(error).errorType;
+            if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
+                return [
+                    // TODO: Exclude from tree item picker.
+                    new GenericItem(
+                        () => {
+                            const treeItem = new vscode.TreeItem('Start Queue Emulator');
+
+                            treeItem.contextValue = 'startQueueEmulator';
+                            treeItem.command = { command: 'azureStorage.startQueueEmulator', title: '' };
+
+                            return treeItem;
+                        })
+                ];
+            } else if (errorType === 'ENOTFOUND') {
+                throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'));
+            } else {
+                throw error;
+            }
+        }
 
         return queues.map(queue => new QueueItem(queue));
     }

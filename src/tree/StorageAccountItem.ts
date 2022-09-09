@@ -71,7 +71,7 @@ export class StorageAccountItem implements StorageAccountModel {
                 if (primaryEndpoints.queue) {
                     const queueServiceClientFactory = () => this.createQueueServiceClient(wrapper, key);
 
-                    groupTreeItems.push(new QueueGroupItem(queueServiceClientFactory));
+                    groupTreeItems.push(new QueueGroupItem(queueServiceClientFactory, storageRoot));
                 }
 
                 if (primaryEndpoints.table) {

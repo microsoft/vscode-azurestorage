@@ -38,7 +38,7 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
                 () => this.getActualWebsiteHostingStatus(),
                 this.root,
                 'TODO: subscription ID'),
-            new QueueGroupItem(() => this.root.createQueueServiceClient())
+            new QueueGroupItem(() => this.root.createQueueServiceClient(), this.root)
         ];
 
         if (!this.root.isEmulated) {
