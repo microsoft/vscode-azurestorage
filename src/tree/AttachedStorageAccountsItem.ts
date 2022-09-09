@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { localize } from '../utils/localize';
-import { AttachedStorageAccountItem } from './AttachedStorageAccountItem';
+import { AttachedStorageAccountItem, AttachedStorageAccountItemFactory } from './AttachedStorageAccountItem';
 import { KeyTar, tryGetKeyTar } from '../utils/keytar';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
 import { emulatorAccountName, emulatorConnectionString } from '../constants';
@@ -15,7 +15,7 @@ export class AttachedStorageAccountsItem implements StorageAccountModel {
     private readonly _serviceName: string = "ms-azuretools.vscode-azurestorage.connectionStrings";
     private readonly _keytar: KeyTar | undefined;
 
-    constructor() {
+    constructor(private readonly attachedStorageAccountItemFactory: AttachedStorageAccountItemFactory) {
         this._keytar = tryGetKeyTar();
     }
 
@@ -52,16 +52,12 @@ export class AttachedStorageAccountsItem implements StorageAccountModel {
                 const accountName: string | undefined = getPropertyFromConnectionString(connectionString, 'AccountName');
 
                 if (accountName) {
-                    persistedAccounts.push(this.createTreeItem(connectionString, accountName));
+                    persistedAccounts.push(this.attachedStorageAccountItemFactory(connectionString, accountName));
                 }
             }));
         }
 
-        persistedAccounts.push(this.createTreeItem(emulatorConnectionString, emulatorAccountName));
+        persistedAccounts.push(this.attachedStorageAccountItemFactory(emulatorConnectionString, emulatorAccountName));
         return persistedAccounts;
-    }
-
-    private createTreeItem(connectionString: string, name: string): AttachedStorageAccountItem {
-        return new AttachedStorageAccountItem(connectionString, name);
     }
 }

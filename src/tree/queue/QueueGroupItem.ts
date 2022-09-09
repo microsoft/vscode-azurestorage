@@ -11,8 +11,8 @@ import { parseError } from '@microsoft/vscode-azext-utils';
 
 export class QueueGroupItem implements StorageAccountModel {
     constructor(
-        private readonly queueServiceClientFactory: () => azureStorageQueue.QueueServiceClient,
-        private readonly root: IStorageRoot) {
+        private readonly refresh: (model: StorageAccountModel) => void,
+        private readonly storageRoot: IStorageRoot) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
@@ -22,7 +22,7 @@ export class QueueGroupItem implements StorageAccountModel {
             queues = await this.listAllQueues();
         } catch (error) {
             const errorType: string = parseError(error).errorType;
-            if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
+            if (this.storageRoot.isEmulated && errorType === 'ECONNREFUSED') {
                 return [
                     // TODO: Exclude from tree item picker.
                     new GenericItem(
@@ -30,7 +30,15 @@ export class QueueGroupItem implements StorageAccountModel {
                             const treeItem = new vscode.TreeItem('Start Queue Emulator');
 
                             treeItem.contextValue = 'startQueueEmulator';
-                            treeItem.command = { command: 'azureStorage.startQueueEmulator', title: '' };
+                            treeItem.command = {
+                                arguments: [
+                                    () => {
+                                        this.refresh(this);
+                                    }
+                                ],
+                                command: 'azureStorage.startQueueEmulator',
+                                title: ''
+                            };
 
                             return treeItem;
                         })
@@ -74,10 +82,16 @@ export class QueueGroupItem implements StorageAccountModel {
     }
 
     private async listQueues(continuationToken?: string): Promise<azureStorageQueue.ListQueuesSegmentResponse> {
-        const queueServiceClient = this.queueServiceClientFactory();
+        const queueServiceClient = this.storageRoot.createQueueServiceClient();
         const response: AsyncIterableIterator<azureStorageQueue.ServiceListQueuesSegmentResponse> = queueServiceClient.listQueues().byPage({ continuationToken, maxPageSize });
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (await response.next()).value;
     }
+}
+
+export type QueueGroupItemFactory = (storageRoot: IStorageRoot) => QueueGroupItem;
+
+export function createQueueGroupItemFactory(refresh: (model: StorageAccountModel) => void): QueueGroupItemFactory {
+    return storageRoot => new QueueGroupItem(refresh, storageRoot);
 }

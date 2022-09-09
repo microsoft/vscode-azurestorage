@@ -15,6 +15,7 @@ import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeIte
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from '../IStorageTreeItem';
 import { QueueTreeItem } from './QueueTreeItem';
+import { ext } from "../../extensionVariables";
 
 export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
@@ -48,12 +49,20 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         } catch (error) {
             const errorType: string = parseError(error).errorType;
             if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
-                return [new GenericTreeItem(this, {
+                const item = new GenericTreeItem(this, {
                     contextValue: 'startQueueEmulator',
                     label: 'Start Queue Emulator',
                     commandId: 'azureStorage.startQueueEmulator',
                     includeInTreeItemPicker: false
-                })];
+                });
+
+                item.commandArgs = [
+                    context => {
+                        return ext.rgApi.workspaceResourceTree.refresh(context, ext.attachedStorageAccountsTreeItem);
+                    }
+                ];
+
+                return [item];
             } else if (errorType === 'ENOTFOUND') {
                 throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'));
             } else {

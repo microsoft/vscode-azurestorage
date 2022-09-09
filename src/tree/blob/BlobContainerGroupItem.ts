@@ -33,7 +33,14 @@ export class BlobContainerGroupItem implements StorageAccountModel {
                             const treeItem = new vscode.TreeItem('Start Blob Emulator');
 
                             treeItem.contextValue = 'startBlobEmulator';
-                            treeItem.command = { command: 'azureStorage.startBlobEmulator', title: '' };
+                            treeItem.command = {
+                                arguments: [
+                                    () => {
+                                        // TODO: Refresh tree item.
+                                    }
+                                ],
+                                command: 'azureStorage.startBlobEmulator',
+                                title: '' };
 
                             return treeItem;
                         })

@@ -9,6 +9,7 @@ import { ResolvedAppResourceTreeItem } from "@microsoft/vscode-azext-utils/hosta
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { getResourcesPath, maxPageSize } from "../../constants";
+import { ext } from "../../extensionVariables";
 import { ResolvedStorageAccount } from "../../StorageAccountResolver";
 import { createBlobContainerClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
@@ -50,12 +51,20 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         } catch (error) {
             const errorType: string = parseError(error).errorType;
             if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
-                return [new GenericTreeItem(this, {
+                const item = new GenericTreeItem(this, {
                     contextValue: 'startBlobEmulator',
                     label: 'Start Blob Emulator',
                     commandId: 'azureStorage.startBlobEmulator',
                     includeInTreeItemPicker: false
-                })];
+                });
+
+                item.commandArgs = [
+                    context => {
+                        return ext.rgApi.workspaceResourceTree.refresh(context, ext.attachedStorageAccountsTreeItem);
+                    }
+                ];
+
+                return [item];
             } else if (errorType === 'ENOTFOUND') {
                 throw new Error(localize('storageAccountDoesNotSupportBlobs', 'This storage account does not support blobs.'));
             } else {

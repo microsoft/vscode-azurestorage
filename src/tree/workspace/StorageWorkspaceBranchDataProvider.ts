@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { BranchDataProvider, WorkspaceResource } from '../../vscode-azureresourcegroups.api.v2';
 import { StorageAccountModel } from '../StorageAccountModel';
 import { AttachedStorageAccountsItem } from '../AttachedStorageAccountsItem';
+import { createAttachedStorageAccountItemFactory } from '../AttachedStorageAccountItem';
 
 export class StorageWorkspaceBranchDataProvider extends vscode.Disposable implements BranchDataProvider<WorkspaceResource, StorageAccountModel> {
     private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<void | StorageAccountModel | null | undefined>();
@@ -24,6 +25,6 @@ export class StorageWorkspaceBranchDataProvider extends vscode.Disposable implem
     }
 
     getResourceItem(_element: WorkspaceResource): StorageAccountModel | Thenable<StorageAccountModel> {
-        return new AttachedStorageAccountsItem();
+        return new AttachedStorageAccountsItem(createAttachedStorageAccountItemFactory(model => this.onDidChangeTreeDataEmitter.fire(model)));
     }
 }

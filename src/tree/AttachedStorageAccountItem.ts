@@ -14,7 +14,7 @@ import * as azureStorageQueue from '@azure/storage-queue';
 import { StorageAccountModel } from './StorageAccountModel';
 import { FileShareGroupItem } from './fileShare/FileShareGroupItem';
 import { BlobContainerGroupItem } from './blob/BlobContainerGroupItem';
-import { QueueGroupItem } from './queue/QueueGroupItem';
+import { createQueueGroupItemFactory, QueueGroupItemFactory } from './queue/QueueGroupItem';
 import { TableGroupItem } from './table/TableGroupItem';
 import { WebsiteHostingStatus } from './StorageAccountTreeItem';
 import { createFileShareItemFactory } from './fileShare/FileShareItem';
@@ -27,6 +27,7 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
 
     constructor(
         public readonly connectionString: string,
+        private readonly queueGroupItemFactory: QueueGroupItemFactory,
         private readonly storageAccountName: string) {
         this.root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
     }
@@ -38,7 +39,7 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
                 () => this.getActualWebsiteHostingStatus(),
                 this.root,
                 'TODO: subscription ID'),
-            new QueueGroupItem(() => this.root.createQueueServiceClient(), this.root)
+            this.queueGroupItemFactory(this.root)
         ];
 
         if (!this.root.isEmulated) {
@@ -133,4 +134,10 @@ class AttachedStorageRoot extends AttachedAccountRoot {
     public createTableServiceClient(): azureDataTables.TableServiceClient {
         return azureDataTables.TableServiceClient.fromConnectionString(this._connectionString, { retryOptions: { maxRetries: this._serviceClientPipelineOptions.retryOptions.maxTries } });
     }
+}
+
+export type AttachedStorageAccountItemFactory = (connectionString: string, storageAccountName: string) => AttachedStorageAccountItem;
+
+export function createAttachedStorageAccountItemFactory(refresh: (model: StorageAccountModel) => void): AttachedStorageAccountItemFactory {
+    return (connectionString: string, storageAccountName: string) => new AttachedStorageAccountItem(connectionString, createQueueGroupItemFactory(refresh), storageAccountName);
 }

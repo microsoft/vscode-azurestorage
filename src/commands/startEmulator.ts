@@ -10,11 +10,11 @@ import { ext } from "../extensionVariables";
 import { isAzuriteCliInstalled, isAzuriteExtensionInstalled, warnAzuriteNotInstalled } from '../utils/azuriteUtils';
 import { cpUtils } from '../utils/cpUtils';
 
-export async function startEmulator(context: IActionContext, emulatorType: EmulatorType): Promise<void> {
+export async function startEmulator(context: IActionContext, emulatorType: EmulatorType, onDidStartEmulator: (context: IActionContext) => Promise<void>): Promise<void> {
     if (isAzuriteExtensionInstalled()) {
         // Use the Azurite extension
         await vscode.commands.executeCommand(`azurite.start_${emulatorType}`);
-        await ext.rgApi.workspaceResourceTree.refresh(context, ext.attachedStorageAccountsTreeItem);
+        await onDidStartEmulator(context);
     } else if (await isAzuriteCliInstalled()) {
         // Use the Azurite CLI
 
@@ -26,7 +26,7 @@ export async function startEmulator(context: IActionContext, emulatorType: Emula
             setTimeout(resolve, emulatorTimeoutMS);
         });
 
-        await ext.rgApi.workspaceResourceTree.refresh(context, ext.attachedStorageAccountsTreeItem);
+        await onDidStartEmulator(context);
     } else {
         warnAzuriteNotInstalled(context);
     }
