@@ -11,8 +11,8 @@ import { parseError } from '@microsoft/vscode-azext-utils';
 
 export class QueueGroupItem implements StorageAccountModel {
     constructor(
-        private readonly refresh: (model: StorageAccountModel) => void,
-        private readonly storageRoot: IStorageRoot) {
+        private readonly storageRoot: IStorageRoot,
+        private readonly refresh?: (model: StorageAccountModel) => void) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
@@ -33,7 +33,7 @@ export class QueueGroupItem implements StorageAccountModel {
                             treeItem.command = {
                                 arguments: [
                                     () => {
-                                        this.refresh(this);
+                                        this.refresh?.(this);
                                     }
                                 ],
                                 command: 'azureStorage.startQueueEmulator',
@@ -93,5 +93,5 @@ export class QueueGroupItem implements StorageAccountModel {
 export type QueueGroupItemFactory = (storageRoot: IStorageRoot) => QueueGroupItem;
 
 export function createQueueGroupItemFactory(refresh: (model: StorageAccountModel) => void): QueueGroupItemFactory {
-    return storageRoot => new QueueGroupItem(refresh, storageRoot);
+    return storageRoot => new QueueGroupItem(storageRoot, refresh);
 }

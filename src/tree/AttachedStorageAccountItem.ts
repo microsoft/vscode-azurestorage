@@ -13,7 +13,7 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorageQueue from '@azure/storage-queue';
 import { StorageAccountModel } from './StorageAccountModel';
 import { FileShareGroupItem } from './fileShare/FileShareGroupItem';
-import { BlobContainerGroupItem } from './blob/BlobContainerGroupItem';
+import { BlobContainerGroupItemFactory, createBlobContainerItemFactory } from './blob/BlobContainerGroupItem';
 import { createQueueGroupItemFactory, QueueGroupItemFactory } from './queue/QueueGroupItem';
 import { TableGroupItem } from './table/TableGroupItem';
 import { WebsiteHostingStatus } from './StorageAccountTreeItem';
@@ -26,6 +26,7 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
     private readonly root: IStorageRoot;
 
     constructor(
+        private readonly blobContainerGroupItemFactory: BlobContainerGroupItemFactory,
         public readonly connectionString: string,
         private readonly queueGroupItemFactory: QueueGroupItemFactory,
         private readonly storageAccountName: string) {
@@ -34,8 +35,7 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
 
     getChildren(): vscode.ProviderResult<StorageAccountModel[]> {
         const children: StorageAccountModel[] = [
-            new BlobContainerGroupItem(
-                () => this.root.createBlobServiceClient(),
+            this.blobContainerGroupItemFactory(
                 () => this.getActualWebsiteHostingStatus(),
                 this.root,
                 'TODO: subscription ID'),
@@ -139,5 +139,5 @@ class AttachedStorageRoot extends AttachedAccountRoot {
 export type AttachedStorageAccountItemFactory = (connectionString: string, storageAccountName: string) => AttachedStorageAccountItem;
 
 export function createAttachedStorageAccountItemFactory(refresh: (model: StorageAccountModel) => void): AttachedStorageAccountItemFactory {
-    return (connectionString: string, storageAccountName: string) => new AttachedStorageAccountItem(connectionString, createQueueGroupItemFactory(refresh), storageAccountName);
+    return (connectionString: string, storageAccountName: string) => new AttachedStorageAccountItem(createBlobContainerItemFactory(refresh), connectionString, createQueueGroupItemFactory(refresh), storageAccountName);
 }

@@ -46,10 +46,9 @@ export class StorageAccountItem implements StorageAccountModel {
                 const groupTreeItems: StorageAccountModel[] = [];
 
                 if (primaryEndpoints.blob) {
-                    const blobServiceClientFactory = () => this.createBlobServiceClient(wrapper, key);
-                    const getWebSiteHostingStatus = () => this.getActualWebsiteHostingStatus(blobServiceClientFactory());
+                    const getWebSiteHostingStatus = () => this.getActualWebsiteHostingStatus(storageRoot.createBlobServiceClient());
 
-                    groupTreeItems.push(new BlobContainerGroupItem(blobServiceClientFactory, getWebSiteHostingStatus, storageRoot, this.resource.subscription.subscriptionId));
+                    groupTreeItems.push(new BlobContainerGroupItem(getWebSiteHostingStatus, storageRoot, this.resource.subscription.subscriptionId));
                 }
 
                 if (primaryEndpoints.file) {
@@ -69,9 +68,7 @@ export class StorageAccountItem implements StorageAccountModel {
                 }
 
                 if (primaryEndpoints.queue) {
-                    const queueServiceClientFactory = () => this.createQueueServiceClient(wrapper, key);
-
-                    groupTreeItems.push(new QueueGroupItem(queueServiceClientFactory, storageRoot));
+                    groupTreeItems.push(new QueueGroupItem(storageRoot));
                 }
 
                 if (primaryEndpoints.table) {
@@ -169,19 +166,9 @@ export class StorageAccountItem implements StorageAccountModel {
         };
     }
 
-    private createBlobServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageBlob.BlobServiceClient {
-        const credential = new azureStorageBlob.StorageSharedKeyCredential(storageAccount.name, key.value);
-        return new azureStorageBlob.BlobServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'blob'), credential);
-    }
-
     private createShareServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageShare.ShareServiceClient {
         const credential = new azureStorageShare.StorageSharedKeyCredential(storageAccount.name, key.value);
         return new azureStorageShare.ShareServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'file'), credential);
-    }
-
-    private createQueueServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageQueue.QueueServiceClient {
-        const credential = new azureStorageQueue.StorageSharedKeyCredential(storageAccount.name, key.value);
-        return new azureStorageQueue.QueueServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'queue'), credential);
     }
 
     private createTableServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureDataTables.TableServiceClient {

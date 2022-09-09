@@ -12,10 +12,10 @@ import { localize } from "../../utils/localize";
 
 export class BlobContainerGroupItem implements StorageAccountModel {
     constructor(
-        private readonly blobServiceClientFactory: () => azureStorageBlob.BlobServiceClient,
         private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>,
         private readonly storageRoot: IStorageRoot,
-        private readonly subscriptionId: string) {
+        private readonly subscriptionId: string,
+        private readonly refresh?: (model: StorageAccountModel) => void) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
@@ -36,7 +36,7 @@ export class BlobContainerGroupItem implements StorageAccountModel {
                             treeItem.command = {
                                 arguments: [
                                     () => {
-                                        // TODO: Refresh tree item.
+                                        this.refresh?.(this);
                                     }
                                 ],
                                 command: 'azureStorage.startBlobEmulator',
@@ -58,7 +58,7 @@ export class BlobContainerGroupItem implements StorageAccountModel {
                     container,
                     { storageAccountId: this.storageRoot.storageAccountId, subscriptionId: this.subscriptionId },
                     () => {
-                        const blobServiceClient = this.blobServiceClientFactory();
+                        const blobServiceClient = this.storageRoot.createBlobServiceClient();
                         return blobServiceClient.getContainerClient(container.name);
                     },
                     this.storageRoot.isEmulated,
@@ -94,10 +94,16 @@ export class BlobContainerGroupItem implements StorageAccountModel {
     }
 
     async listContainers(continuationToken?: string): Promise<azureStorageBlob.ListContainersSegmentResponse> {
-        const blobServiceClient: azureStorageBlob.BlobServiceClient = this.blobServiceClientFactory();
+        const blobServiceClient: azureStorageBlob.BlobServiceClient = this.storageRoot.createBlobServiceClient();
         const response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize });
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (await response.next()).value;
     }
+}
+
+export type BlobContainerGroupItemFactory = (getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>, storageRoot: IStorageRoot, subscriptionId: string) => BlobContainerGroupItem;
+
+export function createBlobContainerItemFactory(refresh: (model: StorageAccountModel) => void): BlobContainerGroupItemFactory {
+    return (getWebSiteHostingStatus, storageRoot, subscriptionId) => new BlobContainerGroupItem(getWebSiteHostingStatus, storageRoot, subscriptionId, refresh);
 }
