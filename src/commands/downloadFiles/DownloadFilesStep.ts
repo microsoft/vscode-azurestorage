@@ -43,6 +43,9 @@ export class DownloadFilesStep extends AzureWizardExecuteStep<IDownloadWizardCon
             const units: 'files' | 'bytes' = azCopyDownload.isDirectory ? 'files' : 'bytes';
             const transferProgress: TransferProgress = new TransferProgress(units, azCopyDownload.remoteFileName);
             await azCopyTransfer(context, azCopyDownload.fromTo, src, dst, transferProgress, progress, this.cancellationToken);
+            if (azCopyDownload.isDirectory) {
+                await AzExtFsExtra.ensureDir(azCopyDownload.localFilePath);
+            }
         }
 
         const downloaded: string = localize('successfullyDownloaded', 'Successfully downloaded to "{0}".', context.destinationFolder);
