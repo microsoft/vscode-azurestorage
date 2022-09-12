@@ -57,7 +57,7 @@ export async function uploadLocalFolder(
 
     const resourceUri = getResourceUri(destTreeItem);
     const sasToken = getSasToken(destTreeItem.root);
-    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, destPath, true);
+    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, destPath, false);
     const transferProgress: TransferProgress = new TransferProgress('files', messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
