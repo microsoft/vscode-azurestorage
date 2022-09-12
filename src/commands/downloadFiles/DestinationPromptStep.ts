@@ -18,5 +18,4 @@ export class DestinationPromptStep extends AzureWizardPromptStep<IActionContext>
     public shouldPrompt(context: IDownloadWizardContext): boolean {
         return !context.destinationFolder;
     }
-
 }
