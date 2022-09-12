@@ -12,11 +12,11 @@ const maxQuotaGB = 5120;
 
 export class StorageQuotaPromptStep extends AzureWizardPromptStep<IFileShareWizardContext> {
     public async prompt(context: IFileShareWizardContext): Promise<void> {
-        context.quota = await context.ui.showInputBox({
+        context.quota = Number(await context.ui.showInputBox({
             prompt: localize('quotaPrompt', 'Specify quota (in GB, between {0} and {1}), to limit total storage size', minQuotaGB, maxQuotaGB),
             value: maxQuotaGB.toString(),
             validateInput: this.validateQuota
-        });
+        }));
     }
 
     public shouldPrompt(context: IFileShareWizardContext): boolean {

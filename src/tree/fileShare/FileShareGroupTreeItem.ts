@@ -88,7 +88,7 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
             context.showCreatingTreeItem(shareName);
             progress.report({ message: localize('creatingFileShare', 'Azure Storage: Creating file share "{0}"...', shareName) });
             const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
-            await shareServiceClient.createShare(shareName, { quota: Number(quotaGB) });
+            await shareServiceClient.createShare(shareName, { quota: quotaGB });
             return new FileShareTreeItem(this, shareName);
         });
     }
