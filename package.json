@@ -409,7 +409,7 @@
                 {
                     "$comment": "========= azureBlobContainer =========",
                     "command": "azureStorage.openBlobContainer",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer && !isWeb && !isLinux",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureBlobContainer && !isWeb && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -517,7 +517,7 @@
                 {
                     "$comment": "========= azureFileShare =========",
                     "command": "azureStorage.openFileShare",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare && !isWeb && !isLinux",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureFileShare && !isWeb && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -641,7 +641,7 @@
                 {
                     "$comment": "========= azureQueue =========",
                     "command": "azureStorage.openQueue",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureQueue && !isWeb && !isLinux",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureQueue && !isWeb && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -663,7 +663,7 @@
                 {
                     "$comment": "========= azureTable =========",
                     "command": "azureStorage.openTable",
-                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureTable && !isWeb && !isLinux",
+                    "when": "view =~ /azure(Workspace|ResourceGroups)/i && viewItem == azureTable && !isWeb && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
