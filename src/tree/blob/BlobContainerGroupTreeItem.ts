@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from "@azure/storage-blob";
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from "@microsoft/vscode-azext-utils/hostapi";
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -12,11 +12,13 @@ import { getResourcesPath, maxPageSize } from "../../constants";
 import { ResolvedStorageAccount } from "../../StorageAccountResolver";
 import { createBlobContainerClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
+import { nonNullProp } from "../../utils/nonNull";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from "../IStorageTreeItem";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
+import { BlobContainerNameStep } from "./createBlobContainer/BlobContainerNameStep";
 
 export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
@@ -86,20 +88,17 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<BlobContainerTreeItem> {
-        const containerName = await context.ui.showInputBox({
-            placeHolder: 'Enter a name for the new blob container',
-            validateInput: BlobContainerGroupTreeItem.validateContainerName
+        const wizardContext: IActionContext & { name?: string } = { ...context };
+        const wizard = new AzureWizard(wizardContext, { promptSteps: [new BlobContainerNameStep()] });
+        await wizard.prompt();
+
+        const name = nonNullProp(wizardContext, 'name');
+
+        return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
+            context.showCreatingTreeItem(name);
+            progress.report({ message: `Azure Storage: Creating blob container '${name}'` });
+            return await BlobContainerTreeItem.createBlobContainerTreeItem(this, await this.createBlobContainer(name));
         });
-
-        if (containerName) {
-            return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-                context.showCreatingTreeItem(containerName);
-                progress.report({ message: `Azure Storage: Creating blob container '${containerName}'` });
-                return await BlobContainerTreeItem.createBlobContainerTreeItem(this, await this.createBlobContainer(containerName));
-            });
-        }
-
-        throw new UserCancelledError();
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
@@ -124,30 +123,5 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         }
 
         return createdContainer;
-    }
-
-    private static validateContainerName(name: string): string | undefined | null {
-        const validLength = { min: 3, max: 63 };
-
-        if (!name) {
-            return "Container name cannot be empty";
-        }
-        if (name.indexOf(" ") >= 0) {
-            return "Container name cannot contain spaces";
-        }
-        if (name.length < validLength.min || name.length > validLength.max) {
-            return `Container name must contain between ${validLength.min} and ${validLength.max} characters`;
-        }
-        if (!/^[a-z0-9-]+$/.test(name)) {
-            return 'Container name can only contain lowercase letters, numbers and hyphens';
-        }
-        if (/--/.test(name)) {
-            return 'Container name cannot contain two hyphens in a row';
-        }
-        if (/(^-)|(-$)/.test(name)) {
-            return 'Container name cannot begin or end with a hyphen';
-        }
-
-        return undefined;
     }
 }
