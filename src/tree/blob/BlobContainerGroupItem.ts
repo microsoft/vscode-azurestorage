@@ -9,6 +9,7 @@ import { IStorageRoot } from "../IStorageRoot";
 import { parseError } from "@microsoft/vscode-azext-utils";
 import { GenericItem } from "../../utils/v2/treeutils";
 import { localize } from "../../utils/localize";
+import { delay } from "../../utils/delay";
 
 export class BlobContainerGroupItem implements StorageAccountModel {
     constructor(
@@ -19,50 +20,53 @@ export class BlobContainerGroupItem implements StorageAccountModel {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
-        let containers: azureStorageBlob.ContainerItem[];
+        let containers: azureStorageBlob.ContainerItem[] | undefined;
 
-        try {
-            containers = await this.listAllContainers();
-        } catch (error) {
-            const errorType: string = parseError(error).errorType;
-            if (this.storageRoot.isEmulated && errorType === 'ECONNREFUSED') {
-                return [
-                    // TODO: Exclude from tree item picker.
-                    new GenericItem(
-                        () => {
-                            const treeItem = new vscode.TreeItem('Start Blob Emulator');
+        const tries = 3;
 
-                            treeItem.contextValue = 'startBlobEmulator';
-                            treeItem.command = {
-                                arguments: [
-                                    () => {
-                                        this.refresh?.(this);
-                                    }
-                                ],
-                                command: 'azureStorage.startBlobEmulator',
-                                title: '' };
+        for (let i = 0; i < tries; i++) {
+            containers = await this.getContainers();
 
-                            return treeItem;
-                        })
-                ];
-            } else if (errorType === 'ENOTFOUND') {
-                throw new Error(localize('storageAccountDoesNotSupportBlobs', 'This storage account does not support blobs.'));
+            if (containers) {
+                break;
             } else {
-                throw error;
+                await delay(500);
             }
         }
 
-        return containers.map(
-            container =>
-                new BlobContainerItem(
-                    container,
-                    { storageAccountId: this.storageRoot.storageAccountId, subscriptionId: this.subscriptionId },
+        if (containers) {
+            return containers.map(
+                container =>
+                    new BlobContainerItem(
+                        container,
+                        { storageAccountId: this.storageRoot.storageAccountId, subscriptionId: this.subscriptionId },
+                        () => {
+                            const blobServiceClient = this.storageRoot.createBlobServiceClient();
+                            return blobServiceClient.getContainerClient(container.name);
+                        },
+                        this.storageRoot.isEmulated,
+                        this.getWebSiteHostingStatus));
+        } else {
+            return [
+                // TODO: Exclude from tree item picker.
+                new GenericItem(
                     () => {
-                        const blobServiceClient = this.storageRoot.createBlobServiceClient();
-                        return blobServiceClient.getContainerClient(container.name);
-                    },
-                    this.storageRoot.isEmulated,
-                    this.getWebSiteHostingStatus));
+                        const treeItem = new vscode.TreeItem('Start Blob Emulator');
+
+                        treeItem.contextValue = 'startBlobEmulator';
+                        treeItem.command = {
+                            arguments: [
+                                () => {
+                                    this.refresh?.(this);
+                                }
+                            ],
+                            command: 'azureStorage.startBlobEmulator',
+                            title: '' };
+
+                        return treeItem;
+                    })
+            ];
+        }
     }
 
     getTreeItem(): vscode.TreeItem {
@@ -77,7 +81,22 @@ export class BlobContainerGroupItem implements StorageAccountModel {
         return treeItem;
     }
 
-    async listAllContainers(): Promise<azureStorageBlob.ContainerItem[]> {
+    private async getContainers(): Promise<azureStorageBlob.ContainerItem[] | undefined> {
+        try {
+            return await this.listAllContainers();
+        } catch (error) {
+            const errorType: string = parseError(error).errorType;
+            if (this.storageRoot.isEmulated && errorType === 'ECONNREFUSED') {
+                return undefined;
+            } else if (errorType === 'ENOTFOUND') {
+                throw new Error(localize('storageAccountDoesNotSupportBlobs', 'This storage account does not support blobs.'));
+            } else {
+                throw error;
+            }
+        }
+    }
+
+    private async listAllContainers(): Promise<azureStorageBlob.ContainerItem[]> {
         let response: azureStorageBlob.ListContainersSegmentResponse | undefined;
 
         const containers: azureStorageBlob.ContainerItem[] = [];
@@ -93,7 +112,7 @@ export class BlobContainerGroupItem implements StorageAccountModel {
         return containers;
     }
 
-    async listContainers(continuationToken?: string): Promise<azureStorageBlob.ListContainersSegmentResponse> {
+    private async listContainers(continuationToken?: string): Promise<azureStorageBlob.ListContainersSegmentResponse> {
         const blobServiceClient: azureStorageBlob.BlobServiceClient = this.storageRoot.createBlobServiceClient();
         const response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize });
 

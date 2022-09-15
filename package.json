@@ -107,6 +107,13 @@
                     "detail": "For file storage and static file hosting."
                 }
             ],
+            "application": {
+                "branches": [
+                    {
+                        "type": "microsoft.storage/storageaccounts"
+                    }
+                ]
+            },
             "workspace": {
                 "resources": [
                     {
@@ -656,7 +663,7 @@
                 },
                 {
                     "command": "azureStorage.attachStorageAccount",
-                    "when": "view == azureWorkspace && viewItem == attachedStorageAccounts",
+                    "when": "view =~ /azureWorkspace/i && viewItem == attachedStorageAccounts",
                     "group": "2_create"
                 },
                 {
