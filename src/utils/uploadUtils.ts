@@ -77,16 +77,33 @@ export function outputAndCopyUploadedFileUrls(parentUrl: string, fileUrls: strin
         ext.outputChannel.appendLog(url);
     }
 
-    void vscode.window.showInformationMessage(
-        localize('outputAndCopyFinished', 'Finished uploading {0} {1}.', fileUrls.length, fileUrls.length === 1 ? 'file' : 'files'),
-        localize('copyToClipboard', 'Copy to Clipboard')
-    ).then(async (result) => {
-        const shouldCopy: boolean = !!result;
-        if (shouldCopy) {
-            const lastFileUrl: string = `${parentUrl}/${fileUrls[fileUrls.length - 1]}`;
-            await copyAndShowToast(lastFileUrl, 'File URL');
-        }
-    });
+    const copyToClipboard: string = localize('copyToClipboard', 'Copy to Clipboard');
+    const outputAndCopyFile: string = localize('outputAndCopyFinished.file', 'Finished uploading 1 file.');
+    const outputAndCopyFiles: string = localize('outputAndCopyFinished.files', 'Finished uploading {0} files.', fileUrls.length);
+    const viewOutput: string = localize('viewOutput', 'View Output');
+
+    if (fileUrls.length === 1) {
+        void vscode.window.showInformationMessage(
+            outputAndCopyFile,
+            copyToClipboard
+        ).then(async (result) => {
+            const shouldCopy: boolean = !!result;
+            if (shouldCopy) {
+                const lastFileUrl: string = `${parentUrl}/${fileUrls[fileUrls.length - 1]}`;
+                await copyAndShowToast(lastFileUrl, 'File URL');
+            }
+        });
+    } else {
+        void vscode.window.showInformationMessage(
+            outputAndCopyFiles,
+            viewOutput
+        ).then(result => {
+            const shouldView: boolean = !!result;
+            if (shouldView) {
+                ext.outputChannel.show();
+            }
+        });
+    }
 }
 
 export function showUploadSuccessMessage(treeItemLabel: string): void {
