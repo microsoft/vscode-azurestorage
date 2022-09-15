@@ -15,4 +15,3 @@ export interface IDownloadWizardContext extends IActionContext, ExecuteActivityC
     allFileDownloads?: IAzCopyDownload[];
     allFolderDownloads?: IAzCopyDownload[];
 }
-
