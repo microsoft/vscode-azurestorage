@@ -3,11 +3,11 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext } from "@microsoft/vscode-azext-utils";
+import { ExecuteActivityContext, IActionContext } from "@microsoft/vscode-azext-utils";
 import { IDownloadableTreeItem } from "../../tree/IDownloadableTreeItem";
 import { IAzCopyDownload } from "../downloadFile";
 
-export interface IDownloadWizardContext extends IActionContext {
+export interface IDownloadWizardContext extends IActionContext, ExecuteActivityContext {
     destinationFolder?: string;
     sasUrl?: string;
     treeItems?: IDownloadableTreeItem[];
@@ -15,3 +15,4 @@ export interface IDownloadWizardContext extends IActionContext {
     allFileDownloads?: IAzCopyDownload[];
     allFolderDownloads?: IAzCopyDownload[];
 }
+
