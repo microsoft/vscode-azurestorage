@@ -97,7 +97,7 @@ export function outputAndCopyUploadedFileUrls(parentUrl: string, fileUrls: strin
         void vscode.window.showInformationMessage(
             outputAndCopyFiles,
             viewOutput
-        ).then(async (result) => {
+        ).then(result => {
             const shouldView: boolean = !!result;
             if (shouldView) {
                 ext.outputChannel.show();
