@@ -34,6 +34,7 @@ export class DownloadFilesStep extends AzureWizardExecuteStep<IDownloadWizardCon
         }
 
         const message: string = localize('downloadingTo', 'Downloading to "{0}"...', context.destinationFolder);
+        context.activityTitle = message;
         ext.outputChannel.appendLog(message);
         progress.report({ message });
 
@@ -48,7 +49,8 @@ export class DownloadFilesStep extends AzureWizardExecuteStep<IDownloadWizardCon
             }
         }
 
-        const downloaded: string = localize('successfullyDownloaded', 'Successfully downloaded to "{0}".', context.destinationFolder);
+        const downloaded: string = localize('successfullyDownloaded', 'Downloaded to "{0}".', context.destinationFolder);
+        context.activityTitle = downloaded;
         progress.report({ message: downloaded });
         ext.outputChannel.appendLog(downloaded);
     }
