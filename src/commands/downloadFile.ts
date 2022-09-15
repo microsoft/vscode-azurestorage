@@ -6,6 +6,7 @@
 import { FromToOption } from "@azure-tools/azcopy-node";
 import { AzureWizard, AzureWizardPromptStep, IActionContext } from "@microsoft/vscode-azext-utils";
 import { IDownloadableTreeItem } from "../tree/IDownloadableTreeItem";
+import { createActivityContext } from "../utils/activityUtils";
 import { localize } from "../utils/localize";
 import { DestinationPromptStep } from "./downloadFiles/DestinationPromptStep";
 import { DownloadFilesStep } from "./downloadFiles/DownloadFilesStep";
@@ -23,15 +24,16 @@ export interface IAzCopyDownload {
     sasToken: string;
 }
 
-export async function download(context: IDownloadWizardContext, treeItems?: IDownloadableTreeItem[]): Promise<void> {
+export async function download(context: IActionContext, treeItems?: IDownloadableTreeItem[]): Promise<void> {
+    const wizardContext: IDownloadWizardContext = { ...context, ...(await createActivityContext()) };
     const promptSteps: AzureWizardPromptStep<IDownloadWizardContext>[] = [new DestinationPromptStep()];
     if (!treeItems) {
         promptSteps.push(new SasUrlPromptStep());
     } else {
-        context.treeItems = treeItems;
+        wizardContext.treeItems = treeItems;
     }
 
-    const wizard: AzureWizard<IDownloadWizardContext> = new AzureWizard(context, {
+    const wizard: AzureWizard<IDownloadWizardContext> = new AzureWizard(wizardContext, {
         promptSteps,
         executeSteps: [new GetAzCopyDownloadsStep(), new DownloadFilesStep()],
         title: localize('download', 'Download Files')
