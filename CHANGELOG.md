@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+## 0.15.0 - 2022-09-15
+
+### Added
+- Support for Virtual Workspaces [#1118](https://github.com/microsoft/vscode-azurestorage/pull/1118)
+- Support for deleting many blobs and file shares [#1113](https://github.com/microsoft/vscode-azurestorage/pull/1113)
+- Support for emulated tables [#1105](https://github.com/microsoft/vscode-azurestorage/pull/1105)
+- Uploaded files to blob containers automatically log file URL's to output [#1076](https://github.com/microsoft/vscode-azurestorage/pull/1076)
+- Activity log support when deleting a folder in a blob container [#1123](https://github.com/microsoft/vscode-azurestorage/pull/1123)
+- Download from SAS URL command to Local Workspace view [#1151](https://github.com/microsoft/vscode-azurestorage/pull/1151)
+- Download support for File Shares and Blob Containers [#1121](https://github.com/microsoft/vscode-azurestorage/pull/1121)
+
+### Changed
+- "Open in File Explorer" command changed to "Open in Explorer" [#1110](https://github.com/microsoft/vscode-azurestorage/pull/1110)
+- Disabled "Open in Storage Explorer" default behavior when in remote workspace [#1109](https://github.com/microsoft/vscode-azurestorage/pull/1109)
+- Minimum VS code version that is supported is now version 1.66.2 [#1106](https://github.com/microsoft/vscode-azurestorage/pull/1106)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-azurestorage/issues?q=is%3Aclosed+is%3Aissue+milestone%3A0.15.0)
+- Errors associated with Attached Storage Accounts [#1045](https://github.com/microsoft/vscode-azurestorage/issues/1045)
+
 ## 0.14.2 - 2022-07-05
 
 ### Added
