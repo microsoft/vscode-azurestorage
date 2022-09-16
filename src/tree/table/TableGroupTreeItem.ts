@@ -24,7 +24,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
     public readonly childTypeLabel: string = "Table";
     public static contextValue: string = 'azureTableGroup';
     public contextValue: string = TableGroupTreeItem.contextValue;
-    public parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
+    public declare parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
 
     public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
