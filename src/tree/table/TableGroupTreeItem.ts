@@ -4,14 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureDataTables from '@azure/data-tables';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { localize } from "../../utils/localize";
-import { nonNull } from '../../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from '../IStorageTreeItem';
@@ -98,7 +97,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
                 context.showCreatingTreeItem(tableName);
                 progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
                 const table = await this.createTable(tableName);
-                return new TableTreeItem(this, nonNull(table.name, 'name'));
+                return new TableTreeItem(this, nonNullProp(table, 'name'));
             });
         }
 
