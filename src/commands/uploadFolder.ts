@@ -71,6 +71,7 @@ export async function uploadFolder(
         showUploadSuccessMessage(treeItem.label);
     }
 
-    await refreshTreeItem(context, treeItem);
+    throw new Error('TODO: Implement  me!');
+    await refreshTreeItem(undefined);
     return resolution;
 }

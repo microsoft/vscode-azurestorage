@@ -6,9 +6,8 @@
 'use strict';
 
 import { registerAzureUtilsExtensionVariables } from '@microsoft/vscode-azext-azureutils';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '@microsoft/vscode-azext-utils/api';
-import { AzureHostExtensionApi } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
 import { AzureStorageFS } from './AzureStorageFS';
@@ -39,20 +38,17 @@ import { uploadToAzureStorage } from './commands/uploadToAzureStorage';
 import { azuriteExtensionId, emulatorTimeoutMS as startEmulatorDebounce, storageFilter } from './constants';
 import { ext } from './extensionVariables';
 import { getApiExport } from './getApiExport';
-import { StorageAccountResolver } from './StorageAccountResolver';
-import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
 import { BlobContainerItem } from './tree/blob/BlobContainerItem';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
 import { FileShareItem } from './tree/fileShare/FileShareItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
 import { ICopyUrl } from './tree/ICopyUrl';
-import { IStorageTreeItem } from './tree/IStorageTreeItem';
 import { refreshTreeItem } from './tree/refreshTreeItem';
 import { branchDataProvider } from './tree/StorageAccountBranchDataProvider';
 import { StorageWorkspaceBranchDataProvider } from './tree/workspace/StorageWorkspaceBranchDataProvider';
 import { StorageWorkspaceResourceProvider } from './tree/workspace/StorageWorkspaceResourceProvider';
 import { registerBranchCommand } from './utils/v2/commandUtils';
-import { AzureResourcesApiManager, GetApiOptions, V2AzureResourcesApi } from './vscode-azureresourcegroups.api.v2';
+import { AzureResourcesApiManager, GetApiOptions, V2AzureResourcesApi, WrappedResourceModel } from './vscode-azureresourcegroups.api.v2';
 
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
     ext.context = context;
@@ -84,7 +80,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', ext.azureStorageFS, { isCaseSensitive: true }));
         context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('azurestorage', ext.azureStorageFS));
 
-        registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
+        registerCommand('azureStorage.refresh', async (_: IActionContext, treeItem?: WrappedResourceModel | undefined) => { await refreshTreeItem(treeItem) })
         registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
         registerBranchCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerItem | BlobContainerTreeItem | FileShareItem | FileShareTreeItem) => {
             if (!treeItem) {
@@ -161,19 +157,6 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
         const rgApiOptions: GetApiOptions = { extensionId: context.extension.id };
         const rgApiProvider = await getApiExport<AzureResourcesApiManager>('ms-azuretools.vscode-azureresourcegroups');
         if (rgApiProvider) {
-            const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1', rgApiOptions);
-
-            if (api === undefined) {
-                throw new Error('Could not find the V1 Azure Resource Groups API.');
-            }
-
-            ext.rgApi = api;
-            api.registerApplicationResourceResolver('microsoft.storage/storageaccounts', new StorageAccountResolver());
-
-            const workspaceRootTreeItem = (ext.rgApi.workspaceResourceTree as unknown as { _rootTreeItem: AzExtParentTreeItem })._rootTreeItem;
-            const storageWorkspaceProvider = new StorageWorkspaceProvider(workspaceRootTreeItem);
-            ext.rgApi.registerWorkspaceResourceProvider('ms-azuretools.vscode-azurestorage', storageWorkspaceProvider);
-
             const v2Api = rgApiProvider.getApi<V2AzureResourcesApi>('2', rgApiOptions);
 
             if (v2Api === undefined) {

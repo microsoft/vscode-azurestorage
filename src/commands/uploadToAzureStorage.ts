@@ -99,5 +99,6 @@ export async function uploadToAzureStorage(context: IActionContext, _firstSelect
         showUploadSuccessMessage(treeItem.label);
     }
 
-    await refreshTreeItem(context, treeItem);
+    throw new Error('TODO: Implement  me!');
+    await refreshTreeItem(undefined);
 }

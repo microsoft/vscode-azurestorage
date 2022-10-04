@@ -72,18 +72,12 @@
         "onCommand:azureStorage.detachStorageAccount",
         "onCommand:azureStorage.startBlobEmulator",
         "onCommand:azureStorage.startQueueEmulator",
-        "onCommand:azureStorage.reportIssue",
-        "onView:azureWorkspace"
+        "onCommand:azureStorage.reportIssue"
     ],
     "main": "main",
     "icon": "resources/storageAccount.png",
     "contributes": {
         "x-azResources": {
-            "activation": {
-                "onFetch": [
-                    "microsoft.storage/storageaccounts"
-                ]
-            },
             "commands": [
                 {
                     "command": "azureStorage.createGpv2Account",
