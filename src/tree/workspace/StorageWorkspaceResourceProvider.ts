@@ -14,7 +14,7 @@ export class StorageWorkspaceResourceProvider extends vscode.Disposable implemen
 
     onDidChangeResource = this.onDidChangeResourceEmitter.event;
 
-    provideResources(folder: vscode.WorkspaceFolder, _options?: ProvideResourceOptions | undefined): vscode.ProviderResult<WorkspaceResource[]> {
+    getResources(folder: vscode.WorkspaceFolder, _options?: ProvideResourceOptions | undefined): vscode.ProviderResult<WorkspaceResource[]> {
         return [
             {
                 folder,
