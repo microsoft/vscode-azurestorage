@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ProvideResourceOptions, WorkspaceResource, WorkspaceResourceProvider } from '../../vscode-azureresourcegroups.api.v2';
+import { WorkspaceResource, WorkspaceResourceProvider } from '../../vscode-azureresourcegroups.api.v2';
 
 export class StorageWorkspaceResourceProvider extends vscode.Disposable implements WorkspaceResourceProvider {
     private readonly onDidChangeResourceEmitter = new vscode.EventEmitter<WorkspaceResource | undefined>()
@@ -14,13 +14,13 @@ export class StorageWorkspaceResourceProvider extends vscode.Disposable implemen
 
     onDidChangeResource = this.onDidChangeResourceEmitter.event;
 
-    getResources(folder: vscode.WorkspaceFolder, _options?: ProvideResourceOptions | undefined): vscode.ProviderResult<WorkspaceResource[]> {
+    getResources(folder: vscode.WorkspaceFolder): vscode.ProviderResult<WorkspaceResource[]> {
         return [
             {
                 folder,
                 id: 'ms-azuretools.vscode-azurestorage', // TODO: Make unique?
                 name: 'Attached Storage Accounts',
-                type: 'ms-azuretools.vscode-azurestorage'
+                resourceType: 'ms-azuretools.vscode-azurestorage'
             }
         ];
     }

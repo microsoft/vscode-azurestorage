@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { WrappedResourceModel } from "../vscode-azureresourcegroups.api.v2";
+import { WrappedResourceModel } from "../utils/v2/WrappedResourceModel";
 import { branchDataProvider } from "./StorageAccountBranchDataProvider";
 import { StorageAccountModel } from "./StorageAccountModel";
 

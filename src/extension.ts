@@ -6,7 +6,7 @@
 'use strict';
 
 import { registerAzureUtilsExtensionVariables } from '@microsoft/vscode-azext-azureutils';
-import { AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
+import { AzExtResourceType, AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerCommand, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureExtensionApi, AzureExtensionApiProvider } from '@microsoft/vscode-azext-utils/api';
 import * as vscode from 'vscode';
 import { commands } from 'vscode';
@@ -48,7 +48,8 @@ import { branchDataProvider } from './tree/StorageAccountBranchDataProvider';
 import { StorageWorkspaceBranchDataProvider } from './tree/workspace/StorageWorkspaceBranchDataProvider';
 import { StorageWorkspaceResourceProvider } from './tree/workspace/StorageWorkspaceResourceProvider';
 import { registerBranchCommand } from './utils/v2/commandUtils';
-import { AzureResourcesApiManager, GetApiOptions, V2AzureResourcesApi, WrappedResourceModel } from './vscode-azureresourcegroups.api.v2';
+import { WrappedResourceModel } from './utils/v2/WrappedResourceModel';
+import { AzureResourcesApiManager, GetApiOptions, V2AzureResourcesApi } from './vscode-azureresourcegroups.api.v2';
 
 export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
     ext.context = context;
@@ -163,8 +164,8 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 throw new Error('Could not find the V2 Azure Resource Groups API.');
             }
 
-            v2Api.registerApplicationResourceBranchDataProvider('microsoft.storage/storageaccounts', branchDataProvider);
-            v2Api.registerWorkspaceResourceProvider('ms-azuretools.vscode-azurestorage', new StorageWorkspaceResourceProvider());
+            v2Api.registerApplicationResourceBranchDataProvider(AzExtResourceType.StorageAccounts, branchDataProvider);
+            v2Api.registerWorkspaceResourceProvider(new StorageWorkspaceResourceProvider());
             v2Api.registerWorkspaceResourceBranchDataProvider('ms-azuretools.vscode-azurestorage', new StorageWorkspaceBranchDataProvider());
         } else {
             throw new Error('Could not find the Azure Resource Groups extension');

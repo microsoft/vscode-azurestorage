@@ -1,5 +1,6 @@
 import { IActionContext, registerCommand } from "@microsoft/vscode-azext-utils";
-import { ResourceModelBase, WrappedResourceModel } from "../../vscode-azureresourcegroups.api.v2";
+import { ResourceModelBase } from "../../vscode-azureresourcegroups.api.v2";
+import { WrappedResourceModel } from "./WrappedResourceModel";
 
 export type BranchCommandCallback = (context: IActionContext, item: unknown, ...args: never[]) => unknown;
 
