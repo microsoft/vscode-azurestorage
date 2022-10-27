@@ -1,10 +1,15 @@
-import * as vscode from 'vscode';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { getResourcesPath } from '../../constants';
+import { IStorageRoot } from '../IStorageRoot';
 import { StorageAccountModel } from "../StorageAccountModel";
 
 export class TableItem implements StorageAccountModel {
-    constructor(private readonly tableName: string) {
+    constructor(
+        public readonly tableName: string,
+        public readonly storageRoot: IStorageRoot,
+        public readonly subscriptionId: string,
+        public readonly notifyDeleted: () => void) {
     }
 
     getChildren(): vscode.ProviderResult<StorageAccountModel[]> {

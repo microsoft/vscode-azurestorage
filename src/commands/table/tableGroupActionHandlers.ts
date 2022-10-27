@@ -50,10 +50,10 @@ export async function createTable(context: IActionContext, treeItem?: TableGroup
         return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
             progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
 
-            const tableServiceClient = treeItem.tableServiceClientFactory();
+            const tableServiceClient = treeItem.storageRoot.createTableServiceClient();
             await tableServiceClient.createTable(tableName);
 
-            const tablesResponse = await listTables(treeItem.tableServiceClientFactory);
+            const tablesResponse = await listTables(() => treeItem.storageRoot.createTableServiceClient());
             let createdTable: azureDataTables.TableItem | undefined;
             for (const table of tablesResponse) {
                 if (table.name === tableName) {

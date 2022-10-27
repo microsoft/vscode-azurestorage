@@ -74,9 +74,7 @@ export class StorageAccountItem implements StorageAccountModel {
                 }
 
                 if (primaryEndpoints.table) {
-                    const tableServiceClientFactory = () => this.createTableServiceClient(wrapper, key);
-
-                    groupTreeItems.push(new TableGroupItem(tableServiceClientFactory, this.refresh));
+                    groupTreeItems.push(new TableGroupItem(storageRoot, this.resource.subscription.subscriptionId, this.refresh));
                 }
 
                 return groupTreeItems;
@@ -171,11 +169,6 @@ export class StorageAccountItem implements StorageAccountModel {
     private createShareServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureStorageShare.ShareServiceClient {
         const credential = new azureStorageShare.StorageSharedKeyCredential(storageAccount.name, key.value);
         return new azureStorageShare.ShareServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'file'), credential);
-    }
-
-    private createTableServiceClient(storageAccount: StorageAccountWrapper, key: StorageAccountKeyWrapper): azureDataTables.TableServiceClient {
-        const credential = new azureDataTables.AzureNamedKeyCredential(storageAccount.name, key.value);
-        return new azureDataTables.TableServiceClient(nonNullProp(storageAccount.primaryEndpoints, 'table'), credential);
     }
 
     private async getActualWebsiteHostingStatus(serviceClient: azureStorageBlob.BlobServiceClient): Promise<WebSiteHostingStatus> {
