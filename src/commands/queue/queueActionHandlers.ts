@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DialogResponses, IActionContext, registerCommand, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { DialogResponses, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { QueueItem } from '../../tree/queue/QueueItem';
-import { WrappedResourceModel } from '../../utils/v2/WrappedResourceModel';
+import { registerBranchCommand } from '../../utils/v2/commandUtils';
 
 export function registerQueueActionHandlers(): void {
-    registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);
-    registerCommand("azureStorage.deleteQueue", deleteQueue);
+    registerBranchCommand("azureStorage.openQueue", openQueueInStorageExplorer);
+    registerBranchCommand("azureStorage.deleteQueue", deleteQueue);
 }
 
 async function openQueueInStorageExplorer(_context: IActionContext, treeItem: QueueItem): Promise<void> {
@@ -21,22 +21,20 @@ async function openQueueInStorageExplorer(_context: IActionContext, treeItem: Qu
     await storageExplorerLauncher.openResource(accountId, treeItem.subscriptionId, resourceType, resourceName);
 }
 
-export async function deleteQueue(context: IActionContext, treeItem?: WrappedResourceModel): Promise<void> {
+export async function deleteQueue(context: IActionContext, treeItem?: QueueItem): Promise<void> {
     // TODO: Implement pick.
     // treeItem = await pickForDeleteNode(context, QueueTreeItem.contextValue, treeItem);
 
-    const queueItem = treeItem?.unwrap<QueueItem>();
-
-    if (!queueItem) {
+    if (!treeItem) {
         throw new Error('A tree item must be selected.');
     }
 
-    const message: string = `Are you sure you want to delete queue '${queueItem.name}' and all its contents?`;
+    const message: string = `Are you sure you want to delete queue '${treeItem.name}' and all its contents?`;
     const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
     if (result === DialogResponses.deleteResponse) {
-        const queueServiceClient = queueItem.storageRoot.createQueueServiceClient();
-        await queueServiceClient.deleteQueue(queueItem.name);
-        queueItem.notifyDeleted();
+        const queueServiceClient = treeItem.storageRoot.createQueueServiceClient();
+        await queueServiceClient.deleteQueue(treeItem.name);
+        treeItem.notifyDeleted();
     } else {
         throw new UserCancelledError();
     }

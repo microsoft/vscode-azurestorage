@@ -4,16 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageQueue from '@azure/storage-queue';
-import { IActionContext, registerCommand, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { QueueGroupItem } from '../../tree/queue/QueueGroupItem';
 import { listQueues } from '../../tree/queue/queueUtils';
 import { isAzuriteInstalled, warnAzuriteNotInstalled } from '../../utils/azuriteUtils';
 import { localize } from "../../utils/localize";
-import { WrappedResourceModel } from '../../utils/v2/WrappedResourceModel';
+import { registerBranchCommand } from '../../utils/v2/commandUtils';
 
 export function registerQueueGroupActionHandlers(): void {
-    registerCommand("azureStorage.createQueue", createQueue);
+    registerBranchCommand("azureStorage.createQueue", createQueue);
 }
 
 function validateQueueName(name: string): string | undefined | null {
@@ -41,14 +41,12 @@ function validateQueueName(name: string): string | undefined | null {
     return undefined;
 }
 
-export async function createQueue(context: IActionContext, treeItem?: WrappedResourceModel): Promise<void> {
-    const queueGroupItem = treeItem?.unwrap<QueueGroupItem>();
-
-    if (!queueGroupItem) {
+export async function createQueue(context: IActionContext, treeItem?: QueueGroupItem): Promise<void> {
+    if (!treeItem) {
         throw new Error('A tree item must be selected.');
     }
 
-    if (queueGroupItem.storageRoot.isEmulated && !(await isAzuriteInstalled())) {
+    if (treeItem.storageRoot.isEmulated && !(await isAzuriteInstalled())) {
         warnAzuriteNotInstalled(context);
     }
 
@@ -60,10 +58,10 @@ export async function createQueue(context: IActionContext, treeItem?: WrappedRes
     if (queueName) {
         return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
             progress.report({ message: `Azure Storage: Creating queue '${queueName}'` });
-            const queueServiceClient = queueGroupItem.storageRoot.createQueueServiceClient();
+            const queueServiceClient = treeItem.storageRoot.createQueueServiceClient();
             await queueServiceClient.createQueue(queueName);
 
-            const queuesResponse: azureStorageQueue.ListQueuesSegmentResponse = await listQueues(queueGroupItem.storageRoot);
+            const queuesResponse: azureStorageQueue.ListQueuesSegmentResponse = await listQueues(treeItem.storageRoot);
             let createdQueue: azureStorageQueue.QueueItem | undefined;
             for (const queue of queuesResponse.queueItems || []) {
                 if (queue.name === queueName) {
@@ -76,7 +74,7 @@ export async function createQueue(context: IActionContext, treeItem?: WrappedRes
                 throw new Error(localize('couldNotCreateQueue', `Could not create queue "${queueName}".`));
             }
 
-            queueGroupItem.notifyCreated();
+            treeItem.notifyCreated();
         });
     }
 
