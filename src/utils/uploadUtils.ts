@@ -87,9 +87,9 @@ export async function checkCanUpload(
 ): Promise<boolean> {
     return await checkCanOverwrite(context, destPath, overwriteChoice, async () => {
         if (treeItem instanceof BlobContainerTreeItem) {
-            return await doesBlobExist(treeItem, destPath) || await doesBlobDirectoryExist(treeItem, destPath);
+            return await doesBlobExist(treeItem.root, treeItem.container.name, destPath) || await doesBlobDirectoryExist(treeItem.root, treeItem.container.name, destPath);
         } else {
-            return await doesFileExist(basename(destPath), treeItem, dirname(destPath), treeItem.shareName) || await doesDirectoryExist(treeItem, destPath, treeItem.shareName);
+            return await doesFileExist(basename(destPath), treeItem.root, dirname(destPath), treeItem.shareName) || await doesDirectoryExist(treeItem.root, destPath, treeItem.shareName);
         }
     });
 }

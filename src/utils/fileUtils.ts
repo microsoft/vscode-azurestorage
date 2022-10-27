@@ -32,7 +32,7 @@ export function createFileClient(root: IStorageRoot, shareName: string, director
 }
 
 export async function askAndCreateEmptyTextFile(parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<FileTreeItem> {
-    const fileName: string = context.childName || await getFileOrDirectoryName(context, parent, directoryPath, shareName);
+    const fileName: string = context.childName || await getFileOrDirectoryName(context, parent.root, directoryPath, shareName);
     return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(fileName);
         progress.report({ message: `Azure Storage: Creating file '${fileName}'` });
@@ -41,7 +41,7 @@ export async function askAndCreateEmptyTextFile(parent: FileShareTreeItem | Dire
     });
 }
 
-export async function getFileOrDirectoryName(context: IActionContext, parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string, value?: string): Promise<string> {
+export async function getFileOrDirectoryName(context: IActionContext, root: IStorageRoot, directoryPath: string, shareName: string, value?: string): Promise<string> {
     return await context.ui.showInputBox({
         value,
         placeHolder: localize('enterName', 'Enter a name for the new resource'),
@@ -49,7 +49,7 @@ export async function getFileOrDirectoryName(context: IActionContext, parent: Fi
             const nameError: string | undefined = validateFileOrDirectoryName(name);
             if (nameError) {
                 return nameError;
-            } else if (await doesFileExist(name, parent, directoryPath, shareName) || await doesDirectoryExist(parent, posix.join(directoryPath, name), shareName)) {
+            } else if (await doesFileExist(name, root, directoryPath, shareName) || await doesDirectoryExist(root, posix.join(directoryPath, name), shareName)) {
                 return localize('alreadyExists', 'A file or directory named "{0}" already exists', name);
             }
             return undefined;
@@ -57,8 +57,8 @@ export async function getFileOrDirectoryName(context: IActionContext, parent: Fi
     });
 }
 
-export async function doesFileExist(fileName: string, parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string): Promise<boolean> {
-    const fileService: azureStorageShare.ShareFileClient = createFileClient(parent.root, shareName, directoryPath, fileName);
+export async function doesFileExist(fileName: string, root: IStorageRoot, directoryPath: string, shareName: string): Promise<boolean> {
+    const fileService: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, fileName);
     try {
         await fileService.getProperties();
         return true;

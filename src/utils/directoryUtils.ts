@@ -16,7 +16,7 @@ import { createDirectoryClient, deleteFile, getFileOrDirectoryName } from "./fil
 
 // Supports both file share and directory parents
 export async function askAndCreateChildDirectory(parent: FileShareTreeItem | DirectoryTreeItem, parentPath: string, shareName: string, context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<DirectoryTreeItem> {
-    const dirName: string = context.childName || await getFileOrDirectoryName(context, parent, parentPath, shareName);
+    const dirName: string = context.childName || await getFileOrDirectoryName(context, parent.root, parentPath, shareName);
     return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(dirName);
         progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
@@ -75,8 +75,8 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
     ext.outputChannel.appendLog(`Deleted directory "${directory}"`);
 }
 
-export async function doesDirectoryExist(parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string): Promise<boolean> {
-    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(parent.root, shareName, directoryPath);
+export async function doesDirectoryExist(root: IStorageRoot, directoryPath: string, shareName: string): Promise<boolean> {
+    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directoryPath);
     try {
         await directoryClient.getProperties();
         return true;

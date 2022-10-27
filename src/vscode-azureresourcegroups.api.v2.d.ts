@@ -58,7 +58,12 @@ export interface ResourceProvider<TResourceSource, TResource extends ResourceBas
 /**
  * The base interface for visualizers of application and workspace resources.
  */
-export interface BranchDataProvider<TResource extends ResourceBase, TModel extends ResourceModelBase> extends vscode.TreeDataProvider<TModel> {
+export interface BranchDataProvider<TResourceType, TResource extends ResourceBase, TModel extends ResourceModelBase> extends vscode.TreeDataProvider<TModel> {
+    /**
+     * TODO: Should T be derived from TModel?
+     */
+    findModel?<T>(resourceType: TResourceType, resourceId: string, context?: string[]): vscode.ProviderResult<T>;
+
     /**
      * Get the children of `element`.
      *
@@ -214,7 +219,7 @@ export type ApplicationResourceProvider = ResourceProvider<ApplicationSubscripti
 /**
  * A provider for visualizing items in the application resource tree (e.g. Cosmos DB, Storage, etc.).
  */
-export type ApplicationResourceBranchDataProvider<TModel extends ApplicationResourceModel> = BranchDataProvider<ApplicationResource, TModel>;
+export type ApplicationResourceBranchDataProvider<TModel extends ApplicationResourceModel> = BranchDataProvider<AzExtResourceType, ApplicationResource, TModel>;
 
 /**
  * Respresents a specific type of workspace resource.
@@ -253,12 +258,14 @@ export type WorkspaceResourceProvider = ResourceProvider<vscode.WorkspaceFolder,
 /**
  * A provider for visualizing items in the workspace resource tree (e.g., storage emulator, function apps in workspace, etc.).
  */
-export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel> = BranchDataProvider<WorkspaceResource, TModel>;
+export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel> = BranchDataProvider<WorkspaceResourceType, WorkspaceResource, TModel>;
 
 /**
  * The current (v2) Azure Resources extension API.
  */
 export interface V2AzureResourcesApi extends AzureResourcesApiBase {
+    findApplicationResourceModel<T>(resourceType: AzExtResourceType, resourceId: string, context?: string[]): vscode.ProviderResult<T>;
+
     /**
      * Registers a provider of application resources.
      *

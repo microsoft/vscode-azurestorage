@@ -266,9 +266,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             let childExistsRemote: boolean;
             if (treeItem instanceof FileShareTreeItem) {
-                childExistsRemote = await doesFileExist(parsedUri.baseName, treeItem, parsedUri.parentDirPath, treeItem.shareName);
+                childExistsRemote = await doesFileExist(parsedUri.baseName, treeItem.root, parsedUri.parentDirPath, treeItem.shareName);
             } else {
-                childExistsRemote = await doesBlobExist(treeItem, parsedUri.filePath);
+                childExistsRemote = await doesBlobExist(treeItem.root, treeItem.container.name, parsedUri.filePath);
             }
 
             if (childExists !== childExistsRemote) {
@@ -288,7 +288,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                         if (treeItem instanceof FileShareTreeItem) {
                             await updateFileFromText(parsedUri.parentDirPath, parsedUri.baseName, treeItem.shareName, treeItem.root, content.toString());
                         } else {
-                            await createOrUpdateBlockBlob(treeItem, parsedUri.filePath, content.toString());
+                            await createOrUpdateBlockBlob(treeItem.root, treeItem.container.name, parsedUri.filePath, content.toString());
                         }
 
                         // NOTE: This is the only event handled directly in this class and not in the tree item

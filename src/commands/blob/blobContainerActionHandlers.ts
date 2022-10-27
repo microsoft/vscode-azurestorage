@@ -22,7 +22,7 @@ export function registerBlobContainerActionHandlers(): void {
     registerCommand("azureStorage.editBlob", async (context: IActionContext, treeItem: BlobTreeItem) => AzureStorageFS.showEditor(context, treeItem), 250);
     registerCommand("azureStorage.deleteBlobContainer", deleteBlobContainer);
     registerCommand("azureStorage.createBlockBlob", async (context: IActionContext, parent: BlobContainerTreeItem) => {
-        const blobPath: string = await getBlobPath(context, parent);
+        const blobPath: string = await getBlobPath(context, parent.root, parent.container.name);
         const dirNames: string[] = blobPath.includes('/') ? path.dirname(blobPath).split('/') : [];
         let dirParentTreeItem: BlobDirectoryTreeItem | BlobContainerTreeItem = parent;
 

@@ -143,7 +143,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         let partialParentDirectoryPath: string = '';
         for (const dir of parentDirectories) {
             partialParentDirectoryPath += `${dir}/`;
-            if (!(await doesDirectoryExist(this, partialParentDirectoryPath, this.shareName))) {
+            if (!(await doesDirectoryExist(this.root, partialParentDirectoryPath, this.shareName))) {
                 const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, partialParentDirectoryPath);
                 await directoryClient.create();
             }

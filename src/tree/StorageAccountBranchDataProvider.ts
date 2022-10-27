@@ -1,9 +1,10 @@
+import { AzExtResourceType } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { ApplicationResource, BranchDataProvider } from '../vscode-azureresourcegroups.api.v2';
+import { ApplicationResource, ApplicationResourceBranchDataProvider } from '../vscode-azureresourcegroups.api.v2';
 import { StorageAccountItem } from './StorageAccountItem';
 import { StorageAccountModel } from './StorageAccountModel';
 
-export class StorageAccountBranchDataProvider extends vscode.Disposable implements BranchDataProvider<ApplicationResource, StorageAccountModel> {
+export class StorageAccountBranchDataProvider extends vscode.Disposable implements ApplicationResourceBranchDataProvider<StorageAccountModel> {
     private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<StorageAccountModel>();
 
     constructor() {
@@ -15,6 +16,10 @@ export class StorageAccountBranchDataProvider extends vscode.Disposable implemen
 
     get onDidChangeTreeData(): vscode.Event<StorageAccountModel> {
         return this.onDidChangeTreeDataEmitter.event;
+    }
+
+    findModel<T>(_resourceType: AzExtResourceType, _resourceId: string, _context?: string[] | undefined): vscode.ProviderResult<T> {
+        return undefined;
     }
 
     getChildren(element: StorageAccountModel): vscode.ProviderResult<StorageAccountModel[]> {

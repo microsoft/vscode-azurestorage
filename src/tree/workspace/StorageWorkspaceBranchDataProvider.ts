@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
-import { BranchDataProvider, WorkspaceResource } from '../../vscode-azureresourcegroups.api.v2';
-import { StorageAccountModel } from '../StorageAccountModel';
-import { AttachedStorageAccountsItem } from '../AttachedStorageAccountsItem';
+import { WorkspaceResource, WorkspaceResourceBranchDataProvider } from '../../vscode-azureresourcegroups.api.v2';
 import { createAttachedStorageAccountItemFactory } from '../AttachedStorageAccountItem';
+import { AttachedStorageAccountsItem } from '../AttachedStorageAccountsItem';
+import { StorageAccountModel } from '../StorageAccountModel';
 
-export class StorageWorkspaceBranchDataProvider extends vscode.Disposable implements BranchDataProvider<WorkspaceResource, StorageAccountModel> {
+export class StorageWorkspaceBranchDataProvider extends vscode.Disposable implements WorkspaceResourceBranchDataProvider<StorageAccountModel> {
     private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<void | StorageAccountModel | null | undefined>();
 
     constructor() {
