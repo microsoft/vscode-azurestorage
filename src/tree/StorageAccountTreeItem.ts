@@ -31,7 +31,6 @@ import { StaticWebsiteIndexDocumentStep } from './createWizard/StaticWebsiteInde
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
-import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
 export type WebsiteHostingStatus = {
     capable: boolean;
@@ -55,7 +54,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     private _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private _fileShareGroupTreeItem: FileShareGroupTreeItem;
-    private _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot;
 
     private constructor(
@@ -85,7 +83,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
-        this._tableGroupTreeItem = new TableGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
 
         const primaryEndpoints = this.storageAccount.primaryEndpoints;
         const groupTreeItems: AzExtTreeItem[] = [];
@@ -96,10 +93,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
         if (primaryEndpoints.file) {
             groupTreeItems.push(this._fileShareGroupTreeItem);
-        }
-
-        if (primaryEndpoints.table) {
-            groupTreeItems.push(this._tableGroupTreeItem);
         }
 
         return groupTreeItems;

@@ -19,7 +19,6 @@ import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
 import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTreeItem';
-import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
 export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     public childTypeLabel: string = 'resource type';
@@ -29,7 +28,6 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
-    private readonly _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot;
 
     constructor(
@@ -47,7 +45,6 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
         this._root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
-        this._tableGroupTreeItem = new TableGroupTreeItem(this);
     }
 
     public get root(): IStorageRoot {
@@ -67,7 +64,7 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
         const groupTreeItems: AzExtTreeItem[] = [this._blobContainerGroupTreeItem];
 
         if (!this.root.isEmulated) {
-            groupTreeItems.push(this._fileShareGroupTreeItem, this._tableGroupTreeItem);
+            groupTreeItems.push(this._fileShareGroupTreeItem);
         }
 
         return groupTreeItems;
