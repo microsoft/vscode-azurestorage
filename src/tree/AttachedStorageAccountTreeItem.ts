@@ -18,7 +18,6 @@ import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
-import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { StorageAccountTreeItem, WebsiteHostingStatus } from './StorageAccountTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
@@ -30,7 +29,6 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
 
     private readonly _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private readonly _fileShareGroupTreeItem: FileShareGroupTreeItem;
-    private readonly _queueGroupTreeItem: QueueGroupTreeItem;
     private readonly _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot;
 
@@ -49,7 +47,6 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
         this._root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this);
-        this._queueGroupTreeItem = new QueueGroupTreeItem(this);
         this._tableGroupTreeItem = new TableGroupTreeItem(this);
     }
 
@@ -67,7 +64,7 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
 
     // eslint-disable-next-line @typescript-eslint/require-await
     public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
-        const groupTreeItems: AzExtTreeItem[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem];
+        const groupTreeItems: AzExtTreeItem[] = [this._blobContainerGroupTreeItem];
 
         if (!this.root.isEmulated) {
             groupTreeItems.push(this._fileShareGroupTreeItem, this._tableGroupTreeItem);

@@ -31,7 +31,6 @@ import { StaticWebsiteIndexDocumentStep } from './createWizard/StaticWebsiteInde
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
-import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
 export type WebsiteHostingStatus = {
@@ -56,7 +55,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     private _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private _fileShareGroupTreeItem: FileShareGroupTreeItem;
-    private _queueGroupTreeItem: QueueGroupTreeItem;
     private _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot;
 
@@ -87,7 +85,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
-        this._queueGroupTreeItem = new QueueGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
         this._tableGroupTreeItem = new TableGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
 
         const primaryEndpoints = this.storageAccount.primaryEndpoints;
@@ -99,10 +96,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
         if (primaryEndpoints.file) {
             groupTreeItems.push(this._fileShareGroupTreeItem);
-        }
-
-        if (primaryEndpoints.queue) {
-            groupTreeItems.push(this._queueGroupTreeItem);
         }
 
         if (primaryEndpoints.table) {
