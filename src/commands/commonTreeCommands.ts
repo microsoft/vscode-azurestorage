@@ -7,6 +7,17 @@ import { AzExtParentTreeItem, AzExtTreeItem, IActionContext } from '@microsoft/v
 import { storageFilter } from '../constants';
 import { ext } from '../extensionVariables';
 
+export async function pickForDeleteNode<T extends AzExtTreeItem>(context: IActionContext, expectedContextValue: string | RegExp, node?: T): Promise<T> {
+    if (!node) {
+        node = await ext.rgApi.pickAppResource({ ...context, suppressCreatePick: true }, {
+            filter: storageFilter,
+            expectedChildContextValue: expectedContextValue
+        }) as T;
+    }
+
+    return node;
+}
+
 export async function deleteNode(context: IActionContext, expectedContextValue: string | RegExp, node?: AzExtTreeItem): Promise<void> {
     if (!node) {
         node = await ext.rgApi.pickAppResource({ ...context, suppressCreatePick: true }, {

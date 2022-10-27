@@ -6,6 +6,7 @@ export interface VisitedResourceModel extends ResourceModelBase {
     getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem>;
 }
 
+
 export class GenericItem implements VisitedResourceModel {
     constructor(private readonly treeItemFactory: vscode.TreeItem | (() => vscode.TreeItem | Thenable<vscode.TreeItem>)) {
     }

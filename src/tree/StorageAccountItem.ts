@@ -28,7 +28,9 @@ export type WebSiteHostingStatus = {
 export class StorageAccountItem implements StorageAccountModel {
     public static contextValue: string = 'azureStorageAccount';
 
-    constructor(private readonly resource: ApplicationResource) {
+    constructor(
+        private readonly resource: ApplicationResource,
+        private readonly refresh: (model: StorageAccountModel) => void) {
     }
 
     getChildren(): vscode.ProviderResult<StorageAccountModel[]> {
@@ -68,7 +70,7 @@ export class StorageAccountItem implements StorageAccountModel {
                 }
 
                 if (primaryEndpoints.queue) {
-                    groupTreeItems.push(new QueueGroupItem(storageRoot));
+                    groupTreeItems.push(new QueueGroupItem(storageRoot, this.resource.subscription.subscriptionId, this.refresh));
                 }
 
                 if (primaryEndpoints.table) {

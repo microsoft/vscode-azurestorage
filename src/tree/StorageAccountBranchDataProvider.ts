@@ -27,7 +27,7 @@ export class StorageAccountBranchDataProvider extends vscode.Disposable implemen
     }
 
     getResourceItem(element: ApplicationResource): StorageAccountModel | Thenable<StorageAccountModel> {
-        return new StorageAccountItem(element);
+        return new StorageAccountItem(element, model => this.refresh(model));
     }
 
     getTreeItem(element: StorageAccountModel): vscode.TreeItem | Thenable<vscode.TreeItem> {
