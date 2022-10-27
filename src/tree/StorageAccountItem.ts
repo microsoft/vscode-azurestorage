@@ -76,7 +76,7 @@ export class StorageAccountItem implements StorageAccountModel {
                 if (primaryEndpoints.table) {
                     const tableServiceClientFactory = () => this.createTableServiceClient(wrapper, key);
 
-                    groupTreeItems.push(new TableGroupItem(tableServiceClientFactory));
+                    groupTreeItems.push(new TableGroupItem(tableServiceClientFactory, this.refresh));
                 }
 
                 return groupTreeItems;

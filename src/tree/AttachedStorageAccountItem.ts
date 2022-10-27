@@ -29,7 +29,8 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
         private readonly blobContainerGroupItemFactory: BlobContainerGroupItemFactory,
         public readonly connectionString: string,
         private readonly queueGroupItemFactory: QueueGroupItemFactory,
-        private readonly storageAccountName: string) {
+        private readonly storageAccountName: string,
+        private readonly refresh: (model: StorageAccountModel) => void) {
         this.root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
     }
 
@@ -56,7 +57,7 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
                 new FileShareGroupItem(
                     fileShareItemFactory,
                     () => this.root.createShareServiceClient()),
-                new TableGroupItem(() => this.root.createTableServiceClient())
+                new TableGroupItem(() => this.root.createTableServiceClient(), this.refresh)
             );
         }
 
@@ -139,5 +140,5 @@ class AttachedStorageRoot extends AttachedAccountRoot {
 export type AttachedStorageAccountItemFactory = (connectionString: string, storageAccountName: string) => AttachedStorageAccountItem;
 
 export function createAttachedStorageAccountItemFactory(refresh: (model: StorageAccountModel) => void): AttachedStorageAccountItemFactory {
-    return (connectionString: string, storageAccountName: string) => new AttachedStorageAccountItem(createBlobContainerItemFactory(refresh), connectionString, createQueueGroupItemFactory(refresh), storageAccountName);
+    return (connectionString: string, storageAccountName: string) => new AttachedStorageAccountItem(createBlobContainerItemFactory(refresh), connectionString, createQueueGroupItemFactory(refresh), storageAccountName, refresh);
 }

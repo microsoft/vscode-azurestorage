@@ -1,16 +1,21 @@
 import * as azureDataTables from '@azure/data-tables';
-import * as vscode from 'vscode';
 import * as path from 'path';
-import { getResourcesPath, maxPageSize } from '../../constants';
+import * as vscode from 'vscode';
+import { getResourcesPath } from '../../constants';
 import { StorageAccountModel } from "../StorageAccountModel";
 import { TableItem } from './TableItem';
+import { listAllTables } from './tableUtils';
 
 export class TableGroupItem implements StorageAccountModel {
-    constructor(private readonly tableServiceClientFactory: () => azureDataTables.TableServiceClient) {
+    constructor(
+        public readonly tableServiceClientFactory: () => azureDataTables.TableServiceClient,
+        public readonly refresh: (model: StorageAccountModel) => void) {
     }
 
+    readonly notifyCreated = (): void => this.refresh(this);
+
     async getChildren(): Promise<StorageAccountModel[]> {
-        const tables = await this.listAllTables();
+        const tables = await listAllTables(this.tableServiceClientFactory);
 
         return tables
             .filter(table => table.name !== undefined)
@@ -28,29 +33,5 @@ export class TableGroupItem implements StorageAccountModel {
         };
 
         return treeItem;
-    }
-
-    private async listAllTables(): Promise<azureDataTables.TableItem[]> {
-        let response: azureDataTables.TableItemResultPage | undefined;
-
-        const queues: azureDataTables.TableItem[] = [];
-
-        do {
-            response = await this.listTables(response?.continuationToken);
-
-            if (response) {
-                queues.push(...response);
-            }
-        } while (response.continuationToken);
-
-        return queues;
-    }
-
-    private async listTables(continuationToken?: string): Promise<azureDataTables.TableItemResultPage> {
-        const tableServiceClient = this.tableServiceClientFactory();
-        const response: AsyncIterableIterator<azureDataTables.TableItemResultPage> = tableServiceClient.listTables().byPage({ continuationToken, maxPageSize });
-
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return (await response.next()).value;
     }
 }
