@@ -5,8 +5,6 @@ import { IStorageRoot } from '../IStorageRoot';
 import { BlobParentItem } from './BlobParentItem';
 
 export class BlobDirectoryItem extends BlobParentItem {
-    private readonly dirPath: string;
-
     constructor(
         blobContainerClientFactory: () => azureStorageBlob.ContainerClient,
         isEmulated: boolean,
@@ -24,10 +22,14 @@ export class BlobDirectoryItem extends BlobParentItem {
             storageRoot);
 
         this.dirPath = dirPath;
+        this.dirName = path.basename(this.dirPath);
     }
 
+    public readonly dirName: string;
+    public readonly dirPath: string;
+
     async getTreeItem(): Promise<vscode.TreeItem> {
-        const treeItem = new vscode.TreeItem(path.basename(this.dirPath), vscode.TreeItemCollapsibleState.Collapsed);
+        const treeItem = new vscode.TreeItem(this.dirName, vscode.TreeItemCollapsibleState.Collapsed);
 
         treeItem.contextValue = 'azureBlobDirectory';
         treeItem.iconPath = new vscode.ThemeIcon('folder');
