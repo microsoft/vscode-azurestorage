@@ -4,14 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageBlob from "@azure/storage-blob";
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, parseError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from "@microsoft/vscode-azext-utils/hostapi";
 import * as path from 'path';
-import * as vscode from 'vscode';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { ResolvedStorageAccount } from "../../StorageAccountResolver";
-import { createBlobContainerClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
@@ -94,69 +92,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         return (await response.next()).value;
     }
 
-    public async createChildImpl(context: ICreateChildImplContext): Promise<BlobContainerTreeItem> {
-        const containerName = await context.ui.showInputBox({
-            placeHolder: 'Enter a name for the new blob container',
-            validateInput: BlobContainerGroupTreeItem.validateContainerName
-        });
-
-        if (containerName) {
-            return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
-                context.showCreatingTreeItem(containerName);
-                progress.report({ message: `Azure Storage: Creating blob container '${containerName}'` });
-                return await BlobContainerTreeItem.createBlobContainerTreeItem(this, await this.createBlobContainer(containerName));
-            });
-        }
-
-        throw new UserCancelledError();
-    }
-
     public isAncestorOfImpl(contextValue: string): boolean {
         return contextValue === BlobContainerTreeItem.contextValue;
-    }
-
-    private async createBlobContainer(name: string): Promise<azureStorageBlob.ContainerItem> {
-        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, name);
-        await containerClient.create();
-
-        const containersResponse: azureStorageBlob.ListContainersSegmentResponse = await this.listContainers();
-        let createdContainer: azureStorageBlob.ContainerItem | undefined;
-        for (const container of containersResponse.containerItems) {
-            if (container.name === name) {
-                createdContainer = container;
-                break;
-            }
-        }
-
-        if (!createdContainer) {
-            throw new Error(`Could not create container ${name}`);
-        }
-
-        return createdContainer;
-    }
-
-    private static validateContainerName(name: string): string | undefined | null {
-        const validLength = { min: 3, max: 63 };
-
-        if (!name) {
-            return "Container name cannot be empty";
-        }
-        if (name.indexOf(" ") >= 0) {
-            return "Container name cannot contain spaces";
-        }
-        if (name.length < validLength.min || name.length > validLength.max) {
-            return `Container name must contain between ${validLength.min} and ${validLength.max} characters`;
-        }
-        if (!/^[a-z0-9-]+$/.test(name)) {
-            return 'Container name can only contain lowercase letters, numbers and hyphens';
-        }
-        if (/--/.test(name)) {
-            return 'Container name cannot contain two hyphens in a row';
-        }
-        if (/(^-)|(-$)/.test(name)) {
-            return 'Container name cannot begin or end with a hyphen';
-        }
-
-        return undefined;
     }
 }

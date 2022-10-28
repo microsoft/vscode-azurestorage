@@ -1,20 +1,21 @@
 import * as azureStorageBlob from "@azure/storage-blob";
-import * as vscode from 'vscode';
+import { parseError } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
-import { getResourcesPath, maxPageSize } from '../../constants';
+import * as vscode from 'vscode';
+import { getResourcesPath } from '../../constants';
+import { delay } from "../../utils/delay";
+import { localize } from "../../utils/localize";
+import { GenericItem } from "../../utils/v2/treeutils";
+import { IStorageRoot } from "../IStorageRoot";
+import { WebSiteHostingStatus } from "../StorageAccountItem";
 import { StorageAccountModel } from "../StorageAccountModel";
 import { BlobContainerItem } from "./BlobContainerItem";
-import { WebSiteHostingStatus } from "../StorageAccountItem";
-import { IStorageRoot } from "../IStorageRoot";
-import { parseError } from "@microsoft/vscode-azext-utils";
-import { GenericItem } from "../../utils/v2/treeutils";
-import { localize } from "../../utils/localize";
-import { delay } from "../../utils/delay";
+import { listAllContainers } from './blobUtils';
 
 export class BlobContainerGroupItem implements StorageAccountModel {
     constructor(
         private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>,
-        private readonly storageRoot: IStorageRoot,
+        public readonly storageRoot: IStorageRoot,
         private readonly subscriptionId: string,
         private readonly refresh?: (model: StorageAccountModel) => void) {
     }
@@ -62,7 +63,8 @@ export class BlobContainerGroupItem implements StorageAccountModel {
                                 }
                             ],
                             command: 'azureStorage.startBlobEmulator',
-                            title: '' };
+                            title: ''
+                        };
 
                         return treeItem;
                     })
@@ -84,7 +86,7 @@ export class BlobContainerGroupItem implements StorageAccountModel {
 
     private async getContainers(): Promise<azureStorageBlob.ContainerItem[] | undefined> {
         try {
-            return await this.listAllContainers();
+            return await listAllContainers(this.storageRoot.createBlobServiceClient());
         } catch (error) {
             const errorType: string = parseError(error).errorType;
             if (this.storageRoot.isEmulated && errorType === 'ECONNREFUSED') {
@@ -95,30 +97,6 @@ export class BlobContainerGroupItem implements StorageAccountModel {
                 throw error;
             }
         }
-    }
-
-    private async listAllContainers(): Promise<azureStorageBlob.ContainerItem[]> {
-        let response: azureStorageBlob.ListContainersSegmentResponse | undefined;
-
-        const containers: azureStorageBlob.ContainerItem[] = [];
-
-        do {
-            response = await this.listContainers(response?.continuationToken);
-
-            if (response.containerItems) {
-                containers.push(...response.containerItems);
-            }
-        } while (response.continuationToken);
-
-        return containers;
-    }
-
-    private async listContainers(continuationToken?: string): Promise<azureStorageBlob.ListContainersSegmentResponse> {
-        const blobServiceClient: azureStorageBlob.BlobServiceClient = this.storageRoot.createBlobServiceClient();
-        const response: AsyncIterableIterator<azureStorageBlob.ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize });
-
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return (await response.next()).value;
     }
 }
 
