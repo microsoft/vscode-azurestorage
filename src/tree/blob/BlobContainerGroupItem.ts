@@ -17,7 +17,7 @@ export class BlobContainerGroupItem implements StorageAccountModel {
         private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>,
         public readonly storageRoot: IStorageRoot,
         private readonly subscriptionId: string,
-        private readonly refresh?: (model: StorageAccountModel) => void) {
+        private readonly refresh: (model: StorageAccountModel) => void) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
@@ -59,7 +59,7 @@ export class BlobContainerGroupItem implements StorageAccountModel {
                         treeItem.command = {
                             arguments: [
                                 () => {
-                                    this.refresh?.(this);
+                                    this.refresh(this);
                                 }
                             ],
                             command: 'azureStorage.startBlobEmulator',
@@ -82,6 +82,10 @@ export class BlobContainerGroupItem implements StorageAccountModel {
         };
 
         return treeItem;
+    }
+
+    notifyChanged(): void {
+        this.refresh(this);
     }
 
     private async getContainers(): Promise<azureStorageBlob.ContainerItem[] | undefined> {

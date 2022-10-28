@@ -71,11 +71,11 @@ export async function createBlobContainer(context: IActionContext, treeItem?: Bl
                 }
             }
 
+            treeItem.notifyChanged();
+
             if (!createdContainer) {
                 throw new Error(`Could not create container ${containerName}`);
             }
-
-            // TODO: Refresh group item.
         });
     }
 
