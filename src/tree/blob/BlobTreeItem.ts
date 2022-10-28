@@ -5,11 +5,9 @@
 
 import * as azureStorageBlob from "@azure/storage-blob";
 import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
-import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { MessageItem, window } from 'vscode';
-import { AzureStorageFS } from "../../AzureStorageFS";
 import { storageExplorerDownloadUrl } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
@@ -62,22 +60,6 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
         await vscode.env.clipboard.writeText(url);
         ext.outputChannel.show();
         ext.outputChannel.appendLog(`Blob URL copied to clipboard: ${url}`);
-    }
-
-    public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {
-        let result: MessageItem | undefined;
-        if (!context.suppressMessage) {
-            const message: string = `Are you sure you want to delete the blob '${this.label}'?`;
-            result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        }
-        if (result === DialogResponses.deleteResponse || context.suppressMessage) {
-            const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
-            await blobClient.delete();
-        } else {
-            throw new UserCancelledError();
-        }
-
-        AzureStorageFS.fireDeleteEvent(this);
     }
 
     public async checkCanDownload(context: IActionContext): Promise<void> {
