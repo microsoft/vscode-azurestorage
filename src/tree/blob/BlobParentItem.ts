@@ -3,6 +3,7 @@ import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { maxPageSize } from "../../constants";
+import { IStorageRoot } from '../IStorageRoot';
 import { StorageAccountModel } from "../StorageAccountModel";
 import { BlobItem } from "./BlobItem";
 
@@ -11,7 +12,8 @@ export abstract class BlobParentItem implements StorageAccountModel {
         private readonly blobContainerClientFactory: () => azureStorageBlob.ContainerClient,
         private readonly parentItemFactory: (dirPath: string) => BlobParentItem,
         public readonly isEmulated: boolean,
-        private readonly prefix: string | undefined) {
+        private readonly prefix: string | undefined,
+        private readonly storageRoot: IStorageRoot) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
@@ -32,7 +34,7 @@ export abstract class BlobParentItem implements StorageAccountModel {
         const children: StorageAccountModel[] = [];
         for (const blob of responseValue.segment.blobItems) {
             // NOTE: `blob.name` as returned from Azure is actually the blob path in the container
-            children.push(new BlobItem(blob.name));
+            children.push(new BlobItem(blob.name, { containerName: containerClient.containerName, storageRoot: this.storageRoot }));
         }
 
         for (const directory of responseValue.segment.blobPrefixes || []) {

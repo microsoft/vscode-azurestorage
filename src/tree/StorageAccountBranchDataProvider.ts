@@ -23,7 +23,7 @@ export class StorageAccountBranchDataProvider extends vscode.Disposable implemen
     }
 
     getChildren(element: StorageAccountModel): vscode.ProviderResult<StorageAccountModel[]> {
-        return element.getChildren();
+        return element.getChildren?.();
     }
 
     getResourceItem(element: ApplicationResource): StorageAccountModel | Thenable<StorageAccountModel> {

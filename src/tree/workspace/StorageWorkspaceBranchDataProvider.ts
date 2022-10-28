@@ -17,7 +17,7 @@ export class StorageWorkspaceBranchDataProvider extends vscode.Disposable implem
     onDidChangeTreeData = this.onDidChangeTreeDataEmitter.event;
 
     getChildren(element: StorageAccountModel): vscode.ProviderResult<StorageAccountModel[]> {
-        return element.getChildren();
+        return element.getChildren?.();
     }
 
     getTreeItem(element: StorageAccountModel): vscode.TreeItem | Thenable<vscode.TreeItem> {

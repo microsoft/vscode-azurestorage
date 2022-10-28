@@ -45,7 +45,8 @@ export class BlobContainerGroupItem implements StorageAccountModel {
                             return blobServiceClient.getContainerClient(container.name);
                         },
                         this.storageRoot.isEmulated,
-                        this.getWebSiteHostingStatus));
+                        this.getWebSiteHostingStatus,
+                        this.storageRoot));
         } else {
             return [
                 // TODO: Exclude from tree item picker.

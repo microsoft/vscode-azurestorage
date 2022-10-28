@@ -1,6 +1,7 @@
 import * as azureStorageBlob from "@azure/storage-blob";
-import * as vscode from 'vscode';
 import * as path from 'path';
+import * as vscode from 'vscode';
+import { IStorageRoot } from '../IStorageRoot';
 import { BlobParentItem } from './BlobParentItem';
 
 export class BlobDirectoryItem extends BlobParentItem {
@@ -9,16 +10,18 @@ export class BlobDirectoryItem extends BlobParentItem {
     constructor(
         blobContainerClientFactory: () => azureStorageBlob.ContainerClient,
         isEmulated: boolean,
-        dirPath: string) {
+        dirPath: string,
+        storageRoot: IStorageRoot) {
         if (!dirPath.endsWith(path.posix.sep)) {
             dirPath += path.posix.sep;
         }
 
         super(
             blobContainerClientFactory,
-            (dirPath: string) => new BlobDirectoryItem(blobContainerClientFactory, isEmulated, dirPath),
+            (dirPath: string) => new BlobDirectoryItem(blobContainerClientFactory, isEmulated, dirPath, storageRoot),
             isEmulated,
-            dirPath);
+            dirPath,
+            storageRoot);
 
         this.dirPath = dirPath;
     }

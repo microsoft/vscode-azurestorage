@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { getResourcesPath, staticWebsiteContainerName } from '../../constants';
 import { GenericItem } from "../../utils/v2/treeutils";
+import { IStorageRoot } from '../IStorageRoot';
 import { WebSiteHostingStatus } from "../StorageAccountItem";
 import { StorageAccountModel } from "../StorageAccountModel";
 import { BlobDirectoryItem } from "./BlobDirectoryItem";
@@ -14,12 +15,14 @@ export class BlobContainerItem extends BlobParentItem {
         public readonly context: { storageAccountId: string, subscriptionId: string },
         blobContainerClientFactory: () => azureStorageBlob.ContainerClient,
         isEmulated: boolean,
-        private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>) {
+        private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>,
+        storageRoot: IStorageRoot) {
         super(
             blobContainerClientFactory,
-            (dirPath: string) => new BlobDirectoryItem(blobContainerClientFactory, isEmulated, dirPath),
+            (dirPath: string) => new BlobDirectoryItem(blobContainerClientFactory, isEmulated, dirPath, storageRoot),
             isEmulated,
-            /* prefix: */ undefined);
+            /* prefix: */ undefined,
+            storageRoot);
     }
 
     get containerName(): string {
@@ -35,9 +38,10 @@ export class BlobContainerItem extends BlobParentItem {
                     const treeItem = new vscode.TreeItem('Open in File Explorer...');
 
                     treeItem.command = {
-                        arguments: [ this ],
+                        arguments: [this],
                         command: 'azureStorage.openInFileExplorer',
-                        title: '' };
+                        title: ''
+                    };
                     treeItem.contextValue = 'openInFileExplorer';
 
                     return treeItem;
