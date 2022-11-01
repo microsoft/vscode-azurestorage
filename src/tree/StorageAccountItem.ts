@@ -84,6 +84,8 @@ export class StorageAccountItem implements StorageAccountModel {
     getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {
         const treeItem = new vscode.TreeItem(this.resource.name, vscode.TreeItemCollapsibleState.Collapsed);
 
+        treeItem.contextValue = 'azureStorageAccount';
+
         return treeItem;
     }
 
