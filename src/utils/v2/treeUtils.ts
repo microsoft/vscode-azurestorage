@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import { ResourceModelBase } from "../../vscode-azureresourcegroups.api.v2";
 
-export interface VisitedResourceModel extends ResourceModelBase {
+export interface VisitedResourceModel {
     getChildren?(): vscode.ProviderResult<VisitedResourceModel[]>;
     getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem>;
 }

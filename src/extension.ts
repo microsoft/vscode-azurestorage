@@ -15,6 +15,7 @@ import { revealTreeItem } from './commands/api/revealTreeItem';
 import { registerBlobActionHandlers } from './commands/blob/blobActionHandlers';
 import { registerBlobContainerActionHandlers } from './commands/blob/blobContainerActionHandlers';
 import { registerBlobContainerGroupActionHandlers } from './commands/blob/blobContainerGroupActionHandlers';
+import { copyUrl } from './commands/copyUrl';
 import { createStorageAccount, createStorageAccountAdvanced } from './commands/createStorageAccount';
 import { detachStorageAccount } from './commands/detachStorageAccount';
 import { download } from './commands/downloadFile';
@@ -42,7 +43,6 @@ import { BlobContainerItem } from './tree/blob/BlobContainerItem';
 import { BlobContainerTreeItem } from './tree/blob/BlobContainerTreeItem';
 import { FileShareItem } from './tree/fileShare/FileShareItem';
 import { FileShareTreeItem } from './tree/fileShare/FileShareTreeItem';
-import { ICopyUrl } from './tree/ICopyUrl';
 import { refreshTreeItem } from './tree/refreshTreeItem';
 import { branchDataProvider } from './tree/StorageAccountBranchDataProvider';
 import { StorageWorkspaceBranchDataProvider } from './tree/workspace/StorageWorkspaceBranchDataProvider';
@@ -117,7 +117,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
             await wizard.prompt();
             await wizard.execute();
         });
-        registerCommand('azureStorage.copyUrl', (_actionContext: IActionContext, treeItem: AzExtTreeItem & ICopyUrl) => treeItem.copyUrl());
+        registerBranchCommand('azureStorage.copyUrl', copyUrl);
         registerCommand("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
             const accountTreeItem = await selectStorageAccountTreeItemForCommand(
                 treeItem,
