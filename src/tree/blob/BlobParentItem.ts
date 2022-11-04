@@ -13,7 +13,7 @@ export abstract class BlobParentItem implements StorageAccountModel {
         private readonly parentItemFactory: (dirPath: string) => BlobParentItem,
         public readonly isEmulated: boolean,
         private readonly prefix: string | undefined,
-        private readonly storageRoot: IStorageRoot) {
+        protected readonly storageRoot: IStorageRoot) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {

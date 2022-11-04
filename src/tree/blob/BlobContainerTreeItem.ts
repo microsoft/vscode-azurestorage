@@ -22,7 +22,6 @@ import { throwIfCanceled } from '../../utils/errorUtils';
 import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
 import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
-import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
 import { IStorageTreeItem } from '../IStorageTreeItem';
 import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -35,7 +34,7 @@ export enum ChildType {
     uploadedBlob
 }
 
-export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class BlobContainerTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
     private _websiteHostingEnabled: boolean;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
@@ -162,18 +161,6 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
         AzureStorageFS.fireCreateEvent(child);
         return child;
-    }
-
-    public getUrl(): string {
-        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
-        return containerClient.url;
-    }
-
-    public async copyUrl(): Promise<void> {
-        const url: string = this.getUrl();
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Container URL copied to clipboard: ${url}`);
     }
 
     public async deployStaticWebsite(context: IActionContext, sourceFolderPath: string): Promise<void> {

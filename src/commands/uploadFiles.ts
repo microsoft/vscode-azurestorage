@@ -9,6 +9,7 @@ import { NotificationProgress, storageFilter } from "../constants";
 import { ext } from "../extensionVariables";
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../tree/fileShare/FileShareTreeItem";
+import { ICopyUrl } from '../tree/ICopyUrl';
 import { AzExtFsExtra } from "../utils/AzExtFsExtra";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../utils/errorUtils";
 import { nonNullValue } from "../utils/nonNull";
@@ -81,7 +82,8 @@ export async function uploadFiles(
         });
 
         if (!calledFromUploadToAzureStorage) {
-            outputAndCopyUploadedFileUrls(treeItem.getUrl(), fileEndings);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            outputAndCopyUploadedFileUrls((<ICopyUrl>treeItem).getUrl!(), fileEndings);
         }
 
         return resolution;

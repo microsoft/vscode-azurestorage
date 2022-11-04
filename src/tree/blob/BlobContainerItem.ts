@@ -2,15 +2,15 @@ import * as azureStorageBlob from "@azure/storage-blob";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { getResourcesPath, staticWebsiteContainerName } from '../../constants';
+import { createBlobContainerClient } from '../../utils/blobUtils';
 import { GenericItem } from "../../utils/v2/treeutils";
-import { ApplicationResourceModel } from '../../vscode-azureresourcegroups.api.v2';
 import { IStorageRoot } from '../IStorageRoot';
 import { WebSiteHostingStatus } from "../StorageAccountItem";
 import { StorageAccountModel } from "../StorageAccountModel";
 import { BlobDirectoryItem } from "./BlobDirectoryItem";
 import { BlobParentItem } from "./BlobParentItem";
 
-export class BlobContainerItem extends BlobParentItem implements ApplicationResourceModel {
+export class BlobContainerItem extends BlobParentItem {
     constructor(
         private readonly container: azureStorageBlob.ContainerItem,
         public readonly context: { storageAccountId: string, subscriptionId: string },
@@ -30,7 +30,10 @@ export class BlobContainerItem extends BlobParentItem implements ApplicationReso
         return this.container.name;
     }
 
-    readonly portalUrl = vscode.Uri.parse('https://google.com');
+    get copyUrl(): vscode.Uri {
+        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.storageRoot, this.container.name);
+        return vscode.Uri.parse(containerClient.url);
+    }
 
     async getChildren(): Promise<StorageAccountModel[]> {
         const children = await super.getChildren();
