@@ -20,7 +20,7 @@ export class BlobContainerItem extends BlobParentItem {
         storageRoot: IStorageRoot) {
         super(
             blobContainerClientFactory,
-            (dirPath: string) => new BlobDirectoryItem(blobContainerClientFactory, isEmulated, dirPath, storageRoot),
+            (dirPath: string) => new BlobDirectoryItem(blobContainerClientFactory, container.name, isEmulated, dirPath, storageRoot),
             isEmulated,
             /* prefix: */ undefined,
             storageRoot);

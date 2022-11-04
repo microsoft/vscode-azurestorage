@@ -8,15 +8,13 @@ import { AzExtParentTreeItem, AzExtTreeItem,  ICreateChildImplContext, TreeItemI
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { ext } from "../../extensionVariables";
-import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
-import { ICopyUrl } from "../ICopyUrl";
+import { createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from "../IStorageTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobTreeItem } from "./BlobTreeItem";
 
-export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     public static contextValue: string = 'azureBlobDirectory';
     public contextValue: string = BlobDirectoryTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
@@ -78,13 +76,5 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
         }
         AzureStorageFS.fireCreateEvent(child);
         return child;
-    }
-
-    public async copyUrl(): Promise<void> {
-        const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.dirPath);
-        const url = blobClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Blob Directory URL copied to clipboard: ${url}`);
     }
 }
