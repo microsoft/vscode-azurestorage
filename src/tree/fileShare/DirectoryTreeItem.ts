@@ -11,14 +11,13 @@ import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
-import { ICopyUrl } from '../ICopyUrl';
+import { askAndCreateEmptyTextFile } from '../../utils/fileUtils';
 import { IStorageRoot } from '../IStorageRoot';
 import { IStorageTreeItem } from '../IStorageTreeItem';
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./FileShareTreeItem";
 import { FileTreeItem } from './FileTreeItem';
 
-export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class DirectoryTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,
@@ -64,15 +63,6 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
             .concat(directories.map((directory: azureStorageShare.DirectoryItem) => {
                 return new DirectoryTreeItem(this, this.fullPath, directory.name, this.shareName);
             }));
-    }
-
-    public async copyUrl(): Promise<void> {
-        // Use this.fullPath here instead of this.directoryName. Otherwise only the leaf directory is displayed in the URL
-        const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, this.fullPath);
-        const url = directoryClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Directory URL copied to clipboard: ${url}`);
     }
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {
