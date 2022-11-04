@@ -1,13 +1,26 @@
-import * as vscode from 'vscode';
+import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
+import * as vscode from 'vscode';
+import { createFileClient } from '../../utils/fileUtils';
+import { IStorageRoot } from '../IStorageRoot';
 import { StorageAccountModel } from '../StorageAccountModel';
 
 export class FileItem implements StorageAccountModel {
     constructor(
-        private readonly path: string) {
+        private readonly path: string,
+        private readonly shareName: string,
+        private readonly storageRoot: IStorageRoot) {
     }
 
-    getChildren(): vscode.ProviderResult<StorageAccountModel[]> {
+    get copyUrl(): vscode.Uri {
+        const directoryPath = path.dirname(this.path);
+        const fileName = path.basename(this.path);
+        const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.storageRoot, this.shareName, directoryPath !== '.' ? directoryPath : '' , fileName);
+
+        return vscode.Uri.parse(fileClient.url);
+    }
+
+    getChildren(): vscode.ProviderResult < StorageAccountModel[] > {
         return undefined;
     }
 

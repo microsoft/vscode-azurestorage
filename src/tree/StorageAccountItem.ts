@@ -61,7 +61,9 @@ export class StorageAccountItem implements StorageAccountModel {
                         {
                             id: this.resource.id,
                             isEmulated: false, // TODO: Determine if this is an emulator
-                            subscriptionId: this.resource.subscription.subscriptionId });
+                            subscriptionId: this.resource.subscription.subscriptionId
+                        },
+                        storageRoot);
 
                     groupTreeItems.push(
                         new FileShareGroupItem(

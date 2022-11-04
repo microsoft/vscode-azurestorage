@@ -1,16 +1,21 @@
 import * as azureStorageShare from '@azure/storage-file-share';
-import * as vscode from 'vscode';
 import * as path from 'path';
+import * as vscode from 'vscode';
+import { IStorageRoot } from '../IStorageRoot';
 import { FileParentItem } from './FileParentItem';
 
 export class DirectoryItem extends FileParentItem {
     constructor(
         private readonly directoryPath: string,
+        shareName: string,
+        storageRoot: IStorageRoot,
         directoryClientFactory: (directory: string | undefined) => azureStorageShare.ShareDirectoryClient) {
         super(
             directoryPath,
-            d => new DirectoryItem(d, directoryClientFactory),
-            directoryClientFactory);
+            shareName,
+            d => new DirectoryItem(d, shareName, storageRoot, directoryClientFactory),
+            directoryClientFactory,
+            storageRoot);
     }
 
     getTreeItem(): vscode.TreeItem {

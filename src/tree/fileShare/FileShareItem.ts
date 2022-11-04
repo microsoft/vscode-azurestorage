@@ -1,11 +1,12 @@
 import * as azureStorageShare from '@azure/storage-file-share';
-import * as vscode from 'vscode';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { getResourcesPath } from '../../constants';
-import { FileParentItem, ShareDirectoryClientFactory } from './FileParentItem';
-import { DirectoryItem } from './DirectoryItem';
-import { StorageAccountModel } from '../StorageAccountModel';
 import { GenericItem } from '../../utils/v2/treeutils';
+import { IStorageRoot } from '../IStorageRoot';
+import { StorageAccountModel } from '../StorageAccountModel';
+import { DirectoryItem } from './DirectoryItem';
+import { FileParentItem, ShareDirectoryClientFactory } from './FileParentItem';
 
 export type ShareClientFactory = (shareName: string) => azureStorageShare.ShareClient;
 export type StorageAccountInfo = { id: string, isEmulated: boolean, subscriptionId: string };
@@ -13,13 +14,16 @@ export type StorageAccountInfo = { id: string, isEmulated: boolean, subscription
 export class FileShareItem extends FileParentItem {
     constructor(
         shareDirectoryClientFactory: ShareDirectoryClientFactory,
-        public readonly shareName: string,
-        public readonly storageAccount: StorageAccountInfo) {
+        shareName: string,
+        public readonly storageAccount: StorageAccountInfo,
+        storageRoot: IStorageRoot) {
 
         super(
             /* directory: */ undefined,
-            d => new DirectoryItem(d, shareDirectoryClientFactory),
-            shareDirectoryClientFactory
+            shareName,
+            d => new DirectoryItem(d, shareName, storageRoot, shareDirectoryClientFactory),
+            shareDirectoryClientFactory,
+            storageRoot
         )
     }
 
@@ -32,9 +36,10 @@ export class FileShareItem extends FileParentItem {
                     const treeItem = new vscode.TreeItem('Open in File Explorer...');
 
                     treeItem.command = {
-                        arguments: [ this ],
+                        arguments: [this],
                         command: 'azureStorage.openInFileExplorer',
-                        title: '' };
+                        title: ''
+                    };
                     treeItem.contextValue = 'openInFileExplorer';
 
                     return treeItem;
@@ -58,10 +63,10 @@ export class FileShareItem extends FileParentItem {
 
 export type FileShareItemFactory = (shareName: string) => FileShareItem;
 
-export function createFileShareItemFactory(shareClientFactory: ShareClientFactory, storageAccount: StorageAccountInfo): FileShareItemFactory {
+export function createFileShareItemFactory(shareClientFactory: ShareClientFactory, storageAccount: StorageAccountInfo, storageRoot: IStorageRoot): FileShareItemFactory {
     return (shareName: string) => {
         const directoryClientFactory = (directory: string) => shareClientFactory(shareName).getDirectoryClient(directory ?? '');
 
-        return new FileShareItem(directoryClientFactory, shareName, storageAccount);
+        return new FileShareItem(directoryClientFactory, shareName, storageAccount, storageRoot);
     }
 }

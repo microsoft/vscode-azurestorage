@@ -1,7 +1,8 @@
+import { PageSettings } from '@azure/core-paging';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as vscode from 'vscode';
-import { PageSettings } from '@azure/core-paging';
 import { maxPageSize } from '../../constants';
+import { IStorageRoot } from '../IStorageRoot';
 import { StorageAccountModel } from '../StorageAccountModel';
 import { FileItem } from './FileItem';
 
@@ -10,8 +11,10 @@ export type ShareDirectoryClientFactory = (directory: string | undefined) => azu
 export abstract class FileParentItem implements StorageAccountModel {
     constructor(
         private readonly directory: string | undefined,
+        public readonly shareName: string,
         private readonly parentItemFactory: (directory: string) => FileParentItem,
-        private readonly shareClientFactory: ShareDirectoryClientFactory) {
+        private readonly shareClientFactory: ShareDirectoryClientFactory,
+        protected readonly storageRoot: IStorageRoot) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {
@@ -31,7 +34,7 @@ export abstract class FileParentItem implements StorageAccountModel {
 
         const children: StorageAccountModel[] = [];
 
-        children.push(...responseValue.segment.fileItems.map(fileItem => new FileItem(fileItem.name)));
+        children.push(...responseValue.segment.fileItems.map(fileItem => new FileItem(fileItem.name, this.shareName, this.storageRoot)));
 
         children.push(...responseValue.segment.directoryItems.map(directoryItem => this.parentItemFactory(directoryItem.name)));
 

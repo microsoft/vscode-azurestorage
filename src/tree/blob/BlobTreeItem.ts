@@ -9,17 +9,15 @@ import { AzExtTreeItem, IActionContext, TreeItemIconPath } from '@microsoft/vsco
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { storageExplorerDownloadUrl } from "../../constants";
-import { ext } from "../../extensionVariables";
 import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
-import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
+import { createBlockBlobClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
-import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from "../IStorageTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 
-export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTreeItem {
+export class BlobTreeItem extends AzExtTreeItem implements IStorageTreeItem {
     public static contextValue: string = 'azureBlob';
     public contextValue: string = BlobTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
@@ -51,15 +49,6 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
 
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('file');
-    }
-
-    public async copyUrl(): Promise<void> {
-        // Use this.blobPath here instead of this.blobName. Otherwise the blob's containing directory/directories aren't displayed
-        const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
-        const url = blobClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Blob URL copied to clipboard: ${url}`);
     }
 
     public async checkCanDownload(context: IActionContext): Promise<void> {

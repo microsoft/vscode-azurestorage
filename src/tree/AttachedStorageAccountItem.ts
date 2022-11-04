@@ -51,7 +51,8 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
                     id: this.root.storageAccountId,
                     isEmulated: this.root.isEmulated,
                     subscriptionId: 'TODO: What subscription ID'
-                });
+                },
+                this.root);
 
             children.push(
                 new FileShareGroupItem(
