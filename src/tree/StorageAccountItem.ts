@@ -1,22 +1,19 @@
-import * as azureStorageBlob from "@azure/storage-blob";
-import * as azureStorageQueue from '@azure/storage-queue';
-import * as azureStorageShare from '@azure/storage-file-share';
+import { StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
 import * as azureDataTables from '@azure/data-tables';
-import { StorageAccount, StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
-import { callWithTelemetryAndErrorHandling, IActionContext, nonNullProp } from '@microsoft/vscode-azext-utils';
+import * as azureStorageBlob from "@azure/storage-blob";
+import * as azureStorageShare from '@azure/storage-file-share';
+import * as azureStorageQueue from '@azure/storage-queue';
+import { nonNullProp } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
-import { createStorageClient } from '../utils/azureClients';
-import { getResourceGroupFromId } from '../utils/azureUtils';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { ApplicationResource } from '../vscode-azureresourcegroups.api.v2';
 import { BlobContainerGroupItem } from './blob/BlobContainerGroupItem';
 import { FileShareGroupItem } from './fileShare/FileShareGroupItem';
+import { createFileShareItemFactory } from "./fileShare/FileShareItem";
+import { IStorageRoot } from "./IStorageRoot";
 import { QueueGroupItem } from './queue/QueueGroupItem';
 import { StorageAccountModel } from './StorageAccountModel';
 import { TableGroupItem } from './table/TableGroupItem';
-import { createSubscriptionContext } from "../utils/v2/credentialsUtils";
-import { createFileShareItemFactory } from "./fileShare/FileShareItem";
-import { IStorageRoot } from "./IStorageRoot";
 
 export type WebSiteHostingStatus = {
     capable: boolean;
@@ -30,57 +27,53 @@ export class StorageAccountItem implements StorageAccountModel {
 
     constructor(
         private readonly resource: ApplicationResource,
+        private readonly storageAccount: StorageAccountWrapper,
+        private readonly storageManagementClient: StorageManagementClient,
         private readonly refresh: (model: StorageAccountModel) => void) {
     }
 
-    getChildren(): vscode.ProviderResult<StorageAccountModel[]> {
-        return callWithTelemetryAndErrorHandling(
-            'getChildren',
-            async (context: IActionContext) => {
-                const subContext = createSubscriptionContext(this.resource.subscription);
+    readonly storageAccountId = this.storageAccount.id;
+    readonly subscriptionId = this.resource.subscription.subscriptionId;
 
-                const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
-                const sa: StorageAccount = await storageManagementClient.storageAccounts.getProperties(getResourceGroupFromId(nonNullProp(this.resource, 'id')), nonNullProp(this.resource, 'name'));
-                const wrapper = new StorageAccountWrapper(sa);
-                const key = await this.getKey(wrapper, storageManagementClient);
-                const storageRoot = this.createRoot(wrapper, key);
-                const primaryEndpoints = wrapper.primaryEndpoints;
-                const groupTreeItems: StorageAccountModel[] = [];
+    async getChildren(): Promise<StorageAccountModel[]> {
+        const key = await this.getKey(this.storageAccount, this.storageManagementClient);
+        const storageRoot = this.createRoot(this.storageAccount, key);
+        const primaryEndpoints = this.storageAccount.primaryEndpoints;
+        const groupTreeItems: StorageAccountModel[] = [];
 
-                if (primaryEndpoints.blob) {
-                    const getWebSiteHostingStatus = () => this.getActualWebsiteHostingStatus(storageRoot.createBlobServiceClient());
+        if (primaryEndpoints.blob) {
+            const getWebSiteHostingStatus = () => this.getActualWebsiteHostingStatus(storageRoot.createBlobServiceClient());
 
-                    groupTreeItems.push(new BlobContainerGroupItem(getWebSiteHostingStatus, storageRoot, this.resource.subscription.subscriptionId, this.refresh));
-                }
+            groupTreeItems.push(new BlobContainerGroupItem(getWebSiteHostingStatus, storageRoot, this.resource.subscription.subscriptionId, this.refresh));
+        }
 
-                if (primaryEndpoints.file) {
-                    const shareServiceClientFactory = () => this.createShareServiceClient(wrapper, key);
-                    const shareClientFactory = (shareName: string) => shareServiceClientFactory().getShareClient(shareName);
-                    const fileShareItemFactory = createFileShareItemFactory(
-                        shareClientFactory,
-                        {
-                            id: this.resource.id,
-                            isEmulated: false, // TODO: Determine if this is an emulator
-                            subscriptionId: this.resource.subscription.subscriptionId
-                        },
-                        storageRoot);
+        if (primaryEndpoints.file) {
+            const shareServiceClientFactory = () => this.createShareServiceClient(this.storageAccount, key);
+            const shareClientFactory = (shareName: string) => shareServiceClientFactory().getShareClient(shareName);
+            const fileShareItemFactory = createFileShareItemFactory(
+                shareClientFactory,
+                {
+                    id: this.resource.id,
+                    isEmulated: false, // TODO: Determine if this is an emulator
+                    subscriptionId: this.resource.subscription.subscriptionId
+                },
+                storageRoot);
 
-                    groupTreeItems.push(
-                        new FileShareGroupItem(
-                            fileShareItemFactory,
-                            shareServiceClientFactory));
-                }
+            groupTreeItems.push(
+                new FileShareGroupItem(
+                    fileShareItemFactory,
+                    shareServiceClientFactory));
+        }
 
-                if (primaryEndpoints.queue) {
-                    groupTreeItems.push(new QueueGroupItem(storageRoot, this.resource.subscription.subscriptionId, this.refresh));
-                }
+        if (primaryEndpoints.queue) {
+            groupTreeItems.push(new QueueGroupItem(storageRoot, this.resource.subscription.subscriptionId, this.refresh));
+        }
 
-                if (primaryEndpoints.table) {
-                    groupTreeItems.push(new TableGroupItem(storageRoot, this.resource.subscription.subscriptionId, this.refresh));
-                }
+        if (primaryEndpoints.table) {
+            groupTreeItems.push(new TableGroupItem(storageRoot, this.resource.subscription.subscriptionId, this.refresh));
+        }
 
-                return groupTreeItems;
-            });
+        return groupTreeItems;
     }
 
     getTreeItem(): vscode.TreeItem | Thenable<vscode.TreeItem> {

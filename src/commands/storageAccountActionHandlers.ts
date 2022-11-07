@@ -4,39 +4,42 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeItem, IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
-import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from "vscode";
 import { configurationSettingsKeys, extensionPrefix, storageFilter } from '../constants';
 import { ext } from '../extensionVariables';
-import { ResolvedStorageAccount } from '../StorageAccountResolver';
 import { storageExplorerLauncher } from '../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
+import { StorageAccountItem } from '../tree/StorageAccountItem';
 import { ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from '../tree/StorageAccountTreeItem';
 import { isPathEqual, isSubpath } from '../utils/fs';
 import { localize } from "../utils/localize";
 import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
+import { registerBranchCommand } from '../utils/v2/commandUtils';
 import { deleteNode } from './commonTreeCommands';
 import { selectStorageAccountTreeItemForCommand } from './selectStorageAccountNodeForCommand';
 
 export function registerStorageAccountActionHandlers(): void {
-    registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
+    registerBranchCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
     registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
     registerCommand("azureStorage.copyConnectionString", copyConnectionString);
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
     registerCommand("azureStorage.deleteStorageAccount", deleteStorageAccount);
 }
 
-async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: ResolvedAppResourceTreeItem<ResolvedStorageAccount>): Promise<void> {
+async function openStorageAccountInStorageExplorer(_context: IActionContext, treeItem: StorageAccountItem): Promise<void> {
+    // Support picking.
+    /*
     if (!treeItem) {
         treeItem = await ext.rgApi.pickAppResource<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtTreeItem>(context, {
             filter: storageFilter,
             expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
         });
     }
+    */
 
-    const accountId = treeItem.storageAccount.id;
+    const accountId = treeItem.storageAccountId;
 
-    await storageExplorerLauncher.openResource(accountId, treeItem.subscription.subscriptionId);
+    await storageExplorerLauncher.openResource(accountId, treeItem.subscriptionId);
 }
 
 export async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
