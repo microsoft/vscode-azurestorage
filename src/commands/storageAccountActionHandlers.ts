@@ -5,8 +5,7 @@
 
 import { AzExtTreeItem, IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
 import * as vscode from "vscode";
-import { configurationSettingsKeys, extensionPrefix, storageFilter } from '../constants';
-import { ext } from '../extensionVariables';
+import { configurationSettingsKeys, extensionPrefix } from '../constants';
 import { storageExplorerLauncher } from '../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { StorageAccountItem } from '../tree/StorageAccountItem';
@@ -20,48 +19,45 @@ import { selectStorageAccountTreeItemForCommand } from './selectStorageAccountNo
 
 export function registerStorageAccountActionHandlers(): void {
     registerBranchCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
-    registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
-    registerCommand("azureStorage.copyConnectionString", copyConnectionString);
+    registerBranchCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
+    registerBranchCommand("azureStorage.copyConnectionString", copyConnectionString);
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
     registerCommand("azureStorage.deleteStorageAccount", deleteStorageAccount);
 }
 
-async function openStorageAccountInStorageExplorer(_context: IActionContext, treeItem: StorageAccountItem): Promise<void> {
-    // Support picking.
-    /*
-    if (!treeItem) {
-        treeItem = await ext.rgApi.pickAppResource<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtTreeItem>(context, {
-            filter: storageFilter,
-            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
-        });
-    }
-    */
+function getStorageAccountItem(_context: IActionContext, treeItem: StorageAccountItem | undefined): Promise<StorageAccountItem> {
+    // TODO: Support picking when available.
+    // if (!treeItem) {
+    //     treeItem = await ext.rgApi.pickAppResource<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtTreeItem>(context, {
+    //         filter: storageFilter,
+    //         expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
+    //     });
+    // }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return Promise.resolve(treeItem!);
+}
+
+async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: StorageAccountItem): Promise<void> {
+    treeItem = await getStorageAccountItem(context, treeItem);
 
     const accountId = treeItem.storageAccountId;
 
     await storageExplorerLauncher.openResource(accountId, treeItem.subscriptionId);
 }
 
-export async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
-    if (!treeItem) {
-        treeItem = await ext.rgApi.pickAppResource<StorageAccountTreeItem & AzExtTreeItem>(context, {
-            filter: storageFilter,
-            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
-        });
-    }
+export async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountItem): Promise<void> {
+    treeItem = await getStorageAccountItem(context, treeItem);
 
-    await vscode.env.clipboard.writeText(treeItem.key.value);
+    const key = await treeItem.getKey();
+
+    await vscode.env.clipboard.writeText(key.value);
 }
 
-export async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
-    if (!treeItem) {
-        treeItem = await ext.rgApi.pickAppResource<StorageAccountTreeItem & AzExtTreeItem>(context, {
-            filter: storageFilter,
-            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
-        });
-    }
+export async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountItem): Promise<void> {
+    treeItem = await getStorageAccountItem(context, treeItem);
 
-    const connectionString = treeItem.getConnectionString();
+    const connectionString = await treeItem.getConnectionString();
     await vscode.env.clipboard.writeText(connectionString);
 }
 

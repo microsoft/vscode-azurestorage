@@ -25,6 +25,8 @@ export type WebSiteHostingStatus = {
 export class StorageAccountItem implements StorageAccountModel {
     public static contextValue: string = 'azureStorageAccount';
 
+    private _key: StorageAccountKeyWrapper | undefined;
+
     constructor(
         private readonly resource: ApplicationResource,
         private readonly storageAccount: StorageAccountWrapper,
@@ -36,7 +38,7 @@ export class StorageAccountItem implements StorageAccountModel {
     readonly subscriptionId = this.resource.subscription.subscriptionId;
 
     async getChildren(): Promise<StorageAccountModel[]> {
-        const key = await this.getKey(this.storageAccount, this.storageManagementClient);
+        const key = await this.getKey();
         const storageRoot = this.createRoot(this.storageAccount, key);
         const primaryEndpoints = this.storageAccount.primaryEndpoints;
         const groupTreeItems: StorageAccountModel[] = [];
@@ -84,23 +86,32 @@ export class StorageAccountItem implements StorageAccountModel {
         return treeItem;
     }
 
-    private async getKey(storageAccount: StorageAccountWrapper, storageManagementClient: StorageManagementClient): Promise<StorageAccountKeyWrapper> {
-        const keys: StorageAccountKeyWrapper[] = await this.getKeys(storageAccount, storageManagementClient);
-        const primaryKey = keys.find(key => {
-            return key.keyName === "key1" || key.keyName === "primaryKey";
-        });
-
-        if (primaryKey) {
-            return new StorageAccountKeyWrapper(primaryKey);
-        } else {
-            throw new Error("Could not find primary key");
-        }
+    async getConnectionString(): Promise<string> {
+        const key = await this.getKey();
+        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${key.value};EndpointSuffix=${nonNullProp(this.resource.subscription.environment, 'storageEndpointSuffix')}`;
     }
 
-    private async getKeys(storageAccount: StorageAccountWrapper, storageManagementClient: StorageManagementClient): Promise<StorageAccountKeyWrapper[]> {
-        const parsedId = StorageAccountItem.parseAzureResourceId(storageAccount.id);
+    async getKey(): Promise<StorageAccountKeyWrapper> {
+        if (!this._key) {
+            const keys: StorageAccountKeyWrapper[] = await this.getKeys();
+            const primaryKey = keys.find(key => {
+                return key.keyName === "key1" || key.keyName === "primaryKey";
+            });
+
+            if (primaryKey) {
+                this._key = new StorageAccountKeyWrapper(primaryKey);
+            } else {
+                throw new Error("Could not find primary key");
+            }
+        }
+
+        return this._key;
+    }
+
+    private async getKeys(): Promise<StorageAccountKeyWrapper[]> {
+        const parsedId = StorageAccountItem.parseAzureResourceId(this.storageAccount.id);
         const resourceGroupName = parsedId.resourceGroups;
-        const keyResult = await storageManagementClient.storageAccounts.listKeys(resourceGroupName, storageAccount.name);
+        const keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
         return (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
     }
 
