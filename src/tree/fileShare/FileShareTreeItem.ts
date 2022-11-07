@@ -18,14 +18,13 @@ import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
 import { getUploadingMessageWithSource } from '../../utils/uploadUtils';
-import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
 import { IStorageTreeItem } from '../IStorageTreeItem';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareGroupTreeItem } from './FileShareGroupTreeItem';
 import { FileTreeItem } from './FileTreeItem';
 
-export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class FileShareTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     public parent: FileShareGroupTreeItem;
     private _continuationToken: string | undefined;
     private _openInFileExplorerString: string = 'Open in File Explorer...';
@@ -85,18 +84,6 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         }
 
         return ti1.label.localeCompare(ti2.label);
-    }
-
-    public getUrl(): string {
-        const shareClient: azureStorageShare.ShareClient = createShareClient(this.root, this.shareName);
-        return shareClient.url;
-    }
-
-    public async copyUrl(): Promise<void> {
-        const url: string = this.getUrl();
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Share URL copied to clipboard: ${url}`);
     }
 
     public async deleteTreeItemImpl(context: IActionContext): Promise<void> {

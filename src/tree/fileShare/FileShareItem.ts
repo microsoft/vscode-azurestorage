@@ -2,6 +2,7 @@ import * as azureStorageShare from '@azure/storage-file-share';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { getResourcesPath } from '../../constants';
+import { createShareClient } from '../../utils/fileUtils';
 import { GenericItem } from '../../utils/v2/treeutils';
 import { IStorageRoot } from '../IStorageRoot';
 import { StorageAccountModel } from '../StorageAccountModel';
@@ -25,6 +26,12 @@ export class FileShareItem extends FileParentItem {
             shareDirectoryClientFactory,
             storageRoot
         )
+    }
+
+    get copyUrl(): vscode.Uri {
+        const shareClient: azureStorageShare.ShareClient = createShareClient(this.storageRoot, this.shareName);
+
+        return vscode.Uri.parse(shareClient.url);
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {

@@ -82,8 +82,9 @@ export async function uploadFiles(
         });
 
         if (!calledFromUploadToAzureStorage) {
+            // TODO: Fixup tree item.
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            outputAndCopyUploadedFileUrls((<ICopyUrl>treeItem).getUrl!(), fileEndings);
+            outputAndCopyUploadedFileUrls((<ICopyUrl><unknown>treeItem).getUrl!(), fileEndings);
         }
 
         return resolution;
