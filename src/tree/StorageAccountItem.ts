@@ -29,12 +29,16 @@ export class StorageAccountItem implements StorageAccountModel {
 
     constructor(
         private readonly resource: ApplicationResource,
-        private readonly storageAccount: StorageAccountWrapper,
+        public readonly storageAccount: StorageAccountWrapper,
         private readonly storageManagementClient: StorageManagementClient,
-        private readonly refresh: (model: StorageAccountModel) => void) {
+        private readonly refresh: (model: StorageAccountModel) => void,
+        private readonly refreshParent: () => void) {
     }
 
+    readonly notifyChanged = this.refreshParent;
+    readonly name = this.storageAccount.name;
     readonly storageAccountId = this.storageAccount.id;
+    readonly subscription = this.resource.subscription;
     readonly subscriptionId = this.resource.subscription.subscriptionId;
 
     async getChildren(): Promise<StorageAccountModel[]> {

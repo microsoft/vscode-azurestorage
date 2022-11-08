@@ -3,13 +3,14 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as vscode from 'vscode';
 import { AzExtTreeDataProvider, AzExtTreeItem, IAzExtOutputChannel, ITreeItemPickerContext } from "@microsoft/vscode-azext-utils";
+import { Activity, PickAppResourceOptions } from '@microsoft/vscode-azext-utils/hostapi';
+import * as vscode from 'vscode';
 import { ExtensionContext } from "vscode";
 import { AzureAccountTreeItem } from '../src/tree/AzureAccountTreeItem';
 import { AzureStorageFS } from "./AzureStorageFS";
 import { AttachedStorageAccountsTreeItem } from "./tree/AttachedStorageAccountsTreeItem";
-import { Activity, PickAppResourceOptions } from '@microsoft/vscode-azext-utils/hostapi';
+import { V2AzureResourcesApi } from './vscode-azureresourcegroups.api.v2';
 
 export interface AzureHostExtensionApi2 {
     /**
@@ -66,4 +67,5 @@ export namespace ext {
     export const prefix: string = 'azureStorage';
 
     export let rgApi: AzureHostExtensionApi2;
+    export let rgApi2: V2AzureResourcesApi;
 }

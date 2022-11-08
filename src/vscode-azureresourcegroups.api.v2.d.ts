@@ -5,6 +5,7 @@
 
 import type { Environment } from '@azure/ms-rest-azure-env';
 import { AzExtResourceType } from '@microsoft/vscode-azext-utils';
+import { Activity } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from 'vscode';
 
 /**
@@ -58,12 +59,7 @@ export interface ResourceProvider<TResourceSource, TResource extends ResourceBas
 /**
  * The base interface for visualizers of application and workspace resources.
  */
-export interface BranchDataProvider<TResourceType, TResource extends ResourceBase, TModel extends ResourceModelBase> extends vscode.TreeDataProvider<TModel> {
-    /**
-     * TODO: Should T be derived from TModel?
-     */
-    findModel?<T>(resourceType: TResourceType, resourceId: string, context?: string[]): vscode.ProviderResult<T>;
-
+export interface BranchDataProvider<TResource extends ResourceBase, TModel extends ResourceModelBase> extends vscode.TreeDataProvider<TModel> {
     /**
      * Get the children of `element`.
      *
@@ -137,7 +133,7 @@ export interface ApplicationSubscription {
     /**
      * The tenant to which this subscription belongs or undefined, if not associated with a specific tenant.
      */
-    readonly tenantId?: string;
+    readonly tenantId: string;
 }
 
 /**
@@ -152,7 +148,7 @@ export interface AzureResourceType {
     /**
      * The (general) type of resource.
      */
-     readonly type: string;
+    readonly type: string;
 }
 
 /**
@@ -219,7 +215,7 @@ export type ApplicationResourceProvider = ResourceProvider<ApplicationSubscripti
 /**
  * A provider for visualizing items in the application resource tree (e.g. Cosmos DB, Storage, etc.).
  */
-export type ApplicationResourceBranchDataProvider<TModel extends ApplicationResourceModel> = BranchDataProvider<AzExtResourceType, ApplicationResource, TModel>;
+export type ApplicationResourceBranchDataProvider<TModel extends ApplicationResourceModel> = BranchDataProvider<ApplicationResource, TModel>;
 
 /**
  * Respresents a specific type of workspace resource.
@@ -258,13 +254,18 @@ export type WorkspaceResourceProvider = ResourceProvider<vscode.WorkspaceFolder,
 /**
  * A provider for visualizing items in the workspace resource tree (e.g., storage emulator, function apps in workspace, etc.).
  */
-export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel> = BranchDataProvider<WorkspaceResourceType, WorkspaceResource, TModel>;
+export type WorkspaceResourceBranchDataProvider<TModel extends WorkspaceResourceModel> = BranchDataProvider<WorkspaceResource, TModel>;
 
 /**
  * The current (v2) Azure Resources extension API.
  */
 export interface V2AzureResourcesApi extends AzureResourcesApiBase {
-    findApplicationResourceModel<T>(resourceType: AzExtResourceType, resourceId: string, context?: string[]): vscode.ProviderResult<T>;
+    /**
+     * Registers an activity to appear in the activity window.
+     *
+     * @param activity The activity information to show.
+     */
+     registerActivity(activity: Activity): Promise<void>;
 
     /**
      * Registers a provider of application resources.

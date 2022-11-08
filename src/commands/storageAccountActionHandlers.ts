@@ -3,18 +3,21 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, AzureWizard, DeleteConfirmationStep, IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
 import * as vscode from "vscode";
 import { configurationSettingsKeys, extensionPrefix } from '../constants';
 import { storageExplorerLauncher } from '../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
 import { StorageAccountItem } from '../tree/StorageAccountItem';
 import { ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from '../tree/StorageAccountTreeItem';
+import { createActivityContext } from '../utils/activityUtils';
 import { isPathEqual, isSubpath } from '../utils/fs';
 import { localize } from "../utils/localize";
 import { showWorkspaceFoldersQuickPick } from "../utils/quickPickUtils";
 import { registerBranchCommand } from '../utils/v2/commandUtils';
-import { deleteNode } from './commonTreeCommands';
+import { createSubscriptionContext } from '../utils/v2/credentialsUtils';
+import { DeleteStorageAccountStep } from './deleteStorageAccount/DeleteStorageAccountStep';
+import { DeleteStorageAccountWizardContext } from './deleteStorageAccount/DeleteStorageAccountWizardContext';
 import { selectStorageAccountTreeItemForCommand } from './selectStorageAccountNodeForCommand';
 
 export function registerStorageAccountActionHandlers(): void {
@@ -22,7 +25,7 @@ export function registerStorageAccountActionHandlers(): void {
     registerBranchCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
     registerBranchCommand("azureStorage.copyConnectionString", copyConnectionString);
     registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
-    registerCommand("azureStorage.deleteStorageAccount", deleteStorageAccount);
+    registerBranchCommand("azureStorage.deleteStorageAccount", deleteStorageAccount);
 }
 
 function getStorageAccountItem(_context: IActionContext, treeItem: StorageAccountItem | undefined): Promise<StorageAccountItem> {
@@ -142,6 +145,33 @@ function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vsc
     }
 }
 
-export async function deleteStorageAccount(context: IActionContext, treeItem?: StorageAccountTreeItem & AzExtTreeItem): Promise<void> {
-    await deleteNode(context, new RegExp(StorageAccountTreeItem.contextValue), treeItem);
+export async function deleteStorageAccount(context: IActionContext, treeItem?: StorageAccountItem): Promise<void> {
+    if (!treeItem) {
+        // TODO: Implement picker when available.
+        // treeItem = await ext.rgApi.pickAppResource({ ...context, suppressCreatePick: true }, {
+        //     filter: storageFilter,
+        //     expectedChildContextValue: expectedContextValue
+        // });
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        treeItem = treeItem!;
+    }
+
+    const deletingStorageAccount: string = localize('deleteStorageAccount', 'Delete storage account "{0}"', treeItem.name);
+    const wizardContext: DeleteStorageAccountWizardContext = Object.assign(context, {
+        storageAccount: treeItem.storageAccount,
+        subscription: createSubscriptionContext(treeItem.subscription),
+        ...(await createActivityContext()),
+        activityTitle: deletingStorageAccount
+    });
+
+    const message: string = `Are you sure you want to delete account "${treeItem.name}" and all its contents?`;
+    const wizard = new AzureWizard(wizardContext, {
+        promptSteps: [new DeleteConfirmationStep(message)],
+        executeSteps: [new DeleteStorageAccountStep()]
+    });
+
+    await wizard.prompt();
+    await wizard.execute();
+
+    treeItem.notifyChanged();
 }

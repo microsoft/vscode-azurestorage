@@ -164,6 +164,8 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
                 throw new Error('Could not find the V2 Azure Resource Groups API.');
             }
 
+            ext.rgApi2 = v2Api;
+
             v2Api.registerApplicationResourceBranchDataProvider(AzExtResourceType.StorageAccounts, branchDataProvider);
             v2Api.registerWorkspaceResourceProvider(new StorageWorkspaceResourceProvider());
             v2Api.registerWorkspaceResourceBranchDataProvider('ms-azuretools.vscode-azurestorage', new StorageWorkspaceBranchDataProvider());

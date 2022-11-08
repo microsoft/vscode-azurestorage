@@ -10,7 +10,7 @@ import { StorageAccountItem } from './StorageAccountItem';
 import { StorageAccountModel } from './StorageAccountModel';
 
 export class StorageAccountBranchDataProvider extends vscode.Disposable implements ApplicationResourceBranchDataProvider<StorageAccountModel> {
-    private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<StorageAccountModel>();
+    private readonly onDidChangeTreeDataEmitter = new vscode.EventEmitter<StorageAccountModel | undefined>();
 
     constructor() {
         super(
@@ -19,7 +19,7 @@ export class StorageAccountBranchDataProvider extends vscode.Disposable implemen
             });
     }
 
-    get onDidChangeTreeData(): vscode.Event<StorageAccountModel> {
+    get onDidChangeTreeData(): vscode.Event<StorageAccountModel | undefined> {
         return this.onDidChangeTreeDataEmitter.event;
     }
 
@@ -42,7 +42,12 @@ export class StorageAccountBranchDataProvider extends vscode.Disposable implemen
 
                 const storageAccount = new StorageAccountWrapper(sa);
 
-                return new StorageAccountItem(element, storageAccount, storageManagementClient, model => this.refresh(model));
+                return new StorageAccountItem(
+                    element,
+                    storageAccount,
+                    storageManagementClient,
+                    model => this.refresh(model),
+                    () => this.onDidChangeTreeDataEmitter.fire(undefined));
             });
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
