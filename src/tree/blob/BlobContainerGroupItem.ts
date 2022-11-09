@@ -47,7 +47,8 @@ export class BlobContainerGroupItem implements StorageAccountModel {
                         },
                         this.storageRoot.isEmulated,
                         this.getWebSiteHostingStatus,
-                        this.storageRoot));
+                        this.storageRoot,
+                        () => this.notifyChanged()));
         } else {
             return [
                 // TODO: Exclude from tree item picker.

@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import * as azureStorageBlob from '@azure/storage-blob';
+import { DialogResponses, IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
@@ -13,15 +14,15 @@ import { BlobContainerItem } from '../../tree/blob/BlobContainerItem';
 import { BlobContainerTreeItem } from '../../tree/blob/BlobContainerTreeItem';
 import { BlobDirectoryTreeItem } from '../../tree/blob/BlobDirectoryTreeItem';
 import { BlobTreeItem } from '../../tree/blob/BlobTreeItem';
-import { getBlobPath, IBlobContainerCreateChildContext } from '../../utils/blobUtils';
+import { createBlobContainerClient, getBlobPath, IBlobContainerCreateChildContext } from '../../utils/blobUtils';
 import { localize } from '../../utils/localize';
 import { registerBranchCommand } from '../../utils/v2/commandUtils';
-import { deleteNode } from '../commonTreeCommands';
+import { pickForDeleteNode } from '../commonTreeCommands';
 
 export function registerBlobContainerActionHandlers(): void {
     registerBranchCommand("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
     registerCommand("azureStorage.editBlob", async (context: IActionContext, treeItem: BlobTreeItem) => AzureStorageFS.showEditor(context, treeItem), 250);
-    registerCommand("azureStorage.deleteBlobContainer", deleteBlobContainer);
+    registerBranchCommand("azureStorage.deleteBlobContainer", deleteBlobContainer);
     registerCommand("azureStorage.createBlockBlob", async (context: IActionContext, parent: BlobContainerTreeItem) => {
         const blobPath: string = await getBlobPath(context, parent.root, parent.container.name);
         const dirNames: string[] = blobPath.includes('/') ? path.dirname(blobPath).split('/') : [];
@@ -54,6 +55,17 @@ async function openBlobContainerInStorageExplorer(_context: IActionContext, tree
     await storageExplorerLauncher.openResource(accountId, treeItem.context.subscriptionId, resourceType, resourceName);
 }
 
-export async function deleteBlobContainer(context: IActionContext, treeItem?: BlobContainerTreeItem): Promise<void> {
-    await deleteNode(context, BlobContainerTreeItem.contextValue, treeItem);
+export async function deleteBlobContainer(context: IActionContext, treeItem?: BlobContainerItem): Promise<void> {
+    treeItem = await pickForDeleteNode(context, BlobContainerTreeItem.contextValue, treeItem);
+
+    const message: string = `Are you sure you want to delete blob container '${treeItem.containerName}' and all its contents?`;
+    const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
+    if (result === DialogResponses.deleteResponse) {
+        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(treeItem.storageRoot, treeItem.containerName);
+        await containerClient.delete();
+        treeItem.onDeleted();
+    }
+
+    // TODO: Reenable events on FS.
+    // AzureStorageFS.fireDeleteEvent(this);
 }

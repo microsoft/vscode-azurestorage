@@ -6,13 +6,17 @@
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext } from '@microsoft/vscode-azext-utils';
 import { storageFilter } from '../constants';
 import { ext } from '../extensionVariables';
+import { StorageAccountModel } from '../tree/StorageAccountModel';
 
-export async function pickForDeleteNode<T extends AzExtTreeItem>(context: IActionContext, expectedContextValue: string | RegExp, node?: T): Promise<T> {
+export async function pickForDeleteNode<T extends StorageAccountModel>(_context: IActionContext, _expectedContextValue: string | RegExp, node?: T): Promise<T> {
     if (!node) {
-        node = await ext.rgApi.pickAppResource({ ...context, suppressCreatePick: true }, {
-            filter: storageFilter,
-            expectedChildContextValue: expectedContextValue
-        }) as T;
+        // node = await ext.rgApi.pickAppResource({ ...context, suppressCreatePick: true }, {
+        //     filter: storageFilter,
+        //     expectedChildContextValue: expectedContextValue
+        // }) as T;
+
+        // TODO: Enable picking.
+        throw new Error('Not implemented');
     }
 
     return node;

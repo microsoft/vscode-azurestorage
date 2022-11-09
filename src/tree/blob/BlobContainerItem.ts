@@ -17,7 +17,8 @@ export class BlobContainerItem extends BlobParentItem {
         blobContainerClientFactory: () => azureStorageBlob.ContainerClient,
         isEmulated: boolean,
         private readonly getWebSiteHostingStatus: () => Promise<WebSiteHostingStatus>,
-        storageRoot: IStorageRoot) {
+        storageRoot: IStorageRoot,
+        public readonly onDeleted: () => void) {
         super(
             blobContainerClientFactory,
             (dirPath: string) => new BlobDirectoryItem(blobContainerClientFactory, container.name, isEmulated, dirPath, storageRoot),
