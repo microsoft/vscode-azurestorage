@@ -9,15 +9,12 @@ import * as azureStorageBlob from '@azure/storage-blob';
 import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
 import * as azureStorageShare from '@azure/storage-file-share';
 import * as azureStorageQueue from '@azure/storage-queue';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DialogResponses, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import { commands, MessageItem, window } from 'vscode';
-import { DeleteStorageAccountStep } from '../commands/deleteStorageAccount/DeleteStorageAccountStep';
-import { DeleteStorageAccountWizardContext } from '../commands/deleteStorageAccount/DeleteStorageAccountWizardContext';
 import { staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
 import { ResolvedStorageAccount } from '../StorageAccountResolver';
-import { createActivityContext } from '../utils/activityUtils';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -57,14 +54,13 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     private _root: IStorageRoot;
 
     private constructor(
-        private readonly _subscription: ISubscriptionContext,
         public readonly storageAccount: StorageAccountWrapper,
         public readonly storageManagementClient: StorageManagementClient) {
         this._root = this.createRoot();
     }
 
-    public static async createStorageAccountTreeItem(subscription: ISubscriptionContext, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
-        const ti = new StorageAccountTreeItem(subscription, storageAccount, client);
+    public static async createStorageAccountTreeItem(storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
+        const ti = new StorageAccountTreeItem(storageAccount, client);
         // make sure key is initialized
         await ti.refreshKey();
         return ti;
@@ -115,25 +111,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         }
     }
 
-    public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
-        const deletingStorageAccount: string = localize('deleteStorageAccount', 'Delete storage account "{0}"', this.label);
-        const wizardContext: DeleteStorageAccountWizardContext = Object.assign(context, {
-            storageAccount: this.storageAccount,
-            subscription: this._subscription,
-            ...(await createActivityContext()),
-            activityTitle: deletingStorageAccount
-        });
-
-        const message: string = `Are you sure you want to delete account "${this.label}" and all its contents?`;
-        const wizard = new AzureWizard(wizardContext, {
-            promptSteps: [new DeleteConfirmationStep(message)],
-            executeSteps: [new DeleteStorageAccountStep()]
-        });
-
-        await wizard.prompt();
-        await wizard.execute();
-    }
-
     private createRoot(): IStorageRoot {
         return {
             storageAccountName: this.storageAccount.name,
@@ -163,10 +140,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 return new azureDataTables.TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
             }
         };
-    }
-
-    getConnectionString(): string {
-        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${nonNullProp(this._subscription.environment, 'storageEndpointSuffix')}`;
     }
 
     async getKeys(): Promise<StorageAccountKeyWrapper[]> {

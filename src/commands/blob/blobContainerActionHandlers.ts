@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { ext } from '../../extensionVariables';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
+import { BlobContainerItem } from '../../tree/blob/BlobContainerItem';
 import { BlobContainerTreeItem } from '../../tree/blob/BlobContainerTreeItem';
 import { BlobDirectoryTreeItem } from '../../tree/blob/BlobDirectoryTreeItem';
 import { BlobTreeItem } from '../../tree/blob/BlobTreeItem';
@@ -45,12 +46,12 @@ export function registerBlobContainerActionHandlers(): void {
     });
 }
 
-async function openBlobContainerInStorageExplorer(_context: IActionContext, treeItem: BlobContainerTreeItem): Promise<void> {
-    const accountId = treeItem.root.storageAccountId;
+async function openBlobContainerInStorageExplorer(_context: IActionContext, treeItem: BlobContainerItem): Promise<void> {
+    const accountId = treeItem.context.storageAccountId;
     const resourceType = 'Azure.BlobContainer';
-    const resourceName = treeItem.container.name;
+    const resourceName = treeItem.containerName;
 
-    await storageExplorerLauncher.openResource(accountId, treeItem.subscription.subscriptionId, resourceType, resourceName);
+    await storageExplorerLauncher.openResource(accountId, treeItem.context.subscriptionId, resourceType, resourceName);
 }
 
 export async function deleteBlobContainer(context: IActionContext, treeItem?: BlobContainerTreeItem): Promise<void> {
