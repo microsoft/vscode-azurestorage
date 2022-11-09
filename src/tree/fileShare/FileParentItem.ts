@@ -14,7 +14,7 @@ export abstract class FileParentItem implements StorageAccountModel {
         public readonly shareName: string,
         private readonly parentItemFactory: (directory: string) => FileParentItem,
         private readonly shareClientFactory: ShareDirectoryClientFactory,
-        protected readonly storageRoot: IStorageRoot) {
+        public readonly storageRoot: IStorageRoot) {
     }
 
     async getChildren(): Promise<StorageAccountModel[]> {

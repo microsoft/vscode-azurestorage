@@ -17,7 +17,8 @@ export class FileShareItem extends FileParentItem {
         shareDirectoryClientFactory: ShareDirectoryClientFactory,
         shareName: string,
         public readonly storageAccount: StorageAccountInfo,
-        storageRoot: IStorageRoot) {
+        storageRoot: IStorageRoot,
+        public readonly notifyDeleted: () => void) {
 
         super(
             /* directory: */ undefined,
@@ -68,12 +69,12 @@ export class FileShareItem extends FileParentItem {
     }
 }
 
-export type FileShareItemFactory = (shareName: string) => FileShareItem;
+export type FileShareItemFactory = (shareName: string, notifyDeleted: () => void) => FileShareItem;
 
 export function createFileShareItemFactory(shareClientFactory: ShareClientFactory, storageAccount: StorageAccountInfo, storageRoot: IStorageRoot): FileShareItemFactory {
-    return (shareName: string) => {
+    return (shareName: string, notifyDeleted: () => void) => {
         const directoryClientFactory = (directory: string) => shareClientFactory(shareName).getDirectoryClient(directory ?? '');
 
-        return new FileShareItem(directoryClientFactory, shareName, storageAccount, storageRoot);
+        return new FileShareItem(directoryClientFactory, shareName, storageAccount, storageRoot, notifyDeleted);
     }
 }

@@ -68,7 +68,8 @@ export class StorageAccountItem implements StorageAccountModel {
             groupTreeItems.push(
                 new FileShareGroupItem(
                     fileShareItemFactory,
-                    shareServiceClientFactory));
+                    shareServiceClientFactory,
+                    model => this.refresh(model)));
         }
 
         if (primaryEndpoints.queue) {
