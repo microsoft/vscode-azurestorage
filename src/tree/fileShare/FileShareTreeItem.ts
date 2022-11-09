@@ -5,7 +5,7 @@
 
 import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageShare from '@azure/storage-file-share';
-import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, IActionContext, ICreateChildImplContext } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
@@ -16,7 +16,7 @@ import { getResourcesPath, NotificationProgress } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { TransferProgress } from '../../TransferProgress';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
+import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
 import { getUploadingMessageWithSource } from '../../utils/uploadUtils';
 import { IStorageRoot } from '../IStorageRoot';
 import { IStorageTreeItem } from '../IStorageTreeItem';
@@ -84,19 +84,6 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements IStorageTr
         }
 
         return ti1.label.localeCompare(ti2.label);
-    }
-
-    public async deleteTreeItemImpl(context: IActionContext): Promise<void> {
-        const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
-        const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        if (result === DialogResponses.deleteResponse) {
-            const shareClient: azureStorageShare.ShareClient = createShareClient(this.root, this.shareName);
-            await shareClient.delete();
-        } else {
-            throw new UserCancelledError();
-        }
-
-        AzureStorageFS.fireDeleteEvent(this);
     }
 
     public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingFileContext> & IFileShareCreateChildContext): Promise<AzExtTreeItem> {

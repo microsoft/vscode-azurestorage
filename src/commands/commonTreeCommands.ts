@@ -3,9 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtParentTreeItem, IActionContext } from '@microsoft/vscode-azext-utils';
-import { storageFilter } from '../constants';
-import { ext } from '../extensionVariables';
+import { IActionContext } from '@microsoft/vscode-azext-utils';
 import { StorageAccountModel } from '../tree/StorageAccountModel';
 
 export async function pickForDeleteNode<T extends StorageAccountModel>(_context: IActionContext, _expectedContextValue: string | RegExp, node?: T): Promise<T> {
@@ -22,13 +20,16 @@ export async function pickForDeleteNode<T extends StorageAccountModel>(_context:
     return node;
 }
 
-export async function createChildNode(context: IActionContext, expectedContextValue: string, node?: AzExtParentTreeItem): Promise<void> {
+export async function pickForCreateChildNode<T extends StorageAccountModel>(_context: IActionContext, _expectedContextValue: string, node?: T): Promise<T> {
     if (!node) {
-        node = await ext.rgApi.pickAppResource<AzExtParentTreeItem>(context, {
-            filter: storageFilter,
-            expectedChildContextValue: expectedContextValue
-        });
+        // node = await ext.rgApi.pickAppResource<AzExtParentTreeItem>(context, {
+        //     filter: storageFilter,
+        //     expectedChildContextValue: expectedContextValue
+        // });
+
+        // TODO: Enable picking.
+        throw new Error('Not implemented');
     }
 
-    await node.createChild(context);
+    return node;
 }

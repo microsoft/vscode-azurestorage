@@ -58,6 +58,7 @@ export class AttachedStorageAccountItem implements StorageAccountModel {
                 new FileShareGroupItem(
                     fileShareItemFactory,
                     () => this.root.createShareServiceClient(),
+                    this.root,
                     model => this.refresh(model)),
                 new TableGroupItem(this.root, 'TODO: What subscription ID', this.refresh)
             );

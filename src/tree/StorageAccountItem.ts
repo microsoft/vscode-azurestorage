@@ -69,6 +69,7 @@ export class StorageAccountItem implements StorageAccountModel {
                 new FileShareGroupItem(
                     fileShareItemFactory,
                     shareServiceClientFactory,
+                    storageRoot,
                     model => this.refresh(model)));
         }
 
