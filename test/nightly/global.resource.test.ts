@@ -15,6 +15,7 @@ export let webSiteClient: StorageManagementClient;
 export const resourceGroupsToDelete: string[] = [];
 
 suiteSetup(async function (this: Mocha.Context): Promise<void> {
+    this.skip();
     if (longRunningTestsEnabled) {
         this.timeout(2 * 60 * 1000);
         testAccount = new TestAzureAccount(vscode);
