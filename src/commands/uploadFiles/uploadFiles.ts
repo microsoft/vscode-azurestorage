@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizard, IActionContext, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, AzureWizard, IActionContext, IWizardOptions, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { basename } from "path";
 import { CancellationToken, Uri } from "vscode";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
@@ -18,6 +18,7 @@ import { UploadFilesStep } from "./UploadFilesStep";
 export async function uploadFiles(
     context: IActionContext,
     treeItem?: BlobContainerTreeItem | FileShareTreeItem,
+    _selectedNodes?: AzExtTreeItem[],
     uris?: Uri[],
     cancellationToken?: CancellationToken,
     destinationDirectory?: string

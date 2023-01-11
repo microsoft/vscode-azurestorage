@@ -86,6 +86,21 @@
     },
     "contributes": {
         "x-azResources": {
+            "azure": {
+                "branches": [
+                    {
+                        "type": "StorageAccounts"
+                    }
+                ]
+            },
+            "workspace": {
+                "branches": [
+                    {
+                        "type": "storageEmulator"
+                    }
+                ],
+                "resources": true
+            },
             "activation": {
                 "onFetch": [
                     "microsoft.storage/storageaccounts"

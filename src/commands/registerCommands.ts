@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, AzureWizard, IActionContext, registerCommand } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, AzureWizard, IActionContext, registerCommandWithTreeNodeUnwrapping } from "@microsoft/vscode-azext-utils";
 import { commands } from "vscode";
 import { azuriteExtensionId, emulatorTimeoutMS, storageFilter } from "../constants";
 import { ext } from "../extensionVariables";
@@ -49,9 +49,9 @@ export function registerCommands(): void {
     registerTableActionHandlers();
     registerTableGroupActionHandlers();
 
-    registerCommand('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
-    registerCommand('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
-    registerCommand('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
+    registerCommandWithTreeNodeUnwrapping('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
+    registerCommandWithTreeNodeUnwrapping('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
+    registerCommandWithTreeNodeUnwrapping('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
         if (!treeItem) {
             treeItem = await ext.rgApi.pickAppResource<BlobContainerTreeItem | FileShareTreeItem>(actionContext, {
                 filter: storageFilter,
@@ -70,8 +70,8 @@ export function registerCommands(): void {
         await wizard.prompt();
         await wizard.execute();
     });
-    registerCommand('azureStorage.copyUrl', (_actionContext: IActionContext, treeItem: AzExtTreeItem & ICopyUrl) => treeItem.copyUrl());
-    registerCommand("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
+    registerCommandWithTreeNodeUnwrapping('azureStorage.copyUrl', (_actionContext: IActionContext, treeItem: AzExtTreeItem & ICopyUrl) => treeItem.copyUrl());
+    registerCommandWithTreeNodeUnwrapping("azureStorage.configureStaticWebsite", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
         const accountTreeItem = await selectStorageAccountTreeItemForCommand(
             treeItem,
             actionContext,
@@ -81,7 +81,7 @@ export function registerCommands(): void {
             });
         await accountTreeItem.configureStaticWebsite(actionContext);
     });
-    registerCommand("azureStorage.disableStaticWebsite", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
+    registerCommandWithTreeNodeUnwrapping("azureStorage.disableStaticWebsite", async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
         const accountTreeItem = await selectStorageAccountTreeItemForCommand(
             treeItem,
             actionContext,
@@ -91,9 +91,9 @@ export function registerCommands(): void {
             });
         await accountTreeItem.disableStaticWebsite(actionContext);
     });
-    registerCommand("azureStorage.createGpv2Account", createStorageAccount);
-    registerCommand("azureStorage.createGpv2AccountAdvanced", createStorageAccountAdvanced);
-    registerCommand('azureStorage.browseStaticWebsite', async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
+    registerCommandWithTreeNodeUnwrapping("azureStorage.createGpv2Account", createStorageAccount);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.createGpv2AccountAdvanced", createStorageAccountAdvanced);
+    registerCommandWithTreeNodeUnwrapping('azureStorage.browseStaticWebsite', async (actionContext: IActionContext, treeItem?: AzExtTreeItem) => {
         const accountTreeItem = await selectStorageAccountTreeItemForCommand(
             treeItem,
             actionContext,
@@ -104,18 +104,18 @@ export function registerCommands(): void {
         await accountTreeItem.browseStaticWebsite(actionContext);
     });
 
-    registerCommand("azureStorage.uploadFiles", uploadFiles);
-    registerCommand("azureStorage.uploadFolder", uploadFolder);
-    registerCommand("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
-    registerCommand('azureStorage.downloadTreeItems', downloadTreeItems);
-    registerCommand('azureStorage.downloadSasUrl', downloadSasUrl);
-    registerCommand('azureStorage.generateSasUrl', generateSasUrl);
-    registerCommand("azureStorage.attachStorageAccount", async (actionContext: IActionContext) => {
+    registerCommandWithTreeNodeUnwrapping("azureStorage.uploadFiles", uploadFiles);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.uploadFolder", uploadFolder);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.uploadToAzureStorage", uploadToAzureStorage);
+    registerCommandWithTreeNodeUnwrapping('azureStorage.downloadTreeItems', downloadTreeItems);
+    registerCommandWithTreeNodeUnwrapping('azureStorage.downloadSasUrl', downloadSasUrl);
+    registerCommandWithTreeNodeUnwrapping('azureStorage.generateSasUrl', generateSasUrl);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.attachStorageAccount", async (actionContext: IActionContext) => {
         await ext.attachedStorageAccountsTreeItem.attachWithConnectionString(actionContext);
     });
-    registerCommand('azureStorage.detachStorageAccount', detachStorageAccount);
-    registerCommand('azureStorage.startBlobEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.blob); }, emulatorTimeoutMS);
-    registerCommand('azureStorage.startQueueEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.queue); }, emulatorTimeoutMS);
-    registerCommand('azureStorage.startTableEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.table); }, emulatorTimeoutMS);
-    registerCommand('azureStorage.showAzuriteExtension', async () => { await commands.executeCommand('extension.open', azuriteExtensionId); });
+    registerCommandWithTreeNodeUnwrapping('azureStorage.detachStorageAccount', detachStorageAccount);
+    registerCommandWithTreeNodeUnwrapping('azureStorage.startBlobEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.blob); }, emulatorTimeoutMS);
+    registerCommandWithTreeNodeUnwrapping('azureStorage.startQueueEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.queue); }, emulatorTimeoutMS);
+    registerCommandWithTreeNodeUnwrapping('azureStorage.startTableEmulator', async (actionContext: IActionContext) => { await startEmulator(actionContext, EmulatorType.table); }, emulatorTimeoutMS);
+    registerCommandWithTreeNodeUnwrapping('azureStorage.showAzuriteExtension', async () => { await commands.executeCommand('extension.open', azuriteExtensionId); });
 }

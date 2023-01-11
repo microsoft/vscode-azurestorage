@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { registerCommand } from '@microsoft/vscode-azext-utils';
+import { registerCommandWithTreeNodeUnwrapping } from '@microsoft/vscode-azext-utils';
 import { deleteFilesAndDirectories } from '../deleteFilesAndDirectories';
 
 export function registerFileActionHandlers(): void {
-    registerCommand("azureStorage.deleteFile", deleteFilesAndDirectories);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.deleteFile", deleteFilesAndDirectories);
 }
