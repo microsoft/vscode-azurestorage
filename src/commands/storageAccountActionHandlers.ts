@@ -29,10 +29,7 @@ export function registerStorageAccountActionHandlers(): void {
 
 async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: ResolvedAppResourceTreeItem<ResolvedStorageAccount>): Promise<void> {
     if (!treeItem) {
-        treeItem = await ext.rgApi.pickAppResource<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtTreeItem>(context, {
-            filter: storageFilter,
-            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
-        });
+        treeItem = await pickStorageAccount(context);
     }
 
     const accountId = treeItem.storageAccount.id;
@@ -42,10 +39,7 @@ async function openStorageAccountInStorageExplorer(context: IActionContext, tree
 
 export async function copyPrimaryKey(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = await ext.rgApi.pickAppResource<StorageAccountTreeItem & AzExtTreeItem>(context, {
-            filter: storageFilter,
-            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
-        });
+        treeItem = await pickStorageAccount(context);
     }
 
     await copyAndShowToast(treeItem.key.value, 'Primary key');
@@ -53,10 +47,7 @@ export async function copyPrimaryKey(context: IActionContext, treeItem?: Storage
 
 export async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
-        treeItem = await ext.rgApi.pickAppResource<StorageAccountTreeItem & AzExtTreeItem>(context, {
-            filter: storageFilter,
-            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
-        });
+        treeItem = await pickStorageAccount(context);
     }
 
     const connectionString = treeItem.getConnectionString();
@@ -146,4 +137,10 @@ function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vsc
 
 export async function deleteStorageAccount(context: IActionContext, treeItem?: StorageAccountTreeItem & AzExtTreeItem): Promise<void> {
     await deleteNode(context, new RegExp(StorageAccountTreeItem.contextValue), treeItem);
+}
+
+async function pickStorageAccount(context: IActionContext) {
+    return await ext.rgApi.pickAppResource<ResolvedAppResourceTreeItem<ResolvedStorageAccount> & StorageAccountTreeItem & AzExtTreeItem>(context, {
+        filter: storageFilter
+    });
 }
