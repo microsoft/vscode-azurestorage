@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import { IActionContext, registerCommandWithTreeNodeUnwrapping } from '@microsoft/vscode-azext-utils';
 import { QueueGroupTreeItem } from '../../tree/queue/QueueGroupTreeItem';
 import { isAzuriteInstalled, warnAzuriteNotInstalled } from '../../utils/azuriteUtils';
 import { createChildNode } from '../commonTreeCommands';
 
 export function registerQueueGroupActionHandlers(): void {
-    registerCommand("azureStorage.createQueue", createQueue);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.createQueue", createQueue);
 }
 
 export async function createQueue(context: IActionContext, treeItem?: QueueGroupTreeItem): Promise<void> {

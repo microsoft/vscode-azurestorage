@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, IActionContext, registerCommandWithTreeNodeUnwrapping } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as vscode from "vscode";
 import { configurationSettingsKeys, extensionPrefix, storageFilter } from '../constants';
@@ -20,11 +20,11 @@ import { deleteNode } from './commonTreeCommands';
 import { selectStorageAccountTreeItemForCommand } from './selectStorageAccountNodeForCommand';
 
 export function registerStorageAccountActionHandlers(): void {
-    registerCommand("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
-    registerCommand("azureStorage.copyPrimaryKey", copyPrimaryKey);
-    registerCommand("azureStorage.copyConnectionString", copyConnectionString);
-    registerCommand("azureStorage.deployStaticWebsite", deployStaticWebsite);
-    registerCommand("azureStorage.deleteStorageAccount", deleteStorageAccount);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.openStorageAccount", openStorageAccountInStorageExplorer);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.copyPrimaryKey", copyPrimaryKey);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.copyConnectionString", copyConnectionString);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.deployStaticWebsite", deployStaticWebsite);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.deleteStorageAccount", deleteStorageAccount);
 }
 
 async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: ResolvedAppResourceTreeItem<ResolvedStorageAccount>): Promise<void> {
