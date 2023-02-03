@@ -29,13 +29,10 @@ import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigur
 import { StaticWebsiteErrorDocument404Step } from './createWizard/StaticWebsiteErrorDocument404Step';
 import { StaticWebsiteIndexDocumentStep } from './createWizard/StaticWebsiteIndexDocumentStep';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
-import { FileShareTreeItem } from './fileShare/FileShareTreeItem';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
-import { QueueTreeItem } from './queue/QueueTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
-import { TableTreeItem } from './table/TableTreeItem';
 
 export type WebsiteHostingStatus = {
     capable: boolean;
@@ -117,29 +114,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     hasMoreChildrenImpl(): boolean {
         return false;
-    }
-
-    public async pickTreeItemImpl(expectedContextValues: (string | RegExp)[]): Promise<AzExtTreeItem | undefined> {
-        for (const expectedContextValue of expectedContextValues) {
-            const blobContainerContextValues = [BlobContainerTreeItem.contextValue, BlobContainerGroupTreeItem.contextValue];
-            if (matchContextValue(expectedContextValue, blobContainerContextValues)) {
-                return this._blobContainerGroupTreeItem;
-            }
-            const fileShareContextValues = [FileShareGroupTreeItem.contextValue, FileShareTreeItem.contextValue];
-            if (matchContextValue(expectedContextValue, fileShareContextValues)) {
-                return this._fileShareGroupTreeItem;
-            }
-
-            if (matchContextValue(expectedContextValue, [QueueGroupTreeItem.contextValue, QueueTreeItem.contextValue])) {
-                return this._queueGroupTreeItem;
-            }
-
-            if (matchContextValue(expectedContextValue, [TableGroupTreeItem.contextValue, TableTreeItem.contextValue])) {
-                return this._tableGroupTreeItem;
-            }
-        }
-
-        return undefined;
     }
 
     async refreshKey(): Promise<void> {
@@ -373,23 +347,5 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
             throw new Error(localize('doesntSupportHosting', 'This storage account does not support static website hosting.'));
         }
-    }
-}
-
-function matchContextValue(expectedContextValue: RegExp | string, matches: (string | RegExp)[]): boolean {
-    if (expectedContextValue instanceof RegExp) {
-        return matches.some((match) => {
-            if (match instanceof RegExp) {
-                return expectedContextValue.toString() === match.toString();
-            }
-            return expectedContextValue.test(match);
-        });
-    } else {
-        return matches.some((match) => {
-            if (match instanceof RegExp) {
-                return match.test(expectedContextValue);
-            }
-            return expectedContextValue === match;
-        });
     }
 }
