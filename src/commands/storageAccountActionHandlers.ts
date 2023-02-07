@@ -136,7 +136,7 @@ function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vsc
 }
 
 export async function deleteStorageAccount(context: IActionContext, treeItem?: StorageAccountTreeItem & AzExtTreeItem): Promise<void> {
-    await deleteNode(context, new RegExp(StorageAccountTreeItem.contextValue), treeItem);
+    await deleteNode(context, undefined, treeItem);
 }
 
 async function pickStorageAccount(context: IActionContext) {
