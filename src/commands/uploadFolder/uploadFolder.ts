@@ -39,5 +39,7 @@ export async function uploadFolder(
     wizardContext.activityTitle = localize('activityLogUploadFolder', 'Upload "{0}" folder to "{1}"', basename(nUri.path), nTreeItem.label);
 
     await wizard.execute();
+    await nTreeItem.refresh(context);
+
     return wizardContext.resolution as IAzCopyResolution;
 }

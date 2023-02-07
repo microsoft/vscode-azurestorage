@@ -43,5 +43,7 @@ export async function uploadFiles(
     }
 
     await wizard.execute();
+    await nTreeItem.refresh(context);
+
     return wizardContext.resolution as IAzCopyResolution;
 }
