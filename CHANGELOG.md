@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+## 0.15.0 - 2023-02-08
+
+### Added
+- Support for Azure Resources API v2
+
+### Engineering
+- Intentionally override base property by @alexweininger in [#1173](https://github.com/microsoft/vscode-azurestorage/pull/1173)
+- Remove extra nonNull util by @alexweininger in [#1174](https://github.com/microsoft/vscode-azurestorage/pull/1174)
+- Add .nvmrc file by @alexweininger in [#1190](https://github.com/microsoft/vscode-azurestorage/pull/1190)
+- Initial conversion to a v1.5 extension by @alexweininger in [#1195](https://github.com/microsoft/vscode-azurestorage/pull/1195)
+- Fix AzureStorageFS id parsing by @alexweininger in [#1194](https://github.com/microsoft/vscode-azurestorage/pull/1194)
+- Remove expected child context value by @alexweininger in [#1211](https://github.com/microsoft/vscode-azurestorage/pull/1211)
+
+### Dependencies
+- Bump @xmldom/xmldom from 0.7.5 to 0.7.8 by @dependabot in [#1181](https://github.com/microsoft/vscode-azurestorage/pull/1181)
+- Bump yargs-parser and yargs by @dependabot in [#1182](https://github.com/microsoft/vscode-azurestorage/pull/1182)
+- Bump loader-utils from 1.4.0 to 1.4.2 by @dependabot in [#1186](https://github.com/microsoft/vscode-azurestorage/pull/1186)
+- Bump decode-uri-component from 0.2.0 to 0.2.2 by @dependabot in [#1187](https://github.com/microsoft/vscode-azurestorage/pull/1187)
+- Bump minimatch and mocha by @dependabot in [#1188](https://github.com/microsoft/vscode-azurestorage/pull/1188)
+- Bump simple-git from 3.7.0 to 3.15.1 by @dependabot in [#1189](https://github.com/microsoft/vscode-azurestorage/pull/1189)
+- Bump json5 from 1.0.1 to 1.0.2 by @dependabot in [#1193](https://github.com/microsoft/vscode-azurestorage/pull/1193)
+- Bump simple-git from 3.15.1 to 3.16.0 by @dependabot in [#1197](https://github.com/microsoft/vscode-azurestorage/pull/1197)
+
 ## 0.15.0 - 2022-09-15
 
 ### Added
