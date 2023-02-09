@@ -4,7 +4,7 @@
 
 ## 0.15.0 - 2023-02-08
 
-### Changed
+### Added
 - Support for Azure Resources API v2
 
 ### Engineering
