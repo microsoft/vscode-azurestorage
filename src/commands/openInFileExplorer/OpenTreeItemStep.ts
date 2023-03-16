@@ -20,12 +20,16 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
             context.openBehavior = 'OpenInCurrentWindow';
         }
 
+        const ti = nonNullProp(context, 'treeItem');
         const uri: Uri = AzureStorageFS.idToUri(nonNullProp(context, 'treeItem').fullId);
+
+        const uri3 = Uri.parse(`azurestorageblob:///${('container' in ti ? ti.container.name : ti.shareName)}?resourceId=${ti.root.storageAccountId}&name=${('container' in ti ? ti.container.name : ti.shareName)}`);
+
         if (context.openBehavior === 'AddToWorkspace') {
             workspace.updateWorkspaceFolders(openFolders.length, 0, { uri: uri });
             await commands.executeCommand('workbench.view.explorer');
         } else {
-            await commands.executeCommand('vscode.openFolder', uri, context.openBehavior === 'OpenInNewWindow' /* forceNewWindow */);
+            await commands.executeCommand('vscode.openFolder', uri3, context.openBehavior === 'OpenInNewWindow' /* forceNewWindow */);
         }
     }
 
