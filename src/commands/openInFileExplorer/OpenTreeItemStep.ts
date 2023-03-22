@@ -6,6 +6,7 @@
 import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { commands, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
+import { BlobContainerFS } from '../../BlobContainerFS';
 import { nonNullProp } from "../../utils/nonNull";
 import { IOpenInFileExplorerWizardContext } from './IOpenInFileExplorerWizardContext';
 
@@ -20,12 +21,30 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
             context.openBehavior = 'OpenInCurrentWindow';
         }
 
+        const ti = nonNullProp(context, 'treeItem');
         const uri: Uri = AzureStorageFS.idToUri(nonNullProp(context, 'treeItem').fullId);
+
+        const storageAccountId = ti.root.storageAccountId;
+        const serviceType = 'container' in ti ? "blob" : "fileShare";
+        const containerName = 'container' in ti ? ti.container.name : ti.shareName;
+        let uri3: Uri;
+        if (serviceType === "blob") {
+            uri3 = BlobContainerFS.constructUri(containerName, storageAccountId);
+        } else {
+            // @todo: Use static methods from FileShareFS
+            uri3 = Uri.parse(`azurestorageblob:///${containerName}?resourceId=${storageAccountId}&name=${containerName}`);
+        }
+
         if (context.openBehavior === 'AddToWorkspace') {
             workspace.updateWorkspaceFolders(openFolders.length, 0, { uri: uri });
             await commands.executeCommand('workbench.view.explorer');
         } else {
-            await commands.executeCommand('vscode.openFolder', uri, context.openBehavior === 'OpenInNewWindow' /* forceNewWindow */);
+            try {
+                await commands.executeCommand('vscode.openFolder', uri3, context.openBehavior === 'OpenInNewWindow' /* forceNewWindow */);
+            } catch (error) {
+                console.log(error);
+                throw error;
+            }
         }
     }
 
