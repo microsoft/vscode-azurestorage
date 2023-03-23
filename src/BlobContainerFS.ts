@@ -158,9 +158,14 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         // When expanding a directory, VSCode always calls the `stats` method to make sure the directory exists and is really a directory.
-        // Since directories are virtual in a flat namespace blob container, we always assume the directory exists if a matching blob doesn't exist.
         const result = await callWithTelemetryAndErrorHandling<vscode.FileStat | void>('azureStorage.stat', async (context) => {
+            // VSCode is expecting a FileNotFound error when creating new file/directories.
+            // If we don't rethrow the error, VSCode won't write the new file/directory.
             context.errorHandling.rethrow = true;
+
+            // VSCode will attempt to peek/read some files which doesn't necessarily exists (e.g. .vscode/settings.json).
+            // Since we are rethrowing the error, we suppress the error notification to prevent showing false alarms.
+            context.errorHandling.suppressDisplay = true;
 
             const { blobPath } = this.parseUri(uri);
 
