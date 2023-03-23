@@ -157,7 +157,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        console.log("[DEBUG] stats", uri);
         // When expanding a directory, VSCode always calls the `stats` method to make sure the directory exists and is really a directory.
         // Since directories are virtual in a flat namespace blob container, we always assume the directory exists if a matching blob doesn't exist.
         const result = await callWithTelemetryAndErrorHandling<vscode.FileStat | void>('azureStorage.stat', async (context) => {
@@ -236,8 +235,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
         });
 
-        console.log("[DEBUG] stats", result);
-
         return result ?? {
             ctime: 0,
             mtime: 0,
@@ -247,7 +244,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
-        console.log("[DEBUG] readDirectory", uri);
         // VSCode issues multiple readDirectory calls to get each directory in the path,
         // It results in multiple notifications showing up at the same time. Any way to suppress them?
         const { containerName, blobPath } = this.parseUri(uri);
@@ -290,7 +286,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
-        console.log("[DEBUG] createDirectory", uri);
         const result = await callWithTelemetryAndErrorHandling<void>("azureStorage.createDirectory", async (context) => {
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
             const isHnsEnabled = !!storageAccount.isHnsEnabled;
@@ -323,7 +318,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        console.log("[DEBUG] readFile", uri);
         const result = await callWithTelemetryAndErrorHandling('azureStorage.readFile', async (context) => {
             try {
                 const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
@@ -346,7 +340,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
-        console.log("[DEBUG] writeFile", uri, options);
         const result = await callWithTelemetryAndErrorHandling("azureStorage.writeFile", async (context) => {
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
             const { blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
