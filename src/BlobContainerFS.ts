@@ -32,6 +32,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     /**
      * Construct an Uri to a blob or a directory in the blob container.
      * The format of the Uri is:
+     * azurestorageblob:///<containerName>?storageAccountId=<storage account id>
      * azurestorageblob:///<containerName>/<blob path>?storageAccountId=<storage account id>
      *
      * If {@link blobPath} is not specified, the Uri points to the root of the container.
