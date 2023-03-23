@@ -6,17 +6,22 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
-import { BlobClient, BlobServiceClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { BlobClient, BlobGetPropertiesResponse, BlobServiceClient, BlockBlobClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse, StorageSharedKeyCredential } from '@azure/storage-blob';
 import { DataLakeFileSystemClient, DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
-import { apiUtils, callWithTelemetryAndErrorHandling, createSubscriptionContext, IActionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { apiUtils, callWithTelemetryAndErrorHandling, createSubscriptionContext, IActionContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';
 import * as vscode from 'vscode';
 import { AzureAccountExtensionApi, AzureSubscription as AzureAccountSubscription } from './azure-account-api';
+import { download } from "./commands/downloadFile";
+import { maxRemoteFileEditSizeBytes, maxRemoteFileEditSizeMB } from "./constants";
+import { BlobTreeItem } from './tree/blob/BlobTreeItem';
 import { createStorageClient } from './utils/azureClients';
 import { BlobPathUtils } from './utils/blobPathUtils';
+import { createBlockBlobClient } from './utils/blobUtils';
 import { localize } from './utils/localize';
+import { nonNullValue } from "./utils/nonNull";
 import { StorageAccountKeyWrapper } from './utils/storageWrappers';
 
 /**
@@ -154,6 +159,53 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         return new vscode.Disposable(() => {
             // Since we're not actually watching "in Azure" (i.e. polling for changes), there's no need to selectively watch based on the Uri passed in here. Thus there's nothing to dispose
         });
+    }
+
+    static idToUri(resourceId: string): vscode.Uri {
+        let idRegExp: RegExp;
+        if (resourceId.startsWith('/attachedStorageAccounts')) {
+            idRegExp = /(\/attachedStorageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
+        } else {
+
+            if (/\/subscriptions\/.*\/subscriptions\//.test(resourceId)) {
+                // compatible with Resource Groups v1
+                idRegExp = /(\/subscriptions\/.*\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
+            } else {
+                // resource groups v2
+                idRegExp = /(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
+            }
+        }
+
+        let matches: RegExpMatchArray | null = resourceId.match(idRegExp);
+        matches = nonNullValue(matches, 'resourceIdMatches');
+
+        const rootId = matches[1];
+        const storageAccountId = BlobPathUtils.trimSlash(BlobPathUtils.dirname(BlobPathUtils.dirname(rootId)));
+        const containerName = BlobPathUtils.basename(rootId);
+        const blobPath = matches[2];
+
+        return BlobContainerFS.constructUri(containerName, storageAccountId, blobPath);
+    }
+
+    static async showEditor(context: IActionContext, treeItem: BlobTreeItem): Promise<void> {
+        const client: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
+
+        const uri = BlobContainerFS.idToUri(treeItem.fullId);
+        const properties: BlobGetPropertiesResponse = await client.getProperties();
+        if (properties.contentLength && properties.contentLength > maxRemoteFileEditSizeBytes) {
+            const downloadInstead: vscode.MessageItem = {
+                title: localize('downloadInstead', 'Download file instead')
+            };
+            const message: string = localize('failedToOpen', 'Failed to open "{0}". Cannot edit remote files larger than {1}MB.', uri.fsPath, maxRemoteFileEditSizeMB);
+            const result: vscode.MessageItem | undefined = await vscode.window.showErrorMessage(message, downloadInstead);
+            if (result === downloadInstead) {
+                await download(context, [treeItem]);
+            }
+            throw new UserCancelledError(message);
+        }
+
+        const doc = await vscode.workspace.openTextDocument(uri);
+        await vscode.window.showTextDocument(doc, { preserveFocus: false, preview: false });
     }
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {

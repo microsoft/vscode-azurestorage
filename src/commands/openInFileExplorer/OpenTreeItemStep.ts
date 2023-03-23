@@ -32,7 +32,7 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
             uri3 = BlobContainerFS.constructUri(containerName, storageAccountId);
         } else {
             // @todo: Use static methods from FileShareFS
-            uri3 = Uri.parse(`azurestorageblob:///${containerName}?resourceId=${storageAccountId}&name=${containerName}`);
+            uri3 = Uri.parse(`azurestorage:///${containerName}?resourceId=${storageAccountId}&name=${containerName}`);
         }
 
         if (context.openBehavior === 'AddToWorkspace') {

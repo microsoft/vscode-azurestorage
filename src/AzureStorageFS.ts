@@ -1,9 +1,10 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+*  Copyright (c) Microsoft Corporation. All rights reserved.
+*  Licensed under the MIT License. See License.txt in the project root for license information.
+*--------------------------------------------------------------------------------------------*/
 
-import { BlobClient, BlobDownloadResponseModel, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import { FileDownloadResponseModel, FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
 import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import * as path from "path";
@@ -12,23 +13,23 @@ import * as vscode from "vscode";
 import { download } from "./commands/downloadFile";
 import { maxRemoteFileEditSizeBytes, maxRemoteFileEditSizeMB } from "./constants";
 import { ext } from "./extensionVariables";
-import { BlobContainerTreeItem } from "./tree/blob/BlobContainerTreeItem";
-import { BlobDirectoryTreeItem } from "./tree/blob/BlobDirectoryTreeItem";
-import { BlobTreeItem } from "./tree/blob/BlobTreeItem";
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./tree/fileShare/DirectoryTreeItem";
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "./tree/fileShare/FileTreeItem";
-import { createBlobClient, createBlockBlobClient, createOrUpdateBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
 import { createFileClient, doesFileExist, updateFileFromText } from "./utils/fileUtils";
 import { localize } from "./utils/localize";
 import { nonNullValue } from "./utils/nonNull";
-import { validateBlobDirectoryName, validateFileOrDirectoryName } from "./utils/validateNames";
+import { validateFileOrDirectoryName } from "./utils/validateNames";
 
 type AzureStorageFileTreeItem = FileTreeItem | DirectoryTreeItem | FileShareTreeItem;
-type AzureStorageBlobTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
-type AzureStorageTreeItem = AzureStorageFileTreeItem | AzureStorageBlobTreeItem;
-type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
+type AzureStorageTreeItem = AzureStorageFileTreeItem;
+type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem;
 
+
+/**
+ * @deprecated Use BlobContainerFS as FileSystemProvider for blob containers.
+ * @todo: Implement FileShareFS as FileSystemProvider for file shares.
+ */
 export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDocumentContentProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     private _bufferedEvents: vscode.FileChangeEvent[] = [];
@@ -62,16 +63,11 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         return vscode.Uri.parse(`azurestorage:///${path.posix.join(rootName, filePath)}?resourceId=${rootId}`);
     }
 
-    static async showEditor(context: IActionContext, treeItem: BlobTreeItem | FileTreeItem): Promise<void> {
-        let client: BlockBlobClient | ShareFileClient;
-        if (treeItem instanceof BlobTreeItem) {
-            client = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
-        } else {
-            client = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
-        }
+    static async showEditor(context: IActionContext, treeItem: FileTreeItem): Promise<void> {
+        const client: ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
 
         const uri = this.idToUri(treeItem.fullId);
-        const properties: BlobGetPropertiesResponse | FileGetPropertiesResponse = await client.getProperties();
+        const properties: FileGetPropertiesResponse = await client.getProperties();
         if (properties.contentLength && properties.contentLength > maxRemoteFileEditSizeBytes) {
             const downloadInstead: vscode.MessageItem = {
                 title: localize('downloadInstead', 'Download file instead')
@@ -120,13 +116,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             }
 
             const treeItem: AzureStorageTreeItem = await this.lookup(uri, context);
-            const fileType: vscode.FileType = treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem ? vscode.FileType.Directory : vscode.FileType.File;
-            let props: (BlobGetPropertiesResponse & FileGetPropertiesResponse) | undefined;
+            const fileType: vscode.FileType = treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem ? vscode.FileType.Directory : vscode.FileType.File;
+            let props: FileGetPropertiesResponse | undefined;
             try {
-                if (treeItem instanceof BlobTreeItem) {
-                    const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
-                    props = await blockBlobClient.getProperties();
-                } else if (treeItem instanceof FileTreeItem) {
+                if (treeItem instanceof FileTreeItem) {
                     const fileClient: ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
                     props = await fileClient.getProperties();
                 }
@@ -138,7 +131,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 throw error;
             }
 
-            ctime = props?.createdOn?.valueOf() || props?.fileCreatedOn?.valueOf() || 0;
+            ctime = props?.fileCreatedOn?.valueOf() || 0;
             mtime = props?.lastModified?.valueOf() || 0;
             size = props?.contentLength || 0;
 
@@ -159,10 +152,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                     result.push([child.fileName, vscode.FileType.File]);
                 } else if (child instanceof DirectoryTreeItem) {
                     result.push([child.directoryName, vscode.FileType.Directory]);
-                } else if (child instanceof BlobTreeItem) {
-                    result.push([child.blobName, vscode.FileType.File]);
-                } else if (child instanceof BlobDirectoryTreeItem) {
-                    result.push([child.dirName, vscode.FileType.Directory]);
                 }
             }
 
@@ -176,13 +165,13 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             try {
                 const parsedUri: IParsedUri = this.parseUri(uri);
-                const response: string | undefined = this.isFileShareUri(uri) ? validateFileOrDirectoryName(parsedUri.baseName) : validateBlobDirectoryName(parsedUri.baseName);
+                const response: string | undefined = validateFileOrDirectoryName(parsedUri.baseName);
                 if (response) {
                     // Use getFileSystemError to prevent multiple error notifications
                     throw getFileSystemError(uri, context, () => { return new vscode.FileSystemError(response); });
                 }
 
-                this.isFileShareUri(uri) ? await this.createDirectoryFileShare(parsedUri, context) : await this.createDirectoryBlobContainer(uri, parsedUri, context);
+                await this.createDirectoryFileShare(parsedUri, context);
             } catch (error) {
                 const pe = parseError(error);
                 if (pe.errorType === "ResourceAlreadyExists") {
@@ -200,38 +189,18 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: 'azureFileShareDirectory', childName: parsedUri.baseName });
     }
 
-    async createDirectoryBlobContainer(uri: vscode.Uri, parsedUri: IParsedUri, context: IActionContext): Promise<void> {
-        let treeItem: AzureStorageBlobTreeItem = await this.lookupBlobContainer(uri, context, parsedUri.resourceId, parsedUri.filePath, true);
-        if (treeItem instanceof BlobTreeItem) {
-            throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotADirectory);
-        }
-
-        const tiParsedUri = this.parseUri(AzureStorageFS.idToUri(parsedUri.resourceId, path.dirname(parsedUri.filePath)));
-        let matches = parsedUri.filePath.match(`^${this.regexEscape(tiParsedUri.filePath)}\/?([^\/^]+)\/?(.*?)$`);
-        while (matches) {
-            treeItem = <BlobDirectoryTreeItem>await treeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlobDirectory', childName: matches[1] });
-            matches = matches[2].match("^([^\/]+)\/?(.*?)$");
-        }
-    }
-
-    private regexEscape(s: string): string {
-        return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    }
-
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        let client: ShareFileClient | BlobClient;
-        let downloaded: FileDownloadResponseModel | BlobDownloadResponseModel;
+        let client: ShareFileClient;
+        let downloaded: FileDownloadResponseModel;
         return await callWithTelemetryAndErrorHandling('readFile', async (context) => {
             context.errorHandling.suppressDisplay = true;
             let result: string | undefined;
             const parsedUri = this.parseUri(uri);
-            const treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
+            const treeItem: FileShareTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
 
             try {
                 if (treeItem instanceof FileShareTreeItem) {
                     client = createFileClient(treeItem.root, treeItem.shareName, parsedUri.parentDirPath, parsedUri.baseName);
-                } else {
-                    client = createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
                 }
                 downloaded = await client.download();
                 result = await this.streamToString(downloaded.readableStreamBody);
@@ -263,7 +232,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             const writeToFileShare: boolean = this.isFileShareUri(uri);
             const parsedUri = this.parseUri(uri);
-            const treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
+            const treeItem: FileShareTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
 
             let childExists: boolean;
             try {
@@ -273,11 +242,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 childExists = false;
             }
 
-            let childExistsRemote: boolean;
+            let childExistsRemote: boolean = true;
             if (treeItem instanceof FileShareTreeItem) {
                 childExistsRemote = await doesFileExist(parsedUri.baseName, treeItem, parsedUri.parentDirPath, treeItem.shareName);
-            } else {
-                childExistsRemote = await doesBlobExist(treeItem, parsedUri.filePath);
             }
 
             if (childExists !== childExistsRemote) {
@@ -296,8 +263,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
                         if (treeItem instanceof FileShareTreeItem) {
                             await updateFileFromText(parsedUri.parentDirPath, parsedUri.baseName, treeItem.shareName, treeItem.root, content.toString());
-                        } else {
-                            await createOrUpdateBlockBlob(treeItem, parsedUri.filePath, content.toString());
                         }
 
                         // NOTE: This is the only event handled directly in this class and not in the tree item
@@ -309,8 +274,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
                         if (writeToFileShare) {
                             await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue, childName: parsedUri.baseName });
-                        } else {
-                            await parent.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobTreeItem.contextValue, childName: parsedUri.filePath });
                         }
                     }
                 });
@@ -329,13 +292,8 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
             const parsedUri = this.parseUri(uri);
             const treeItem: AzureStorageTreeItem = await this.lookup(uri, context, parsedUri.resourceId, parsedUri.filePath);
-            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (progress) => {
-                if (treeItem instanceof FileTreeItem || treeItem instanceof DirectoryTreeItem || treeItem instanceof BlobTreeItem || treeItem instanceof BlobDirectoryTreeItem) {
-                    if (!(treeItem instanceof BlobDirectoryTreeItem)) {
-                        // The deletion message from deleteTreeItem is not suppressed for BlobDirectoryTreeItems so avoid duplicate notifications
-                        progress.report({ message: `Deleting ${parsedUri.filePath}` });
-                    }
-
+            await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification }, async (_progress) => {
+                if (treeItem instanceof FileTreeItem || treeItem instanceof DirectoryTreeItem) {
                     await treeItem.deleteTreeItem(<IDirectoryDeleteContext>{ ...context, suppressMessage: true });
                 } else {
                     throw new RangeError(`Unexpected entry ${treeItem.constructor.name}.`);
@@ -365,7 +323,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             filePath = parsedUri.filePath;
         }
 
-        return this.isFileShareUri(uri) ? await this.lookupFileShare(uri, context, resourceId, filePath) : await this.lookupBlobContainer(uri, context, resourceId, filePath);
+        return await this.lookupFileShare(uri, context, resourceId, filePath);
     }
 
     /**
@@ -406,50 +364,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         }
     }
 
-    private async lookupBlobContainer(uri: vscode.Uri, context: IActionContext, resourceId: string, filePath: string, endSearchEarly?: boolean): Promise<AzureStorageBlobTreeItem> {
-        let treeItem: AzureStorageBlobTreeItem = <BlobContainerTreeItem>await this.lookupRoot(uri, context, resourceId);
-        if (filePath === '') {
-            return treeItem;
-        }
-
-        const pathToLook = filePath.split('/');
-        let childCount: number = 0;
-        for (const childName of pathToLook) {
-            // Only allow blobs to be found on the last iteration of the loop.
-            // Otherwise a blob with the same name as a directory will be found first leading to a file system error.
-            childCount += 1;
-            const allowBlobTreeItem: boolean = childCount === pathToLook.length;
-
-            if (treeItem instanceof BlobTreeItem) {
-                if (endSearchEarly) {
-                    return treeItem;
-                }
-                throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-            }
-
-            const children: AzExtTreeItem[] = await treeItem.getCachedChildren(context);
-            const child = children.find((element) => {
-                if (element instanceof BlobTreeItem && allowBlobTreeItem) {
-                    return element.blobName === childName;
-                } else if (element instanceof BlobDirectoryTreeItem) {
-                    return element.dirName === childName;
-                }
-                return false;
-            });
-            if (!child) {
-                if (endSearchEarly) {
-                    return treeItem;
-                }
-                throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
-            }
-
-            treeItem = <BlobTreeItem | BlobDirectoryTreeItem>child;
-        }
-
-        return treeItem;
-    }
-
-    private async lookupRoot(uri: vscode.Uri, context: IActionContext, resourceId: string): Promise<FileShareTreeItem | BlobContainerTreeItem> {
+    private async lookupRoot(uri: vscode.Uri, context: IActionContext, resourceId: string): Promise<FileShareTreeItem> {
         const rootName: string = path.basename(resourceId);
         const loadingMessage: string = this.isFileShareUri(uri) ? localize('loadingFileShare', 'Loading file share "{0}"...', rootName) : localize('loadingContainer', 'Loading blob container "{0}"...', rootName);
 
@@ -468,7 +383,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             await ext.rgApi.workspaceResourceTree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage }) :
             await ext.rgApi.appResourceTree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage });
 
-        if (treeItem instanceof FileShareTreeItem || treeItem instanceof BlobContainerTreeItem) {
+        if (treeItem instanceof FileShareTreeItem) {
             return treeItem;
         } else {
             throw getFileSystemError(uri, context, vscode.FileSystemError.FileNotFound);
@@ -477,7 +392,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
     private async lookupAsDirectory(uri: vscode.Uri, context: IActionContext, resourceId?: string, filePath?: string): Promise<AzureStorageDirectoryTreeItem> {
         const treeItem: AzureStorageTreeItem = await this.lookup(uri, context, resourceId, filePath);
-        if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem || treeItem instanceof BlobDirectoryTreeItem || treeItem instanceof BlobContainerTreeItem) {
+        if (treeItem instanceof DirectoryTreeItem || treeItem instanceof FileShareTreeItem) {
             return treeItem;
         } else {
             throw RangeError(`Unexpected entry ${treeItem.constructor.name}.`);

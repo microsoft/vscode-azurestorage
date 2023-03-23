@@ -6,7 +6,7 @@
 import { IActionContext, registerCommandWithTreeNodeUnwrapping } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { AzureStorageFS } from '../../AzureStorageFS';
+import { BlobContainerFS } from '../../BlobContainerFS';
 import { ext } from '../../extensionVariables';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { BlobContainerTreeItem } from '../../tree/blob/BlobContainerTreeItem';
@@ -18,7 +18,7 @@ import { deleteNode } from '../commonTreeCommands';
 
 export function registerBlobContainerActionHandlers(): void {
     registerCommandWithTreeNodeUnwrapping("azureStorage.openBlobContainer", openBlobContainerInStorageExplorer);
-    registerCommandWithTreeNodeUnwrapping("azureStorage.editBlob", async (context: IActionContext, treeItem: BlobTreeItem) => AzureStorageFS.showEditor(context, treeItem), 250);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.editBlob", async (context: IActionContext, treeItem: BlobTreeItem) => BlobContainerFS.showEditor(context, treeItem), 250);
     registerCommandWithTreeNodeUnwrapping("azureStorage.deleteBlobContainer", deleteBlobContainer);
     registerCommandWithTreeNodeUnwrapping("azureStorage.createBlockBlob", async (context: IActionContext, parent: BlobContainerTreeItem) => {
         const blobPath: string = normalizeBlobPathInput(await getBlobPath(context, parent));
