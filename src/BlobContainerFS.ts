@@ -10,7 +10,7 @@ import { TokenCredential } from '@azure/core-auth';
 import { BlobClient, BlobServiceClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse, StorageSharedKeyCredential } from '@azure/storage-blob';
 import { DataLakeFileSystemClient, DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
-import { apiUtils, callWithTelemetryAndErrorHandling, createSubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { apiUtils, callWithTelemetryAndErrorHandling, createSubscriptionContext, IActionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';
 import * as vscode from 'vscode';
@@ -77,7 +77,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     /**
      * @todo Support Azure AD authorization.
      */
-    private async getStorageAccount(uri: vscode.Uri, context): Promise<{ storageAccount: StorageAccount, keyCredential?: StorageSharedKeyCredential }> {
+    private async getStorageAccount(uri: vscode.Uri, context: IActionContext): Promise<{ storageAccount: StorageAccount, keyCredential?: StorageSharedKeyCredential }> {
         const { storageAccountId } = this.parseUri(uri);
         const subscriptionId = parseAzureResourceId(storageAccountId).subscriptionId;
         const resourceGroupName = parseAzureResourceId(storageAccountId).resourceGroup;
