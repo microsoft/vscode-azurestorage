@@ -39,12 +39,7 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
             workspace.updateWorkspaceFolders(openFolders.length, 0, { uri: uri });
             await commands.executeCommand('workbench.view.explorer');
         } else {
-            try {
-                await commands.executeCommand('vscode.openFolder', uri3, context.openBehavior === 'OpenInNewWindow' /* forceNewWindow */);
-            } catch (error) {
-                console.log(error);
-                throw error;
-            }
+            await commands.executeCommand('vscode.openFolder', uri3, context.openBehavior === 'OpenInNewWindow' /* forceNewWindow */);
         }
     }
 
