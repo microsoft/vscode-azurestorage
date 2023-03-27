@@ -3,17 +3,15 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
 import { BlobClient, BlobGetPropertiesResponse, BlobServiceClient, BlockBlobClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse, StorageSharedKeyCredential } from '@azure/storage-blob';
 import { DataLakeFileSystemClient, DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
-import { apiUtils, callWithTelemetryAndErrorHandling, createSubscriptionContext, IActionContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { callWithTelemetryAndErrorHandling, createSubscriptionContext, IActionContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';
 import * as vscode from 'vscode';
-import { AzureAccountExtensionApi, AzureSubscription as AzureAccountSubscription } from './azure-account-api';
+import { AzureAccountExtensionApi, AzureAccountSubscription, getAzureAccountExtensionApi } from "./AzureAccountExtension";
 import { download } from "./commands/downloadFile";
 import { maxRemoteFileEditSizeBytes, maxRemoteFileEditSizeMB } from "./constants";
 import { BlobTreeItem } from './tree/blob/BlobTreeItem';
@@ -527,28 +525,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     private async getAzureAccountExtensionApi(): Promise<AzureAccountExtensionApi> {
         if (!this.azureAccountApi) {
-            const extension = vscode.extensions.getExtension<apiUtils.AzureExtensionApiProvider>('ms-vscode.azure-account');
-
-            if (extension) {
-                if (!extension.isActive) {
-                    await extension.activate();
-                }
-
-                if ('getApi' in extension.exports) {
-                    this.azureAccountApi = extension.exports.getApi<AzureAccountExtensionApi>('1');
-                } else {
-                    // support versions of the Azure Account extension <0.10.0
-                    this.azureAccountApi = extension.exports as unknown as AzureAccountExtensionApi;
-                }
-
-                if (this.azureAccountApi) {
-                    await this.azureAccountApi.waitForSubscriptions();
-                }
-            }
-        }
-
-        if (!this.azureAccountApi) {
-            throw new Error('Could not get Azure Account API');
+            this.azureAccountApi = await getAzureAccountExtensionApi();
         }
 
         return this.azureAccountApi;
