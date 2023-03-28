@@ -208,7 +208,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         // When expanding a directory, VSCode always calls the `stats` method to make sure the directory exists and is really a directory.
-        const result = await callWithTelemetryAndErrorHandling<vscode.FileStat | void>('azureStorage.stat', async (context) => {
+        const result = await callWithTelemetryAndErrorHandling<vscode.FileStat | void>('azureStorageBlob.stat', async (context) => {
             // VSCode is expecting a FileNotFound error when creating new file/directory.
             // If we don't rethrow the error, VSCode won't write the new file/directory.
             context.errorHandling.rethrow = true;
@@ -300,7 +300,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         // It results in multiple notifications showing up at the same time. Any way to suppress them?
         const { containerName, blobPath } = this.parseUri(uri);
 
-        const result = await callWithTelemetryAndErrorHandling<[string, vscode.FileType][]>("azureStorage.readDirectory", async (context) => {
+        const result = await callWithTelemetryAndErrorHandling<[string, vscode.FileType][]>("azureStorageBlob.readDirectory", async (context) => {
             context.errorHandling.rethrow = true;
 
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
@@ -340,7 +340,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
-        const result = await callWithTelemetryAndErrorHandling<void>("azureStorage.createDirectory", async (context) => {
+        const result = await callWithTelemetryAndErrorHandling<void>("azureStorageBlob.createDirectory", async (context) => {
             context.errorHandling.rethrow = true;
 
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
@@ -374,7 +374,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-        const result = await callWithTelemetryAndErrorHandling('azureStorage.readFile', async (context) => {
+        const result = await callWithTelemetryAndErrorHandling('azureStorageBlob.readFile', async (context) => {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
@@ -399,7 +399,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
-        const result = await callWithTelemetryAndErrorHandling("azureStorage.writeFile", async (context) => {
+        const result = await callWithTelemetryAndErrorHandling("azureStorageBlob.writeFile", async (context) => {
             context.errorHandling.rethrow = true;
 
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
@@ -433,7 +433,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
-        const result = await callWithTelemetryAndErrorHandling<void>("azureStorage.delete", async (context) => {
+        const result = await callWithTelemetryAndErrorHandling<void>("azureStorageBlob.delete", async (context) => {
             context.errorHandling.rethrow = true;
 
             if (!options.recursive) {
@@ -494,7 +494,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         return result;
     }
     async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): Promise<void> {
-        const result = await callWithTelemetryAndErrorHandling("azureStorage.rename", async (context) => {
+        const result = await callWithTelemetryAndErrorHandling("azureStorageBlob.rename", async (context) => {
             context.errorHandling.rethrow = true;
 
             const { storageAccount, accountKey } = await this.getStorageAccount(oldUri, context);
