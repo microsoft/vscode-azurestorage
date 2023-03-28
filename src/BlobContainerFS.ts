@@ -209,12 +209,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
         // When expanding a directory, VSCode always calls the `stats` method to make sure the directory exists and is really a directory.
         const result = await callWithTelemetryAndErrorHandling<vscode.FileStat | void>('azureStorage.stat', async (context) => {
-            // VSCode is expecting a FileNotFound error when creating new file/directories.
+            // VSCode is expecting a FileNotFound error when creating new file/directory.
             // If we don't rethrow the error, VSCode won't write the new file/directory.
             context.errorHandling.rethrow = true;
-
-            // VSCode will attempt to peek/read some files which doesn't necessarily exists (e.g. .vscode/settings.json).
-            // Since we are rethrowing the error, we suppress the error notification to prevent showing false alarms.
             context.errorHandling.suppressDisplay = true;
 
             const { blobPath } = this.parseUri(uri);
@@ -304,6 +301,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         const { containerName, blobPath } = this.parseUri(uri);
 
         const result = await callWithTelemetryAndErrorHandling<[string, vscode.FileType][]>("azureStorage.readDirectory", async (context) => {
+            context.errorHandling.rethrow = true;
+
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
             const { containerClient } = await this.getBlobClients(uri, storageAccount, accountKey);
 
@@ -342,6 +341,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async createDirectory(uri: vscode.Uri): Promise<void> {
         const result = await callWithTelemetryAndErrorHandling<void>("azureStorage.createDirectory", async (context) => {
+            context.errorHandling.rethrow = true;
+
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
             const isHnsEnabled = !!storageAccount.isHnsEnabled;
 
@@ -374,6 +375,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         const result = await callWithTelemetryAndErrorHandling('azureStorage.readFile', async (context) => {
+            context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
+
             try {
                 const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
                 const { blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
@@ -396,6 +400,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
         const result = await callWithTelemetryAndErrorHandling("azureStorage.writeFile", async (context) => {
+            context.errorHandling.rethrow = true;
+
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
             const { blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
 
@@ -428,6 +434,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
     async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
         const result = await callWithTelemetryAndErrorHandling<void>("azureStorage.delete", async (context) => {
+            context.errorHandling.rethrow = true;
+
             if (!options.recursive) {
                 throw new Error("Azure storage does not support non-recursive deletion.");
             }
@@ -487,6 +495,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
     async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): Promise<void> {
         const result = await callWithTelemetryAndErrorHandling("azureStorage.rename", async (context) => {
+            context.errorHandling.rethrow = true;
+
             const { storageAccount, accountKey } = await this.getStorageAccount(oldUri, context);
             const isHnsEnabled = !!storageAccount.isHnsEnabled;
             if (!isHnsEnabled) {
