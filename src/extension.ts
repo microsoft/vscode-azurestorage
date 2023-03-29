@@ -6,20 +6,19 @@
 'use strict';
 
 import { registerAzureUtilsExtensionVariables } from '@microsoft/vscode-azext-azureutils';
-import { AzExtParentTreeItem, AzExtResourceType, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
-import { AzureExtensionApi, AzureExtensionApiProvider } from '@microsoft/vscode-azext-utils/api';
+import { AzExtParentTreeItem, AzureExtensionApi, IActionContext, apiUtils, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureHostExtensionApi } from '@microsoft/vscode-azext-utils/hostapi';
+import { AzExtResourceType } from '@microsoft/vscode-azureresources-api';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from './AzureStorageFS';
+import { StorageAccountResolver } from './StorageAccountResolver';
+import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
 import { revealTreeItem } from './commands/api/revealTreeItem';
 import { registerCommands } from './commands/registerCommands';
 import { ext } from './extensionVariables';
-import { getApiExport } from './getApiExport';
-import { StorageAccountResolver } from './StorageAccountResolver';
-import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
 import './tree/AttachedStorageAccountTreeItem';
 
-export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<AzureExtensionApiProvider> {
+export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<apiUtils.AzureExtensionApiProvider> {
     ext.context = context;
     ext.ignoreBundle = ignoreBundle;
     ext.outputChannel = createAzExtOutputChannel('Azure Storage', ext.prefix);
@@ -42,7 +41,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         registerCommands();
 
-        const rgApiProvider = await getApiExport<AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
+        const rgApiProvider = await apiUtils.getExtensionExports<apiUtils.AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
         if (rgApiProvider) {
             const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
             ext.rgApi = api;
