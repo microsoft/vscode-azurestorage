@@ -16,6 +16,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 let DEBUG_WEBPACK = !!process.env.DEBUG_WEBPACK;
 
 let config = dev.getDefaultWebpackConfig({
+    target: 'node',
     projectRoot: __dirname,
     verbosity: DEBUG_WEBPACK ? 'debug' : 'normal',
     externalNodeModules: [
