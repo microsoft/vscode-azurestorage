@@ -854,7 +854,7 @@
         "@azure/storage-queue": "^12.7.0",
         "@microsoft/vscode-azext-azureappservice": "^0.7.0",
         "@microsoft/vscode-azext-azureutils": "^0.3.4",
-        "@microsoft/vscode-azext-utils": "^0.5.1",
+        "@microsoft/vscode-azext-utils": "^1.1.0",
         "@microsoft/vscode-azureresources-api": "^2.0.4",
         "glob": "^7.1.2",
         "mime": "^2.4.4",
