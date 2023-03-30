@@ -7,8 +7,6 @@ import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { commands, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { BlobContainerFS } from '../../BlobContainerFS';
-import { BlobContainerTreeItem } from '../../tree/blob/BlobContainerTreeItem';
-import { FileShareTreeItem } from '../../tree/fileShare/FileShareTreeItem';
 import { nonNullProp } from "../../utils/nonNull";
 import { IOpenInFileExplorerWizardContext } from './IOpenInFileExplorerWizardContext';
 
@@ -16,9 +14,6 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
     public priority: number = 250;
     public hideStepCount: boolean = true;
 
-    private isAttachedAccount(treeItem: BlobContainerTreeItem | FileShareTreeItem): boolean {
-        return treeItem.fullId.startsWith("/attachedStorageAccounts/");
-    }
 
     public async execute(context: IOpenInFileExplorerWizardContext): Promise<void> {
         const openFolders: readonly WorkspaceFolder[] = workspace.workspaceFolders || [];
@@ -29,7 +24,7 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
 
         const treeItem = nonNullProp(context, 'treeItem');
 
-        if (!this.isAttachedAccount(treeItem)) {
+        if (!AzureStorageFS.isAttachedAccount(treeItem)) {
             const storageAccountId = treeItem.root.storageAccountId;
             const serviceType = 'container' in treeItem ? "blob" : "fileShare";
             const containerName = 'container' in treeItem ? treeItem.container.name : treeItem.shareName;

@@ -43,6 +43,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     private _queryCache: Map<string, { query: string, invalid?: boolean }> = new Map<string, { query: string, invalid?: boolean }>(); // Key: rootName
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
+    static isAttachedAccount(treeItem: BlobContainerTreeItem | FileShareTreeItem | BlobTreeItem): boolean {
+        return treeItem.fullId.startsWith("/attachedStorageAccounts/");
+    }
+
     static idToUri(resourceId: string, filePath?: string): vscode.Uri {
         let idRegExp: RegExp;
         if (resourceId.startsWith('/attachedStorageAccounts')) {
