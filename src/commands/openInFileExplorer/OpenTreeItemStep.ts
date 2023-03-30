@@ -7,12 +7,18 @@ import { AzureWizardExecuteStep } from '@microsoft/vscode-azext-utils';
 import { commands, Uri, workspace, WorkspaceFolder } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { BlobContainerFS } from '../../BlobContainerFS';
+import { BlobContainerTreeItem } from '../../tree/blob/BlobContainerTreeItem';
+import { FileShareTreeItem } from '../../tree/fileShare/FileShareTreeItem';
 import { nonNullProp } from "../../utils/nonNull";
 import { IOpenInFileExplorerWizardContext } from './IOpenInFileExplorerWizardContext';
 
 export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorerWizardContext> {
     public priority: number = 250;
     public hideStepCount: boolean = true;
+
+    private isAttachedAccount(treeItem: BlobContainerTreeItem | FileShareTreeItem): boolean {
+        return treeItem.fullId.startsWith("/attachedStorageAccounts/");
+    }
 
     public async execute(context: IOpenInFileExplorerWizardContext): Promise<void> {
         const openFolders: readonly WorkspaceFolder[] = workspace.workspaceFolders || [];
@@ -22,24 +28,35 @@ export class OpenTreeItemStep extends AzureWizardExecuteStep<IOpenInFileExplorer
         }
 
         const treeItem = nonNullProp(context, 'treeItem');
-        const uri: Uri = AzureStorageFS.idToUri(treeItem.fullId);
 
-        const storageAccountId = treeItem.root.storageAccountId;
-        const serviceType = 'container' in treeItem ? "blob" : "fileShare";
-        const containerName = 'container' in treeItem ? treeItem.container.name : treeItem.shareName;
-        let uriByService: Uri;
-        if (serviceType === "blob") {
-            uriByService = BlobContainerFS.constructUri(containerName, storageAccountId);
-        } else {
-            // @todo: Use static methods from FileShareFS
-            uriByService = Uri.parse(`azurestorage:///${containerName}?resourceId=${storageAccountId}&name=${containerName}`);
-        }
+        if (!this.isAttachedAccount(treeItem)) {
+            const storageAccountId = treeItem.root.storageAccountId;
+            const serviceType = 'container' in treeItem ? "blob" : "fileShare";
+            const containerName = 'container' in treeItem ? treeItem.container.name : treeItem.shareName;
+            let uriByService: Uri;
+            if (serviceType === "blob") {
+                uriByService = BlobContainerFS.constructUri(containerName, storageAccountId);
+            } else {
+                // @todo: Use static methods from FileShareFS
+                uriByService = Uri.parse(`azurestorage:///${containerName}?resourceId=${storageAccountId}&name=${containerName}`);
+            }
 
-        if (context.openBehavior === 'AddToWorkspace') {
-            workspace.updateWorkspaceFolders(openFolders.length, 0, { uri: uri });
-            await commands.executeCommand('workbench.view.explorer');
+            if (context.openBehavior === 'AddToWorkspace') {
+                workspace.updateWorkspaceFolders(openFolders.length, 0, { uri: uriByService });
+                await commands.executeCommand('workbench.view.explorer');
+            } else {
+                await commands.executeCommand('vscode.openFolder', uriByService, context.openBehavior === 'OpenInNewWindow' /* forceNewWindow */);
+            }
         } else {
-            await commands.executeCommand('vscode.openFolder', uriByService, context.openBehavior === 'OpenInNewWindow' /* forceNewWindow */);
+            // @todo: Support attached accounts in BlobContainerFS
+            const uri = AzureStorageFS.idToUri(nonNullProp(context, 'treeItem').fullId);
+            if (context.openBehavior === 'AddToWorkspace') {
+                // @todo: Test if this should the BlobContainerFS uri or the original uri
+                workspace.updateWorkspaceFolders(openFolders.length, 0, { uri: uri });
+                await commands.executeCommand('workbench.view.explorer');
+            } else {
+                await commands.executeCommand('vscode.openFolder', uri, context.openBehavior === 'OpenInNewWindow' /* forceNewWindow */);
+            }
         }
     }
 
