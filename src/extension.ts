@@ -33,7 +33,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         ext.azureStorageFS = new AzureStorageFS();
         ext.azureStorageWorkspaceFS = new AzureStorageFS();
-        // context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', ext.azureStorageFS, { isCaseSensitive: true }));
+        context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', ext.azureStorageFS, { isCaseSensitive: true }));
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorageblob', new BlobContainerFS(), { isCaseSensitive: true }));
         context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('azurestorage', ext.azureStorageFS));
 
