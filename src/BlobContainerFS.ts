@@ -7,7 +7,7 @@ import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
 import { BlobClient, BlobGetPropertiesResponse, BlobServiceClient, BlockBlobClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse, StorageSharedKeyCredential } from '@azure/storage-blob';
 import { DataLakeFileSystemClient, DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
-import { callWithTelemetryAndErrorHandling, createSubscriptionContext, IActionContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, createSubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';
 import * as vscode from 'vscode';
@@ -41,6 +41,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
      */
     static constructUri(containerName: string, storageAccountId: string, blobPath?: string): vscode.Uri {
         return vscode.Uri.parse(`azurestorageblob:///${containerName}/${blobPath ?? ""}?storageAccountId=${storageAccountId}`);
+    }
+
+    private async getSubscriptions(): Promise<AzureSubscription[]> {
+        const azureAccountApi = await getAzureAccountExtensionApi();
+        return azureAccountApi.subscriptions.map(sub => this.createAzureSubscription(sub));
     }
 
     private getStorageAccountId(uri: vscode.Uri): string | null {
@@ -86,13 +91,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         const resourceGroupName = parseAzureResourceId(storageAccountId).resourceGroup;
         const storageAccountName = parseAzureResourceId(storageAccountId).resourceName;
 
-        const azureAccountApi = await this.getAzureAccountExtensionApi();
-        const accountSubscription = azureAccountApi.subscriptions.find(s => s.subscription.subscriptionId === subscriptionId);
-        if (!accountSubscription) {
+        const subscriptions = await this.getSubscriptions();
+        const subscription = subscriptions.find(s => s.subscriptionId === subscriptionId);
+        if (!subscription) {
             throw new Error(`Could not find subscription with ID "${subscriptionId}"`);
         }
 
-        const subscription = this.createAzureSubscription(accountSubscription);
         const client = await createStorageClient([context, createSubscriptionContext(subscription)]);
 
         const keyResult = await client.storageAccounts.listKeys(resourceGroupName, storageAccountName);
