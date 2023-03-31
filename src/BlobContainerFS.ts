@@ -11,7 +11,7 @@ import { IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, 
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';
 import * as vscode from 'vscode';
-import { AzureAccountExtensionApi, AzureAccountSubscription, getAzureAccountExtensionApi } from "./AzureAccountExtension";
+import { AzureAccountSubscription, getAzureAccountExtensionApi } from "./AzureAccountExtension";
 import { download } from "./commands/downloadFile";
 import { maxRemoteFileEditSizeBytes, maxRemoteFileEditSizeMB } from "./constants";
 import { BlobTreeItem } from './tree/blob/BlobTreeItem';
@@ -533,16 +533,6 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
 
         return result;
-    }
-
-    private azureAccountApi: AzureAccountExtensionApi | undefined;
-
-    private async getAzureAccountExtensionApi(): Promise<AzureAccountExtensionApi> {
-        if (!this.azureAccountApi) {
-            this.azureAccountApi = await getAzureAccountExtensionApi();
-        }
-
-        return this.azureAccountApi;
     }
 
     private createAzureSubscription(subscription: AzureAccountSubscription): AzureSubscription {
