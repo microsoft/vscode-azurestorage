@@ -31,6 +31,7 @@
     "preview": true,
     "activationEvents": [
         "onFileSystem:azurestorage",
+        "onFileSystem:azurestorageblob",
         "onCommand:azureStorage.openInFileExplorer",
         "onCommand:azureStorage.deployStaticWebsite",
         "onCommand:azureStorage.configureStaticWebsite",
@@ -848,6 +849,7 @@
         "@azure/arm-storage-profile-2020-09-01-hybrid": "^2.0.0",
         "@azure/data-tables": "^13.0.0",
         "@azure/storage-blob": "^12.1.1",
+        "@azure/storage-file-datalake": "^12.1.1",
         "@azure/storage-file-share": "^12.1.1",
         "@azure/storage-queue": "^12.7.0",
         "@microsoft/vscode-azext-azureappservice": "^0.7.0",

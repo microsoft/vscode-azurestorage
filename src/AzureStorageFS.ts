@@ -30,6 +30,11 @@ type AzureStorageBlobTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobConta
 type AzureStorageTreeItem = AzureStorageFileTreeItem | AzureStorageBlobTreeItem;
 type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
+/**
+ * @deprecated Use BlobContainerFS as FileSystemProvider for blob containers.
+ * @todo: Implement FileShareFS as FileSystemProvider for file shares.
+ * @todo: Support attached storage accounts in BlobContainerFS and FileShareFS
+ */
 export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDocumentContentProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     private _bufferedEvents: vscode.FileChangeEvent[] = [];
@@ -37,6 +42,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
     private _queryCache: Map<string, { query: string, invalid?: boolean }> = new Map<string, { query: string, invalid?: boolean }>(); // Key: rootName
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+
+    static isAttachedAccount(treeItem: BlobContainerTreeItem | FileShareTreeItem | BlobTreeItem): boolean {
+        return treeItem.fullId.startsWith("/attachedStorageAccounts/");
+    }
 
     static idToUri(resourceId: string, filePath?: string): vscode.Uri {
         let idRegExp: RegExp;
