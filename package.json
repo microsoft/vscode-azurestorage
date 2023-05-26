@@ -10,13 +10,13 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/Microsoft/vscode-azurestorage"
+        "url": "https://github.com/microsoft/vscode-azurestorage"
     },
     "galleryBanner": {
         "color": "#0072c6",
         "theme": "dark"
     },
-    "homepage": "https://github.com/Microsoft/vscode-azurestorage/blob/main/README.md",
+    "homepage": "https://github.com/microsoft/vscode-azurestorage/blob/main/README.md",
     "license": "SEE LICENSE IN LICENSE.md",
     "categories": [
         "Azure"
