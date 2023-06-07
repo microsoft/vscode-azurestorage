@@ -5,7 +5,7 @@
 
 import { BlobClient, BlobDownloadResponseModel, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
 import { FileDownloadResponseModel, FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
-import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError, UserCancelledError } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, parseError } from "@microsoft/vscode-azext-utils";
 import * as path from "path";
 import * as querystring from "querystring";
 import * as vscode from "vscode";
@@ -19,7 +19,7 @@ import { DirectoryTreeItem, IDirectoryDeleteContext } from "./tree/fileShare/Dir
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "./tree/fileShare/FileTreeItem";
 import { getAppResourceIdFromId } from "./utils/azureUtils";
-import { createBlobClient, createBlockBlobClient, createOrUpdateBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
+import { IBlobContainerCreateChildContext, createBlobClient, createBlockBlobClient, createOrUpdateBlockBlob, doesBlobExist } from './utils/blobUtils';
 import { createFileClient, doesFileExist, updateFileFromText } from "./utils/fileUtils";
 import { localize } from "./utils/localize";
 import { nonNullValue } from "./utils/nonNull";
@@ -31,9 +31,11 @@ type AzureStorageTreeItem = AzureStorageFileTreeItem | AzureStorageBlobTreeItem;
 type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
 /**
+ * Still used to support the following scenarios:
+ * 1. Editing blobs from attached or emulated storage accounts
+ * 2. Opening an attached or emulated blob container in the explorer
+ *
  * @deprecated Use BlobContainerFS as FileSystemProvider for blob containers.
- * @todo: Implement FileShareFS as FileSystemProvider for file shares.
- * @todo: Support attached storage accounts in BlobContainerFS and FileShareFS
  */
 export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDocumentContentProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
