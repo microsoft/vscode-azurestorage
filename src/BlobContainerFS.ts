@@ -337,13 +337,13 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async createDirectory(uri: vscode.Uri): Promise<void> {
         const result = await callWithTelemetryAndErrorHandling<void>("azureStorageBlob.createDirectory", async (context) => {
             context.errorHandling.rethrow = true;
+            context.errorHandling.suppressDisplay = true;
 
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
             const isHnsEnabled = !!storageAccount.isHnsEnabled;
 
             if (!isHnsEnabled) {
-                // Virtual directories don't need to be created
-                return;
+                throw new Error(localize('createDirectoryNotSupported', 'Creating directories is not supported for non-HNS enabled storage accounts.'));
             } else {
                 const { pathClient } = await this.getDataLakeClients(uri, storageAccount, accountKey);
                 const directoryClient = pathClient.toDirectoryClient();
