@@ -302,7 +302,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
         // VSCode issues multiple readDirectory calls to get each directory in the path,
         // It results in multiple notifications showing up at the same time. Any way to suppress them?
-        const { containerName, blobPath } = this.parseUri(uri);
+        const { blobPath } = this.parseUri(uri);
 
         const result = await callWithTelemetryAndErrorHandling<[string, vscode.FileType][]>("azureStorageBlob.readDirectory", async (context) => {
             context.errorHandling.rethrow = true;
@@ -310,34 +310,25 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
             const { containerClient } = await this.getBlobClients(uri, storageAccount, accountKey);
 
-            const directoryLabel = blobPath === "" ? containerName : containerName + "/" + blobPath;
-            // @todo: localize
-            const loadingMessage: string = localize("loadingDir", 'Loading directory "{0}".', directoryLabel);
-
             const results: [string, vscode.FileType][] = [];
 
             let continuationToken: string | undefined = undefined;
-            const resultsPromise = vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, cancellationToken) => {
-                do {
-                    progress.report({ message: loadingMessage });
-                    const prefix = blobPath === "" ? blobPath : BlobPathUtils.appendSlash(blobPath)
-                    const listResult = containerClient.listBlobsByHierarchy("/", {
-                        prefix: prefix,
-                    }).byPage({ maxPageSize: BlobContainerFS.listBlobPageSize, continuationToken });
+            do {
+                const prefix = blobPath === "" ? blobPath : BlobPathUtils.appendSlash(blobPath)
+                const listResult = containerClient.listBlobsByHierarchy("/", {
+                    prefix: prefix,
+                }).byPage({ maxPageSize: BlobContainerFS.listBlobPageSize, continuationToken });
 
-                    const response = ((await listResult.next()).value as ListBlobsHierarchySegmentResponse);
+                const response = ((await listResult.next()).value as ListBlobsHierarchySegmentResponse);
 
-                    response.segment.blobItems.forEach(childBlob => results.push([BlobPathUtils.basename(childBlob.name), vscode.FileType.File]));
-                    response.segment.blobPrefixes?.forEach(directory => results.push([BlobPathUtils.basename(directory.name), vscode.FileType.Directory]));
-                    continuationToken = response.continuationToken;
+                response.segment.blobItems.forEach(childBlob => results.push([BlobPathUtils.basename(childBlob.name), vscode.FileType.File]));
+                response.segment.blobPrefixes?.forEach(directory => results.push([BlobPathUtils.basename(directory.name), vscode.FileType.Directory]));
+                continuationToken = response.continuationToken;
 
-                    if (cancellationToken.isCancellationRequested || !continuationToken) {
-                        return results;
-                    }
-                } while (true);
-            });
-
-            return resultsPromise;
+                if (!continuationToken) {
+                    return results;
+                }
+            } while (true);
         });
 
         return result ?? [];
@@ -408,6 +399,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
             const { blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
+            const { baseName } = this.parseUri(uri);
 
             const exists = await blobClient.exists();
             if (!options.create && !exists) {
@@ -417,10 +409,17 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
 
             try {
-                await blobClient.getBlockBlobClient().uploadData(content, {
-                    blobHTTPHeaders: {
-                        blobContentType: mime.getType(uri.path) || undefined
+                await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: false }, async (progress) => {
+                    if (exists) {
+                        progress.report({ message: localize('savingBlob', `Saving blob {0}...`, baseName) });
+                    } else {
+                        progress.report({ message: localize('creatingBlob', `Creating blob {0}...`, baseName) });
                     }
+                    await blobClient.getBlockBlobClient().uploadData(content, {
+                        blobHTTPHeaders: {
+                            blobContentType: mime.getType(uri.path) || undefined
+                        }
+                    });
                 });
             } catch (error) {
                 const pe = parseError(error);
@@ -448,21 +447,20 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             const isHnsEnabled = !!storageAccount.isHnsEnabled;
 
             try {
-                if (!isHnsEnabled) {
-                    const { containerClient, blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
-                    const exists = await blobClient.exists();
-                    if (exists) {
-                        // Check if there is matching blob and delete it.
-                        await blobClient.delete();
-                    } else {
-                        // Check if there is a matching virtual directory and delete its contents
-                        const { containerName, blobPath } = this.parseUri(uri);
+                return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: false }, async (progress, cancellationToken) => {
+                    const { baseName, blobPath } = this.parseUri(uri);
+                    progress.report({ message: localize('deletingBlob', `Deleting blob {0}...`, baseName) });
+                    if (!isHnsEnabled) {
+                        const { containerClient, blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
+                        const exists = await blobClient.exists();
+                        if (exists) {
+                            // Check if there is matching blob and delete it.
+                            await blobClient.delete();
+                        } else {
+                            // Check if there is a matching virtual directory and delete its contents
 
-                        const deletingMessage = `Deleting virtual directory ${containerName}/${blobPath}. (loc)`;
-                        let continuationToken: string | undefined = undefined;
-                        return vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: true }, async (progress, cancellationToken) => {
+                            let continuationToken: string | undefined = undefined;
                             do {
-                                progress.report({ message: deletingMessage });
                                 const prefix = BlobPathUtils.appendSlash(blobPath)
                                 const listResult = containerClient.listBlobsFlat({
                                     prefix: prefix,
@@ -480,12 +478,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                                     return;
                                 }
                             } while (true);
-                        });
+                        }
+                    } else {
+                        const { pathClient } = await this.getDataLakeClients(uri, storageAccount, accountKey);
+                        await pathClient.deleteIfExists();
                     }
-                } else {
-                    const { pathClient } = await this.getDataLakeClients(uri, storageAccount, accountKey);
-                    await pathClient.deleteIfExists();
-                }
+                });
             } catch (error) {
                 const pe = parseError(error);
                 if (pe.errorType === "403") {
@@ -497,6 +495,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
         return result;
     }
+
     async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): Promise<void> {
         const result = await callWithTelemetryAndErrorHandling("azureStorageBlob.rename", async (context) => {
             context.errorHandling.rethrow = true;
