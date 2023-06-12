@@ -2,12 +2,17 @@
 
 ## Unreleased
 
-## 0.15.1 - 2023-05-17
+## 0.15.3 - 2023-06-12
+
+### Fixed
+* Too Many Requests error when opening a blob container using file system provider [#1222](https://github.com/microsoft/vscode-azurestorage/issues/1222)
+
+## 0.15.2 - 2023-05-17
 
 ### Added
 * Add support for the upcoming Azure Resources Focus feature
 
-## 0.15.0 - 2023-02-08
+## 0.15.1 - 2023-02-08
 
 ### Added
 - Support for Azure Resources API v2
