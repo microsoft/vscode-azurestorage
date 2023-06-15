@@ -334,12 +334,37 @@
                 "category": "Azure Storage"
             }
         ],
+        "submenus": [
+            {
+                "id": "azureStorage.submenus.workspaceActions",
+                "label": "Azure Storage",
+                "icon": "resources/storageAccount.png"
+            }
+        ],
         "menus": {
-            "view/title": [
+            "azureStorage.submenus.workspaceActions": [
                 {
                     "command": "azureStorage.downloadSasUrl",
+                    "group": "1_download@1"
+                },
+                {
+                    "command": "azureStorage.attachStorageAccount",
+                    "group": "2_attach@1"
+                },
+                {
+                    "command": "azureStorage.createGpv2Account",
+                    "group": "3_create@1"
+                },
+                {
+                    "command": "azureStorage.createGpv2AccountAdvanced",
+                    "group": "3_create@2"
+                }
+            ],
+            "view/title": [
+                {
+                    "submenu": "azureStorage.submenus.workspaceActions",
                     "when": "view == azureWorkspace",
-                    "group": "navigation@4"
+                    "group": "navigation@5"
                 }
             ],
             "explorer/context": [
