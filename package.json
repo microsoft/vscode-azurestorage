@@ -338,7 +338,10 @@
             {
                 "id": "azureStorage.submenus.workspaceActions",
                 "label": "Azure Storage",
-                "icon": "resources/storageAccount.png"
+                "icon": {
+                    "light": "resources/storageAccount.png",
+                    "dark": "resources/storageAccount.png"
+                }
             }
         ],
         "menus": {
