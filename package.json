@@ -111,7 +111,7 @@
                 {
                     "command": "azureStorage.createGpv2Account",
                     "title": "Create Storage Account...",
-                    "type": "microsoft.storage/storageaccounts",
+                    "type": "StorageAccounts",
                     "detail": "For file storage and static file hosting."
                 }
             ]
