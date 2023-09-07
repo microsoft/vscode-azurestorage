@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureDataTables from '@azure/data-tables';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { localize } from "../../utils/localize";
+import { nonNull } from '../../utils/storageWrappers';
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from '../IStorageTreeItem';
@@ -23,7 +24,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
     public readonly childTypeLabel: string = "Table";
     public static contextValue: string = 'azureTableGroup';
     public contextValue: string = TableGroupTreeItem.contextValue;
-    public declare parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
+    public parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
 
     public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
@@ -89,15 +90,11 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         });
 
         if (tableName) {
-            const currentChildren = await this.getCachedChildren(context);
-            if (currentChildren.some(child => child.label === tableName)) {
-                throw new Error(localize('tableAlreadyExists', 'The table "{0}" already exists', tableName));
-            }
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
                 context.showCreatingTreeItem(tableName);
                 progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
                 const table = await this.createTable(tableName);
-                return new TableTreeItem(this, nonNullProp(table, 'name'));
+                return new TableTreeItem(this, nonNull(table.name, 'name'));
             });
         }
 
