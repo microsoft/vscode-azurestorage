@@ -6,7 +6,6 @@
 import * as azureStorageBlob from '@azure/storage-blob';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ISubscriptionContext, parseError, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import { ThemeIcon } from 'vscode';
-import { AttachedAccountRoot } from '../AttachedAccountRoot';
 import { emulatorAccountName, emulatorConnectionString } from '../constants';
 import { ext } from '../extensionVariables';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
@@ -79,7 +78,7 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         const index = attachedAccounts.findIndex((account) => account.fullId === treeItem.fullId);
         if (index !== -1) {
             attachedAccounts.splice(index, 1);
-            await ext.context.secrets.delete(this.getAccountKey(treeItem));
+            await ext.context.secrets.delete(this._serviceName + treeItem.fullId);
             await this.persistIds(attachedAccounts);
         }
     }
@@ -106,7 +105,7 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
             attachedAccounts.push(treeItem);
 
             if (treeItem.root.storageAccountName !== emulatorAccountName) {
-                await ext.context.secrets.store(this.getAccountKey(treeItem), treeItem.getConnectionString());
+                await ext.context.secrets.store(this._serviceName + treeItem.fullId, treeItem.getConnectionString());
                 await this.persistIds(attachedAccounts);
             }
         }
@@ -120,7 +119,7 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         if (value) {
             const accounts: IPersistedAccount[] = <IPersistedAccount[]>JSON.parse(value);
             await Promise.all(accounts.map(async account => {
-                connectionString = <string>await ext.context.secrets.get(this.getAccountKey(account));
+                connectionString = <string>await ext.context.secrets.get(this._serviceName + account.fullId);
                 const accountName: string | undefined = getPropertyFromConnectionString(connectionString, 'AccountName');
 
                 if (accountName) {
@@ -172,8 +171,40 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
 
         return localize('connectionStringMustMatchFormat', 'Connection string must match format "DefaultEndpointsProtocol=...;AccountName=...;AccountKey=...;"');
     }
+}
 
-    private getAccountKey(account: IPersistedAccount): string {
-        return this._serviceName + account.fullId;
+export class AttachedAccountRoot implements ISubscriptionContext {
+    private _error: Error = new Error(localize('cannotRetrieveAzureSubscriptionInfoForAttachedAccount', 'Cannot retrieve Azure subscription information for an attached account.'));
+
+    public get credentials(): never {
+        throw this._error;
+    }
+
+    public get subscriptionDisplayName(): never {
+        throw this._error;
+    }
+
+    public get subscriptionId(): never {
+        throw this._error;
+    }
+
+    public get subscriptionPath(): never {
+        throw this._error;
+    }
+
+    public get tenantId(): never {
+        throw this._error;
+    }
+
+    public get userId(): never {
+        throw this._error;
+    }
+
+    public get environment(): never {
+        throw this._error;
+    }
+
+    public get isCustomCloud(): never {
+        throw this._error;
     }
 }

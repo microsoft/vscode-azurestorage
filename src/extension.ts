@@ -15,6 +15,7 @@ import { BlobContainerFS } from './BlobContainerFS';
 import { revealTreeItem } from './commands/api/revealTreeItem';
 import { registerCommands } from './commands/registerCommands';
 import { ext } from './extensionVariables';
+import { getApiExport } from './getApiExport';
 import { StorageAccountResolver } from './StorageAccountResolver';
 import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
 import './tree/AttachedStorageAccountTreeItem';
@@ -33,7 +34,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         ext.azureStorageFS = new AzureStorageFS();
         ext.azureStorageWorkspaceFS = new AzureStorageFS();
-        context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', ext.azureStorageFS, { isCaseSensitive: true }));
+        // context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorage', ext.azureStorageFS, { isCaseSensitive: true }));
         context.subscriptions.push(vscode.workspace.registerFileSystemProvider('azurestorageblob', new BlobContainerFS(), { isCaseSensitive: true }));
         context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('azurestorage', ext.azureStorageFS));
 
@@ -43,7 +44,7 @@ export async function activateInternal(context: vscode.ExtensionContext, perfSta
 
         registerCommands();
 
-        const rgApiProvider = await apiUtils.getExtensionExports<apiUtils.AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
+        const rgApiProvider = await getApiExport<apiUtils.AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
         if (rgApiProvider) {
             const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
             ext.rgApi = api;

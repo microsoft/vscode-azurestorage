@@ -5,7 +5,7 @@
 
 import { BlobClient, BlobDownloadResponseModel, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
 import { FileDownloadResponseModel, FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
-import { AzExtTreeItem, IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, parseError } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, callWithTelemetryAndErrorHandling, IActionContext, parseError, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import * as path from "path";
 import * as querystring from "querystring";
 import * as vscode from "vscode";
@@ -18,8 +18,7 @@ import { BlobTreeItem } from "./tree/blob/BlobTreeItem";
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./tree/fileShare/DirectoryTreeItem";
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "./tree/fileShare/FileTreeItem";
-import { getAppResourceIdFromId } from "./utils/azureUtils";
-import { IBlobContainerCreateChildContext, createBlobClient, createBlockBlobClient, createOrUpdateBlockBlob, doesBlobExist } from './utils/blobUtils';
+import { createBlobClient, createBlockBlobClient, createOrUpdateBlockBlob, doesBlobExist, IBlobContainerCreateChildContext } from './utils/blobUtils';
 import { createFileClient, doesFileExist, updateFileFromText } from "./utils/fileUtils";
 import { localize } from "./utils/localize";
 import { nonNullValue } from "./utils/nonNull";
@@ -30,13 +29,6 @@ type AzureStorageBlobTreeItem = BlobTreeItem | BlobDirectoryTreeItem | BlobConta
 type AzureStorageTreeItem = AzureStorageFileTreeItem | AzureStorageBlobTreeItem;
 type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | BlobDirectoryTreeItem | BlobContainerTreeItem;
 
-/**
- * Still used to support the following scenarios:
- * 1. Editing blobs from attached or emulated storage accounts
- * 2. Opening an attached or emulated blob container in the explorer
- *
- * @deprecated Use BlobContainerFS as FileSystemProvider for blob containers.
- */
 export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDocumentContentProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     private _bufferedEvents: vscode.FileChangeEvent[] = [];
@@ -44,10 +36,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
     private _queryCache: Map<string, { query: string, invalid?: boolean }> = new Map<string, { query: string, invalid?: boolean }>(); // Key: rootName
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
-
-    static isAttachedAccount(treeItem: BlobContainerTreeItem | FileShareTreeItem | BlobTreeItem): boolean {
-        return treeItem.fullId.startsWith("/attachedStorageAccounts/");
-    }
 
     static idToUri(resourceId: string, filePath?: string): vscode.Uri {
         let idRegExp: RegExp;
@@ -465,16 +453,16 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         const rootName: string = path.basename(resourceId);
         const loadingMessage: string = this.isFileShareUri(uri) ? localize('loadingFileShare', 'Loading file share "{0}"...', rootName) : localize('loadingContainer', 'Loading blob container "{0}"...', rootName);
 
-        try {
-            // the storage account needs to be resolved for the file system to read the files
-            const appResourceId = getAppResourceIdFromId(resourceId);
-            if (appResourceId) {
-                const appResource = await ext.rgApi.appResourceTree.findTreeItem(appResourceId, { ...context, loadAll: true }) as unknown as { resolve: () => Promise<void> }
-                await appResource.resolve();
-            }
-        } catch {
-            // swallow this error-- we don't want to abort this lookup
-        }
+        // try {
+        //     // the storage account needs to be resolved for the file system to read the files
+        //     const appResourceId = getAppResourceIdFromId(resourceId);
+        //     if (appResourceId) {
+        //         const appResource = await ext.rgApi.appResourceTree.findTreeItem(appResourceId, { ...context, loadAll: true }) as unknown as { resolve: () => Promise<void> }
+        //         await appResource.resolve();
+        //     }
+        // } catch {
+        //     // swallow this error-- we don't want to abort this lookup
+        // }
 
         const treeItem = resourceId.includes('attachedStorageAccounts') ?
             await ext.rgApi.workspaceResourceTree.findTreeItem(resourceId, { ...context, loadAll: true, loadingMessage }) :
