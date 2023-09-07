@@ -2,6 +2,59 @@
 
 ## Unreleased
 
+## 0.15.3 - 2023-06-12
+
+### Fixed
+* Too Many Requests error when opening a blob container using file system provider [#1222](https://github.com/microsoft/vscode-azurestorage/issues/1222)
+
+## 0.15.2 - 2023-05-17
+
+### Added
+* Add support for the upcoming Azure Resources Focus feature
+
+## 0.15.1 - 2023-02-08
+
+### Added
+- Support for Azure Resources API v2
+
+### Engineering
+- Intentionally override base property by @alexweininger in [#1173](https://github.com/microsoft/vscode-azurestorage/pull/1173)
+- Remove extra nonNull util by @alexweininger in [#1174](https://github.com/microsoft/vscode-azurestorage/pull/1174)
+- Add .nvmrc file by @alexweininger in [#1190](https://github.com/microsoft/vscode-azurestorage/pull/1190)
+- Initial conversion to a v1.5 extension by @alexweininger in [#1195](https://github.com/microsoft/vscode-azurestorage/pull/1195)
+- Fix AzureStorageFS id parsing by @alexweininger in [#1194](https://github.com/microsoft/vscode-azurestorage/pull/1194)
+- Remove expected child context value by @alexweininger in [#1211](https://github.com/microsoft/vscode-azurestorage/pull/1211)
+
+### Dependencies
+- Bump @xmldom/xmldom from 0.7.5 to 0.7.8 by @dependabot in [#1181](https://github.com/microsoft/vscode-azurestorage/pull/1181)
+- Bump yargs-parser and yargs by @dependabot in [#1182](https://github.com/microsoft/vscode-azurestorage/pull/1182)
+- Bump loader-utils from 1.4.0 to 1.4.2 by @dependabot in [#1186](https://github.com/microsoft/vscode-azurestorage/pull/1186)
+- Bump decode-uri-component from 0.2.0 to 0.2.2 by @dependabot in [#1187](https://github.com/microsoft/vscode-azurestorage/pull/1187)
+- Bump minimatch and mocha by @dependabot in [#1188](https://github.com/microsoft/vscode-azurestorage/pull/1188)
+- Bump simple-git from 3.7.0 to 3.15.1 by @dependabot in [#1189](https://github.com/microsoft/vscode-azurestorage/pull/1189)
+- Bump json5 from 1.0.1 to 1.0.2 by @dependabot in [#1193](https://github.com/microsoft/vscode-azurestorage/pull/1193)
+- Bump simple-git from 3.15.1 to 3.16.0 by @dependabot in [#1197](https://github.com/microsoft/vscode-azurestorage/pull/1197)
+
+## 0.15.0 - 2022-09-15
+
+### Added
+- Support for Virtual Workspaces [#1118](https://github.com/microsoft/vscode-azurestorage/pull/1118)
+- Support for deleting many blobs and file shares [#1113](https://github.com/microsoft/vscode-azurestorage/pull/1113)
+- Support for emulated tables [#1105](https://github.com/microsoft/vscode-azurestorage/pull/1105)
+- Uploaded files to blob containers automatically log file URL's to output [#1076](https://github.com/microsoft/vscode-azurestorage/pull/1076)
+- Activity log support when deleting a folder in a blob container [#1123](https://github.com/microsoft/vscode-azurestorage/pull/1123)
+- Download from SAS URL command to Local Workspace view [#1151](https://github.com/microsoft/vscode-azurestorage/pull/1151)
+- Download support for File Shares and Blob Containers [#1121](https://github.com/microsoft/vscode-azurestorage/pull/1121)
+
+### Changed
+- "Open in File Explorer" command changed to "Open in Explorer" [#1110](https://github.com/microsoft/vscode-azurestorage/pull/1110)
+- Disabled "Open in Storage Explorer" default behavior when in remote workspace [#1109](https://github.com/microsoft/vscode-azurestorage/pull/1109)
+- Minimum VS code version that is supported is now version 1.66.2 [#1106](https://github.com/microsoft/vscode-azurestorage/pull/1106)
+
+### Fixed
+- [Bugs fixed](https://github.com/microsoft/vscode-azurestorage/issues?q=is%3Aclosed+is%3Aissue+milestone%3A0.15.0)
+- Errors associated with Attached Storage Accounts [#1045](https://github.com/microsoft/vscode-azurestorage/issues/1045)
+
 ## 0.14.2 - 2022-07-05
 
 ### Added

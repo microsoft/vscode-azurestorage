@@ -3,17 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzureWizardExecuteStep, IActionContext, IParsedError, nonNullValue, parseError } from "@microsoft/vscode-azext-utils";
+import { AzExtFsExtra, AzureWizardExecuteStep, IActionContext, IParsedError, nonNullValue, parseError } from "@microsoft/vscode-azext-utils";
 import { CancellationToken, ProgressLocation, Uri, window } from "vscode";
 import { NotificationProgress } from '../../constants';
 import { ext } from "../../extensionVariables";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
-import { AzExtFsExtra } from "../../utils/AzExtFsExtra";
+import { refreshTreeItem } from "../../tree/refreshTreeItem";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../../utils/errorUtils";
 import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, outputAndCopyUploadedFileUrls, OverwriteChoice } from "../../utils/uploadUtils";
 import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";
-import { IExistingFileContext } from "./IExistingFileContext";
 import { IUploadFilesWizardContext } from './IUploadFilesWizardContext';
 
 export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardContext> {
@@ -57,7 +56,7 @@ export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardCo
             if (!context.calledFromUploadToAzureStorage) {
                 outputAndCopyUploadedFileUrls(context.treeItem.getUrl(), fileEndings);
             }
-
+            await refreshTreeItem(context, context.treeItem);
             context.resolution = resolution;
         }
     }
@@ -83,15 +82,8 @@ async function uploadFilesStepHelper(
 
         const localFilePath: string = uri.fsPath;
         const remoteFilePath: string = convertLocalPathToRemotePath(localFilePath, destinationDirectory);
-        const id: string = `${treeItem.fullId}/${remoteFilePath}`;
-        const result = await treeItem.treeDataProvider.findTreeItem(id, context);
         try {
-            if (result) {
-                // A treeItem for this file already exists, no need to do anything with the tree, just upload
-                await treeItem.uploadLocalFile(context, localFilePath, remoteFilePath, notificationProgress, cancellationToken);
-            } else {
-                await treeItem.createChild(<IExistingFileContext>{ ...context, remoteFilePath, localFilePath });
-            }
+            await treeItem.uploadLocalFile(context, localFilePath, remoteFilePath, notificationProgress, cancellationToken);
         } catch (error) {
             const parsedError: IParsedError = parseError(error);
             if (isAzCopyError(parsedError)) {

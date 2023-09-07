@@ -5,24 +5,26 @@
 
 import * as azureStorageBlob from "@azure/storage-blob";
 import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
-import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, AzureWizard, DeleteConfirmationStep, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
+import { DeleteBlobStep } from "../../commands/deleteBlob/DeleteBlobStep";
+import { IDeleteBlobWizardContext } from "../../commands/deleteBlob/IDeleteBlobWizardContext";
 import { storageExplorerDownloadUrl } from "../../constants";
-import { ext } from "../../extensionVariables";
+import { createActivityContext } from "../../utils/activityUtils";
 import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
+import { copyAndShowToast } from "../../utils/copyAndShowToast";
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from "../IDownloadableTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
-import { IStorageTreeItem } from "../IStorageTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 
-export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTreeItem {
-    public static contextValue: string = 'azureBlob';
+export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadableTreeItem {
+    public static contextValue: string = 'azureBlobFile';
     public contextValue: string = BlobTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
 
@@ -47,6 +49,10 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
         return this.parent.root;
     }
 
+    public get remoteFilePath(): string {
+        return this.blobPath;
+    }
+
     public get label(): string {
         return this.blobName;
     }
@@ -59,24 +65,30 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IStorageTre
         // Use this.blobPath here instead of this.blobName. Otherwise the blob's containing directory/directories aren't displayed
         const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
         const url = blobClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Blob URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Blob URL');
     }
 
     public async deleteTreeItemImpl(context: ISuppressMessageContext): Promise<void> {
-        let result: MessageItem | undefined;
         if (!context.suppressMessage) {
-            const message: string = `Are you sure you want to delete the blob '${this.label}'?`;
-            result = await window.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
-        }
-        if (result === DialogResponses.deleteResponse || context.suppressMessage) {
+            const deletingBlob: string = localize('deleteBlob', 'Delete blob "{0}"', this.label);
+            const wizardContext: IDeleteBlobWizardContext = Object.assign(context, {
+                blobName: this.label,
+                blob: this,
+                root: this.root,
+                ...(await createActivityContext()),
+                activityTitle: deletingBlob,
+            });
+            const message: string = localize('deleteBlob', "Are you sure you want to delete the blob '{0}'?", this.label);
+            const wizard = new AzureWizard(wizardContext, {
+                promptSteps: [new DeleteConfirmationStep(message)],
+                executeSteps: [new DeleteBlobStep()]
+            });
+            await wizard.prompt();
+            await wizard.execute();
+        } else {
             const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
             await blobClient.delete();
-        } else {
-            throw new UserCancelledError();
         }
-
         AzureStorageFS.fireDeleteEvent(this);
     }
 

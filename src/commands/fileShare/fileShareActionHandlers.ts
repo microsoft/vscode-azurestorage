@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import { IActionContext, registerCommandWithTreeNodeUnwrapping } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
@@ -12,11 +12,11 @@ import { FileTreeItem } from '../../tree/fileShare/FileTreeItem';
 import { deleteNode } from '../commonTreeCommands';
 
 export function registerFileShareActionHandlers(): void {
-    registerCommand("azureStorage.openFileShare", openFileShareInStorageExplorer);
-    registerCommand("azureStorage.editFile", async (context: IActionContext, treeItem: FileTreeItem) => AzureStorageFS.showEditor(context, treeItem), 250);
-    registerCommand("azureStorage.deleteFileShare", deleteFileShare);
-    registerCommand("azureStorage.createDirectory", async (context: IActionContext, treeItem: FileShareTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.contextValue }));
-    registerCommand("azureStorage.createFile", async (context: IActionContext, treeItem: FileShareTreeItem) => {
+    registerCommandWithTreeNodeUnwrapping("azureStorage.openFileShare", openFileShareInStorageExplorer);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.editFile", async (context: IActionContext, treeItem: FileTreeItem) => AzureStorageFS.showEditor(context, treeItem), 250);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.deleteFileShare", deleteFileShare);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.createDirectory", async (context: IActionContext, treeItem: FileShareTreeItem) => await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: DirectoryTreeItem.contextValue }));
+    registerCommandWithTreeNodeUnwrapping("azureStorage.createFile", async (context: IActionContext, treeItem: FileShareTreeItem) => {
         const childTreeItem = await treeItem.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue });
         await vscode.commands.executeCommand("azureStorage.editFile", childTreeItem);
     });

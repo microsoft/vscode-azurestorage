@@ -61,7 +61,7 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
 
 // Currently only supports creating block blobs
 export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, context: ICreateChildImplContext & IBlobContainerCreateChildContext): Promise<BlobTreeItem> {
-    const blobPath: string = context.childName || await getBlobPath(context, parent);
+    const blobPath: string = context.childName ?? await getBlobPath(context, parent);
 
     return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(blobPath);

@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import { IActionContext, registerCommandWithTreeNodeUnwrapping } from '@microsoft/vscode-azext-utils';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { QueueTreeItem } from '../../tree/queue/QueueTreeItem';
 import { deleteNode } from '../commonTreeCommands';
 
 export function registerQueueActionHandlers(): void {
-    registerCommand("azureStorage.openQueue", openQueueInStorageExplorer);
-    registerCommand("azureStorage.deleteQueue", deleteQueue);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.openQueue", openQueueInStorageExplorer);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.deleteQueue", deleteQueue);
 }
 
 async function openQueueInStorageExplorer(_context: IActionContext, treeItem: QueueTreeItem): Promise<void> {

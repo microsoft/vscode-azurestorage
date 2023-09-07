@@ -4,22 +4,23 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as azureStorageShare from '@azure/storage-file-share';
-import { AzExtParentTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzureWizard, ICreateChildImplContext, parseError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { localize } from '../../utils/localize';
+import { nonNullProp } from '../../utils/nonNull';
 import { AttachedStorageAccountTreeItem } from '../AttachedStorageAccountTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
 import { IStorageTreeItem } from '../IStorageTreeItem';
+import { FileShareNameStep } from './createFileShare/FileShareNameStep';
+import { IFileShareWizardContext } from './createFileShare/IFileShareWizardContext';
+import { StorageQuotaPromptStep } from './createFileShare/StorageQuotaPromptStep';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareTreeItem } from './FileShareTreeItem';
 import { FileTreeItem } from './FileTreeItem';
-
-const minQuotaGB = 1;
-const maxQuotaGB = 5120;
 
 export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
@@ -75,72 +76,26 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<FileShareTreeItem> {
-        const shareName = await context.ui.showInputBox({
-            placeHolder: 'Enter a name for the new file share',
-            validateInput: FileShareGroupTreeItem.validateFileShareName
+        const wizardContext: IFileShareWizardContext = { ...context };
+        const promptSteps = [new FileShareNameStep(), new StorageQuotaPromptStep()];
+
+        const wizard = new AzureWizard(wizardContext, { title: localize('createFileShare', "Create File Share"), promptSteps });
+        await wizard.prompt();
+        const shareName = nonNullProp(wizardContext, 'name');
+        const quota = nonNullProp(wizardContext, 'quota');
+
+        return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
+            context.showCreatingTreeItem(shareName);
+            progress.report({ message: localize('creatingFileShare', 'Azure Storage: Creating file share "{0}"...', shareName) });
+            const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
+            await shareServiceClient.createShare(shareName, { quota });
+            return new FileShareTreeItem(this, shareName);
         });
-
-        if (shareName) {
-            const quotaGB = await context.ui.showInputBox({
-                prompt: `Specify quota (in GB, between ${minQuotaGB} and ${maxQuotaGB}), to limit total storage size`,
-                value: maxQuotaGB.toString(),
-                validateInput: FileShareGroupTreeItem.validateQuota
-            });
-
-            if (quotaGB) {
-                return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-                    context.showCreatingTreeItem(shareName);
-                    progress.report({ message: `Azure Storage: Creating file share '${shareName}'` });
-                    const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
-                    await shareServiceClient.createShare(shareName, { quota: Number(quotaGB) });
-                    return new FileShareTreeItem(this, shareName);
-                });
-            }
-        }
-
-        throw new UserCancelledError();
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
         return contextValue === FileShareTreeItem.contextValue ||
             contextValue === DirectoryTreeItem.contextValue ||
             contextValue === FileTreeItem.contextValue;
-    }
-
-    private static validateFileShareName(name: string): string | undefined | null {
-        const validLength = { min: 3, max: 63 };
-
-        if (!name) {
-            return "Share name cannot be empty";
-        }
-        if (name.indexOf(" ") >= 0) {
-            return "Share name cannot contain spaces";
-        }
-        if (name.length < validLength.min || name.length > validLength.max) {
-            return `Share name must contain between ${validLength.min} and ${validLength.max} characters`;
-        }
-        if (!/^[a-z0-9-]+$/.test(name)) {
-            return 'Share name can only contain lowercase letters, numbers and hyphens';
-        }
-        if (/--/.test(name)) {
-            return 'Share name cannot contain two hyphens in a row';
-        }
-        if (/(^-)|(-$)/.test(name)) {
-            return 'Share name cannot begin or end with a hyphen';
-        }
-
-        return undefined;
-    }
-
-    private static validateQuota(input: string): string | undefined {
-        try {
-            const value = Number(input);
-            if (value < minQuotaGB || value > maxQuotaGB) {
-                return `Value must be between ${minQuotaGB} and ${maxQuotaGB}`;
-            }
-        } catch (err) {
-            return "Input must be a number";
-        }
-        return undefined;
     }
 }

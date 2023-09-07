@@ -9,6 +9,8 @@ import { basename, dirname, posix } from 'path';
 import * as vscode from 'vscode';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
+import { getResourceUri } from '../commands/downloadFiles/getResourceUri';
+import { getSasToken } from '../commands/downloadFiles/getSasToken';
 import { NotificationProgress } from '../constants';
 import { ext } from '../extensionVariables';
 import { TransferProgress } from '../TransferProgress';
@@ -16,8 +18,10 @@ import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { doesBlobDirectoryExist, doesBlobExist } from './blobUtils';
 import { checkCanOverwrite } from './checkCanOverwrite';
+import { copyAndShowToast } from './copyAndShowToast';
 import { doesDirectoryExist } from './directoryUtils';
 import { doesFileExist } from './fileUtils';
+import { isEmptyDirectory } from './fs';
 import { localize } from './localize';
 
 export const upload: string = localize('upload', 'Upload');
@@ -39,8 +43,21 @@ export async function uploadLocalFolder(
     messagePrefix?: string,
 ): Promise<void> {
     const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
-    const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, true);
-    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(destTreeItem, destPath);
+    const uri = vscode.Uri.file(sourcePath);
+    let useWildCard: boolean = true;
+    if (await isEmptyDirectory(uri)) {
+        useWildCard = false;
+        destPath = dirname(destPath);
+        if (destPath === '.') {
+            destPath = '';
+        }
+    }
+
+    const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, useWildCard);
+
+    const resourceUri = getResourceUri(destTreeItem);
+    const sasToken = getSasToken(destTreeItem.root);
+    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, destPath, false);
     const transferProgress: TransferProgress = new TransferProgress('files', messagePrefix);
     ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
@@ -60,18 +77,33 @@ export function outputAndCopyUploadedFileUrls(parentUrl: string, fileUrls: strin
         ext.outputChannel.appendLog(url);
     }
 
-    void vscode.window.showInformationMessage(
-        localize('outputAndCopyFinished', 'Finished uploading {0} {1}.', fileUrls.length, fileUrls.length === 1 ? 'file' : 'files'),
-        localize('copyToClipboard', 'Copy to Clipboard')
-    ).then(async (result) => {
-        const shouldCopy: boolean = !!result;
-        if (shouldCopy) {
-            const lastFileUrl: string = `${parentUrl}/${fileUrls[fileUrls.length - 1]}`;
-            const success: string = localize('copiedToClipboard', 'File URL copied to clipboard: {0}', lastFileUrl);
-            await vscode.env.clipboard.writeText(lastFileUrl);
-            ext.outputChannel.appendLog(success);
-        }
-    });
+    const copyToClipboard: string = localize('copyToClipboard', 'Copy to Clipboard');
+    const outputAndCopyFile: string = localize('outputAndCopyFinished.file', 'Finished uploading 1 file.');
+    const outputAndCopyFiles: string = localize('outputAndCopyFinished.files', 'Finished uploading {0} files.', fileUrls.length);
+    const viewOutput: string = localize('viewOutput', 'View Output');
+
+    if (fileUrls.length === 1) {
+        void vscode.window.showInformationMessage(
+            outputAndCopyFile,
+            copyToClipboard
+        ).then(async (result) => {
+            const shouldCopy: boolean = !!result;
+            if (shouldCopy) {
+                const lastFileUrl: string = `${parentUrl}/${fileUrls[fileUrls.length - 1]}`;
+                await copyAndShowToast(lastFileUrl, 'File URL');
+            }
+        });
+    } else {
+        void vscode.window.showInformationMessage(
+            outputAndCopyFiles,
+            viewOutput
+        ).then(result => {
+            const shouldView: boolean = !!result;
+            if (shouldView) {
+                ext.outputChannel.show();
+            }
+        });
+    }
 }
 
 export function showUploadSuccessMessage(treeItemLabel: string): void {

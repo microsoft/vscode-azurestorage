@@ -3,14 +3,13 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, IParsedError } from '@microsoft/vscode-azext-utils';
+import { AzExtFsExtra, IActionContext, IParsedError } from '@microsoft/vscode-azext-utils';
 import * as vscode from 'vscode';
 import { storageFilter } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { refreshTreeItem } from '../tree/refreshTreeItem';
-import { AzExtFsExtra } from '../utils/AzExtFsExtra';
 import { multipleAzCopyErrorsMessage, throwIfCanceled } from '../utils/errorUtils';
 import { isSubpath } from '../utils/fs';
 import { localize } from '../utils/localize';
@@ -85,10 +84,10 @@ export async function uploadToAzureStorage(context: IActionContext, _firstSelect
     await vscode.window.withProgress({ cancellable: true, location: vscode.ProgressLocation.Notification, title }, async (_notificationProgress, cancellationToken) => {
         for (const folderUri of folderUrisToUpload) {
             throwIfCanceled(cancellationToken, context.telemetry.properties, 'uploadToAzureStorage');
-            errors.push(...(await uploadFolder(context, treeItem, folderUri, cancellationToken, destinationDirectory)).errors);
+            errors.push(...(await uploadFolder(context, treeItem, undefined, folderUri, cancellationToken, destinationDirectory)).errors);
         }
 
-        errors.push(...(await uploadFiles(context, treeItem, fileUrisToUpload, cancellationToken, destinationDirectory)).errors);
+        errors.push(...(await uploadFiles(context, treeItem, undefined, fileUrisToUpload, cancellationToken, destinationDirectory)).errors);
     });
 
     if (errors.length === 1) {

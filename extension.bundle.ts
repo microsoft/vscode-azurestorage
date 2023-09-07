@@ -14,9 +14,9 @@
 //
 // The tests should import '../extension.bundle.ts'. At design-time they live in tests/ and so will pick up this file (extension.bundle.ts).
 // At runtime the tests live in dist/tests and will therefore pick up the main webpack bundle at dist/extension.bundle.js.
-export * from '@microsoft/vscode-azext-utils';
 export * from '@microsoft/vscode-azext-azureutils';
-export * from './src/commands/blob/blobActionHandlers';
+export * from '@microsoft/vscode-azext-utils';
+export { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 export * from './src/commands/blob/blobContainerActionHandlers';
 export * from './src/commands/blob/blobContainerGroupActionHandlers';
 export * from './src/commands/createStorageAccount';
@@ -30,12 +30,10 @@ export * from './src/commands/table/tableGroupActionHandlers';
 // Export activate/deactivate for main.js
 export { activateInternal, deactivateInternal } from './src/extension';
 export { ext } from './src/extensionVariables';
+export { ResolvedStorageAccount } from './src/StorageAccountResolver';
 export { AzureAccountTreeItem } from './src/tree/AzureAccountTreeItem';
 export { StorageAccountTreeItem } from './src/tree/StorageAccountTreeItem';
-export { AzExtFsExtra } from './src/utils/AzExtFsExtra';
 export { delay } from './src/utils/delay';
 export { getRandomHexString } from './src/utils/stringUtils';
-export { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
-export { ResolvedStorageAccount } from './src/StorageAccountResolver';
 
 // NOTE: The auto-fix action "source.organizeImports" does weird things with this file, but there doesn't seem to be a way to disable it on a per-file basis so we'll just let it happen

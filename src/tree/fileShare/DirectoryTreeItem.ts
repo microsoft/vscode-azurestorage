@@ -6,19 +6,21 @@
 import * as azureStorageShare from '@azure/storage-file-share';
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
+import { posix } from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { ext } from "../../extensionVariables";
+import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
+import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
-import { IStorageTreeItem } from '../IStorageTreeItem';
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./FileShareTreeItem";
 import { FileTreeItem } from './FileTreeItem';
 
-export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IStorageTreeItem {
+export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
     public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,
@@ -35,6 +37,10 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
     public get root(): IStorageRoot {
         return this.parent.root;
+    }
+
+    public get remoteFilePath(): string {
+        return posix.join(this.parentPath, this.directoryName, '/');
     }
 
     public get iconPath(): TreeItemIconPath {
@@ -70,9 +76,7 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         // Use this.fullPath here instead of this.directoryName. Otherwise only the leaf directory is displayed in the URL
         const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, this.fullPath);
         const url = directoryClient.url;
-        await vscode.env.clipboard.writeText(url);
-        ext.outputChannel.show();
-        ext.outputChannel.appendLog(`Directory URL copied to clipboard: ${url}`);
+        await copyAndShowToast(url, 'Directory URL');
     }
 
     public async createChildImpl(context: ICreateChildImplContext & IFileShareCreateChildContext): Promise<AzExtTreeItem> {

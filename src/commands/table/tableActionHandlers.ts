@@ -3,14 +3,14 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IActionContext, registerCommand } from '@microsoft/vscode-azext-utils';
+import { IActionContext, registerCommandWithTreeNodeUnwrapping } from '@microsoft/vscode-azext-utils';
 import { storageExplorerLauncher } from '../../storageExplorerLauncher/storageExplorerLauncher';
 import { TableTreeItem } from '../../tree/table/TableTreeItem';
 import { deleteNode } from '../commonTreeCommands';
 
 export function registerTableActionHandlers(): void {
-    registerCommand("azureStorage.openTable", openTableInStorageExplorer);
-    registerCommand("azureStorage.deleteTable", deleteTable);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.openTable", openTableInStorageExplorer);
+    registerCommandWithTreeNodeUnwrapping("azureStorage.deleteTable", deleteTable);
 }
 
 async function openTableInStorageExplorer(_context: IActionContext, treeItem: TableTreeItem): Promise<void> {

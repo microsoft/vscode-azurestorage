@@ -9,7 +9,7 @@ import { storageFilter } from "../constants";
 import { ext } from "../extensionVariables";
 import { AttachedStorageAccountTreeItem } from '../tree/AttachedStorageAccountTreeItem';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
-import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from "../tree/StorageAccountTreeItem";
+import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem } from "../tree/StorageAccountTreeItem";
 import { localize } from '../utils/localize';
 
 /**
@@ -39,7 +39,6 @@ export async function selectStorageAccountTreeItemForCommand(
     if (!treeItem) {
         treeItem = await ext.rgApi.pickAppResource<ResolvedStorageAccountTreeItem & AzExtTreeItem>(context, {
             filter: storageFilter,
-            expectedChildContextValue: new RegExp(StorageAccountTreeItem.contextValue)
         });
     }
 
