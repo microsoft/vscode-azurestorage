@@ -12,10 +12,11 @@
 const process = require('process');
 const dev = require("@microsoft/vscode-azext-dev");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const webpack = require('webpack');
 
 let DEBUG_WEBPACK = !!process.env.DEBUG_WEBPACK;
 
-let config = dev.getDefaultWebpackConfig({
+const desktopConfig = dev.getDefaultWebpackConfig({
     target: 'node',
     projectRoot: __dirname,
     verbosity: DEBUG_WEBPACK ? 'debug' : 'normal',
@@ -37,11 +38,33 @@ let config = dev.getDefaultWebpackConfig({
                 { from: './out/src/utils/getCoreNodeModule.js', to: 'node_modules' }
             ]
         })
-    ]
+    ],
+    suppressCleanDistFolder: true
+});
+
+const webConfig = dev.getDefaultWebpackConfig({
+    projectRoot: __dirname,
+    verbosity: DEBUG_WEBPACK ? 'debug' : 'normal',
+    externals: {
+        // AzCopy exes are not available in the browser, so we need to exclude it from the bundle.
+        "@azure-tools/azcopy-win32": "@azure-tools/azcopy-win32",
+        "@azure-tools/azcopy-win64": "@azure-tools/azcopy-win64",
+        "@azure-tools/azcopy-linux": "@azure-tools/azcopy-linux",
+        "@azure-tools/azcopy-darwin": "@azure-tools/azcopy-darwin",
+        // Since AzCopy exes are not available, exclude the root azcopy-node wrapper package
+        "@azure-tools/azcopy-node": "@azure-tools/azcopy-node",
+    },
+    target: 'webworker',
+    plugins: [
+        new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer'],
+        }),
+    ],
+    suppressCleanDistFolder: true
 });
 
 if (DEBUG_WEBPACK) {
-    console.log('Config:', config);
+    console.log('Config:', desktopConfig);
 }
 
-module.exports = config;
+module.exports = [desktopConfig, webConfig];
