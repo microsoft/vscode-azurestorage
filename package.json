@@ -78,6 +78,7 @@
         "onView:azureWorkspace"
     ],
     "main": "main",
+    "browser": "./dist/web/extension.bundle.js",
     "icon": "resources/storageAccount.png",
     "capabilities": {
         "virtualWorkspaces": {
