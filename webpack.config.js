@@ -16,7 +16,7 @@ const webpack = require('webpack');
 
 let DEBUG_WEBPACK = !!process.env.DEBUG_WEBPACK;
 
-const config = dev.getDefaultWebpackConfig({
+const desktopConfig = dev.getDefaultWebpackConfig({
     target: 'node',
     projectRoot: __dirname,
     verbosity: DEBUG_WEBPACK ? 'debug' : 'normal',
@@ -44,8 +44,14 @@ const config = dev.getDefaultWebpackConfig({
 const webConfig = dev.getDefaultWebpackConfig({
     projectRoot: __dirname,
     verbosity: DEBUG_WEBPACK ? 'debug' : 'normal',
-    externals:
-    {
+    externals: {
+        // AzCopy exes are not available in the browser, so we need to exclude it from the bundle.
+        "@azure-tools/azcopy-win32": "@azure-tools/azcopy-win32",
+        "@azure-tools/azcopy-win64": "@azure-tools/azcopy-win64",
+        "@azure-tools/azcopy-linux": "@azure-tools/azcopy-linux",
+        "@azure-tools/azcopy-darwin": "@azure-tools/azcopy-darwin",
+        // Since AzCopy exes are not available, exclude the root azcopy-node wrapper package
+        "@azure-tools/azcopy-node": "@azure-tools/azcopy-node",
         // Fix "Module not found" errors in ./node_modules/websocket/lib/{BufferUtil,Validation}.js
         // These files are not in node_modules and so will fail normally at runtime and instead use fallbacks.
         // Make them as external so webpack doesn't try to process them, and they'll simply fail at runtime as before.
@@ -63,7 +69,7 @@ const webConfig = dev.getDefaultWebpackConfig({
 });
 
 if (DEBUG_WEBPACK) {
-    console.log('Config:', config);
+    console.log('Config:', desktopConfig);
 }
 
-module.exports = [config, webConfig];
+module.exports = [desktopConfig, webConfig];
