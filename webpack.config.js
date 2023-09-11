@@ -38,7 +38,8 @@ const desktopConfig = dev.getDefaultWebpackConfig({
                 { from: './out/src/utils/getCoreNodeModule.js', to: 'node_modules' }
             ]
         })
-    ]
+    ],
+    suppressCleanDistFolder: true
 });
 
 const webConfig = dev.getDefaultWebpackConfig({
@@ -65,7 +66,8 @@ const webConfig = dev.getDefaultWebpackConfig({
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer'],
         }),
-    ]
+    ],
+    suppressCleanDistFolder: true
 });
 
 if (DEBUG_WEBPACK) {
