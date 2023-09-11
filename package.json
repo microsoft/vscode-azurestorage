@@ -894,7 +894,6 @@
         "winreg": "^1.2.3"
     },
     "extensionDependencies": [
-        "ms-vscode.azure-account",
         "ms-azuretools.vscode-azureresourcegroups"
     ]
 }
