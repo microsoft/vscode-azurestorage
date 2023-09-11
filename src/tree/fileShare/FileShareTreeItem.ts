@@ -9,14 +9,14 @@ import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, I
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
-import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
+import { TransferProgress } from '../../TransferProgress';
 import { getResourceUri } from '../../commands/downloadFiles/getResourceUri';
 import { getSasToken } from '../../commands/downloadFiles/getSasToken';
+import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/transfers/azCopy/azCopyLocations';
+import { azCopyTransfer } from '../../commands/transfers/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
-import { getResourcesPath, NotificationProgress } from "../../constants";
+import { NotificationProgress, getResourcesPath } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { TransferProgress } from '../../TransferProgress';
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';

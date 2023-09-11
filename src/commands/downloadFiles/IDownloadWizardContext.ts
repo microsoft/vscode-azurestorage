@@ -5,13 +5,13 @@
 
 import { ExecuteActivityContext, IActionContext } from "@microsoft/vscode-azext-utils";
 import { IDownloadableTreeItem } from "../../tree/IDownloadableTreeItem";
-import { IAzCopyDownload } from "../downloadFile";
+import { DownloadItem } from "../transfers/transfers";
 
 export interface IDownloadWizardContext extends IActionContext, ExecuteActivityContext {
     destinationFolder?: string;
     sasUrl?: string;
     treeItems?: IDownloadableTreeItem[];
 
-    allFileDownloads?: IAzCopyDownload[];
-    allFolderDownloads?: IAzCopyDownload[];
+    allFileDownloads?: DownloadItem[];
+    allFolderDownloads?: DownloadItem[];
 }

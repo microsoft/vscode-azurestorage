@@ -10,12 +10,12 @@ import { IJobInfo } from "@azure-tools/azcopy-node/dist/src/IJobInfo";
 import { ExitJobStatus, ITransferStatus, ProgressJobStatus } from "@azure-tools/azcopy-node/dist/src/Output/TransferStatus";
 import { IActionContext } from "@microsoft/vscode-azext-utils";
 import { CancellationToken, Uri } from 'vscode';
-import { NotificationProgress } from "../../constants";
-import { ext } from '../../extensionVariables';
-import { TransferProgress } from "../../TransferProgress";
-import { delay } from "../../utils/delay";
-import { throwIfCanceled } from "../../utils/errorUtils";
-import { localize } from "../../utils/localize";
+import { TransferProgress } from "../../../TransferProgress";
+import { NotificationProgress } from "../../../constants";
+import { ext } from '../../../extensionVariables';
+import { delay } from "../../../utils/delay";
+import { throwIfCanceled } from "../../../utils/errorUtils";
+import { localize } from "../../../utils/localize";
 
 interface ITransferLocation {
     src: AzCopyLocation;

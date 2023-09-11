@@ -7,7 +7,7 @@ import { ExecuteActivityContext, IActionContext } from "@microsoft/vscode-azext-
 import { Uri } from "vscode";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
-import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";
+import { IAzCopyResolution } from "../transfers/azCopy/IAzCopyResolution";
 
 export interface IUploadFolderWizardContext extends IActionContext, ExecuteActivityContext {
     calledFromUploadToAzureStorage: boolean;

@@ -7,13 +7,13 @@ import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/a
 import { IActionContext } from "@microsoft/vscode-azext-utils";
 import { basename, dirname, posix } from 'path';
 import * as vscode from 'vscode';
-import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/azCopy/azCopyLocations';
-import { azCopyTransfer } from '../commands/azCopy/azCopyTransfer';
+import { TransferProgress } from '../TransferProgress';
 import { getResourceUri } from '../commands/downloadFiles/getResourceUri';
 import { getSasToken } from '../commands/downloadFiles/getSasToken';
+import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/transfers/azCopy/azCopyLocations';
+import { azCopyTransfer } from '../commands/transfers/azCopy/azCopyTransfer';
 import { NotificationProgress } from '../constants';
 import { ext } from '../extensionVariables';
-import { TransferProgress } from '../TransferProgress';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../tree/fileShare/FileShareTreeItem';
 import { doesBlobDirectoryExist, doesBlobExist } from './blobUtils';

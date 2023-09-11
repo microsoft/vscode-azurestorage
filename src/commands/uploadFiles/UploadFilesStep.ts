@@ -11,8 +11,8 @@ import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { refreshTreeItem } from "../../tree/refreshTreeItem";
 import { isAzCopyError, multipleAzCopyErrorsMessage, throwIfCanceled } from "../../utils/errorUtils";
-import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, outputAndCopyUploadedFileUrls, OverwriteChoice } from "../../utils/uploadUtils";
-import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";
+import { OverwriteChoice, checkCanUpload, convertLocalPathToRemotePath, getUploadingMessage, outputAndCopyUploadedFileUrls } from "../../utils/uploadUtils";
+import { IAzCopyResolution } from "../transfers/azCopy/IAzCopyResolution";
 import { IUploadFilesWizardContext } from './IUploadFilesWizardContext';
 
 export class UploadFilesStep extends AzureWizardExecuteStep<IUploadFilesWizardContext> {

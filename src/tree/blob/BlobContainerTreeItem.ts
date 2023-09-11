@@ -5,21 +5,21 @@
 
 import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageBlob from '@azure/storage-blob';
-import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, parseError, TelemetryProperties, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
-import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/azCopy/azCopyLocations';
-import { azCopyTransfer } from '../../commands/azCopy/azCopyTransfer';
+import { TransferProgress } from '../../TransferProgress';
 import { getResourceUri } from '../../commands/downloadFiles/getResourceUri';
 import { getSasToken } from '../../commands/downloadFiles/getSasToken';
+import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/transfers/azCopy/azCopyLocations';
+import { azCopyTransfer } from '../../commands/transfers/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
-import { configurationSettingsKeys, getResourcesPath, NotificationProgress, staticWebsiteContainerName } from "../../constants";
+import { NotificationProgress, configurationSettingsKeys, getResourcesPath, staticWebsiteContainerName } from "../../constants";
 import { ext } from "../../extensionVariables";
-import { TransferProgress } from '../../TransferProgress';
-import { createBlobContainerClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { IBlobContainerCreateChildContext, createBlobContainerClient, createChildAsNewBlockBlob, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { localize } from '../../utils/localize';
@@ -28,7 +28,7 @@ import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/up
 import { ICopyUrl } from '../ICopyUrl';
 import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
-import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from "../StorageAccountTreeItem";
+import { ResolvedStorageAccountTreeItem, StorageAccountTreeItem, isResolvedStorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerGroupTreeItem } from "./BlobContainerGroupTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 import { BlobTreeItem } from './BlobTreeItem';
