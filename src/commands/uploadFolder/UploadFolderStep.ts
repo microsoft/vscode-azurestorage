@@ -9,7 +9,7 @@ import { NotificationProgress } from '../../constants';
 import { refreshTreeItem } from "../../tree/refreshTreeItem";
 import { isAzCopyError } from "../../utils/errorUtils";
 import { checkCanUpload, convertLocalPathToRemotePath, getUploadingMessageWithSource, showUploadSuccessMessage, uploadLocalFolder } from "../../utils/uploadUtils";
-import { IAzCopyResolution } from "../azCopy/IAzCopyResolution";
+import { IAzCopyResolution } from "../transfers/azCopy/IAzCopyResolution";
 import { IUploadFolderWizardContext } from "./IUploadFolderWizardContext";
 
 export class UploadFolderStep extends AzureWizardExecuteStep<IUploadFolderWizardContext> {

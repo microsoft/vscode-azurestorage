@@ -10,7 +10,7 @@ import { BlobContainerTreeItem } from '../../tree/blob/BlobContainerTreeItem';
 import { FileShareTreeItem } from '../../tree/fileShare/FileShareTreeItem';
 import { createActivityContext } from '../../utils/activityUtils';
 import { localize } from '../../utils/localize';
-import { IAzCopyResolution } from '../azCopy/IAzCopyResolution';
+import { IAzCopyResolution } from '../transfers/azCopy/IAzCopyResolution';
 import { GetFolderDestinationDirectoryStep } from './GetFolderDestinationDirectoryStep';
 import { IUploadFolderWizardContext } from './IUploadFolderWizardContext';
 import { UploadFolderStep } from './UploadFolderStep';
