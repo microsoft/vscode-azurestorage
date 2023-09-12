@@ -5,6 +5,8 @@
 
 import { IStorageTreeItem } from "./IStorageTreeItem";
 
-export interface IDownloadableTreeItem extends IStorageTreeItem {
+export interface ITransferSrcOrDstTreeItem extends IStorageTreeItem {
     remoteFilePath: string;
+    resourceUri: string;
+    transferSasToken: string;
 }

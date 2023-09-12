@@ -9,15 +9,16 @@ import { posix } from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
+import { threeDaysInMS } from '../../constants';
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { createFileClient, deleteFile } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
-import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
+import { ITransferSrcOrDstTreeItem } from '../ITransferSrcOrDstTreeItem';
 import { DirectoryTreeItem, IDirectoryDeleteContext } from "./DirectoryTreeItem";
 import { FileShareTreeItem } from './FileShareTreeItem';
 
-export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadableTreeItem {
+export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,
@@ -42,6 +43,21 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadab
 
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('file');
+    }
+
+    public get resourceUri(): string {
+        const shareClient = this.root.createShareServiceClient().getShareClient(this.shareName);
+        return shareClient.url;
+    }
+
+    public get transferSasToken(): string {
+        const accountSASSignatureValues: azureStorageShare.AccountSASSignatureValues = {
+            expiresOn: new Date(Date.now() + threeDaysInMS),
+            permissions: azureStorageShare.AccountSASPermissions.parse('rwl'), // read, write, list
+            services: 'f', // file
+            resourceTypes: 'co' // container, object
+        };
+        return this.root.generateSasToken(accountSASSignatureValues);
     }
 
     public async copyUrl(): Promise<void> {

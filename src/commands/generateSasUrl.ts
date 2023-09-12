@@ -5,15 +5,12 @@
 
 import { IActionContext } from '@microsoft/vscode-azext-utils';
 import { posix } from 'path';
-import { IDownloadableTreeItem } from '../../tree/IDownloadableTreeItem';
-import { copyAndShowToast } from '../../utils/copyAndShowToast';
-import { getResourceUri } from './getResourceUri';
-import { getSasToken } from './getSasToken';
+import { ITransferSrcOrDstTreeItem } from '../tree/ITransferSrcOrDstTreeItem';
+import { copyAndShowToast } from '../utils/copyAndShowToast';
 
-export async function generateSasUrl(_context: IActionContext, treeItem: IDownloadableTreeItem): Promise<string> {
-    const resourceUri = getResourceUri(treeItem);
-    const sasToken = getSasToken(treeItem.root);
-
+export async function generateSasUrl(_context: IActionContext, treeItem: ITransferSrcOrDstTreeItem): Promise<string> {
+    const resourceUri = treeItem.resourceUri;
+    const sasToken = treeItem.transferSasToken;
     const sasUrl: string = `${resourceUri}${posix.sep}${treeItem.remoteFilePath}?${sasToken}`;
     await copyAndShowToast(sasUrl, 'SAS Token and URL');
     return sasUrl;

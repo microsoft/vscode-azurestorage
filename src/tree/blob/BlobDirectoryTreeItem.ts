@@ -10,17 +10,18 @@ import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { DeleteBlobDirectoryStep } from '../../commands/deleteBlobDirectory/DeleteBlobDirectoryStep';
 import { IDeleteBlobDirectoryWizardContext } from "../../commands/deleteBlobDirectory/IDeleteBlobDirectoryWizardContext";
+import { threeDaysInMS } from "../../constants";
 import { createActivityContext } from "../../utils/activityUtils";
-import { createBlobClient, createChildAsNewBlockBlob, IBlobContainerCreateChildContext, loadMoreBlobChildren } from '../../utils/blobUtils';
+import { IBlobContainerCreateChildContext, createBlobClient, createChildAsNewBlockBlob, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { copyAndShowToast } from "../../utils/copyAndShowToast";
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from "../ICopyUrl";
-import { IDownloadableTreeItem } from "../IDownloadableTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
+import { ITransferSrcOrDstTreeItem } from "../ITransferSrcOrDstTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 
-export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
+export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     public static contextValue: string = 'azureBlobDirectory';
     public contextValue: string = BlobDirectoryTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
@@ -61,6 +62,21 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
 
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('folder');
+    }
+
+    public get resourceUri(): string {
+        const containerClient: azureStorageBlob.ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
+        return containerClient.url;
+    }
+
+    public get transferSasToken(): string {
+        const accountSASSignatureValues: azureStorageBlob.AccountSASSignatureValues = {
+            expiresOn: new Date(Date.now() + threeDaysInMS),
+            permissions: azureStorageBlob.AccountSASPermissions.parse('rwl'), // read, write, list
+            services: 'b', // blob
+            resourceTypes: 'co' // container, object
+        };
+        return this.root.generateSasToken(accountSASSignatureValues);
     }
 
     public hasMoreChildrenImpl(): boolean {
@@ -109,7 +125,7 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
             executeSteps: [new DeleteBlobDirectoryStep()]
         });
 
-        if(!context.suppressMessage) {
+        if (!context.suppressMessage) {
             await wizard.prompt();
         }
         await wizard.execute();

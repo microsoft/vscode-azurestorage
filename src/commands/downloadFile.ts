@@ -5,7 +5,7 @@
 
 import { FromToOption } from "@azure-tools/azcopy-node";
 import { AzureWizard, AzureWizardPromptStep, IActionContext } from "@microsoft/vscode-azext-utils";
-import { IDownloadableTreeItem } from "../tree/IDownloadableTreeItem";
+import { ITransferSrcOrDstTreeItem } from "../tree/ITransferSrcOrDstTreeItem";
 import { createActivityContext } from "../utils/activityUtils";
 import { localize } from "../utils/localize";
 import { DestinationPromptStep } from "./downloadFiles/DestinationPromptStep";
@@ -24,7 +24,7 @@ export interface IAzCopyDownload {
     sasToken: string;
 }
 
-export async function download(context: IActionContext, treeItems?: IDownloadableTreeItem[]): Promise<void> {
+export async function download(context: IActionContext, treeItems?: ITransferSrcOrDstTreeItem[]): Promise<void> {
     const wizardContext: IDownloadWizardContext = { ...context, ...(await createActivityContext()) };
     const promptSteps: AzureWizardPromptStep<IDownloadWizardContext>[] = [new DestinationPromptStep()];
     if (!treeItems) {
@@ -47,7 +47,7 @@ export async function downloadSasUrl(context: IActionContext): Promise<void> {
     return await download(context);
 }
 
-export async function downloadTreeItems(context: IActionContext, treeItem: IDownloadableTreeItem, treeItems?: IDownloadableTreeItem[]): Promise<void> {
+export async function downloadTreeItems(context: IActionContext, treeItem: ITransferSrcOrDstTreeItem, treeItems?: ITransferSrcOrDstTreeItem[]): Promise<void> {
     treeItems ??= [treeItem];
     await download(context, treeItems);
 }

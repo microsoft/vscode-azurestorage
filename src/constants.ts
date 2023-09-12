@@ -43,3 +43,5 @@ export const storageProvider: string = 'Microsoft.Storage';
 export const storageFilter = {
     type: 'Microsoft.Storage/storageAccounts',
 }
+
+export const threeDaysInMS: number = 1000 * 60 * 60 * 24 * 3;
