@@ -10,25 +10,23 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { TransferProgress } from '../../TransferProgress';
-import { getResourceUri } from '../../commands/downloadFiles/getResourceUri';
-import { getSasToken } from '../../commands/downloadFiles/getSasToken';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/transfers/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/transfers/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
-import { NotificationProgress, getResourcesPath } from "../../constants";
+import { NotificationProgress, getResourcesPath, threeDaysInMS } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
 import { getUploadingMessageWithSource } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
-import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
+import { ITransferSrcOrDstTreeItem } from '../ITransferSrcOrDstTreeItem';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareGroupTreeItem } from './FileShareGroupTreeItem';
 import { FileTreeItem } from './FileTreeItem';
 
-export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
+export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     public parent: FileShareGroupTreeItem;
     private _continuationToken: string | undefined;
     private _openInFileExplorerString: string = 'Open in Explorer...';
@@ -49,6 +47,21 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
     public get remoteFilePath(): string {
         return '';
+    }
+
+    public get resourceUri(): string {
+        const shareClient = this.root.createShareServiceClient().getShareClient(this.shareName);
+        return shareClient.url;
+    }
+
+    public get transferSasToken(): string {
+        const accountSASSignatureValues: azureStorageShare.AccountSASSignatureValues = {
+            expiresOn: new Date(Date.now() + threeDaysInMS),
+            permissions: azureStorageShare.AccountSASPermissions.parse('rwl'), // read, write, list
+            services: 'f', // file
+            resourceTypes: 'co' // container, object
+        };
+        return this.root.generateSasToken(accountSASSignatureValues);
     }
 
     public label: string = this.shareName;
@@ -156,8 +169,8 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
         const transferProgress: TransferProgress = new TransferProgress('bytes', destFilePath);
         const src: ILocalLocation = createAzCopyLocalLocation(sourceFilePath);
-        const resourceUri = getResourceUri(this);
-        const sasToken = getSasToken(this.root);
+        const resourceUri = this.resourceUri;
+        const sasToken = this.transferSasToken;
         const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, destFilePath);
         await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress, notificationProgress, cancellationToken);
     }

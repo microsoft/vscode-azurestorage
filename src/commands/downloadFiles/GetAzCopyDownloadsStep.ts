@@ -6,7 +6,7 @@
 import { AzureWizardExecuteStep, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { basename, join, posix } from "path";
 import { NotificationProgress } from "../../constants";
-import { IDownloadableTreeItem } from "../../tree/IDownloadableTreeItem";
+import { ITransferSrcOrDstTreeItem } from "../../tree/ITransferSrcOrDstTreeItem";
 import { BlobContainerTreeItem } from "../../tree/blob/BlobContainerTreeItem";
 import { BlobDirectoryTreeItem } from "../../tree/blob/BlobDirectoryTreeItem";
 import { BlobTreeItem } from "../../tree/blob/BlobTreeItem";
@@ -15,8 +15,6 @@ import { FileShareTreeItem } from "../../tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "../../tree/fileShare/FileTreeItem";
 import { DownloadItem } from "../transfers/transfers";
 import { IDownloadWizardContext } from "./IDownloadWizardContext";
-import { getResourceUri } from "./getResourceUri";
-import { getSasToken } from "./getSasToken";
 
 export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWizardContext> {
     public priority: number = 200;
@@ -32,7 +30,7 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
         return !wizardContext.allFileDownloads && !wizardContext.allFolderDownloads;
     }
 
-    private async setDownloadItemsFromTreeItems(context: IDownloadWizardContext, destinationFolder: string, treeItems: IDownloadableTreeItem[] = []): Promise<void> {
+    private async setDownloadItemsFromTreeItems(context: IDownloadWizardContext, destinationFolder: string, treeItems: ITransferSrcOrDstTreeItem[] = []): Promise<void> {
 
         const allFolderDownloads: DownloadItem[] = [];
         const allFileDownloads: DownloadItem[] = [];
@@ -40,8 +38,8 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
         for (const treeItem of treeItems) {
             // if there is no remoteFilePath, then it is the root
             const remoteFilePath = treeItem.remoteFilePath ?? `${posix.sep}`;
-            const resourceUri: string = getResourceUri(treeItem);
-            const sasToken: string = getSasToken(treeItem.root);
+            const sasToken = treeItem.transferSasToken;
+            const resourceUri = treeItem.resourceUri;
             if (treeItem instanceof BlobTreeItem) {
                 await treeItem.checkCanDownload(context);
                 allFileDownloads.push({

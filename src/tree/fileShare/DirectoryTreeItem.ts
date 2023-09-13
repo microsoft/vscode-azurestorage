@@ -10,17 +10,18 @@ import { posix } from 'path';
 import * as vscode from 'vscode';
 import { MessageItem, window } from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
+import { threeDaysInMS } from '../../constants';
 import { ext } from "../../extensionVariables";
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
-import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
+import { ITransferSrcOrDstTreeItem } from '../ITransferSrcOrDstTreeItem';
 import { FileShareTreeItem, IFileShareCreateChildContext } from "./FileShareTreeItem";
 import { FileTreeItem } from './FileTreeItem';
 
-export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
+export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     public parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,
@@ -49,6 +50,21 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
     private get fullPath(): string {
         return path.posix.join(this.parentPath, this.directoryName);
+    }
+
+    public get resourceUri(): string {
+        const shareClient = this.root.createShareServiceClient().getShareClient(this.shareName);
+        return shareClient.url;
+    }
+
+    public get transferSasToken(): string {
+        const accountSASSignatureValues: azureStorageShare.AccountSASSignatureValues = {
+            expiresOn: new Date(Date.now() + threeDaysInMS),
+            permissions: azureStorageShare.AccountSASPermissions.parse('rwl'), // read, write, list
+            services: 'f', // file
+            resourceTypes: 'co' // container, object
+        };
+        return this.root.generateSasToken(accountSASSignatureValues);
     }
 
     hasMoreChildrenImpl(): boolean {

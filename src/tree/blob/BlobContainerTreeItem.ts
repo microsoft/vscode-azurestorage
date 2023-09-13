@@ -12,12 +12,10 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { TransferProgress } from '../../TransferProgress';
-import { getResourceUri } from '../../commands/downloadFiles/getResourceUri';
-import { getSasToken } from '../../commands/downloadFiles/getSasToken';
 import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/transfers/azCopy/azCopyLocations';
 import { azCopyTransfer } from '../../commands/transfers/azCopy/azCopyTransfer';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
-import { NotificationProgress, configurationSettingsKeys, getResourcesPath, staticWebsiteContainerName } from "../../constants";
+import { NotificationProgress, configurationSettingsKeys, getResourcesPath, staticWebsiteContainerName, threeDaysInMS } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IBlobContainerCreateChildContext, createBlobContainerClient, createChildAsNewBlockBlob, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
@@ -26,8 +24,8 @@ import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
 import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
-import { IDownloadableTreeItem } from '../IDownloadableTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
+import { ITransferSrcOrDstTreeItem } from '../ITransferSrcOrDstTreeItem';
 import { ResolvedStorageAccountTreeItem, StorageAccountTreeItem, isResolvedStorageAccountTreeItem } from "../StorageAccountTreeItem";
 import { BlobContainerGroupTreeItem } from "./BlobContainerGroupTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
@@ -38,7 +36,7 @@ export enum ChildType {
     uploadedBlob
 }
 
-export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, IDownloadableTreeItem {
+export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     private _continuationToken: string | undefined;
     private _websiteHostingEnabled: boolean;
     private _openInFileExplorerString: string = 'Open in Explorer...';
@@ -56,6 +54,21 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
     public get remoteFilePath(): string {
         return '';
+    }
+
+    public get resourceUri(): string {
+        const containerClient: azureStorageBlob.ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
+        return containerClient.url;
+    }
+
+    public get transferSasToken(): string {
+        const accountSASSignatureValues: azureStorageBlob.AccountSASSignatureValues = {
+            expiresOn: new Date(Date.now() + threeDaysInMS),
+            permissions: azureStorageBlob.AccountSASPermissions.parse('rwl'), // read, write, list
+            services: 'b', // blob
+            resourceTypes: 'co' // container, object
+        };
+        return this.root.generateSasToken(accountSASSignatureValues);
     }
 
     public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: azureStorageBlob.ContainerItem): Promise<BlobContainerTreeItem> {
@@ -340,8 +353,8 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     ): Promise<void> {
         ext.outputChannel.appendLog(getUploadingMessageWithSource(filePath, this.label));
         const src: ILocalLocation = createAzCopyLocalLocation(filePath);
-        const resourceUri = getResourceUri(this);
-        const sasToken = getSasToken(this.root);
+        const resourceUri = this.resourceUri;
+        const sasToken = this.transferSasToken;
         const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, blobPath);
         const transferProgress: TransferProgress = new TransferProgress('bytes', blobPath);
         await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress, notificationProgress, cancellationToken);

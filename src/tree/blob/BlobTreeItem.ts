@@ -11,19 +11,19 @@ import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { DeleteBlobStep } from "../../commands/deleteBlob/DeleteBlobStep";
 import { IDeleteBlobWizardContext } from "../../commands/deleteBlob/IDeleteBlobWizardContext";
-import { storageExplorerDownloadUrl } from "../../constants";
+import { storageExplorerDownloadUrl, threeDaysInMS } from "../../constants";
 import { createActivityContext } from "../../utils/activityUtils";
 import { askOpenInStorageExplorer } from "../../utils/askOpenInStorageExplorer";
 import { createBlobClient, createBlockBlobClient } from '../../utils/blobUtils';
 import { copyAndShowToast } from "../../utils/copyAndShowToast";
 import { localize } from "../../utils/localize";
 import { ICopyUrl } from '../ICopyUrl';
-import { IDownloadableTreeItem } from "../IDownloadableTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
+import { ITransferSrcOrDstTreeItem } from "../ITransferSrcOrDstTreeItem";
 import { BlobContainerTreeItem } from "./BlobContainerTreeItem";
 import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 
-export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadableTreeItem {
+export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     public static contextValue: string = 'azureBlobFile';
     public contextValue: string = BlobTreeItem.contextValue;
     public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
@@ -59,6 +59,21 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, IDownloadab
 
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('file');
+    }
+
+    public get resourceUri(): string {
+        const containerClient: azureStorageBlob.ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
+        return containerClient.url;
+    }
+
+    public get transferSasToken(): string {
+        const accountSASSignatureValues: azureStorageBlob.AccountSASSignatureValues = {
+            expiresOn: new Date(Date.now() + threeDaysInMS),
+            permissions: azureStorageBlob.AccountSASPermissions.parse('rwl'), // read, write, list
+            services: 'b', // blob
+            resourceTypes: 'co' // container, object
+        };
+        return this.root.generateSasToken(accountSASSignatureValues);
     }
 
     public async copyUrl(): Promise<void> {

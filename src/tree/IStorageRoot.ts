@@ -6,7 +6,6 @@
 import { Endpoints } from "@azure/arm-storage";
 import * as azureDataTables from '@azure/data-tables';
 import * as azureStorageBlob from "@azure/storage-blob";
-import { AccountSASSignatureValues } from "@azure/storage-blob";
 import * as azureStorageShare from "@azure/storage-file-share";
 import * as azureStorageQueue from '@azure/storage-queue';
 
@@ -15,7 +14,7 @@ export interface IStorageRoot {
     storageAccountId: string;
     isEmulated: boolean;
     primaryEndpoints?: Endpoints;
-    generateSasToken(accountSASSignatureValues: AccountSASSignatureValues): string;
+    generateSasToken(accountSASSignatureValues: azureStorageBlob.AccountSASSignatureValues | azureStorageShare.AccountSASSignatureValues): string;
     createBlobServiceClient(): azureStorageBlob.BlobServiceClient;
     createShareServiceClient(): azureStorageShare.ShareServiceClient;
     createQueueServiceClient(): azureStorageQueue.QueueServiceClient;
