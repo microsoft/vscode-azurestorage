@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { FromToOption } from "@azure-tools/azcopy-node";
 import { AzureWizard, AzureWizardPromptStep, IActionContext } from "@microsoft/vscode-azext-utils";
 import { ITransferSrcOrDstTreeItem } from "../tree/ITransferSrcOrDstTreeItem";
 import { createActivityContext } from "../utils/activityUtils";
@@ -18,7 +17,6 @@ export interface IAzCopyDownload {
     remoteFileName: string;
     remoteFilePath: string;
     localFilePath: string;
-    fromTo: FromToOption;
     isDirectory: boolean;
     resourceUri: string;
     sasToken: string;
