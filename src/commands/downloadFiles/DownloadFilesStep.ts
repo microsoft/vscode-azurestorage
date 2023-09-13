@@ -16,8 +16,8 @@ export class DownloadFilesStep extends AzureWizardExecuteStep<IDownloadWizardCon
         super();
     }
 
-    public async execute(context: IDownloadWizardContext, progress: NotificationProgress): Promise<void> {
-        await downloadFoldersAndFiles(context, progress, context.allFolderDownloads ?? [], context.allFileDownloads ?? [], this.cancellationToken);
+    public async execute(context: IDownloadWizardContext, notificationProgress: NotificationProgress): Promise<void> {
+        await downloadFoldersAndFiles(context, context.allFolderDownloads ?? [], context.allFileDownloads ?? [], notificationProgress, this.cancellationToken);
     }
 
     public shouldExecute(wizardContext: IDownloadWizardContext): boolean {

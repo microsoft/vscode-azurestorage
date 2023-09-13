@@ -3,22 +3,17 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageShare from '@azure/storage-file-share';
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
-import { TransferProgress } from '../../TransferProgress';
-import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/transfers/azCopy/azCopyLocations';
-import { azCopyTransfer } from '../../commands/transfers/azCopy/azCopyTransfer';
+import { UploadItem, uploadFile } from '../../commands/transfers/transfers';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
 import { NotificationProgress, getResourcesPath, threeDaysInMS } from "../../constants";
-import { ext } from "../../extensionVariables";
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
-import { getUploadingMessageWithSource } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
 import { ITransferSrcOrDstTreeItem } from '../ITransferSrcOrDstTreeItem';
@@ -155,8 +150,6 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         const parentDirectoryPath: string = path.dirname(destFilePath);
         const parentDirectories: string[] = parentDirectoryPath.split('/');
 
-        ext.outputChannel.appendLog(getUploadingMessageWithSource(sourceFilePath, this.label));
-
         // Ensure parent directories exist before creating child files
         let partialParentDirectoryPath: string = '';
         for (const dir of parentDirectories) {
@@ -167,12 +160,15 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
             }
         }
 
-        const transferProgress: TransferProgress = new TransferProgress('bytes', destFilePath);
-        const src: ILocalLocation = createAzCopyLocalLocation(sourceFilePath);
-        const resourceUri = this.resourceUri;
-        const sasToken = this.transferSasToken;
-        const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, destFilePath);
-        await azCopyTransfer(context, 'LocalFile', src, dst, transferProgress, notificationProgress, cancellationToken);
+        const uploadItem: UploadItem = {
+            type: "file",
+            localFilePath: sourceFilePath,
+            resourceName: this.shareName,
+            resourceUri: this.resourceUri,
+            remoteFilePath: destFilePath,
+            transferSasToken: this.transferSasToken,
+        };
+        await uploadFile(context, uploadItem, notificationProgress, cancellationToken);
     }
 }
 
