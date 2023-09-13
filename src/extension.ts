@@ -5,6 +5,13 @@
 
 'use strict';
 
+import { ext } from './extensionVariables';
+
+import { polyfill as polyfillForWebWorker } from './polyfill.worker';
+if (ext.isWeb) {
+    polyfillForWebWorker();
+}
+
 import { registerAzureUtilsExtensionVariables } from '@microsoft/vscode-azext-azureutils';
 import { apiUtils, AzExtParentTreeItem, AzureExtensionApi, callWithTelemetryAndErrorHandling, createApiProvider, createAzExtOutputChannel, IActionContext, registerErrorHandler, registerReportIssueCommand, registerUIExtensionVariables } from '@microsoft/vscode-azext-utils';
 import { AzureHostExtensionApi } from '@microsoft/vscode-azext-utils/hostapi';
@@ -14,7 +21,6 @@ import { AzureStorageFS } from './AzureStorageFS';
 import { BlobContainerFS } from './BlobContainerFS';
 import { revealTreeItem } from './commands/api/revealTreeItem';
 import { registerCommands } from './commands/registerCommands';
-import { ext } from './extensionVariables';
 import { StorageAccountResolver } from './StorageAccountResolver';
 import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
 import './tree/AttachedStorageAccountTreeItem';
