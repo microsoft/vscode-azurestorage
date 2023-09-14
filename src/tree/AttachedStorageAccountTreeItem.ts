@@ -3,11 +3,13 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureDataTables from '@azure/data-tables';
-import * as azureStorageBlob from '@azure/storage-blob';
-import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
-import * as azureStorageShare from '@azure/storage-file-share';
-import * as azureStorageQueue from '@azure/storage-queue';
+import type { AccountSASSignatureValues, ServiceGetPropertiesResponse, StaticWebsite } from '@azure/storage-blob';
+
+import { TableServiceClient } from '@azure/data-tables';
+import { BlobServiceClient, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { ShareServiceClient } from '@azure/storage-file-share';
+import { QueueServiceClient } from '@azure/storage-queue';
+
 import { AzExtParentTreeItem, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { AttachedAccountRoot } from '../AttachedAccountRoot';
@@ -86,9 +88,9 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
 
     public async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
         // Does NOT update treeItem's _webHostingEnabled.
-        const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        const properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
-        const staticWebsite: azureStorageBlob.StaticWebsite | undefined = properties.staticWebsite;
+        const serviceClient: BlobServiceClient = this.root.createBlobServiceClient();
+        const properties: ServiceGetPropertiesResponse = await serviceClient.getProperties();
+        const staticWebsite: StaticWebsite | undefined = properties.staticWebsite;
 
         return {
             capable: !!staticWebsite,
@@ -132,19 +134,19 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         ).toString();
     }
 
-    public createBlobServiceClient(): azureStorageBlob.BlobServiceClient {
-        return azureStorageBlob.BlobServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
+    public createBlobServiceClient(): BlobServiceClient {
+        return BlobServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
-    public createShareServiceClient(): azureStorageShare.ShareServiceClient {
-        return azureStorageShare.ShareServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
+    public createShareServiceClient(): ShareServiceClient {
+        return ShareServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
-    public createQueueServiceClient(): azureStorageQueue.QueueServiceClient {
-        return azureStorageQueue.QueueServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
+    public createQueueServiceClient(): QueueServiceClient {
+        return QueueServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
-    public createTableServiceClient(): azureDataTables.TableServiceClient {
-        return azureDataTables.TableServiceClient.fromConnectionString(this._connectionString, { retryOptions: { maxRetries: this._serviceClientPipelineOptions.retryOptions.maxTries } });
+    public createTableServiceClient(): TableServiceClient {
+        return TableServiceClient.fromConnectionString(this._connectionString, { retryOptions: { maxRetries: this._serviceClientPipelineOptions.retryOptions.maxTries } });
     }
 }

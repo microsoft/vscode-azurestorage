@@ -3,8 +3,8 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 **/
 
-import * as azureStorageBlob from "@azure/storage-blob";
-import { BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
+import type { AccountSASSignatureValues, BlobClient, BlobGetPropertiesResponse, BlockBlobClient, ContainerClient, ContainerItem } from "@azure/storage-blob";
+
 import { AzExtTreeItem, AzureWizard, DeleteConfirmationStep, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -38,7 +38,7 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
      */
     public readonly blobPath: string;
 
-    constructor(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string, public readonly container: azureStorageBlob.ContainerItem) {
+    constructor(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string, public readonly container: ContainerItem) {
         super(parent);
         this.commandId = 'azureStorage.editBlob';
         this.blobPath = blobPath;
@@ -62,14 +62,28 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
     }
 
     public get resourceUri(): string {
-        const containerClient: azureStorageBlob.ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
+        const containerClient: ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
         return containerClient.url;
     }
 
     public get transferSasToken(): string {
-        const accountSASSignatureValues: azureStorageBlob.AccountSASSignatureValues = {
+        const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
-            permissions: azureStorageBlob.AccountSASPermissions.parse('rwl'), // read, write, list
+            permissions: {
+                read: true,
+                write: true,
+                list: true,
+                delete: false,
+                deleteVersion: false,
+                add: false,
+                create: false,
+                update: false,
+                process: false,
+                tag: false,
+                filter: false,
+                setImmutabilityPolicy: false,
+                permanentDelete: false
+            },
             services: 'b', // blob
             resourceTypes: 'co' // container, object
         };
@@ -78,7 +92,7 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
 
     public async copyUrl(): Promise<void> {
         // Use this.blobPath here instead of this.blobName. Otherwise the blob's containing directory/directories aren't displayed
-        const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
+        const blobClient: BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
         const url = blobClient.url;
         await copyAndShowToast(url, 'Blob URL');
     }
@@ -101,7 +115,7 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
             await wizard.prompt();
             await wizard.execute();
         } else {
-            const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
+            const blobClient: BlobClient = createBlobClient(this.root, this.container.name, this.blobPath);
             await blobClient.delete();
         }
         AzureStorageFS.fireDeleteEvent(this);

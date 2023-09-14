@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureDataTables from '@azure/data-tables';
+import type { TableItem, TableItemResultPage } from '@azure/data-tables';
+
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
@@ -42,7 +43,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
             this._continuationToken = undefined;
         }
 
-        let tablesResponse: azureDataTables.TableItemResultPage;
+        let tablesResponse: TableItemResultPage;
         try {
             tablesResponse = await this.listTables(this._continuationToken);
         } catch (error) {
@@ -74,9 +75,9 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         return !!this._continuationToken;
     }
 
-    async listTables(continuationToken?: string): Promise<azureDataTables.TableItemResultPage> {
+    async listTables(continuationToken?: string): Promise<TableItemResultPage> {
         const tableServiceClient = this.root.createTableServiceClient();
-        const response: AsyncIterableIterator<azureDataTables.TableItemResultPage> = tableServiceClient.listTables().byPage({ continuationToken, maxPageSize });
+        const response: AsyncIterableIterator<TableItemResultPage> = tableServiceClient.listTables().byPage({ continuationToken, maxPageSize });
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (await response.next()).value;
@@ -108,12 +109,12 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         return contextValue === TableTreeItem.contextValue;
     }
 
-    private async createTable(name: string): Promise<azureDataTables.TableItem> {
+    private async createTable(name: string): Promise<TableItem> {
         const tableServiceClient = this.root.createTableServiceClient();
         await tableServiceClient.createTable(name);
 
         const tablesResponse = await this.listTables();
-        let createdTable: azureDataTables.TableItem | undefined;
+        let createdTable: TableItem | undefined;
         for (const table of tablesResponse) {
             if (table.name === name) {
                 createdTable = table;

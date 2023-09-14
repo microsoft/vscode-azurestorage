@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BlobClient, BlobDownloadResponseModel, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
-import { FileDownloadResponseModel, FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
+import type { BlobClient, BlobDownloadResponseModel, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
+import type { FileDownloadResponseModel, FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
+
 import { AzExtTreeItem, IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, parseError } from "@microsoft/vscode-azext-utils";
 import * as path from "path";
 import * as querystring from "querystring";

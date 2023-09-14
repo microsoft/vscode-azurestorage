@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageBlob from '@azure/storage-blob';
+import type { AccountSASSignatureValues, BlobDeleteResponse, BlobItem, ContainerClient, ContainerItem, ContainerListBlobFlatSegmentResponse, ListBlobsFlatSegmentResponse } from '@azure/storage-blob';
+
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
 import * as path from 'path';
@@ -42,7 +43,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
-        public readonly container: azureStorageBlob.ContainerItem) {
+        public readonly container: ContainerItem) {
         super(parent);
     }
 
@@ -55,21 +56,35 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     public get resourceUri(): string {
-        const containerClient: azureStorageBlob.ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
+        const containerClient: ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
         return containerClient.url;
     }
 
     public get transferSasToken(): string {
-        const accountSASSignatureValues: azureStorageBlob.AccountSASSignatureValues = {
+        const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
-            permissions: azureStorageBlob.AccountSASPermissions.parse('rwl'), // read, write, list
+            permissions: {
+                read: true,
+                write: true,
+                list: true,
+                delete: false,
+                deleteVersion: false,
+                add: false,
+                create: false,
+                update: false,
+                process: false,
+                tag: false,
+                filter: false,
+                setImmutabilityPolicy: false,
+                permanentDelete: false
+            },
             services: 'b', // blob
             resourceTypes: 'co' // container, object
         };
         return this.root.generateSasToken(accountSASSignatureValues);
     }
 
-    public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: azureStorageBlob.ContainerItem): Promise<BlobContainerTreeItem> {
+    public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: ContainerItem): Promise<BlobContainerTreeItem> {
         const ti = new BlobContainerTreeItem(parent, container);
         // Get static website status to display the appropriate icon
         await ti.refreshImpl();
@@ -128,12 +143,12 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         this._websiteHostingEnabled = hostingStatus.enabled;
     }
 
-    private async listAllBlobs(cancellationToken?: vscode.CancellationToken, properties?: TelemetryProperties): Promise<azureStorageBlob.BlobItem[]> {
+    private async listAllBlobs(cancellationToken?: vscode.CancellationToken, properties?: TelemetryProperties): Promise<BlobItem[]> {
         let currentToken: string | undefined;
-        let response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobFlatSegmentResponse>;
-        let responseValue: azureStorageBlob.ListBlobsFlatSegmentResponse;
-        const blobs: azureStorageBlob.BlobItem[] = [];
-        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
+        let response: AsyncIterableIterator<ContainerListBlobFlatSegmentResponse>;
+        let responseValue: ListBlobsFlatSegmentResponse;
+        const blobs: BlobItem[] = [];
+        const containerClient: ContainerClient = createBlobContainerClient(this.root, this.container.name);
 
         ext.outputChannel.appendLog(`Querying Azure... Method: listBlobsFlat blobContainerName: "${this.container.name}" prefix: ""`);
 
@@ -159,7 +174,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
         const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
+            const containerClient: ContainerClient = createBlobContainerClient(this.root, this.container.name);
             await containerClient.delete();
         }
 
@@ -183,7 +198,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     public getUrl(): string {
-        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
+        const containerClient: ContainerClient = createBlobContainerClient(this.root, this.container.name);
         return containerClient.url;
     }
 
@@ -243,7 +258,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
                 if (getWorkspaceSetting<boolean>(configurationSettingsKeys.deleteBeforeDeploy)) {
                     // Find existing blobs
-                    let blobsToDelete: azureStorageBlob.BlobItem[] = [];
+                    let blobsToDelete: BlobItem[] = [];
                     blobsToDelete = await this.listAllBlobs(cancellationToken);
 
                     if (blobsToDelete.length) {
@@ -312,18 +327,18 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     private async deleteBlobs(
-        blobsToDelete: azureStorageBlob.BlobItem[],
+        blobsToDelete: BlobItem[],
         transferProgress: TransferProgress,
         notificationProgress: NotificationProgress,
         cancellationToken: vscode.CancellationToken,
         properties: TelemetryProperties,
     ): Promise<void> {
-        const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(this.root, this.container.name);
+        const containerClient: ContainerClient = createBlobContainerClient(this.root, this.container.name);
         for (const blobIndex of blobsToDelete.keys()) {
-            const blob: azureStorageBlob.BlobItem = blobsToDelete[blobIndex];
+            const blob: BlobItem = blobsToDelete[blobIndex];
             try {
                 ext.outputChannel.appendLog(`Deleting blob "${blob.name}"...`);
-                const response: azureStorageBlob.BlobDeleteResponse = await containerClient.deleteBlob(blob.name);
+                const response: BlobDeleteResponse = await containerClient.deleteBlob(blob.name);
                 if (cancellationToken.isCancellationRequested) {
                     throw new UserCancelledError();
                 } else if (response.errorCode) {

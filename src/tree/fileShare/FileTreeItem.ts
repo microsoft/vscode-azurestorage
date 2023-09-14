@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageShare from '@azure/storage-file-share';
+import type { AccountSASSignatureValues, ShareFileClient } from '@azure/storage-file-share';
+
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { posix } from 'path';
 import * as vscode from 'vscode';
@@ -51,9 +52,18 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
     }
 
     public get transferSasToken(): string {
-        const accountSASSignatureValues: azureStorageShare.AccountSASSignatureValues = {
+        const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
-            permissions: azureStorageShare.AccountSASPermissions.parse('rwl'), // read, write, list
+            permissions: {
+                read: true,
+                write: true,
+                list: true,
+                delete: false,
+                add: false,
+                create: false,
+                update: false,
+                process: false,
+            },
             services: 'f', // file
             resourceTypes: 'co' // container, object
         };
@@ -61,7 +71,7 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
     }
 
     public async copyUrl(): Promise<void> {
-        const fileClient: azureStorageShare.ShareFileClient = createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);
+        const fileClient: ShareFileClient = createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);
         const url = fileClient.url;
         await copyAndShowToast(url, 'File URL');
     }
