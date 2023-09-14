@@ -6,6 +6,9 @@
 import type { BlobClient, BlobGetPropertiesResponse, BlockBlobClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse } from '@azure/storage-blob';
 import type { DataLakeFileSystemClient } from '@azure/storage-file-datalake';
 
+import { polyfill } from './polyfill.worker';
+polyfill();
+
 import { BlobServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob } from '@azure/storage-blob';
 import { DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
 
