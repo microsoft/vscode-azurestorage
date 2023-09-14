@@ -3,9 +3,13 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+import type { BlobClient, BlobGetPropertiesResponse, BlockBlobClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse } from '@azure/storage-blob';
+import type { DataLakeFileSystemClient } from '@azure/storage-file-datalake';
+
+import { BlobServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob } from '@azure/storage-blob';
+import { DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
+
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
-import { BlobClient, BlobGetPropertiesResponse, BlobServiceClient, BlockBlobClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse, StorageSharedKeyCredential } from '@azure/storage-blob';
-import { DataLakeFileSystemClient, DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, createSubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
@@ -118,9 +122,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             throw Error("Unable to get blob endpoint.");
         }
 
-        let credential: StorageSharedKeyCredential;
+        let credential: StorageSharedKeyCredentialBlob;
         if (accountKey !== undefined) {
-            credential = new StorageSharedKeyCredential(storageAccount.name as string, accountKey);
+            credential = new StorageSharedKeyCredentialBlob(storageAccount.name as string, accountKey);
         } else {
             throw Error("Unable to get key credential.");
         }

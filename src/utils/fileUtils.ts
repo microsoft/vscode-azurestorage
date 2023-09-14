@@ -3,31 +3,32 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageShare from '@azure/storage-file-share';
+import type { FileCreateOptions, FileCreateResponse, FileGetPropertiesResponse, FileParallelUploadOptions, ShareClient, ShareDirectoryClient, ShareFileClient, ShareServiceClient } from "@azure/storage-file-share";
+
 import { IActionContext, ICreateChildImplContext } from "@microsoft/vscode-azext-utils";
 import * as mime from 'mime';
 import { posix } from 'path';
 import { ProgressLocation, window } from "vscode";
+import { IStorageRoot } from "../tree/IStorageRoot";
 import { DirectoryTreeItem } from '../tree/fileShare/DirectoryTreeItem';
 import { FileShareTreeItem, IFileShareCreateChildContext } from "../tree/fileShare/FileShareTreeItem";
 import { FileTreeItem } from "../tree/fileShare/FileTreeItem";
-import { IStorageRoot } from "../tree/IStorageRoot";
 import { doesDirectoryExist } from './directoryUtils';
 import { localize } from './localize';
 import { validateFileOrDirectoryName } from './validateNames';
 
-export function createShareClient(root: IStorageRoot, shareName: string): azureStorageShare.ShareClient {
-    const shareServiceClient: azureStorageShare.ShareServiceClient = root.createShareServiceClient();
+export function createShareClient(root: IStorageRoot, shareName: string): ShareClient {
+    const shareServiceClient: ShareServiceClient = root.createShareServiceClient();
     return shareServiceClient.getShareClient(shareName);
 }
 
-export function createDirectoryClient(root: IStorageRoot, shareName: string, directoryName: string): azureStorageShare.ShareDirectoryClient {
-    const shareClient: azureStorageShare.ShareClient = createShareClient(root, shareName);
+export function createDirectoryClient(root: IStorageRoot, shareName: string, directoryName: string): ShareDirectoryClient {
+    const shareClient: ShareClient = createShareClient(root, shareName);
     return shareClient.getDirectoryClient(directoryName);
 }
 
-export function createFileClient(root: IStorageRoot, shareName: string, directoryName: string, fileName: string): azureStorageShare.ShareFileClient {
-    const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(root, shareName, directoryName);
+export function createFileClient(root: IStorageRoot, shareName: string, directoryName: string, fileName: string): ShareFileClient {
+    const directoryClient: ShareDirectoryClient = createDirectoryClient(root, shareName, directoryName);
     return directoryClient.getFileClient(fileName);
 }
 
@@ -58,7 +59,7 @@ export async function getFileOrDirectoryName(context: IActionContext, parent: Fi
 }
 
 export async function doesFileExist(fileName: string, parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string): Promise<boolean> {
-    const fileService: azureStorageShare.ShareFileClient = createFileClient(parent.root, shareName, directoryPath, fileName);
+    const fileService: ShareFileClient = createFileClient(parent.root, shareName, directoryPath, fileName);
     try {
         await fileService.getProperties();
         return true;
@@ -67,8 +68,8 @@ export async function doesFileExist(fileName: string, parent: FileShareTreeItem 
     }
 }
 
-export async function createFile(directoryPath: string, name: string, shareName: string, root: IStorageRoot, options?: azureStorageShare.FileCreateOptions): Promise<azureStorageShare.FileCreateResponse> {
-    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
+export async function createFile(directoryPath: string, name: string, shareName: string, root: IStorageRoot, options?: FileCreateOptions): Promise<FileCreateResponse> {
+    const fileClient: ShareFileClient = createFileClient(root, shareName, directoryPath, name);
 
     options = options || {};
     options.fileHttpHeaders = options.fileHttpHeaders || {};
@@ -78,8 +79,8 @@ export async function createFile(directoryPath: string, name: string, shareName:
 }
 
 export async function updateFileFromText(directoryPath: string, name: string, shareName: string, root: IStorageRoot, text: string | Buffer): Promise<void> {
-    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
-    let options: azureStorageShare.FileParallelUploadOptions = await getExistingCreateOptions(directoryPath, name, shareName, root);
+    const fileClient: ShareFileClient = createFileClient(root, shareName, directoryPath, name);
+    let options: FileParallelUploadOptions = await getExistingCreateOptions(directoryPath, name, shareName, root);
     options = options || {};
     options.fileHttpHeaders = options.fileHttpHeaders || {};
     options.fileHttpHeaders.fileContentType = options.fileHttpHeaders.fileContentType || mime.getType(name) || undefined;
@@ -92,10 +93,10 @@ export async function deleteFile(directory: string, name: string, share: string,
 }
 
 // Gets existing create options using the `@azure/storage-file-share` SDK
-export async function getExistingCreateOptions(directoryPath: string, name: string, shareName: string, root: IStorageRoot): Promise<azureStorageShare.FileCreateOptions> {
-    const fileClient: azureStorageShare.ShareFileClient = createFileClient(root, shareName, directoryPath, name);
-    const propertiesResult: azureStorageShare.FileGetPropertiesResponse = await fileClient.getProperties();
-    const options: azureStorageShare.FileCreateOptions = {};
+export async function getExistingCreateOptions(directoryPath: string, name: string, shareName: string, root: IStorageRoot): Promise<FileCreateOptions> {
+    const fileClient: ShareFileClient = createFileClient(root, shareName, directoryPath, name);
+    const propertiesResult: FileGetPropertiesResponse = await fileClient.getProperties();
+    const options: FileCreateOptions = {};
     options.fileHttpHeaders = {};
     options.fileHttpHeaders.fileCacheControl = propertiesResult.cacheControl;
     options.fileHttpHeaders.fileContentDisposition = propertiesResult.contentDisposition;

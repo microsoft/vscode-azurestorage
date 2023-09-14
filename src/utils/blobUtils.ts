@@ -3,46 +3,47 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { BlobClient, BlobGetPropertiesResponse, BlobServiceClient, BlockBlobClient, BlockBlobUploadOptions, ContainerClient, ContainerListBlobHierarchySegmentResponse, ListBlobsHierarchySegmentResponse } from '@azure/storage-blob';
+
 import { PageSettings } from '@azure/core-paging';
-import * as azureStorageBlob from '@azure/storage-blob';
 import { AzExtTreeItem, IActionContext, ICreateChildImplContext } from '@microsoft/vscode-azext-utils';
 import * as mime from "mime";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { maxPageSize } from '../constants';
+import { IStorageRoot } from "../tree/IStorageRoot";
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
 import { BlobDirectoryTreeItem } from '../tree/blob/BlobDirectoryTreeItem';
 import { BlobTreeItem } from '../tree/blob/BlobTreeItem';
-import { IStorageRoot } from "../tree/IStorageRoot";
 import { localize } from './localize';
 
-export function createBlobContainerClient(root: IStorageRoot, containerName: string): azureStorageBlob.ContainerClient {
-    const blobServiceClient: azureStorageBlob.BlobServiceClient = root.createBlobServiceClient();
+export function createBlobContainerClient(root: IStorageRoot, containerName: string): ContainerClient {
+    const blobServiceClient: BlobServiceClient = root.createBlobServiceClient();
     return blobServiceClient.getContainerClient(containerName);
 }
 
-export function createBlobClient(root: IStorageRoot, containerName: string, blobName: string): azureStorageBlob.BlobClient {
-    const blobContainerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(root, containerName);
+export function createBlobClient(root: IStorageRoot, containerName: string, blobName: string): BlobClient {
+    const blobContainerClient: ContainerClient = createBlobContainerClient(root, containerName);
     return blobContainerClient.getBlobClient(blobName);
 }
 
-export function createBlockBlobClient(root: IStorageRoot, containerName: string, blobName: string): azureStorageBlob.BlockBlobClient {
-    const blobContainerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(root, containerName);
+export function createBlockBlobClient(root: IStorageRoot, containerName: string, blobName: string): BlockBlobClient {
+    const blobContainerClient: ContainerClient = createBlobContainerClient(root, containerName);
     return blobContainerClient.getBlockBlobClient(blobName);
 }
 
 export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, continuationToken?: string): Promise<{ children: AzExtTreeItem[], continuationToken?: string }> {
     const prefix: string | undefined = parent instanceof BlobDirectoryTreeItem ? parent.dirPath : undefined;
-    const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
+    const containerClient: ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
     const settings: PageSettings = {
         continuationToken,
         // https://github.com/Azure/Azurite/issues/605
         maxPageSize: parent.root.isEmulated ? maxPageSize * 10 : maxPageSize
     };
-    const response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(path.posix.sep, { prefix }).byPage(settings);
+    const response: AsyncIterableIterator<ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(path.posix.sep, { prefix }).byPage(settings);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const responseValue: azureStorageBlob.ListBlobsHierarchySegmentResponse = (await response.next()).value;
+    const responseValue: ListBlobsHierarchySegmentResponse = (await response.next()).value;
     continuationToken = responseValue.continuationToken;
 
     const children: AzExtTreeItem[] = [];
@@ -74,9 +75,9 @@ export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | 
 export async function createOrUpdateBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, name: string, text?: string | Buffer): Promise<void> {
     text = text ? text : '';
     const contentLength: number = text instanceof Buffer ? text.byteLength : text.length;
-    const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
+    const containerClient: ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
 
-    let properties: azureStorageBlob.BlockBlobUploadOptions | undefined = await getExistingProperties(parent, name);
+    let properties: BlockBlobUploadOptions | undefined = await getExistingProperties(parent, name);
     properties = properties || {};
     properties.blobHTTPHeaders = properties.blobHTTPHeaders || {};
     properties.blobHTTPHeaders.blobContentType = properties.blobHTTPHeaders.blobContentType || mime.getType(name) || undefined;
@@ -85,7 +86,7 @@ export async function createOrUpdateBlockBlob(parent: BlobContainerTreeItem | Bl
 }
 
 export async function doesBlobExist(treeItem: BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<boolean> {
-    const blobClient: azureStorageBlob.BlobClient = createBlobClient(treeItem.root, treeItem.container.name, blobPath);
+    const blobClient: BlobClient = createBlobClient(treeItem.root, treeItem.container.name, blobPath);
     return blobClient.exists();
 }
 
@@ -95,8 +96,8 @@ export async function doesBlobDirectoryExist(treeItem: BlobContainerTreeItem | B
         blobDirectoryName = `${blobDirectoryName}${sep}`;
     }
 
-    const containerClient: azureStorageBlob.ContainerClient = createBlobContainerClient(treeItem.root, treeItem.container.name);
-    const response: AsyncIterableIterator<azureStorageBlob.ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(sep, { prefix: blobDirectoryName }).byPage({ maxPageSize: 1 });
+    const containerClient: ContainerClient = createBlobContainerClient(treeItem.root, treeItem.container.name);
+    const response: AsyncIterableIterator<ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(sep, { prefix: blobDirectoryName }).byPage({ maxPageSize: 1 });
 
     for await (const responseValue of response) {
         if (responseValue.segment.blobItems.length || responseValue.segment.blobPrefixes?.length) {
@@ -107,10 +108,10 @@ export async function doesBlobDirectoryExist(treeItem: BlobContainerTreeItem | B
     return false;
 }
 
-export async function getExistingProperties(parent: BlobTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<azureStorageBlob.BlockBlobUploadOptions | undefined> {
-    const blockBlobClient: azureStorageBlob.BlockBlobClient = createBlockBlobClient(parent.root, parent.container.name, blobPath);
+export async function getExistingProperties(parent: BlobTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<BlockBlobUploadOptions | undefined> {
+    const blockBlobClient: BlockBlobClient = createBlockBlobClient(parent.root, parent.container.name, blobPath);
     if (await blockBlobClient.exists()) {
-        const existingProperties: azureStorageBlob.BlobGetPropertiesResponse = await blockBlobClient.getProperties();
+        const existingProperties: BlobGetPropertiesResponse = await blockBlobClient.getProperties();
         return {
             metadata: existingProperties.metadata,
             blobHTTPHeaders: {

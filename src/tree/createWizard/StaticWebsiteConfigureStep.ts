@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageBlob from '@azure/storage-blob';
+import type { BlobServiceProperties } from "@azure/storage-blob";
+
 import { AzExtTreeItem, AzureWizardExecuteStep } from "@microsoft/vscode-azext-utils";
 import { window } from "vscode";
 import { NotificationProgress } from '../../constants';
@@ -29,7 +30,7 @@ export class StaticWebsiteConfigureStep extends AzureWizardExecuteStep<IStorageA
 
         progress.report({ message: localize('configuringStaticWebsiteHosting', `Configuring static website hosing for storage account "${this.accountTreeItem.label}"...`) });
 
-        const newStatus: azureStorageBlob.BlobServiceProperties = {
+        const newStatus: BlobServiceProperties = {
             staticWebsite: {
                 enabled: true,
                 indexDocument: wizardContext.indexDocument,

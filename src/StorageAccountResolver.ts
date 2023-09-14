@@ -3,14 +3,15 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
+import type { BlobServiceProperties } from "@azure/storage-blob";
+
 import { StorageAccount, StorageManagementClient } from "@azure/arm-storage";
-import * as azureStorageBlob from '@azure/storage-blob';
 import { getResourceGroupFromId } from "@microsoft/vscode-azext-azureutils";
-import { callWithTelemetryAndErrorHandling, IActionContext, ISubscriptionContext, nonNullProp } from "@microsoft/vscode-azext-utils";
+import { IActionContext, ISubscriptionContext, callWithTelemetryAndErrorHandling, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { AppResource, AppResourceResolver, ResolvedAppResourceBase } from "@microsoft/vscode-azext-utils/hostapi";
-import { BlobContainerTreeItem } from "./tree/blob/BlobContainerTreeItem";
 import { IStorageRoot } from "./tree/IStorageRoot";
 import { StorageAccountTreeItem, WebsiteHostingStatus } from "./tree/StorageAccountTreeItem";
+import { BlobContainerTreeItem } from "./tree/blob/BlobContainerTreeItem";
 import { createStorageClient } from "./utils/azureClients";
 import { StorageAccountWrapper } from "./utils/storageWrappers";
 
@@ -20,7 +21,7 @@ export interface ResolvedStorageAccount extends ResolvedAppResourceBase {
     storageAccount: StorageAccountWrapper;
     getWebsiteCapableContainer(context: IActionContext): Promise<BlobContainerTreeItem | undefined>;
     getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus>;
-    setWebsiteHostingProperties(properties: azureStorageBlob.BlobServiceProperties): Promise<void>;
+    setWebsiteHostingProperties(properties: BlobServiceProperties): Promise<void>;
     ensureHostingCapable(context: IActionContext, hostingStatus: WebsiteHostingStatus): Promise<void>;
     configureStaticWebsite(context: IActionContext): Promise<void>;
     disableStaticWebsite(context: IActionContext): Promise<void>;

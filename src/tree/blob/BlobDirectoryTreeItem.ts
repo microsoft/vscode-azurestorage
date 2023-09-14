@@ -3,7 +3,8 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageBlob from "@azure/storage-blob";
+import type { AccountSASSignatureValues, BlobClient, ContainerClient, ContainerItem } from "@azure/storage-blob";
+
 import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, ICreateChildImplContext, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -38,7 +39,7 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
 
     private _continuationToken: string | undefined;
 
-    constructor(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, dirPath: string, public container: azureStorageBlob.ContainerItem) {
+    constructor(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, dirPath: string, public container: ContainerItem) {
         super(parent);
         if (!dirPath.endsWith(path.posix.sep)) {
             dirPath += path.posix.sep;
@@ -65,14 +66,28 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     public get resourceUri(): string {
-        const containerClient: azureStorageBlob.ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
+        const containerClient: ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
         return containerClient.url;
     }
 
     public get transferSasToken(): string {
-        const accountSASSignatureValues: azureStorageBlob.AccountSASSignatureValues = {
+        const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
-            permissions: azureStorageBlob.AccountSASPermissions.parse('rwl'), // read, write, list
+            permissions: {
+                read: true,
+                write: true,
+                list: true,
+                delete: false,
+                deleteVersion: false,
+                add: false,
+                create: false,
+                update: false,
+                process: false,
+                tag: false,
+                filter: false,
+                setImmutabilityPolicy: false,
+                permanentDelete: false
+            },
             services: 'b', // blob
             resourceTypes: 'co' // container, object
         };
@@ -105,7 +120,7 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     public async copyUrl(): Promise<void> {
-        const blobClient: azureStorageBlob.BlobClient = createBlobClient(this.root, this.container.name, this.dirPath);
+        const blobClient: BlobClient = createBlobClient(this.root, this.container.name, this.dirPath);
         const url = blobClient.url;
         await copyAndShowToast(url, 'Blob Directory URL');
     }

@@ -3,7 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageShare from '@azure/storage-file-share';
+import type { AccountSASSignatureValues } from '@azure/storage-blob';
+import type { DirectoryItem, FileItem, ShareClient, ShareDirectoryClient } from '@azure/storage-file-share';
+
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -50,9 +52,23 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
     }
 
     public get transferSasToken(): string {
-        const accountSASSignatureValues: azureStorageShare.AccountSASSignatureValues = {
+        const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
-            permissions: azureStorageShare.AccountSASPermissions.parse('rwl'), // read, write, list
+            permissions: {
+                read: true,
+                write: true,
+                list: true,
+                delete: false,
+                deleteVersion: false,
+                add: false,
+                create: false,
+                update: false,
+                process: false,
+                tag: false,
+                filter: false,
+                setImmutabilityPolicy: false,
+                permanentDelete: false
+            },
             services: 'f', // file
             resourceTypes: 'co' // container, object
         };
@@ -82,12 +98,12 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
             result.push(ti);
         }
 
-        const { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory('', this.shareName, this.root, this._continuationToken);
+        const { files, directories, continuationToken }: { files: FileItem[]; directories: DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory('', this.shareName, this.root, this._continuationToken);
         this._continuationToken = continuationToken;
-        return result.concat(directories.map((directory: azureStorageShare.DirectoryItem) => {
+        return result.concat(directories.map((directory: DirectoryItem) => {
             return new DirectoryTreeItem(this, '', directory.name, this.shareName);
         }))
-            .concat(files.map((file: azureStorageShare.FileItem) => {
+            .concat(files.map((file: FileItem) => {
                 return new FileTreeItem(this, file.name, '', this.shareName);
             }));
     }
@@ -103,7 +119,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
     }
 
     public getUrl(): string {
-        const shareClient: azureStorageShare.ShareClient = createShareClient(this.root, this.shareName);
+        const shareClient: ShareClient = createShareClient(this.root, this.shareName);
         return shareClient.url;
     }
 
@@ -116,7 +132,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
         const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const shareClient: azureStorageShare.ShareClient = createShareClient(this.root, this.shareName);
+            const shareClient: ShareClient = createShareClient(this.root, this.shareName);
             await shareClient.delete();
         } else {
             throw new UserCancelledError();
@@ -155,7 +171,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         for (const dir of parentDirectories) {
             partialParentDirectoryPath += `${dir}/`;
             if (!(await doesDirectoryExist(this, partialParentDirectoryPath, this.shareName))) {
-                const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, partialParentDirectoryPath);
+                const directoryClient: ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, partialParentDirectoryPath);
                 await directoryClient.create();
             }
         }

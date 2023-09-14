@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageBlob from "@azure/storage-blob";
+import type { BlobClient } from "@azure/storage-blob";
+
 import { AzureWizardExecuteStep, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { Progress, window } from "vscode";
 import { ext } from "../../extensionVariables";
@@ -20,7 +21,7 @@ export class DeleteBlobStep extends AzureWizardExecuteStep<IDeleteBlobWizardCont
         const deletingBlob: string = localize('deletingBlob', 'Deleting blob "{0}"...', blobName);
         ext.outputChannel.appendLog(deletingBlob);
         progress.report({ message: deletingBlob });
-        const blobClient: azureStorageBlob.BlobClient = createBlobClient(blob.root, blob.container.name, blob.blobPath);
+        const blobClient: BlobClient = createBlobClient(blob.root, blob.container.name, blob.blobPath);
         await blobClient.delete();
         const deleteSuccessful: string = localize('successfullyDeletedBlob', 'Successfully deleted blob "{0}".', blobName);
         ext.outputChannel.appendLog(deleteSuccessful);

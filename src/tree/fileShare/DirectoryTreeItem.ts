@@ -3,7 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageShare from '@azure/storage-file-share';
+import type { AccountSASSignatureValues } from '@azure/storage-blob';
+import type { DirectoryItem, FileItem, ShareDirectoryClient } from '@azure/storage-file-share';
+
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { posix } from 'path';
@@ -58,9 +60,23 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
     }
 
     public get transferSasToken(): string {
-        const accountSASSignatureValues: azureStorageShare.AccountSASSignatureValues = {
+        const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
-            permissions: azureStorageShare.AccountSASPermissions.parse('rwl'), // read, write, list
+            permissions: {
+                read: true,
+                write: true,
+                list: true,
+                delete: false,
+                deleteVersion: false,
+                add: false,
+                create: false,
+                update: false,
+                process: false,
+                tag: false,
+                filter: false,
+                setImmutabilityPolicy: false,
+                permanentDelete: false,
+            },
             services: 'f', // file
             resourceTypes: 'co' // container, object
         };
@@ -76,21 +92,21 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
             this._continuationToken = undefined;
         }
 
-        const { files, directories, continuationToken }: { files: azureStorageShare.FileItem[]; directories: azureStorageShare.DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory(this.fullPath, this.shareName, this.root, this._continuationToken);
+        const { files, directories, continuationToken }: { files: FileItem[]; directories: DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory(this.fullPath, this.shareName, this.root, this._continuationToken);
         this._continuationToken = continuationToken;
 
         return (<(DirectoryTreeItem | FileTreeItem)[]>[])
-            .concat(files.map((file: azureStorageShare.FileItem) => {
+            .concat(files.map((file: FileItem) => {
                 return new FileTreeItem(this, file.name, this.fullPath, this.shareName);
             }))
-            .concat(directories.map((directory: azureStorageShare.DirectoryItem) => {
+            .concat(directories.map((directory: DirectoryItem) => {
                 return new DirectoryTreeItem(this, this.fullPath, directory.name, this.shareName);
             }));
     }
 
     public async copyUrl(): Promise<void> {
         // Use this.fullPath here instead of this.directoryName. Otherwise only the leaf directory is displayed in the URL
-        const directoryClient: azureStorageShare.ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, this.fullPath);
+        const directoryClient: ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, this.fullPath);
         const url = directoryClient.url;
         await copyAndShowToast(url, 'Directory URL');
     }

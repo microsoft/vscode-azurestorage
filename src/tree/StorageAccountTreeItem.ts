@@ -3,25 +3,29 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import type { AccountKind, AccountSASSignatureValues, BlobServiceProperties, ServiceGetPropertiesResponse, StaticWebsite } from '@azure/storage-blob';
+
+import { AzureNamedKeyCredential, TableServiceClient } from '@azure/data-tables';
+import { BlobServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob, generateAccountSASQueryParameters } from '@azure/storage-blob';
+import { ShareServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialFileShare } from '@azure/storage-file-share';
+import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialQueue } from '@azure/storage-queue';
+
 import { StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
-import * as azureDataTables from '@azure/data-tables';
-import * as azureStorageBlob from '@azure/storage-blob';
-import { AccountSASSignatureValues, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
-import * as azureStorageShare from '@azure/storage-file-share';
-import * as azureStorageQueue from '@azure/storage-queue';
 import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
-import { commands, MessageItem, window } from 'vscode';
+import { MessageItem, commands, window } from 'vscode';
+import { ResolvedStorageAccount } from '../StorageAccountResolver';
 import { DeleteStorageAccountStep } from '../commands/deleteStorageAccount/DeleteStorageAccountStep';
 import { DeleteStorageAccountWizardContext } from '../commands/deleteStorageAccount/DeleteStorageAccountWizardContext';
 import { staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
-import { ResolvedStorageAccount } from '../StorageAccountResolver';
 import { createActivityContext } from '../utils/activityUtils';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
+import { IStorageRoot } from './IStorageRoot';
+import { IStorageTreeItem } from './IStorageTreeItem';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { BlobContainerTreeItem } from "./blob/BlobContainerTreeItem";
 import { IStaticWebsiteConfigWizardContext } from './createWizard/IStaticWebsiteConfigWizardContext';
@@ -29,8 +33,6 @@ import { StaticWebsiteConfigureStep } from './createWizard/StaticWebsiteConfigur
 import { StaticWebsiteErrorDocument404Step } from './createWizard/StaticWebsiteErrorDocument404Step';
 import { StaticWebsiteIndexDocumentStep } from './createWizard/StaticWebsiteIndexDocumentStep';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
-import { IStorageRoot } from './IStorageRoot';
-import { IStorageTreeItem } from './IStorageTreeItem';
 import { QueueGroupTreeItem } from './queue/QueueGroupTreeItem';
 import { TableGroupTreeItem } from './table/TableGroupTreeItem';
 
@@ -157,24 +159,24 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             generateSasToken: (accountSASSignatureValues: AccountSASSignatureValues) => {
                 return generateAccountSASQueryParameters(
                     accountSASSignatureValues,
-                    new StorageSharedKeyCredential(this.storageAccount.name, this.key.value)
+                    new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value)
                 ).toString();
             },
             createBlobServiceClient: () => {
-                const credential = new azureStorageBlob.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
-                return new azureStorageBlob.BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
+                const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value);
+                return new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
             },
             createShareServiceClient: () => {
-                const credential = new azureStorageShare.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
-                return new azureStorageShare.ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
+                const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, this.key.value);
+                return new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
             },
             createQueueServiceClient: () => {
-                const credential = new azureStorageQueue.StorageSharedKeyCredential(this.storageAccount.name, this.key.value);
-                return new azureStorageQueue.QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
+                const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, this.key.value);
+                return new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
             },
             createTableServiceClient: () => {
-                const credential = new azureDataTables.AzureNamedKeyCredential(this.storageAccount.name, this.key.value);
-                return new azureDataTables.TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
+                const credential = new AzureNamedKeyCredential(this.storageAccount.name, this.key.value);
+                return new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
             }
         };
     }
@@ -238,9 +240,9 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     public async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
         // Does NOT update treeItem's _webHostingEnabled.
-        const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        const properties: azureStorageBlob.ServiceGetPropertiesResponse = await serviceClient.getProperties();
-        const staticWebsite: azureStorageBlob.StaticWebsite | undefined = properties.staticWebsite;
+        const serviceClient: BlobServiceClient = this.root.createBlobServiceClient();
+        const properties: ServiceGetPropertiesResponse = await serviceClient.getProperties();
+        const staticWebsite: StaticWebsite | undefined = properties.staticWebsite;
 
         return {
             capable: !!staticWebsite,
@@ -250,14 +252,14 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         };
     }
 
-    public async setWebsiteHostingProperties(properties: azureStorageBlob.BlobServiceProperties): Promise<void> {
-        const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
+    public async setWebsiteHostingProperties(properties: BlobServiceProperties): Promise<void> {
+        const serviceClient: BlobServiceClient = this.root.createBlobServiceClient();
         await serviceClient.setProperties(properties);
     }
 
-    private async getAccountType(): Promise<azureStorageBlob.AccountKind> {
-        const serviceClient: azureStorageBlob.BlobServiceClient = this.root.createBlobServiceClient();
-        const accountType: azureStorageBlob.AccountKind | undefined = (await serviceClient.getAccountInfo()).accountKind;
+    private async getAccountType(): Promise<AccountKind> {
+        const serviceClient: BlobServiceClient = this.root.createBlobServiceClient();
+        const accountType: AccountKind | undefined = (await serviceClient.getAccountInfo()).accountKind;
 
         if (!accountType) {
             throw new Error("Could not determine storage account type.");
@@ -334,7 +336,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     public async ensureHostingCapable(context: IActionContext, hostingStatus: WebsiteHostingStatus): Promise<void> {
         if (!hostingStatus.capable) {
             // Doesn't support static website hosting. Try to narrow it down.
-            let accountType: azureStorageBlob.AccountKind | undefined;
+            let accountType: AccountKind | undefined;
             try {
                 accountType = await this.getAccountType();
             } catch (error) {

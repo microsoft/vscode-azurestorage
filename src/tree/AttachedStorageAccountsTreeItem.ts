@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageBlob from '@azure/storage-blob';
+import { BlobServiceClient } from "@azure/storage-blob";
+
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ISubscriptionContext, parseError, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
 import { ThemeIcon } from 'vscode';
 import { AttachedAccountRoot } from '../AttachedAccountRoot';
@@ -154,7 +155,7 @@ export class AttachedStorageAccountsTreeItem extends AzExtParentTreeItem {
         if (connectionString.length > 0) {
             try {
                 // Attempt to use the connection string
-                azureStorageBlob.BlobServiceClient.fromConnectionString(connectionString);
+                BlobServiceClient.fromConnectionString(connectionString);
             } catch (error) {
                 return parseError(error).message;
             }

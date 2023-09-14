@@ -3,7 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageQueue from '@azure/storage-queue';
+import type { QueueItem } from '@azure/storage-queue';
+
 import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { getResourcesPath } from "../../constants";
@@ -15,7 +16,7 @@ export class QueueTreeItem extends AzExtTreeItem implements IStorageTreeItem {
     public parent: QueueGroupTreeItem;
     constructor(
         parent: QueueGroupTreeItem,
-        public readonly queue: azureStorageQueue.QueueItem) {
+        public readonly queue: QueueItem) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),

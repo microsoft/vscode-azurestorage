@@ -3,13 +3,14 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageQueue from '@azure/storage-queue';
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import type { ListQueuesSegmentResponse, QueueItem, ServiceListQueuesSegmentResponse } from '@azure/storage-queue';
+
+import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { getResourcesPath, maxPageSize } from "../../constants";
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
+import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from "../../utils/localize";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
@@ -42,7 +43,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
             this._continuationToken = undefined;
         }
 
-        let queuesResponse: azureStorageQueue.ListQueuesSegmentResponse;
+        let queuesResponse: ListQueuesSegmentResponse;
         try {
             queuesResponse = await this.listQueues(this._continuationToken);
         } catch (error) {
@@ -63,7 +64,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
 
         this._continuationToken = queuesResponse.continuationToken;
 
-        return queuesResponse.queueItems?.map((queue: azureStorageQueue.QueueItem) => {
+        return queuesResponse.queueItems?.map((queue: QueueItem) => {
             return new QueueTreeItem(
                 this,
                 queue);
@@ -74,9 +75,9 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         return !!this._continuationToken;
     }
 
-    async listQueues(continuationToken?: string): Promise<azureStorageQueue.ListQueuesSegmentResponse> {
+    async listQueues(continuationToken?: string): Promise<ListQueuesSegmentResponse> {
         const queueServiceClient = this.root.createQueueServiceClient();
-        const response: AsyncIterableIterator<azureStorageQueue.ServiceListQueuesSegmentResponse> = queueServiceClient.listQueues().byPage({ continuationToken, maxPageSize });
+        const response: AsyncIterableIterator<ServiceListQueuesSegmentResponse> = queueServiceClient.listQueues().byPage({ continuationToken, maxPageSize });
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (await response.next()).value;
@@ -108,12 +109,12 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         return contextValue === QueueTreeItem.contextValue;
     }
 
-    private async createQueue(name: string): Promise<azureStorageQueue.QueueItem> {
+    private async createQueue(name: string): Promise<QueueItem> {
         const queueServiceClient = this.root.createQueueServiceClient();
         await queueServiceClient.createQueue(name);
 
-        const queuesResponse: azureStorageQueue.ListQueuesSegmentResponse = await this.listQueues();
-        let createdQueue: azureStorageQueue.QueueItem | undefined;
+        const queuesResponse: ListQueuesSegmentResponse = await this.listQueues();
+        let createdQueue: QueueItem | undefined;
         for (const queue of queuesResponse.queueItems || []) {
             if (queue.name === name) {
                 createdQueue = queue;

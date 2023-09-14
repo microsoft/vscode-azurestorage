@@ -3,24 +3,25 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as azureStorageShare from '@azure/storage-file-share';
+import type { ServiceListSharesSegmentResponse, ShareItem, ShareServiceClient } from '@azure/storage-file-share';
+
 import { AzExtParentTreeItem, AzureWizard, ICreateChildImplContext, parseError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { getResourcesPath, maxPageSize } from "../../constants";
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
+import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from '../../utils/localize';
 import { nonNullProp } from '../../utils/nonNull';
 import { AttachedStorageAccountTreeItem } from '../AttachedStorageAccountTreeItem';
 import { IStorageRoot } from '../IStorageRoot';
 import { IStorageTreeItem } from '../IStorageTreeItem';
-import { FileShareNameStep } from './createFileShare/FileShareNameStep';
-import { IFileShareWizardContext } from './createFileShare/IFileShareWizardContext';
-import { StorageQuotaPromptStep } from './createFileShare/StorageQuotaPromptStep';
 import { DirectoryTreeItem } from './DirectoryTreeItem';
 import { FileShareTreeItem } from './FileShareTreeItem';
 import { FileTreeItem } from './FileTreeItem';
+import { FileShareNameStep } from './createFileShare/FileShareNameStep';
+import { IFileShareWizardContext } from './createFileShare/IFileShareWizardContext';
+import { StorageQuotaPromptStep } from './createFileShare/StorageQuotaPromptStep';
 
 export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
@@ -48,10 +49,10 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
             this._continuationToken = undefined;
         }
 
-        const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
-        const response: AsyncIterableIterator<azureStorageShare.ServiceListSharesSegmentResponse> = shareServiceClient.listShares().byPage({ continuationToken: this._continuationToken, maxPageSize });
+        const shareServiceClient: ShareServiceClient = this.root.createShareServiceClient();
+        const response: AsyncIterableIterator<ServiceListSharesSegmentResponse> = shareServiceClient.listShares().byPage({ continuationToken: this._continuationToken, maxPageSize });
 
-        let responseValue: azureStorageShare.ServiceListSharesSegmentResponse;
+        let responseValue: ServiceListSharesSegmentResponse;
         try {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             responseValue = (await response.next()).value;
@@ -63,10 +64,10 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
             }
         }
 
-        const shares: azureStorageShare.ShareItem[] = responseValue.shareItems || [];
+        const shares: ShareItem[] = responseValue.shareItems || [];
         this._continuationToken = responseValue.continuationToken;
 
-        return shares.map((share: azureStorageShare.ShareItem) => {
+        return shares.map((share: ShareItem) => {
             return new FileShareTreeItem(this, share.name);
         });
     }
@@ -87,7 +88,7 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
             context.showCreatingTreeItem(shareName);
             progress.report({ message: localize('creatingFileShare', 'Azure Storage: Creating file share "{0}"...', shareName) });
-            const shareServiceClient: azureStorageShare.ShareServiceClient = this.root.createShareServiceClient();
+            const shareServiceClient: ShareServiceClient = this.root.createShareServiceClient();
             await shareServiceClient.createShare(shareName, { quota });
             return new FileShareTreeItem(this, shareName);
         });
