@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
+import * as vscode from 'vscode';
 import { Uri, workspace } from 'vscode';
 
 export function isPathEqual(fsPath1: string, fsPath2: string): boolean {
@@ -16,8 +17,12 @@ export function isSubpath(expectedParent: string, expectedChild: string): boolea
     return relativePath !== '' && !relativePath.startsWith('..') && relativePath !== expectedChild;
 }
 
-export async function isEmptyDirectory(uri: Uri): Promise<boolean> {
-    const files = await workspace.fs.readDirectory(uri);
+export async function isEmptyDirectory(pathOrUri: Uri | string): Promise<boolean> {
+    if (typeof pathOrUri === 'string') {
+        pathOrUri = vscode.Uri.file(pathOrUri)
+    }
+
+    const files = await workspace.fs.readDirectory(pathOrUri);
     if (files.length === 0) {
         return true;
     }

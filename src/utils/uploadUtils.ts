@@ -3,13 +3,10 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { FromToOption, ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import { IActionContext } from "@microsoft/vscode-azext-utils";
 import { basename, dirname, posix } from 'path';
 import * as vscode from 'vscode';
-import { TransferProgress } from '../TransferProgress';
-import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../commands/transfers/azCopy/azCopyLocations';
-import { azCopyTransfer } from '../commands/transfers/azCopy/azCopyTransfer';
+import { UploadItem, uploadFolder } from '../commands/transfers/transfers';
 import { NotificationProgress } from '../constants';
 import { ext } from '../extensionVariables';
 import { BlobContainerTreeItem } from '../tree/blob/BlobContainerTreeItem';
@@ -19,7 +16,6 @@ import { checkCanOverwrite } from './checkCanOverwrite';
 import { copyAndShowToast } from './copyAndShowToast';
 import { doesDirectoryExist } from './directoryUtils';
 import { doesFileExist } from './fileUtils';
-import { isEmptyDirectory } from './fs';
 import { localize } from './localize';
 
 export const upload: string = localize('upload', 'Upload');
@@ -40,25 +36,15 @@ export async function uploadLocalFolder(
     cancellationToken: vscode.CancellationToken,
     messagePrefix?: string,
 ): Promise<void> {
-    const fromTo: FromToOption = destTreeItem instanceof BlobContainerTreeItem ? 'LocalBlob' : 'LocalFile';
-    const uri = vscode.Uri.file(sourcePath);
-    let useWildCard: boolean = true;
-    if (await isEmptyDirectory(uri)) {
-        useWildCard = false;
-        destPath = dirname(destPath);
-        if (destPath === '.') {
-            destPath = '';
-        }
+    const uploadItem: UploadItem = {
+        type: destTreeItem instanceof BlobContainerTreeItem ? "blob" : "file",
+        localFilePath: sourcePath,
+        resourceName: destTreeItem instanceof BlobContainerTreeItem ? destTreeItem.container.name : destTreeItem.shareName,
+        resourceUri: destTreeItem.resourceUri,
+        remoteFilePath: destPath,
+        transferSasToken: destTreeItem.transferSasToken,
     }
-
-    const src: ILocalLocation = createAzCopyLocalLocation(sourcePath, useWildCard);
-
-    const resourceUri = destTreeItem.resourceUri;
-    const sasToken = destTreeItem.transferSasToken;
-    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, destPath, false);
-    const transferProgress: TransferProgress = new TransferProgress('files', messagePrefix);
-    ext.outputChannel.appendLog(getUploadingMessageWithSource(sourcePath, destTreeItem.label));
-    await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
+    await uploadFolder(context, uploadItem, messagePrefix, notificationProgress, cancellationToken);
 }
 
 export function getUploadingMessage(treeItemLabel: string): string {

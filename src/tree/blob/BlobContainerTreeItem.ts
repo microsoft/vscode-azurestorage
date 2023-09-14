@@ -3,7 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILocalLocation, IRemoteSasLocation } from '@azure-tools/azcopy-node';
 import * as azureStorageBlob from '@azure/storage-blob';
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
@@ -12,8 +11,7 @@ import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { TransferProgress } from '../../TransferProgress';
-import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from '../../commands/transfers/azCopy/azCopyLocations';
-import { azCopyTransfer } from '../../commands/transfers/azCopy/azCopyTransfer';
+import { UploadItem, uploadFile } from '../../commands/transfers/transfers';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
 import { NotificationProgress, configurationSettingsKeys, getResourcesPath, staticWebsiteContainerName, threeDaysInMS } from "../../constants";
 import { ext } from "../../extensionVariables";
@@ -22,7 +20,7 @@ import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
-import { getUploadingMessageWithSource, uploadLocalFolder } from '../../utils/uploadUtils';
+import { uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
 import { ITransferSrcOrDstTreeItem } from '../ITransferSrcOrDstTreeItem';
@@ -351,13 +349,15 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         notificationProgress?: NotificationProgress,
         cancellationToken?: vscode.CancellationToken
     ): Promise<void> {
-        ext.outputChannel.appendLog(getUploadingMessageWithSource(filePath, this.label));
-        const src: ILocalLocation = createAzCopyLocalLocation(filePath);
-        const resourceUri = this.resourceUri;
-        const sasToken = this.transferSasToken;
-        const dst: IRemoteSasLocation = createAzCopyRemoteLocation(resourceUri, sasToken, blobPath);
-        const transferProgress: TransferProgress = new TransferProgress('bytes', blobPath);
-        await azCopyTransfer(context, 'LocalBlob', src, dst, transferProgress, notificationProgress, cancellationToken);
+        const uploadItem: UploadItem = {
+            type: "blob",
+            localFilePath: filePath,
+            resourceName: this.container.name,
+            resourceUri: this.resourceUri,
+            remoteFilePath: blobPath,
+            transferSasToken: this.transferSasToken,
+        };
+        await uploadFile(context, uploadItem, notificationProgress, cancellationToken);
     }
 
     public static validateBlobName(name: string): string | undefined | null {
