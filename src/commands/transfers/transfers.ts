@@ -111,6 +111,7 @@ function okToOverwriteOrDoesNotExist(context: IActionContext, item: DownloadItem
 }
 
 async function startAzCopyDownload(context: IDownloadWizardContext, item: DownloadItem, progress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
+    // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
     const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
     const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
 
@@ -126,6 +127,7 @@ async function startAzCopyDownload(context: IDownloadWizardContext, item: Downlo
 }
 
 async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken) {
+    // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
     const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
     const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
 
@@ -136,6 +138,7 @@ async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, 
 }
 
 async function startAzCopyFolderUpload(context: IActionContext, item: UploadItem, messagePrefix?: string, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
+    // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
     const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
     const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
 
