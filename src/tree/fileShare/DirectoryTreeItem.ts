@@ -3,8 +3,12 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AccountSASSignatureValues } from '@azure/storage-blob';
-import type { DirectoryItem, FileItem, ShareDirectoryClient } from '@azure/storage-file-share';
+import type { AccountSASSignatureValues, DirectoryItem, FileItem, ShareDirectoryClient } from '@azure/storage-file-share';
+
+import { polyfill } from '../../polyfill.worker';
+polyfill();
+
+import { AccountSASPermissions } from '@azure/storage-file-share';
 
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
@@ -62,21 +66,7 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
     public get transferSasToken(): string {
         const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
-            permissions: {
-                read: true,
-                write: true,
-                list: true,
-                delete: false,
-                deleteVersion: false,
-                add: false,
-                create: false,
-                update: false,
-                process: false,
-                tag: false,
-                filter: false,
-                setImmutabilityPolicy: false,
-                permanentDelete: false,
-            },
+            permissions: AccountSASPermissions.parse("rwl"), // read, write, list
             services: 'f', // file
             resourceTypes: 'co' // container, object
         };

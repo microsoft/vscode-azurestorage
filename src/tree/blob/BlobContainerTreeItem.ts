@@ -5,6 +5,11 @@
 
 import type { AccountSASSignatureValues, BlobDeleteResponse, BlobItem, ContainerClient, ContainerItem, ContainerListBlobFlatSegmentResponse, ListBlobsFlatSegmentResponse } from '@azure/storage-blob';
 
+import { polyfill } from '../../polyfill.worker';
+polyfill();
+
+import { AccountSASPermissions } from '@azure/storage-blob';
+
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
 import * as path from 'path';
@@ -63,21 +68,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     public get transferSasToken(): string {
         const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
-            permissions: {
-                read: true,
-                write: true,
-                list: true,
-                delete: false,
-                deleteVersion: false,
-                add: false,
-                create: false,
-                update: false,
-                process: false,
-                tag: false,
-                filter: false,
-                setImmutabilityPolicy: false,
-                permanentDelete: false
-            },
+            permissions: AccountSASPermissions.parse("rwl"), // read, write, list
             services: 'b', // blob
             resourceTypes: 'co' // container, object
         };

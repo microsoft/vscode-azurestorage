@@ -5,6 +5,11 @@
 
 import type { AccountSASSignatureValues, ShareFileClient } from '@azure/storage-file-share';
 
+import { polyfill } from '../../polyfill.worker';
+polyfill();
+
+import { AccountSASPermissions } from '@azure/storage-file-share';
+
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { posix } from 'path';
 import * as vscode from 'vscode';
@@ -54,16 +59,7 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
     public get transferSasToken(): string {
         const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
-            permissions: {
-                read: true,
-                write: true,
-                list: true,
-                delete: false,
-                add: false,
-                create: false,
-                update: false,
-                process: false,
-            },
+            permissions: AccountSASPermissions.parse("rwl"), // read, write, list
             services: 'f', // file
             resourceTypes: 'co' // container, object
         };
