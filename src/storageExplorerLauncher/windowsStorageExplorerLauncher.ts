@@ -2,13 +2,11 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { AzExtFsExtra, callWithTelemetryAndErrorHandling, UserCancelledError } from "@microsoft/vscode-azext-utils";
+import { AzExtFsExtra, callWithTelemetryAndErrorHandling, openUrl, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import { MessageItem } from "vscode";
-import * as winreg from "winreg";
 import { storageExplorerDownloadUrl } from "../constants";
 import { Launcher } from "../utils/launcher";
 import { localize } from "../utils/localize";
-import { openUrl } from "../utils/openUrl";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
@@ -65,8 +63,9 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     }
 
     private static async getWindowsRegistryValue(hive: string, key: string): Promise<string | undefined> {
-        return new Promise((resolve, reject) => {
-            const rgKey = new winreg({ hive, key });
+        const winreg = await import("winreg");
+        const rgKey = new winreg({ hive, key });
+        return await new Promise((resolve, reject) => {
             rgKey.values((err?: {}, items?: Winreg.RegistryItem[]) => {
                 if (err) {
                     reject(err);

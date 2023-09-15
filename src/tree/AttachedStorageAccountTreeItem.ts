@@ -14,11 +14,11 @@ import { ShareServiceClient } from '@azure/storage-file-share';
 import { QueueServiceClient } from '@azure/storage-queue';
 
 import { AzExtParentTreeItem, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
-import * as path from 'path';
 import { AttachedAccountRoot } from '../AttachedAccountRoot';
-import { emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
+import { emulatorAccountName, emulatorConnectionString, emulatorKey } from '../constants';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
 import { localize } from '../utils/localize';
+import { treeUtils } from "../utils/treeUtils";
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
@@ -46,10 +46,7 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
         super(parent);
 
         this.id = this.storageAccountName;
-        this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
-        };
+        this.iconPath = treeUtils.getThemedIconPath("AzureStorageAccount");
 
         this._root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this);

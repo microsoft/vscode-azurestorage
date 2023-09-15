@@ -14,7 +14,7 @@ import { ShareServiceClient, StorageSharedKeyCredential as StorageSharedKeyCrede
 import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialQueue } from '@azure/storage-queue';
 
 import { StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError, openUrl } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import { MessageItem, commands, window } from 'vscode';
 import { ResolvedStorageAccount } from '../StorageAccountResolver';
@@ -25,7 +25,7 @@ import { ext } from "../extensionVariables";
 import { createActivityContext } from '../utils/activityUtils';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
-import { openUrl } from '../utils/openUrl';
+import { getNonTableStorageCredential } from '../utils/storageCredentials';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
@@ -166,20 +166,28 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 ).toString();
             },
             createBlobServiceClient: () => {
-                const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value);
+                this._subscription
+                const credential = getNonTableStorageCredential(() => new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value), this._subscription);
                 return new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
             },
             createShareServiceClient: () => {
-                const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, this.key.value);
+                const credential = getNonTableStorageCredential(() => new StorageSharedKeyCredentialFileShare(this.storageAccount.name, this.key.value), this._subscription);
                 return new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
             },
             createQueueServiceClient: () => {
-                const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, this.key.value);
+                const credential = getNonTableStorageCredential(() => new StorageSharedKeyCredentialQueue(this.storageAccount.name, this.key.value), this._subscription);
                 return new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
             },
             createTableServiceClient: () => {
-                const credential = new AzureNamedKeyCredential(this.storageAccount.name, this.key.value);
-                return new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
+                // The typings for the table SDK are silly. Because the construtor types do not make use of overloads, we have to have separate code paths not
+                // just for determing what credential to use, but also for constructing the client.
+                if (ext.isWeb) {
+                    const credential = this._subscription.credentials;
+                    return new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
+                } else {
+                    const credential = new AzureNamedKeyCredential(this.storageAccount.name, this.key.value);
+                    return new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
+                }
             }
         };
     }

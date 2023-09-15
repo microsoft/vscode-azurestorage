@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
-import * as path from 'path';
-import { getResourcesPath } from '../../constants';
+import { treeUtils } from "../../utils/treeUtils";
 import { IStorageRoot } from '../IStorageRoot';
 import { IStorageTreeItem } from '../IStorageTreeItem';
 import { TableGroupTreeItem } from './TableGroupTreeItem';
@@ -16,10 +15,7 @@ export class TableTreeItem extends AzExtTreeItem implements IStorageTreeItem {
         parent: TableGroupTreeItem,
         public readonly tableName: string) {
         super(parent);
-        this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureTable.svg')
-        };
+        this.iconPath = treeUtils.getThemedIconPath("AzureTable");
     }
 
     public get root(): IStorageRoot {

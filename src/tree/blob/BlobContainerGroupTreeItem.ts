@@ -8,13 +8,13 @@ import type { BlobServiceClient, ContainerClient, ContainerItem, ListContainersS
 import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError } from '@microsoft/vscode-azext-utils';
 
 import { ResolvedAppResourceTreeItem } from "@microsoft/vscode-azext-utils/hostapi";
-import * as path from 'path';
 import * as vscode from 'vscode';
 import { ResolvedStorageAccount } from "../../StorageAccountResolver";
-import { getResourcesPath, maxPageSize } from "../../constants";
+import { maxPageSize } from "../../constants";
 import { createBlobContainerClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { nonNullProp } from "../../utils/nonNull";
+import { treeUtils } from "../../utils/treeUtils";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from "../IStorageTreeItem";
@@ -33,10 +33,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
 
     public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
-        this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
-        };
+        this.iconPath = treeUtils.getThemedIconPath("AzureBlobContainer")
     }
 
     public get root(): IStorageRoot {

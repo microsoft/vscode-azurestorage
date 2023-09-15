@@ -10,22 +10,22 @@ polyfill();
 
 import { AccountSASPermissions } from '@azure/storage-blob';
 
-import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, TreeItemIconPath, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
 import * as retry from 'p-retry';
-import * as path from 'path';
 import * as vscode from 'vscode';
-import { ProgressLocation, Uri } from 'vscode';
+import { ProgressLocation } from 'vscode';
 import { AzureStorageFS } from '../../AzureStorageFS';
 import { TransferProgress } from '../../TransferProgress';
 import { UploadItem, uploadFile } from '../../commands/transfers/transfers';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
-import { NotificationProgress, configurationSettingsKeys, getResourcesPath, staticWebsiteContainerName, threeDaysInMS } from "../../constants";
+import { NotificationProgress, configurationSettingsKeys, staticWebsiteContainerName, threeDaysInMS } from "../../constants";
 import { ext } from "../../extensionVariables";
 import { IBlobContainerCreateChildContext, createBlobContainerClient, createChildAsNewBlockBlob, loadMoreBlobChildren } from '../../utils/blobUtils';
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { throwIfCanceled } from '../../utils/errorUtils';
 import { localize } from '../../utils/localize';
 import { getWorkspaceSetting } from '../../utils/settingsUtils';
+import { treeUtils } from "../../utils/treeUtils";
 import { uploadLocalFolder } from '../../utils/uploadUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
@@ -82,13 +82,10 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         return ti;
     }
 
-    public get iconPath(): { light: string | Uri; dark: string | Uri } {
+    public get iconPath(): TreeItemIconPath {
         const iconFileName = this._websiteHostingEnabled && this.container.name === staticWebsiteContainerName ?
             'BrandAzureStaticWebsites' : 'AzureBlobContainer';
-        return {
-            light: path.join(getResourcesPath(), 'light', `${iconFileName}.svg`),
-            dark: path.join(getResourcesPath(), 'dark', `${iconFileName}.svg`)
-        };
+        return treeUtils.getThemedIconPath(iconFileName);
     }
 
     public label: string = this.container.name;
