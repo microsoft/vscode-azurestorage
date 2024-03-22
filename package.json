@@ -397,7 +397,7 @@
                 {
                     "$comment": "========= azureStorageAccount =========",
                     "command": "azureStorage.openStorageAccount",
-                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem =~ /azureStorageAccount/ && !isWeb && !isLinux && !remoteName",
+                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem =~ /azureStorageAccount/ && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -454,7 +454,7 @@
                 {
                     "$comment": "========= azureBlobContainer =========",
                     "command": "azureStorage.openBlobContainer",
-                    "when": "view =~ /azure(Workspace|ResourceGroups|focusView)/i && viewItem == azureBlobContainer && !isWeb && !isLinux && !remoteName",
+                    "when": "view =~ /azure(Workspace|ResourceGroups|focusView)/i && viewItem == azureBlobContainer && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -484,7 +484,7 @@
                 },
                 {
                     "command": "azureStorage.generateSasUrl",
-                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureBlobContainer",
+                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureBlobContainer && !isWeb",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -529,7 +529,7 @@
                 },
                 {
                     "command": "azureStorage.generateSasUrl",
-                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureBlobFile",
+                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureBlobFile && !isWeb",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -545,7 +545,7 @@
                 },
                 {
                     "command": "azureStorage.generateSasUrl",
-                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureBlobDirectory",
+                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureBlobDirectory && !isWeb",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -562,7 +562,7 @@
                 {
                     "$comment": "========= azureFileShare =========",
                     "command": "azureStorage.openFileShare",
-                    "when": "view =~ /azure(Workspace|ResourceGroups|focusView)/i && viewItem == azureFileShare && !isWeb && !isLinux && !remoteName",
+                    "when": "view =~ /azure(Workspace|ResourceGroups|focusView)/i && viewItem == azureFileShare && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -597,7 +597,7 @@
                 },
                 {
                     "command": "azureStorage.generateSasUrl",
-                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureFileShare",
+                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureFileShare && !isWeb",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -628,7 +628,7 @@
                 },
                 {
                     "command": "azureStorage.generateSasUrl",
-                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureFile",
+                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureFile && !isWeb",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -659,7 +659,7 @@
                 },
                 {
                     "command": "azureStorage.generateSasUrl",
-                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureFileShareDirectory",
+                    "when": "view =~ /(azureResourceGroups|azureFocusView)/ && viewItem == azureFileShareDirectory && !isWeb",
                     "group": "5_cutcopypaste@2"
                 },
                 {
@@ -686,7 +686,7 @@
                 {
                     "$comment": "========= azureQueue =========",
                     "command": "azureStorage.openQueue",
-                    "when": "view =~ /azure(Workspace|ResourceGroups|focusView)/i && viewItem == azureQueue && !isWeb && !isLinux && !remoteName",
+                    "when": "view =~ /azure(Workspace|ResourceGroups|focusView)/i && viewItem == azureQueue && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -708,7 +708,7 @@
                 {
                     "$comment": "========= azureTable =========",
                     "command": "azureStorage.openTable",
-                    "when": "view =~ /azure(Workspace|ResourceGroups|focusView)/i && viewItem == azureTable && !isWeb && !isLinux && !remoteName",
+                    "when": "view =~ /azure(Workspace|ResourceGroups|focusView)/i && viewItem == azureTable && !isLinux && !remoteName",
                     "group": "navigation@1"
                 },
                 {
@@ -891,7 +891,6 @@
         "glob": "^7.1.2",
         "jsdom": "^21.1.1",
         "mime": "^2.4.4",
-        "open": "^8.0.4",
         "p-retry": "^4.2.0",
         "vscode-nls": "^4.1.1",
         "winreg": "^1.2.3"

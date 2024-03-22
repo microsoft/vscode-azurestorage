@@ -3,9 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtTreeItem, NoResourceFoundError } from "@microsoft/vscode-azext-utils";
+import { AzExtTreeItem, NoResourceFoundError, TreeItemIconPath } from "@microsoft/vscode-azext-utils";
+import { Uri } from "vscode";
+import { ext } from "../extensionVariables";
 
 export namespace treeUtils {
+    export function getThemedIconPath(iconName: string): TreeItemIconPath {
+        return {
+            light: Uri.joinPath(getResourcesUri(), "light", `${iconName}.svg`),
+            dark: Uri.joinPath(getResourcesUri(), "dark", `${iconName}.svg`),
+        }
+    }
+
+    export function getIconPath(iconName: string): TreeItemIconPath {
+        return Uri.joinPath(getResourcesUri(), `${iconName}.svg`);
+    }
+
+    function getResourcesUri(): Uri {
+        return Uri.joinPath(ext.context.extensionUri, 'resources')
+    }
+
     export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parentContextValues: string | RegExp | (string | RegExp)[]): T {
         parentContextValues = Array.isArray(parentContextValues) ? parentContextValues : [parentContextValues];
         if (!parentContextValues.length) throw new NoResourceFoundError();

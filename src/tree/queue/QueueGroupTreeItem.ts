@@ -7,11 +7,11 @@ import type { ListQueuesSegmentResponse, QueueItem, ServiceListQueuesSegmentResp
 
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
-import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
-import { getResourcesPath, maxPageSize } from "../../constants";
+import { maxPageSize } from "../../constants";
 import { localize } from "../../utils/localize";
+import { treeUtils } from "../../utils/treeUtils";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from '../IStorageTreeItem';
@@ -28,10 +28,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
 
     public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
-        this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
-        };
+        this.iconPath = treeUtils.getThemedIconPath("AzureQueue");
     }
 
     public get root(): IStorageRoot {

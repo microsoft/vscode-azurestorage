@@ -6,8 +6,7 @@
 import type { QueueItem } from '@azure/storage-queue';
 
 import { AzExtTreeItem, DialogResponses, IActionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
-import * as path from 'path';
-import { getResourcesPath } from "../../constants";
+import { treeUtils } from "../../utils/treeUtils";
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from '../IStorageTreeItem';
 import { QueueGroupTreeItem } from "./QueueGroupTreeItem";
@@ -18,10 +17,7 @@ export class QueueTreeItem extends AzExtTreeItem implements IStorageTreeItem {
         parent: QueueGroupTreeItem,
         public readonly queue: QueueItem) {
         super(parent);
-        this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
-        };
+        this.iconPath = treeUtils.getThemedIconPath("AzureQueue");
     }
 
     public get root(): IStorageRoot {

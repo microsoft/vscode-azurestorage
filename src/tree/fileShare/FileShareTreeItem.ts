@@ -16,10 +16,11 @@ import * as vscode from 'vscode';
 import { AzureStorageFS } from "../../AzureStorageFS";
 import { UploadItem, uploadFile } from '../../commands/transfers/transfers';
 import { IExistingFileContext } from '../../commands/uploadFiles/IExistingFileContext';
-import { NotificationProgress, getResourcesPath, threeDaysInMS } from "../../constants";
+import { NotificationProgress, threeDaysInMS } from "../../constants";
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, doesDirectoryExist, listFilesInDirectory } from '../../utils/directoryUtils';
 import { askAndCreateEmptyTextFile, createDirectoryClient, createShareClient } from '../../utils/fileUtils';
+import { treeUtils } from "../../utils/treeUtils";
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
 import { ITransferSrcOrDstTreeItem } from '../ITransferSrcOrDstTreeItem';
@@ -36,10 +37,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         parent: FileShareGroupTreeItem,
         public readonly shareName: string) {
         super(parent);
-        this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
-        };
+        this.iconPath = treeUtils.getThemedIconPath("AzureFileShare");
     }
 
     public get root(): IStorageRoot {

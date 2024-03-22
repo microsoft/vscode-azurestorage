@@ -7,11 +7,11 @@ import type { TableItem, TableItemResultPage } from '@azure/data-tables';
 
 import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
-import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
-import { getResourcesPath, maxPageSize } from "../../constants";
+import { maxPageSize } from "../../constants";
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { localize } from "../../utils/localize";
+import { treeUtils } from "../../utils/treeUtils";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
 import { IStorageTreeItem } from '../IStorageTreeItem';
@@ -28,10 +28,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
 
     public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
-        this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureTable.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureTable.svg')
-        };
+        this.iconPath = treeUtils.getThemedIconPath("AzureTable");
     }
 
     public get root(): IStorageRoot {
