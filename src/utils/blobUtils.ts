@@ -67,7 +67,7 @@ export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | 
     return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(blobPath);
         progress.report({ message: `Azure Storage: Creating block blob '${blobPath}'` });
-        await createOrUpdateBlockBlob(parent, blobPath);
+        await createOrUpdateBlockBlob(parent, blobPath, context?.contents || '');
         return new BlobTreeItem(parent, blobPath, parent.container);
     });
 }
@@ -148,4 +148,5 @@ export async function getBlobPath(context: IActionContext, parent: BlobContainer
 export interface IBlobContainerCreateChildContext extends IActionContext {
     childType: string;
     childName: string;
+    contents?: Buffer;
 }
