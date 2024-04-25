@@ -3,8 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { BlobClient, BlobDownloadResponseModel, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
-import type { FileDownloadResponseModel, FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
+import type { BlobClient, BlobGetPropertiesResponse, BlockBlobClient } from "@azure/storage-blob";
+import type { FileGetPropertiesResponse, ShareFileClient } from "@azure/storage-file-share";
 
 import { AzExtTreeItem, IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, parseError } from "@microsoft/vscode-azext-utils";
 import * as path from "path";
@@ -233,21 +233,21 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         let client: ShareFileClient | BlobClient;
-        let downloaded: FileDownloadResponseModel | BlobDownloadResponseModel;
         return await callWithTelemetryAndErrorHandling('readFile', async (context) => {
             context.errorHandling.suppressDisplay = true;
-            let result: string | undefined;
             const parsedUri = this.parseUri(uri);
             const treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
 
             try {
+                let buffer: Buffer;
                 if (treeItem instanceof FileShareTreeItem) {
                     client = createFileClient(treeItem.root, treeItem.shareName, parsedUri.parentDirPath, parsedUri.baseName);
+                    buffer = await client.downloadToBuffer();
                 } else {
                     client = createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
+                    buffer = await client.downloadToBuffer();
                 }
-                downloaded = await client.download();
-                result = await this.streamToString(downloaded.readableStreamBody);
+                return buffer;
             } catch (error) {
                 const pe = parseError(error);
                 if (pe.errorType === '404') {
@@ -255,8 +255,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 }
                 throw error;
             }
-
-            return Buffer.from(result || '');
         }) || Buffer.from('');
     }
 
@@ -323,7 +321,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                         if (writeToFileShare) {
                             await parent.createChild(<IFileShareCreateChildContext>{ ...context, childType: FileTreeItem.contextValue, childName: parsedUri.baseName });
                         } else {
-                            await parent.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobTreeItem.contextValue, childName: parsedUri.filePath });
+                            await parent.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: BlobTreeItem.contextValue, childName: parsedUri.filePath, contents: Buffer.from(content) });
                         }
                     }
                 });
@@ -556,23 +554,6 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
     private isFileShareUri(uri: vscode.Uri): boolean {
         return this.verifyUri(uri).query.indexOf('File Shares') > 0;
-    }
-
-    private async streamToString(readableStream: NodeJS.ReadableStream | undefined): Promise<string | undefined> {
-        if (!readableStream) {
-            return undefined;
-        }
-        return new Promise((resolve, reject) => {
-            const chunks: string[] = [];
-            readableStream.on("data", (data) => {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-                chunks.push(data.toString());
-            });
-            readableStream.on("end", () => {
-                resolve(chunks.join(""));
-            });
-            readableStream.on("error", reject);
-        });
     }
 }
 
