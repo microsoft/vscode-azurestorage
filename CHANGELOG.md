@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+## 0.15.4 - 2024-05-09
+
+### Added
+* [[1250]](https://github.com/microsoft/vscode-azurestorage/pull/1250) Add actions submenu to workspace view title
+* [[1271]](https://github.com/microsoft/vscode-azurestorage/pull/1271) Add icon to create command
+
+### Fixed
+* [[1302]](https://github.com/microsoft/vscode-azurestorage/pull/1302) Fix drag & drop to upload to Azurite
+* [[1270]](https://github.com/microsoft/vscode-azurestorage/pull/1270) Fix icons not showing when using light themes
+
+### Engineering
+* [[1276]](https://github.com/microsoft/vscode-azurestorage/pull/1276) Remove dependency on the Azure Account extension
+
 ## 0.15.3 - 2023-06-12
 
 ### Fixed
