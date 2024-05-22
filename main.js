@@ -19,11 +19,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const extension = require('./out/src/extension');
 
 async function activate(ctx) {
-    return await extension.activate(ctx, perfStats, true);
+    return await extension.activateInternal(ctx, perfStats, true);
 }
 
 async function deactivate(ctx) {
-    return await extension.deactivate(ctx, perfStats);
+    return await extension.deactiveInternal(ctx, perfStats);
 }
 
 // Export as entrypoints for vscode

@@ -78,7 +78,6 @@
         "onView:azureWorkspace"
     ],
     "main": "main",
-    "browser": "./dist/web/extension.bundle.js",
     "icon": "resources/storageAccount.png",
     "capabilities": {
         "virtualWorkspaces": {
@@ -867,7 +866,6 @@
         "mocha": "^10.1.0",
         "mocha-junit-reporter": "^1.18.0",
         "mocha-multi-reporters": "^1.1.7",
-        "node-polyfill-webpack-plugin": "^2.0.1",
         "ts-node": "^7.0.1",
         "typescript": "^4.3.5",
         "vsce": "^2.11.0",
@@ -889,7 +887,6 @@
         "@microsoft/vscode-azext-utils": "^2.0.1",
         "@microsoft/vscode-azureresources-api": "^2.0.4",
         "glob": "^7.1.2",
-        "jsdom": "^21.1.1",
         "mime": "^2.4.4",
         "open": "^8.0.4",
         "p-retry": "^4.2.0",

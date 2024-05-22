@@ -3,16 +3,11 @@
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import type { BlobClient, BlobGetPropertiesResponse, BlockBlobClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse } from '@azure/storage-blob';
-import type { DataLakeFileSystemClient } from '@azure/storage-file-datalake';
-
-import { polyfill } from './polyfill.worker';
-polyfill();
-
-import { BlobServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob } from '@azure/storage-blob';
-import { DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
-
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
+import type { BlobClient, BlobGetPropertiesResponse, BlockBlobClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse } from '@azure/storage-blob';
+import { BlobServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob } from '@azure/storage-blob';
+import type { DataLakeFileSystemClient } from '@azure/storage-file-datalake';
+import { DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
 import { IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, createSubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';

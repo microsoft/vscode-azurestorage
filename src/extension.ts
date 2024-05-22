@@ -19,11 +19,7 @@ import { StorageAccountResolver } from './StorageAccountResolver';
 import { StorageWorkspaceProvider } from './StorageWorkspaceProvider';
 import './tree/AttachedStorageAccountTreeItem';
 
-export async function activate(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<apiUtils.AzureExtensionApiProvider> {
-    // the entry point for vscode.dev is this activate, not main.js, so we need to instantiate perfStats here
-    // the perf stats don't matter for vscode because there is no main file to load-- we may need to see if we can track the download time
-    perfStats ||= { loadStartTime: Date.now(), loadEndTime: Date.now() };
-
+export async function activateInternal(context: vscode.ExtensionContext, perfStats: { loadStartTime: number; loadEndTime: number }, ignoreBundle?: boolean): Promise<apiUtils.AzureExtensionApiProvider> {
     ext.context = context;
     ext.ignoreBundle = ignoreBundle;
     ext.outputChannel = createAzExtOutputChannel('Azure Storage', ext.prefix);
@@ -68,6 +64,6 @@ export async function activate(context: vscode.ExtensionContext, perfStats: { lo
 }
 
 // this method is called when your extension is deactivated
-export function deactivate(): void {
+export function deactivateInternal(): void {
     // Nothing to do
 }

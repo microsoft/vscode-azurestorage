@@ -28,9 +28,9 @@ export * from './src/commands/storageAccountActionHandlers';
 export * from './src/commands/table/tableActionHandlers';
 export * from './src/commands/table/tableGroupActionHandlers';
 // Export activate/deactivate for main.js
-export { ResolvedStorageAccount } from './src/StorageAccountResolver';
-export { activate, deactivate } from './src/extension';
+export { activateInternal, deactivateInternal } from './src/extension';
 export { ext } from './src/extensionVariables';
+export { ResolvedStorageAccount } from './src/StorageAccountResolver';
 export { AzureAccountTreeItem } from './src/tree/AzureAccountTreeItem';
 export { StorageAccountTreeItem } from './src/tree/StorageAccountTreeItem';
 export { delay } from './src/utils/delay';
