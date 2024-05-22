@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
+import type { ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 import { posix, sep } from "path";
 
 export function createAzCopyLocalLocation(path: string, isFolder?: boolean): ILocalLocation {

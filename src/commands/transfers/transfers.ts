@@ -16,6 +16,7 @@ import { isEmptyDirectory, isSubpath } from "../../utils/fs";
 import { localize } from "../../utils/localize";
 import { OverwriteChoice, getUploadingMessageWithSource } from "../../utils/uploadUtils";
 import { IDownloadWizardContext } from "../downloadFiles/IDownloadWizardContext";
+import { azCopyTransfer } from "./azCopy/azCopyTransfer";
 
 export type DownloadItem = {
     type: "blob" | "file";
@@ -48,10 +49,7 @@ export async function downloadFoldersAndFiles(context: IDownloadWizardContext, f
         notificationProgress?.report({ message: inProgressMessage });
 
         for (const item of itemsToDownload) {
-            if (!ext.isWeb) {
-                // @todo: add code path for isWeb === true
-                await startAzCopyDownload(context, item, notificationProgress, cancellationToken);
-            }
+            await startAzCopyDownload(context, item, notificationProgress, cancellationToken);
         }
 
         const downloadedMessage: string = localize('successfullyDownloaded', 'Downloaded to "{0}".', context.destinationFolder);
@@ -72,21 +70,12 @@ export type UploadItem = {
 
 export async function uploadFile(context: IActionContext, item: UploadItem, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
     ext.outputChannel.appendLog(getUploadingMessageWithSource(item.localFilePath, item.resourceName));
-
-    if (!ext.isWeb) {
-        // @todo: add code path for isWeb === true
-        await startAzCopyFileUpload(context, item, notificationProgress, cancellationToken);
-    }
+    await startAzCopyFileUpload(context, item, notificationProgress, cancellationToken);
 }
 
 export async function uploadFolder(context: IActionContext, item: UploadItem, messagePrefix?: string, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
     ext.outputChannel.appendLog(getUploadingMessageWithSource(item.localFilePath, item.resourceName));
-
-    if (!ext.isWeb) {
-        // @todo: add code path for isWeb === true
-        await startAzCopyFolderUpload(context, item, messagePrefix, notificationProgress, cancellationToken);
-    }
-
+    await startAzCopyFolderUpload(context, item, messagePrefix, notificationProgress, cancellationToken);
 }
 
 /**
@@ -112,7 +101,6 @@ function okToOverwriteOrDoesNotExist(context: IActionContext, item: DownloadItem
 
 async function startAzCopyDownload(context: IDownloadWizardContext, item: DownloadItem, progress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
     // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
-    const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
     const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
 
     const src: IRemoteSasLocation = createAzCopyRemoteLocation(item.resourceUri, item.sasToken, item.remoteFilePath, item.isDirectory);

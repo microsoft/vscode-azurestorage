@@ -49,7 +49,7 @@ export async function activate(context: vscode.ExtensionContext, perfStats: { lo
 
         const rgApiProvider = await apiUtils.getExtensionExports<apiUtils.AzureExtensionApiProvider>('ms-azuretools.vscode-azureresourcegroups');
         if (rgApiProvider) {
-            const api = rgApiProvider.getApi<AzureHostExtensionApi>('0.0.1');
+            const api = rgApiProvider.getApi<AzureHostExtensionApi>('^0.0.1');
             ext.rgApi = api;
             api.registerApplicationResourceResolver(AzExtResourceType.StorageAccounts, new StorageAccountResolver());
 

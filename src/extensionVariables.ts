@@ -5,7 +5,7 @@
 
 import { IAzExtOutputChannel } from "@microsoft/vscode-azext-utils";
 import { AzureHostExtensionApi } from "@microsoft/vscode-azext-utils/hostapi";
-import { ExtensionContext, UIKind, Uri, env } from "vscode";
+import { ExtensionContext, Uri } from "vscode";
 import { AzureAccountTreeItem } from '../src/tree/AzureAccountTreeItem';
 import { AzureStorageFS } from "./AzureStorageFS";
 import { AttachedStorageAccountsTreeItem } from "./tree/AttachedStorageAccountsTreeItem";
@@ -27,8 +27,4 @@ export namespace ext {
 
     export let rgApi: AzureHostExtensionApi;
     export let lastUriUpload: Uri | undefined;
-
-    // When debugging thru VS Code as a web environment, the UIKind is Desktop. However, if you sideload it into the browser, you must
-    // change this to UIKind.Web and then webpack it again
-    export const isWeb: boolean = env.uiKind === UIKind.Web;
 }
