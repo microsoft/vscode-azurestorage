@@ -101,7 +101,6 @@ function okToOverwriteOrDoesNotExist(context: IActionContext, item: DownloadItem
 }
 
 async function startAzCopyDownload(context: IDownloadWizardContext, item: DownloadItem, progress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
-    // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
     const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
 
     const src: IRemoteSasLocation = createAzCopyRemoteLocation(item.resourceUri, item.sasToken, item.remoteFilePath, item.isDirectory);
@@ -123,8 +122,6 @@ async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, 
 }
 
 async function startAzCopyFolderUpload(context: IActionContext, item: UploadItem, messagePrefix?: string, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
-    // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
-
     let useWildCard: boolean = true;
     if (await isEmptyDirectory(item.localFilePath)) {
         useWildCard = false;
