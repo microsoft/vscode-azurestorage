@@ -16,6 +16,7 @@ import { isEmptyDirectory, isSubpath } from "../../utils/fs";
 import { localize } from "../../utils/localize";
 import { OverwriteChoice, getUploadingMessageWithSource } from "../../utils/uploadUtils";
 import { IDownloadWizardContext } from "../downloadFiles/IDownloadWizardContext";
+import { createAzCopyLocalLocation, createAzCopyRemoteLocation } from "./azCopy/azCopyLocations";
 import { azCopyTransfer } from "./azCopy/azCopyTransfer";
 
 export type DownloadItem = {
@@ -115,10 +116,6 @@ async function startAzCopyDownload(context: IDownloadWizardContext, item: Downlo
 }
 
 async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken) {
-    // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
-    const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
-    const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
-
     const src: ILocalLocation = createAzCopyLocalLocation(item.localFilePath);
     const dst: IRemoteSasLocation = createAzCopyRemoteLocation(item.resourceUri, item.transferSasToken, item.remoteFilePath);
     const transferProgress: TransferProgress = new TransferProgress("bytes", item.remoteFilePath);
@@ -127,8 +124,6 @@ async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, 
 
 async function startAzCopyFolderUpload(context: IActionContext, item: UploadItem, messagePrefix?: string, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
     // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
-    const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
-    const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
 
     let useWildCard: boolean = true;
     if (await isEmptyDirectory(item.localFilePath)) {
