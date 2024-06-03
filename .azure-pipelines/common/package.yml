@@ -1,21 +1,12 @@
 steps:
 - bash: |
-    npm install --force @azure-tools/azcopy-darwin
-    chmod u+x node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64
-  displayName: 'Install azcopy (MacOS)'
-  condition: eq(variables['Agent.OS'], 'Darwin')
-
-- bash: |
-    npm install --force @azure-tools/azcopy-linux
-    chmod u+x node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64
-  displayName: 'Install azcopy (Linux)'
-  condition: eq(variables['Agent.OS'], 'Linux')
-
-- bash: |
-    npm install --force @azure-tools/azcopy-win32 \
+    npm install --force @azure-tools/azcopy-darwin \
+      @azure-tools/azcopy-linux \
+      @azure-tools/azcopy-win32 \
       @azure-tools/azcopy-win64
-  displayName: 'Install azcopy (Windows)'
-  condition: eq(variables['Agent.OS'], 'Windows_NT')
+    chmod u+x node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64 \
+      node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64
+  displayName: 'Install azcopy'
 
 - task: Npm@1
   displayName: 'cleanReadme'
