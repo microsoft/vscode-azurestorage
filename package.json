@@ -834,7 +834,7 @@
         "build": "tsc",
         "cleanReadme": "gulp cleanReadme",
         "compile": "tsc -watch",
-        "package": "npm install --force \"@azure-tools/azcopy-darwin\" \\ \"@azure-tools/azcopy-linux\" \\ \"@azure-tools/azcopy-win32\" \\ \"@azure-tools/azcopy-win64\" && vsce package --githubBranch main",
+        "package": "npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64 && vsce package --githubBranch main",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "pretest": "gulp preTest",
