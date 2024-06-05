@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { gulp_installAzureAccount, gulp_installResourceGroups, gulp_webpack } from '@microsoft/vscode-azext-dev';
 import * as cp from 'child_process';
 import * as fs from 'fs';
 import * as gulp from 'gulp';
 import * as path from 'path';
-import { gulp_installAzureAccount, gulp_installResourceGroups, gulp_webpack } from '@microsoft/vscode-azext-dev';
 
 async function prepareForWebpack(): Promise<void> {
     const mainJsPath: string = path.join(__dirname, 'main.js');
@@ -26,11 +26,8 @@ async function cleanReadme(): Promise<void> {
 }
 
 async function setAzCopyExePermissions(): Promise<void> {
-    if (process.platform === 'darwin') {
-        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
-    } else if (process.platform === 'linux') {
-        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`);
-    }
+    cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
+    cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`);
 }
 
 exports['webpack-dev'] = gulp.series(prepareForWebpack, () => gulp_webpack('development'));
