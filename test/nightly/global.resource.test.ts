@@ -4,12 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StorageManagementClient } from '@azure/arm-storage';
-import { createTestActionContext, TestAzureAccount } from '@microsoft/vscode-azext-dev';
-import * as vscode from 'vscode';
-import { AzureAccountTreeItem, createAzureClient, ext } from '../../extension.bundle';
 import { longRunningTestsEnabled } from '../global.test';
 
-export let testAccount: TestAzureAccount;
 export let webSiteClient: StorageManagementClient;
 export const resourceGroupsToDelete: string[] = [];
 
@@ -17,10 +13,6 @@ suiteSetup(async function (this: Mocha.Context): Promise<void> {
     this.skip();
     if (longRunningTestsEnabled) {
         this.timeout(2 * 60 * 1000);
-        testAccount = new TestAzureAccount(vscode);
-        await testAccount.signIn();
-        ext.azureAccountTreeItem = new AzureAccountTreeItem(testAccount);
-        webSiteClient = createAzureClient([await createTestActionContext(), testAccount.getSubscriptionContext()], StorageManagementClient);
     }
 });
 
@@ -30,6 +22,5 @@ suiteTeardown(async function (this: Mocha.Context): Promise<void> {
         // await Promise.all(resourceGroupsToDelete.map(async resource => {
         //     await beginDeleteResourceGroup(resource);
         // }));
-        // ext.azureAccountTreeItem.dispose();
     }
 });

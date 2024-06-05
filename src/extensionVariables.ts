@@ -6,7 +6,6 @@
 import { IAzExtOutputChannel } from "@microsoft/vscode-azext-utils";
 import { AzureHostExtensionApi } from "@microsoft/vscode-azext-utils/hostapi";
 import { ExtensionContext, UIKind, Uri, env } from "vscode";
-import { AzureAccountTreeItem } from '../src/tree/AzureAccountTreeItem';
 import { AzureStorageFS } from "./AzureStorageFS";
 import { AttachedStorageAccountsTreeItem } from "./tree/AttachedStorageAccountsTreeItem";
 
@@ -18,7 +17,6 @@ export namespace ext {
     export let outputChannel: IAzExtOutputChannel;
     export let ignoreBundle: boolean | undefined;
 
-    export let azureAccountTreeItem: AzureAccountTreeItem;
     export let attachedStorageAccountsTreeItem: AttachedStorageAccountsTreeItem;
     export let azureStorageFS: AzureStorageFS;
     export let azureStorageWorkspaceFS: AzureStorageFS;

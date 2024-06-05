@@ -18,9 +18,9 @@ import { IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, 
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';
 import * as vscode from 'vscode';
-import { AzureAccountSubscription, getAzureAccountExtensionApi } from "./AzureAccountExtension";
 import { download } from "./commands/downloadFile";
 import { maxRemoteFileEditSizeBytes, maxRemoteFileEditSizeMB } from "./constants";
+import { ext } from './extensionVariables';
 import { BlobTreeItem } from './tree/blob/BlobTreeItem';
 import { createStorageClient } from './utils/azureClients';
 import { BlobPathUtils } from './utils/blobPathUtils';
@@ -51,8 +51,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     private async getSubscriptions(): Promise<AzureSubscription[]> {
-        const azureAccountApi = await getAzureAccountExtensionApi();
-        return azureAccountApi.subscriptions.map(sub => this.createAzureSubscription(sub));
+        return await ext.rgApi.getSubscriptions(false);
     }
 
     private getStorageAccountId(uri: vscode.Uri): string | null {
@@ -539,34 +538,5 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         });
 
         return result;
-    }
-
-    private createAzureSubscription(subscription: AzureAccountSubscription): AzureSubscription {
-        return {
-            authentication: {
-                getSession: async scopes => {
-                    const token = await subscription.session.credentials2.getToken(scopes ?? []);
-
-                    if (!token) {
-                        return undefined;
-                    }
-
-                    return {
-                        accessToken: token.token,
-                        account: {
-                            id: subscription.session.userId,
-                            label: subscription.session.userId
-                        },
-                        id: 'microsoft',
-                        scopes: scopes ?? []
-                    };
-                }
-            },
-            name: subscription.subscription.displayName || 'TODO: ever undefined?',
-            environment: subscription.session.environment,
-            isCustomCloud: subscription.session.environment.name === 'AzureCustomCloud',
-            subscriptionId: subscription.subscription.subscriptionId || 'TODO: ever undefined?',
-            tenantId: subscription.session.tenantId
-        };
     }
 }
