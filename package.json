@@ -831,11 +831,12 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run webpack-prod",
+        "preinstall": "npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64",
         "postinstall": "gulp setAzCopyExePermissions",
         "build": "tsc",
         "cleanReadme": "gulp cleanReadme",
         "compile": "tsc -watch",
-        "package": "npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64 && vsce package --no-dependencies --githubBranch main",
+        "package": "vsce package --no-dependencies --githubBranch main",
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "pretest": "gulp preTest",
