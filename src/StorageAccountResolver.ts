@@ -7,9 +7,8 @@ import type { BlobServiceProperties } from "@azure/storage-blob";
 
 import { StorageManagementClient } from "@azure/arm-storage";
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
-import { IActionContext, ISubscriptionContext, callWithTelemetryAndErrorHandling, nonNullProp } from "@microsoft/vscode-azext-utils";
+import { IActionContext, ISubscriptionContext, callWithTelemetryAndErrorHandling, nonNullProp, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { AppResource, AppResourceResolver, ResolvedAppResourceBase } from "@microsoft/vscode-azext-utils/hostapi";
-import { ext } from "./extensionVariables";
 import { IStorageRoot } from "./tree/IStorageRoot";
 import { StorageAccountTreeItem, WebsiteHostingStatus } from "./tree/StorageAccountTreeItem";
 import { BlobContainerTreeItem } from "./tree/blob/BlobContainerTreeItem";
@@ -35,34 +34,26 @@ export class StorageAccountResolver implements AppResourceResolver {
     private storageAccountCacheLastUpdated = 0;
     private storageAccountCache: Map<string, StorageAccountTreeItem> = new Map<string, StorageAccountTreeItem>();
 
-    public async resolveResource(subContext: ISubscriptionContext, resource: AppResource): Promise<ResolvedStorageAccount | null> {
+    public async resolveResource(subContext: ISubscriptionContext, resource: AppResource): Promise<ResolvedStorageAccount | undefined> {
         return await callWithTelemetryAndErrorHandling('resolveResource', async (context: IActionContext) => {
             context.telemetry.properties.isActivationEvent = 'true';
             const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
 
             if (this.storageAccountCacheLastUpdated < Date.now() - 1000 * 5) {
                 this.storageAccountCache.clear();
-
-                ext.outputChannel.appendLog('Listing all storage accounts...');
                 const storageAccounts = await uiUtils.listAllIterator(storageManagementClient.storageAccounts.list());
-                ext.outputChannel.appendLog('Done.');
 
                 const promises = storageAccounts.map(async sa => {
                     const ti = await StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
                     this.storageAccountCache.set(nonNullProp(sa, 'id'), ti);
                 });
-
-                ext.outputChannel.appendLog('Getting keys...');
                 await Promise.all(promises);
-                ext.outputChannel.appendLog('Done.');
 
                 this.storageAccountCacheLastUpdated = Date.now();
-            } else {
-                ext.outputChannel.appendLog('Using cached storage accounts.');
             }
 
-            return this.storageAccountCache.get(resource.id);
-        }) ?? null;
+            return nonNullValue(this.storageAccountCache.get(resource.id), 'Storage account not found.');
+        });
     }
 
     public matchesResource(resource: AppResource): boolean {
