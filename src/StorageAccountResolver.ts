@@ -5,9 +5,9 @@
 
 import type { BlobServiceProperties } from "@azure/storage-blob";
 
-import { StorageAccount, StorageManagementClient } from "@azure/arm-storage";
-import { getResourceGroupFromId } from "@microsoft/vscode-azext-azureutils";
-import { IActionContext, ISubscriptionContext, callWithTelemetryAndErrorHandling, nonNullProp } from "@microsoft/vscode-azext-utils";
+import { StorageManagementClient } from "@azure/arm-storage";
+import { uiUtils } from "@microsoft/vscode-azext-azureutils";
+import { IActionContext, ISubscriptionContext, callWithTelemetryAndErrorHandling, nonNullProp, nonNullValue } from "@microsoft/vscode-azext-utils";
 import { AppResource, AppResourceResolver, ResolvedAppResourceBase } from "@microsoft/vscode-azext-utils/hostapi";
 import { IStorageRoot } from "./tree/IStorageRoot";
 import { StorageAccountTreeItem, WebsiteHostingStatus } from "./tree/StorageAccountTreeItem";
@@ -31,13 +31,29 @@ export interface ResolvedStorageAccount extends ResolvedAppResourceBase {
 
 export class StorageAccountResolver implements AppResourceResolver {
 
-    public async resolveResource(subContext: ISubscriptionContext, resource: AppResource): Promise<ResolvedStorageAccount | null> {
+    private storageAccountCacheLastUpdated = 0;
+    private storageAccountCache: Map<string, StorageAccountTreeItem> = new Map<string, StorageAccountTreeItem>();
+
+    public async resolveResource(subContext: ISubscriptionContext, resource: AppResource): Promise<ResolvedStorageAccount | undefined> {
         return await callWithTelemetryAndErrorHandling('resolveResource', async (context: IActionContext) => {
             context.telemetry.properties.isActivationEvent = 'true';
             const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
-            const sa: StorageAccount = await storageManagementClient.storageAccounts.getProperties(getResourceGroupFromId(nonNullProp(resource, 'id')), nonNullProp(resource, 'name'));
-            return StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
-        }) ?? null;
+
+            if (this.storageAccountCacheLastUpdated < Date.now() - 1000 * 5) {
+                this.storageAccountCache.clear();
+                const storageAccounts = await uiUtils.listAllIterator(storageManagementClient.storageAccounts.list());
+
+                const promises = storageAccounts.map(async sa => {
+                    const ti = await StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
+                    this.storageAccountCache.set(nonNullProp(sa, 'id'), ti);
+                });
+                await Promise.all(promises);
+
+                this.storageAccountCacheLastUpdated = Date.now();
+            }
+
+            return nonNullValue(this.storageAccountCache.get(resource.id), 'Storage account not found.');
+        });
     }
 
     public matchesResource(resource: AppResource): boolean {
