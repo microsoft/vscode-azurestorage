@@ -14,7 +14,7 @@ import { ShareServiceClient, StorageSharedKeyCredential as StorageSharedKeyCrede
 import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialQueue } from '@azure/storage-queue';
 
 import { StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import { MessageItem, commands, window } from 'vscode';
 import { ResolvedStorageAccount } from '../StorageAccountResolver';
@@ -75,9 +75,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     public static async createStorageAccountTreeItem(subscription: ISubscriptionContext, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
         const ti = new StorageAccountTreeItem(subscription, storageAccount, client);
         // make sure key is initialized
-        ti.refreshKey().catch((e) => {
-            throw parseError(e);
-        });
+        await ti.refreshKey();
         return ti;
     }
 
