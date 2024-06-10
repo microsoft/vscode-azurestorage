@@ -13,6 +13,7 @@ import { IStorageRoot } from "./tree/IStorageRoot";
 import { StorageAccountTreeItem, WebsiteHostingStatus } from "./tree/StorageAccountTreeItem";
 import { BlobContainerTreeItem } from "./tree/blob/BlobContainerTreeItem";
 import { createStorageClient } from "./utils/azureClients";
+import { localize } from "./utils/localize";
 import { StorageAccountWrapper } from "./utils/storageWrappers";
 
 export interface ResolvedStorageAccount extends ResolvedAppResourceBase {
@@ -52,7 +53,7 @@ export class StorageAccountResolver implements AppResourceResolver {
                 this.storageAccountCacheLastUpdated = Date.now();
             }
 
-            return nonNullValue(this.storageAccountCache.get(resource.id), 'Storage account not found.');
+            return nonNullValue(this.storageAccountCache.get(resource.id), localize('storageAccountNotFound', 'Storage account not found.'));
         });
     }
 
