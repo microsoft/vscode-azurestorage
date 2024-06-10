@@ -134,7 +134,7 @@ async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, 
     const src: ILocalLocation = createAzCopyLocalLocation(item.localFilePath);
     const dst: IRemoteSasLocation = createAzCopyRemoteLocation(item.resourceUri, item.transferSasToken, item.remoteFilePath);
     const transferProgress: TransferProgress = new TransferProgress("bytes", item.remoteFilePath);
-    await azCopyTransfer(context, "LocalBlob", src, dst, transferProgress, notificationProgress, cancellationToken);
+    await azCopyTransfer(context, item.type === 'file' ? "LocalFile" : "LocalBlob", src, dst, transferProgress, notificationProgress, cancellationToken);
 }
 
 async function startAzCopyFolderUpload(context: IActionContext, item: UploadItem, messagePrefix?: string, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
