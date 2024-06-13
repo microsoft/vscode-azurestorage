@@ -864,7 +864,7 @@
         "copy-webpack-plugin": "^6.0.0",
         "eslint": "^7.19.0",
         "eslint-plugin-import": "^2.22.1",
-        "gulp": "^4.0.0",
+        "gulp": "^5.0.0",
         "mocha": "^10.1.0",
         "mocha-junit-reporter": "^1.18.0",
         "mocha-multi-reporters": "^1.1.7",
