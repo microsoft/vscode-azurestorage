@@ -47,11 +47,10 @@ export class StorageAccountResolver implements AppResourceResolver {
                     if (sa.provisioningState !== 'Succeeded') {
                         // if it's not provisioned, remove it from the cache
                         this.storageAccountCache.delete(nonNullProp(sa, 'id'));
-                        return undefined;
+                    } else {
+                        const ti = await StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
+                        this.storageAccountCache.set(nonNullProp(sa, 'id'), ti);
                     }
-
-                    const ti = await StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
-                    this.storageAccountCache.set(nonNullProp(sa, 'id'), ti);
                 });
                 await Promise.all(promises);
 
