@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 0.16.0 - 2024-07-03
+## 0.16.0 - 2024-07-08
 ### Added
 * [[1250]](https://github.com/microsoft/vscode-azurestorage/pull/1250) Add actions submenu to workspace view title
 * [[1271]](https://github.com/microsoft/vscode-azurestorage/pull/1271) Add icon to create command
