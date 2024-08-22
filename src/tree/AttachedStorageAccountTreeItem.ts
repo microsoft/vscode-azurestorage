@@ -91,7 +91,7 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
 
     public async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
         // Does NOT update treeItem's _webHostingEnabled.
-        const serviceClient: BlobServiceClient = this.root.createBlobServiceClient();
+        const serviceClient: BlobServiceClient = await this.root.createBlobServiceClient();
         const properties: ServiceGetPropertiesResponse = await serviceClient.getProperties();
         const staticWebsite: StaticWebsite | undefined = properties.staticWebsite;
 

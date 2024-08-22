@@ -26,7 +26,8 @@ export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<ISt
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {
         const storageManagementClient = await createStorageClient(wizardContext);
-        wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.subscription, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')), storageManagementClient);
+        const token = await this.subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
+        wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.subscription, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')), storageManagementClient, token);
 
         const appResource: AppResource = {
             id: wizardContext.accountTreeItem.storageAccount.id,

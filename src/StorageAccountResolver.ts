@@ -5,7 +5,7 @@
 
 import type { BlobServiceProperties } from "@azure/storage-blob";
 
-import { StorageManagementClient } from "@azure/arm-storage";
+import { StorageAccount, StorageManagementClient } from "@azure/arm-storage";
 import { uiUtils } from "@microsoft/vscode-azext-azureutils";
 import { IActionContext, ISubscriptionContext, callWithTelemetryAndErrorHandling, nonNullProp } from "@microsoft/vscode-azext-utils";
 import { AppResource, AppResourceResolver, ResolvedAppResourceBase } from "@microsoft/vscode-azext-utils/hostapi";
@@ -32,32 +32,42 @@ export interface ResolvedStorageAccount extends ResolvedAppResourceBase {
 export class StorageAccountResolver implements AppResourceResolver {
 
     private storageAccountCacheLastUpdated = 0;
-    private storageAccountCache: Map<string, StorageAccountTreeItem> = new Map<string, StorageAccountTreeItem>();
+    private storageAccountCache: Map<string, StorageAccount> = new Map<string, StorageAccount>();
+    private listStorageAccountsTask: Promise<void> | undefined;
 
     public async resolveResource(subContext: ISubscriptionContext, resource: AppResource): Promise<ResolvedStorageAccount | undefined> {
         return await callWithTelemetryAndErrorHandling('resolveResource', async (context: IActionContext) => {
             context.telemetry.properties.isActivationEvent = 'true';
             const storageManagementClient: StorageManagementClient = await createStorageClient([context, subContext]);
 
-            if (this.storageAccountCacheLastUpdated < Date.now() - 1000 * 2) {
-                this.storageAccountCache.clear();
-                const storageAccounts = await uiUtils.listAllIterator(storageManagementClient.storageAccounts.list());
-
-                const promises = storageAccounts.map(async sa => {
-                    if (sa.provisioningState !== 'Succeeded') {
-                        // if it's not provisioned, remove it from the cache
-                        this.storageAccountCache.delete(nonNullProp(sa, 'id'));
-                    } else {
-                        const ti = await StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
-                        this.storageAccountCache.set(nonNullProp(sa, 'id'), ti);
-                    }
-                });
-                await Promise.all(promises);
-
+            if (this.storageAccountCacheLastUpdated < Date.now() - 1000 * 3) {
                 this.storageAccountCacheLastUpdated = Date.now();
+                this.storageAccountCache.clear();
+                this.listStorageAccountsTask = new Promise((resolve, reject) => {
+                    uiUtils.listAllIterator(storageManagementClient.storageAccounts.list()).then((accounts) => {
+                        for (const sa of accounts) {
+                            if (sa.provisioningState !== 'Succeeded') {
+                                // if it's not provisioned, remove it from the cache
+                                this.storageAccountCache.delete(nonNullProp(sa, 'id'));
+                            } else {
+                                this.storageAccountCache.set(nonNullProp(sa, 'id'), sa);
+                            }
+                        }
+                        resolve();
+                    }).catch((reason) => {
+                        reject(reason);
+                    });
+
+                });
+
+                await this.listStorageAccountsTask;
+            }
+            const sa = this.storageAccountCache.get(resource.id);
+            if (!sa) {
+                throw new Error(`Storage account not found: ${resource.id}`);
             }
 
-            return this.storageAccountCache.get(resource.id);
+            return await StorageAccountTreeItem.createStorageAccountTreeItem(subContext, new StorageAccountWrapper({ ...resource, ...sa }), storageManagementClient);
         });
     }
 

@@ -68,7 +68,8 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     private constructor(
         private readonly _subscription: ISubscriptionContext,
         public readonly storageAccount: StorageAccountWrapper,
-        public readonly storageManagementClient: StorageManagementClient) {
+        public readonly storageManagementClient: StorageManagementClient,
+    ) {
         this._root = this.createRoot();
     }
 
@@ -89,7 +90,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     // eslint-disable-next-line @typescript-eslint/require-await
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
-
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
         this._queueGroupTreeItem = new QueueGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
@@ -165,19 +165,28 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                     new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value)
                 ).toString();
             },
-            createBlobServiceClient: () => {
+            createBlobServiceClient: async () => {
                 const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value);
-                return new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
+                let client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
+                try {
+                    await client.getAccountInfo(); // Trigger a request to validate the key
+                } catch (error) {
+                    const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
+                    client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), token);
+                    await client.getAccountInfo(); // Trigger a request to validate the token
+                }
+
+                return client;
             },
-            createShareServiceClient: () => {
+            createShareServiceClient: async () => {
                 const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, this.key.value);
                 return new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
             },
-            createQueueServiceClient: () => {
+            createQueueServiceClient: async () => {
                 const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, this.key.value);
                 return new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
             },
-            createTableServiceClient: () => {
+            createTableServiceClient: async () => {
                 const credential = new AzureNamedKeyCredential(this.storageAccount.name, this.key.value);
                 return new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
             }
@@ -243,7 +252,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     public async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
         // Does NOT update treeItem's _webHostingEnabled.
-        const serviceClient: BlobServiceClient = this.root.createBlobServiceClient();
+        const serviceClient: BlobServiceClient = await this.root.createBlobServiceClient();
         const properties: ServiceGetPropertiesResponse = await serviceClient.getProperties();
         const staticWebsite: StaticWebsite | undefined = properties.staticWebsite;
 
@@ -256,12 +265,12 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     }
 
     public async setWebsiteHostingProperties(properties: BlobServiceProperties): Promise<void> {
-        const serviceClient: BlobServiceClient = this.root.createBlobServiceClient();
+        const serviceClient: BlobServiceClient = await this.root.createBlobServiceClient();
         await serviceClient.setProperties(properties);
     }
 
     private async getAccountType(): Promise<AccountKind> {
-        const serviceClient: BlobServiceClient = this.root.createBlobServiceClient();
+        const serviceClient: BlobServiceClient = await this.root.createBlobServiceClient();
         const accountType: AccountKind | undefined = (await serviceClient.getAccountInfo()).accountKind;
 
         if (!accountType) {
