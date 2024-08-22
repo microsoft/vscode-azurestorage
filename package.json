@@ -806,7 +806,7 @@
     "devDependencies": {
         "@azure/arm-resources": "^5.0.0",
         "@microsoft/eslint-config-azuretools": "^0.1.0",
-        "@microsoft/vscode-azext-dev": "^1.0.3",
+        "@microsoft/vscode-azext-dev": "^2.0.4",
         "@types/fs-extra": "^8.1.0",
         "@types/gulp": "^4.0.6",
         "@types/jsdom": "^21.1.1",
@@ -844,7 +844,7 @@
         "@azure/storage-queue": "^12.7.0",
         "@microsoft/vscode-azext-azureappservice": "^0.7.0",
         "@microsoft/vscode-azext-azureutils": "^2.0.1",
-        "@microsoft/vscode-azext-utils": "^2.5.0",
+        "@microsoft/vscode-azext-utils": "^2.5.6",
         "@microsoft/vscode-azureresources-api": "^2.0.4",
         "glob": "^7.1.2",
         "jsdom": "^21.1.1",
