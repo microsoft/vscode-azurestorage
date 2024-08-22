@@ -42,8 +42,8 @@ export class StorageAccountResolver implements AppResourceResolver {
 
             if (this.storageAccountCacheLastUpdated < Date.now() - 1000 * 3) {
                 this.storageAccountCacheLastUpdated = Date.now();
-                this.storageAccountCache.clear();
                 this.listStorageAccountsTask = new Promise((resolve, reject) => {
+                    this.storageAccountCache.clear();
                     uiUtils.listAllIterator(storageManagementClient.storageAccounts.list()).then((accounts) => {
                         for (const sa of accounts) {
                             if (sa.provisioningState !== 'Succeeded') {
@@ -59,9 +59,9 @@ export class StorageAccountResolver implements AppResourceResolver {
                     });
 
                 });
-
-                await this.listStorageAccountsTask;
             }
+
+            await this.listStorageAccountsTask;
             const sa = this.storageAccountCache.get(resource.id);
             if (!sa) {
                 throw new Error(`Storage account not found: ${resource.id}`);
