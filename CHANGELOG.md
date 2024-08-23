@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.16.1 - 2024-08-23
+### Added
+* [[1331]](https://github.com/microsoft/vscode-azurestorage/pull/1331) Use a list task for the cache that is used for all resolving
+
+### Engineering
+* [[1332]](https://github.com/microsoft/vscode-azurestorage/pull/1332) Improve telemetry and performance
+
 ## 0.16.0 - 2024-07-08
 ### Added
 * [[1250]](https://github.com/microsoft/vscode-azurestorage/pull/1250) Add actions submenu to workspace view title
