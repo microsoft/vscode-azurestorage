@@ -72,7 +72,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: ContainerItem): Promise<BlobContainerTreeItem> {
-        const containerClient: ContainerClient = (await parent.getServiceClient()).getContainerClient(container.name);
+        const containerClient: ContainerClient = await createBlobContainerClient(parent.root, container.name);
         const ti = new BlobContainerTreeItem(parent, container, containerClient.url);
         // Get static website status to display the appropriate icon
         await ti.refreshImpl();
