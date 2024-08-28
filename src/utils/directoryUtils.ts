@@ -21,14 +21,14 @@ export async function askAndCreateChildDirectory(parent: FileShareTreeItem | Dir
     return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
         context.showCreatingTreeItem(dirName);
         progress.report({ message: `Azure Storage: Creating directory '${path.posix.join(parentPath, dirName)}'` });
-        const directoryClient: ShareDirectoryClient = createDirectoryClient(parent.root, shareName, path.posix.join(parentPath, dirName));
+        const directoryClient: ShareDirectoryClient = await createDirectoryClient(parent.root, shareName, path.posix.join(parentPath, dirName));
         await directoryClient.create();
-        return new DirectoryTreeItem(parent, parentPath, dirName, shareName);
+        return new DirectoryTreeItem(parent, parentPath, dirName, shareName, directoryClient.url);
     });
 }
 
 export async function listFilesInDirectory(directory: string, shareName: string, root: IStorageRoot, currentToken?: string): Promise<{ files: FileItem[], directories: DirectoryItem[], continuationToken: string }> {
-    const directoryClient: ShareDirectoryClient = createDirectoryClient(root, shareName, directory);
+    const directoryClient: ShareDirectoryClient = await createDirectoryClient(root, shareName, directory);
     const response: AsyncIterableIterator<DirectoryListFilesAndDirectoriesSegmentResponse> = directoryClient.listFilesAndDirectories().byPage({ continuationToken: currentToken, maxPageSize });
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -71,13 +71,13 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
         }
     }
 
-    const directoryClient: ShareDirectoryClient = createDirectoryClient(root, shareName, directory);
+    const directoryClient: ShareDirectoryClient = await createDirectoryClient(root, shareName, directory);
     await directoryClient.delete();
     ext.outputChannel.appendLog(`Deleted directory "${directory}"`);
 }
 
 export async function doesDirectoryExist(parent: FileShareTreeItem | DirectoryTreeItem, directoryPath: string, shareName: string): Promise<boolean> {
-    const directoryClient: ShareDirectoryClient = createDirectoryClient(parent.root, shareName, directoryPath);
+    const directoryClient: ShareDirectoryClient = await createDirectoryClient(parent.root, shareName, directoryPath);
     try {
         await directoryClient.getProperties();
         return true;

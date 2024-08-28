@@ -169,26 +169,47 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value);
                 let client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
                 try {
-                    await client.getAccountInfo(); // Trigger a request to validate the key
+                    await client.getProperties(); // Trigger a request to validate the key
                 } catch (error) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
                     client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), token);
-                    await client.getAccountInfo(); // Trigger a request to validate the token
+                    await client.getProperties(); // Trigger a request to validate the token
                 }
 
                 return client;
             },
             createShareServiceClient: async () => {
+                // file share does not support OAuth bearer tokens for this endpoint
+                // may be able to implement using https://learn.microsoft.com/en-us/rest/api/storageservices/file-service-rest-api
                 const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, this.key.value);
                 return new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
             },
             createQueueServiceClient: async () => {
+
                 const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, this.key.value);
-                return new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
+                let client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
+                try {
+                    await client.getProperties(); // Trigger a request to validate the key
+                } catch (error) {
+                    const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
+                    client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), token);
+                    await client.getProperties(); // Trigger a request to validate the token
+                }
+
+                return client;
             },
             createTableServiceClient: async () => {
                 const credential = new AzureNamedKeyCredential(this.storageAccount.name, this.key.value);
-                return new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
+                let client = new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
+                try {
+                    await client.getProperties(); // Trigger a request to validate the key
+                } catch (error) {
+                    const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
+                    client = new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), token);
+                    await client.getProperties(); // Trigger a request to validate the token
+                }
+
+                return client;
             }
         };
     }

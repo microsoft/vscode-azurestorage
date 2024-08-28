@@ -196,7 +196,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     static async showEditor(context: IActionContext, treeItem: BlobTreeItem): Promise<void> {
-        const client: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
+        const client: BlockBlobClient = await createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
 
         const uri = BlobContainerFS.idToUri(treeItem.fullId);
         const properties: BlobGetPropertiesResponse = await client.getProperties();

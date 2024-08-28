@@ -78,9 +78,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     static async showEditor(context: IActionContext, treeItem: BlobTreeItem | FileTreeItem): Promise<void> {
         let client: BlockBlobClient | ShareFileClient;
         if (treeItem instanceof BlobTreeItem) {
-            client = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
+            client = await createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
         } else {
-            client = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+            client = await createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
         }
 
         const uri = this.idToUri(treeItem.fullId);
@@ -137,10 +137,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             let props: (BlobGetPropertiesResponse & FileGetPropertiesResponse) | undefined;
             try {
                 if (treeItem instanceof BlobTreeItem) {
-                    const blockBlobClient: BlockBlobClient = createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
+                    const blockBlobClient: BlockBlobClient = await createBlockBlobClient(treeItem.root, treeItem.container.name, treeItem.blobPath);
                     props = await blockBlobClient.getProperties();
                 } else if (treeItem instanceof FileTreeItem) {
-                    const fileClient: ShareFileClient = createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
+                    const fileClient: ShareFileClient = await createFileClient(treeItem.root, treeItem.shareName, treeItem.directoryPath, treeItem.fileName);
                     props = await fileClient.getProperties();
                 }
             } catch (error) {
@@ -241,10 +241,10 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             try {
                 let buffer: Buffer;
                 if (treeItem instanceof FileShareTreeItem) {
-                    client = createFileClient(treeItem.root, treeItem.shareName, parsedUri.parentDirPath, parsedUri.baseName);
+                    client = await createFileClient(treeItem.root, treeItem.shareName, parsedUri.parentDirPath, parsedUri.baseName);
                     buffer = await client.downloadToBuffer();
                 } else {
-                    client = createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
+                    client = await createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
                     buffer = await client.downloadToBuffer();
                 }
                 return buffer;

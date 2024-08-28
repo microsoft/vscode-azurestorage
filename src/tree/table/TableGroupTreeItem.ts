@@ -76,7 +76,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
     }
 
     async listTables(continuationToken?: string): Promise<TableItemResultPage> {
-        const tableServiceClient = this.root.createTableServiceClient();
+        const tableServiceClient = await this.root.createTableServiceClient();
         const response: AsyncIterableIterator<TableItemResultPage> = tableServiceClient.listTables().byPage({ continuationToken, maxPageSize });
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -110,7 +110,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
     }
 
     private async createTable(name: string): Promise<TableItem> {
-        const tableServiceClient = this.root.createTableServiceClient();
+        const tableServiceClient = await this.root.createTableServiceClient();
         await tableServiceClient.createTable(name);
 
         const tablesResponse = await this.listTables();

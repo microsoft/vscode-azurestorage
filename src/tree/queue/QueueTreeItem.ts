@@ -36,7 +36,7 @@ export class QueueTreeItem extends AzExtTreeItem implements IStorageTreeItem {
         const message: string = `Are you sure you want to delete queue '${this.label}' and all its contents?`;
         const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const queueServiceClient = this.root.createQueueServiceClient();
+            const queueServiceClient = await this.root.createQueueServiceClient();
             await queueServiceClient.deleteQueue(this.queue.name);
         } else {
             throw new UserCancelledError();

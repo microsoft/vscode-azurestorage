@@ -24,6 +24,7 @@ import { BlobContainerNameStep } from "./createBlobContainer/BlobContainerNameSt
 
 export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements IStorageTreeItem {
     private _continuationToken: string | undefined;
+    protected serviceClient: BlobServiceClient | undefined;
 
     public label: string = "Blob Containers";
     public readonly childTypeLabel: string = "Blob Container";
@@ -41,6 +42,15 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
 
     public get root(): IStorageRoot {
         return this.parent.root;
+    }
+
+    public async getServiceClient(): Promise<BlobServiceClient> {
+        this.serviceClient = this.serviceClient ?? await this.root.createBlobServiceClient();
+        return this.serviceClient;
+    }
+
+    public async refreshImpl(_context: IActionContext): Promise<void> {
+        this.serviceClient = undefined;
     }
 
     public async loadMoreChildrenImpl(clearCache: boolean): Promise<AzExtTreeItem[]> {
@@ -82,7 +92,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     }
 
     async listContainers(continuationToken?: string): Promise<ListContainersSegmentResponse> {
-        const blobServiceClient: BlobServiceClient = await this.root.createBlobServiceClient();
+        const blobServiceClient: BlobServiceClient = await this.getServiceClient();
         const response: AsyncIterableIterator<ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -108,7 +118,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     }
 
     private async createBlobContainer(name: string): Promise<ContainerItem> {
-        const containerClient: ContainerClient = createBlobContainerClient(this.root, name);
+        const containerClient: ContainerClient = await createBlobContainerClient(this.root, name);
         await containerClient.create();
 
         const containersResponse: ListContainersSegmentResponse = await this.listContainers();

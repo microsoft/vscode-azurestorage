@@ -20,7 +20,7 @@ import { threeDaysInMS } from '../../constants';
 import { ext } from "../../extensionVariables";
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
+import { askAndCreateEmptyTextFile, createDirectoryClient, createFileClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
 import { ITransferSrcOrDstTreeItem } from '../ITransferSrcOrDstTreeItem';
@@ -33,7 +33,8 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         parent: FileShareTreeItem | DirectoryTreeItem,
         public readonly parentPath: string,
         public readonly directoryName: string, // directoryName should not include parent path
-        public readonly shareName: string) {
+        public readonly shareName: string,
+        public readonly resourceUri: string) {
         super(parent);
     }
 
@@ -58,11 +59,6 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         return path.posix.join(this.parentPath, this.directoryName);
     }
 
-    public get resourceUri(): string {
-        const shareClient = this.root.createShareServiceClient().getShareClient(this.shareName);
-        return shareClient.url;
-    }
-
     public get transferSasToken(): string {
         const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
@@ -85,18 +81,24 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         const { files, directories, continuationToken }: { files: FileItem[]; directories: DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory(this.fullPath, this.shareName, this.root, this._continuationToken);
         this._continuationToken = continuationToken;
 
+        const fileTreeItems: FileTreeItem[] = await Promise.all(files.map(async (file: FileItem) => {
+            const shareClient = await createFileClient(this.root, this.shareName, this.directoryName, file.name);
+            return new FileTreeItem(this, file.name, this.fullPath, this.shareName, shareClient.url);
+        }));
+
+        const directoryTreeItems: DirectoryTreeItem[] = await Promise.all(directories.map(async (directory: DirectoryItem) => {
+            const directoryClient = await createDirectoryClient(this.root, this.shareName, directory.name);
+            return new DirectoryTreeItem(this, this.fullPath, directory.name, this.shareName, directoryClient.url);
+        }));
+
         return (<(DirectoryTreeItem | FileTreeItem)[]>[])
-            .concat(files.map((file: FileItem) => {
-                return new FileTreeItem(this, file.name, this.fullPath, this.shareName);
-            }))
-            .concat(directories.map((directory: DirectoryItem) => {
-                return new DirectoryTreeItem(this, this.fullPath, directory.name, this.shareName);
-            }));
+            .concat(fileTreeItems)
+            .concat(directoryTreeItems);
     }
 
     public async copyUrl(): Promise<void> {
         // Use this.fullPath here instead of this.directoryName. Otherwise only the leaf directory is displayed in the URL
-        const directoryClient: ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, this.fullPath);
+        const directoryClient: ShareDirectoryClient = await createDirectoryClient(this.root, this.shareName, this.fullPath);
         const url = directoryClient.url;
         await copyAndShowToast(url, 'Directory URL');
     }

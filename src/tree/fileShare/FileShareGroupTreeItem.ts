@@ -49,7 +49,7 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
             this._continuationToken = undefined;
         }
 
-        const shareServiceClient: ShareServiceClient = this.root.createShareServiceClient();
+        const shareServiceClient: ShareServiceClient = await this.root.createShareServiceClient();
         const response: AsyncIterableIterator<ServiceListSharesSegmentResponse> = shareServiceClient.listShares().byPage({ continuationToken: this._continuationToken, maxPageSize });
 
         let responseValue: ServiceListSharesSegmentResponse;
@@ -68,7 +68,7 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
         this._continuationToken = responseValue.continuationToken;
 
         return shares.map((share: ShareItem) => {
-            return new FileShareTreeItem(this, share.name);
+            return new FileShareTreeItem(this, share.name, shareServiceClient.getShareClient(share.name).url);
         });
     }
 
@@ -88,9 +88,9 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
         return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
             context.showCreatingTreeItem(shareName);
             progress.report({ message: localize('creatingFileShare', 'Azure Storage: Creating file share "{0}"...', shareName) });
-            const shareServiceClient: ShareServiceClient = this.root.createShareServiceClient();
+            const shareServiceClient: ShareServiceClient = await this.root.createShareServiceClient();
             await shareServiceClient.createShare(shareName, { quota });
-            return new FileShareTreeItem(this, shareName);
+            return new FileShareTreeItem(this, shareName, shareServiceClient.getShareClient(shareName).url);
         });
     }
 
