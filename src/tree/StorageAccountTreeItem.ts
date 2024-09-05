@@ -179,13 +179,19 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 return client;
             },
             createShareServiceClient: async () => {
-                // file share does not support OAuth bearer tokens for this endpoint
-                // may be able to implement using https://learn.microsoft.com/en-us/rest/api/storageservices/file-service-rest-api
                 const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, this.key.value);
-                return new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
+                let client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
+                try {
+                    await client.getProperties(); // Trigger a request to validate the key
+                } catch (error) {
+                    const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
+                    client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), token, { fileRequestIntent: 'backup' });
+                    await client.getProperties(); // Trigger a request to validate the token
+                }
+
+                return client;
             },
             createQueueServiceClient: async () => {
-
                 const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, this.key.value);
                 let client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
                 try {
