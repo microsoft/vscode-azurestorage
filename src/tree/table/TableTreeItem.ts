@@ -34,7 +34,7 @@ export class TableTreeItem extends AzExtTreeItem implements IStorageTreeItem {
         const message: string = `Are you sure you want to delete table '${this.label}' and all its contents?`;
         const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const tableServiceClient = this.root.createTableServiceClient();
+            const tableServiceClient = await this.root.createTableServiceClient();
             await tableServiceClient.deleteTable(this.tableName);
         } else {
             throw new UserCancelledError();

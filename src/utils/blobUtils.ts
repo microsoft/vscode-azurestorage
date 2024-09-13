@@ -17,24 +17,24 @@ import { BlobDirectoryTreeItem } from '../tree/blob/BlobDirectoryTreeItem';
 import { BlobTreeItem } from '../tree/blob/BlobTreeItem';
 import { localize } from './localize';
 
-export function createBlobContainerClient(root: IStorageRoot, containerName: string): ContainerClient {
-    const blobServiceClient: BlobServiceClient = root.createBlobServiceClient();
+export async function createBlobContainerClient(root: IStorageRoot, containerName: string): Promise<ContainerClient> {
+    const blobServiceClient: BlobServiceClient = await root.createBlobServiceClient();
     return blobServiceClient.getContainerClient(containerName);
 }
 
-export function createBlobClient(root: IStorageRoot, containerName: string, blobName: string): BlobClient {
-    const blobContainerClient: ContainerClient = createBlobContainerClient(root, containerName);
+export async function createBlobClient(root: IStorageRoot, containerName: string, blobName: string): Promise<BlobClient> {
+    const blobContainerClient: ContainerClient = await createBlobContainerClient(root, containerName);
     return blobContainerClient.getBlobClient(blobName);
 }
 
-export function createBlockBlobClient(root: IStorageRoot, containerName: string, blobName: string): BlockBlobClient {
-    const blobContainerClient: ContainerClient = createBlobContainerClient(root, containerName);
+export async function createBlockBlobClient(root: IStorageRoot, containerName: string, blobName: string): Promise<BlockBlobClient> {
+    const blobContainerClient: ContainerClient = await createBlobContainerClient(root, containerName);
     return blobContainerClient.getBlockBlobClient(blobName);
 }
 
 export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, continuationToken?: string): Promise<{ children: AzExtTreeItem[], continuationToken?: string }> {
     const prefix: string | undefined = parent instanceof BlobDirectoryTreeItem ? parent.dirPath : undefined;
-    const containerClient: ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
+    const containerClient: ContainerClient = await createBlobContainerClient(parent.root, parent.container.name);
     const settings: PageSettings = {
         continuationToken,
         // https://github.com/Azure/Azurite/issues/605
@@ -49,12 +49,14 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
     const children: AzExtTreeItem[] = [];
     for (const blob of responseValue.segment.blobItems) {
         // NOTE: `blob.name` as returned from Azure is actually the blob path in the container
-        children.push(new BlobTreeItem(parent, blob.name, parent.container));
+        const innerContainerClient = await createBlobContainerClient(parent.root, blob.name);
+        children.push(new BlobTreeItem(parent, blob.name, parent.container, innerContainerClient.url));
     }
 
     for (const directory of responseValue.segment.blobPrefixes || []) {
         // NOTE: `directory.name` as returned from Azure is actually the directory path in the container
-        children.push(new BlobDirectoryTreeItem(parent, directory.name, parent.container));
+        const innerContainerClient = await createBlobContainerClient(parent.root, directory.name);
+        children.push(new BlobDirectoryTreeItem(parent, directory.name, parent.container, innerContainerClient.url));
     }
 
     return { children, continuationToken };
@@ -68,14 +70,15 @@ export async function createChildAsNewBlockBlob(parent: BlobContainerTreeItem | 
         context.showCreatingTreeItem(blobPath);
         progress.report({ message: `Azure Storage: Creating block blob '${blobPath}'` });
         await createOrUpdateBlockBlob(parent, blobPath, context?.contents || '');
-        return new BlobTreeItem(parent, blobPath, parent.container);
+        const client = await createBlobContainerClient(parent.root, parent.container.name);
+        return new BlobTreeItem(parent, blobPath, parent.container, client.url);
     });
 }
 
 export async function createOrUpdateBlockBlob(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, name: string, text?: string | Buffer): Promise<void> {
     text = text ? text : '';
     const contentLength: number = text instanceof Buffer ? text.byteLength : text.length;
-    const containerClient: ContainerClient = createBlobContainerClient(parent.root, parent.container.name);
+    const containerClient: ContainerClient = await createBlobContainerClient(parent.root, parent.container.name);
 
     let properties: BlockBlobUploadOptions | undefined = await getExistingProperties(parent, name);
     properties = properties || {};
@@ -86,7 +89,7 @@ export async function createOrUpdateBlockBlob(parent: BlobContainerTreeItem | Bl
 }
 
 export async function doesBlobExist(treeItem: BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<boolean> {
-    const blobClient: BlobClient = createBlobClient(treeItem.root, treeItem.container.name, blobPath);
+    const blobClient: BlobClient = await createBlobClient(treeItem.root, treeItem.container.name, blobPath);
     return blobClient.exists();
 }
 
@@ -96,7 +99,7 @@ export async function doesBlobDirectoryExist(treeItem: BlobContainerTreeItem | B
         blobDirectoryName = `${blobDirectoryName}${sep}`;
     }
 
-    const containerClient: ContainerClient = createBlobContainerClient(treeItem.root, treeItem.container.name);
+    const containerClient: ContainerClient = await createBlobContainerClient(treeItem.root, treeItem.container.name);
     const response: AsyncIterableIterator<ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(sep, { prefix: blobDirectoryName }).byPage({ maxPageSize: 1 });
 
     for await (const responseValue of response) {
@@ -109,7 +112,7 @@ export async function doesBlobDirectoryExist(treeItem: BlobContainerTreeItem | B
 }
 
 export async function getExistingProperties(parent: BlobTreeItem | BlobContainerTreeItem | BlobDirectoryTreeItem, blobPath: string): Promise<BlockBlobUploadOptions | undefined> {
-    const blockBlobClient: BlockBlobClient = createBlockBlobClient(parent.root, parent.container.name, blobPath);
+    const blockBlobClient: BlockBlobClient = await createBlockBlobClient(parent.root, parent.container.name, blobPath);
     if (await blockBlobClient.exists()) {
         const existingProperties: BlobGetPropertiesResponse = await blockBlobClient.getProperties();
         return {

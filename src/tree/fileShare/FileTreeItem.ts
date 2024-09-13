@@ -30,7 +30,8 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
         parent: FileShareTreeItem | DirectoryTreeItem,
         public readonly fileName: string,
         public readonly directoryPath: string,
-        public readonly shareName: string) {
+        public readonly shareName: string,
+        public readonly resourceUri: string) {
         super(parent);
         this.commandId = 'azureStorage.editFile';
     }
@@ -51,11 +52,6 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
         return new vscode.ThemeIcon('file');
     }
 
-    public get resourceUri(): string {
-        const shareClient = this.root.createShareServiceClient().getShareClient(this.shareName);
-        return shareClient.url;
-    }
-
     public get transferSasToken(): string {
         const accountSASSignatureValues: AccountSASSignatureValues = {
             expiresOn: new Date(Date.now() + threeDaysInMS),
@@ -67,7 +63,7 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
     }
 
     public async copyUrl(): Promise<void> {
-        const fileClient: ShareFileClient = createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);
+        const fileClient: ShareFileClient = await createFileClient(this.root, this.shareName, this.directoryPath, this.fileName);
         const url = fileClient.url;
         await copyAndShowToast(url, 'File URL');
     }

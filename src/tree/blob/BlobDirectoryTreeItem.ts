@@ -3,7 +3,7 @@
 *  Licensed under the MIT License. See License.md in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
 
-import type { AccountSASSignatureValues, BlobClient, ContainerClient, ContainerItem } from "@azure/storage-blob";
+import type { AccountSASSignatureValues, BlobClient, ContainerItem } from "@azure/storage-blob";
 
 import { polyfill } from '../../polyfill.worker';
 polyfill();
@@ -44,7 +44,11 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
 
     private _continuationToken: string | undefined;
 
-    constructor(parent: BlobContainerTreeItem | BlobDirectoryTreeItem, dirPath: string, public container: ContainerItem) {
+    constructor(
+        parent: BlobContainerTreeItem | BlobDirectoryTreeItem,
+        dirPath: string,
+        public container: ContainerItem,
+        public readonly resourceUri: string) {
         super(parent);
         if (!dirPath.endsWith(path.posix.sep)) {
             dirPath += path.posix.sep;
@@ -68,11 +72,6 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
 
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('folder');
-    }
-
-    public get resourceUri(): string {
-        const containerClient: ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
-        return containerClient.url;
     }
 
     public get transferSasToken(): string {
@@ -104,14 +103,14 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
         if (context.childType === BlobTreeItem.contextValue) {
             child = await createChildAsNewBlockBlob(this, context);
         } else {
-            child = new BlobDirectoryTreeItem(this, path.posix.join(this.dirPath, context.childName), this.container);
+            child = new BlobDirectoryTreeItem(this, path.posix.join(this.dirPath, context.childName), this.container, this.resourceUri);
         }
         AzureStorageFS.fireCreateEvent(child);
         return child;
     }
 
     public async copyUrl(): Promise<void> {
-        const blobClient: BlobClient = createBlobClient(this.root, this.container.name, this.dirPath);
+        const blobClient: BlobClient = await createBlobClient(this.root, this.container.name, this.dirPath);
         const url = blobClient.url;
         await copyAndShowToast(url, 'Blob Directory URL');
     }

@@ -13,7 +13,7 @@ export class AttachedAccountRoot implements ISubscriptionContext {
         throw this._error;
     }
 
-    public createCredentialsForScopes(): never {
+    public get createCredentialsForScopes(): never {
         throw this._error;
     }
 

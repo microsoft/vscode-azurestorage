@@ -76,7 +76,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
     }
 
     async listQueues(continuationToken?: string): Promise<ListQueuesSegmentResponse> {
-        const queueServiceClient = this.root.createQueueServiceClient();
+        const queueServiceClient = await this.root.createQueueServiceClient();
         const response: AsyncIterableIterator<ServiceListQueuesSegmentResponse> = queueServiceClient.listQueues().byPage({ continuationToken, maxPageSize });
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -110,7 +110,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
     }
 
     private async createQueue(name: string): Promise<QueueItem> {
-        const queueServiceClient = this.root.createQueueServiceClient();
+        const queueServiceClient = await this.root.createQueueServiceClient();
         await queueServiceClient.createQueue(name);
 
         const queuesResponse: ListQueuesSegmentResponse = await this.listQueues();

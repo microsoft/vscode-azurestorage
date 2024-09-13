@@ -82,7 +82,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     }
 
     async listContainers(continuationToken?: string): Promise<ListContainersSegmentResponse> {
-        const blobServiceClient: BlobServiceClient = this.root.createBlobServiceClient();
+        const blobServiceClient: BlobServiceClient = await this.root.createBlobServiceClient();
         const response: AsyncIterableIterator<ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -108,7 +108,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     }
 
     private async createBlobContainer(name: string): Promise<ContainerItem> {
-        const containerClient: ContainerClient = createBlobContainerClient(this.root, name);
+        const containerClient: ContainerClient = await createBlobContainerClient(this.root, name);
         await containerClient.create();
 
         const containersResponse: ListContainersSegmentResponse = await this.listContainers();
