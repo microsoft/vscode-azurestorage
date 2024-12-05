@@ -66,6 +66,10 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
         return this.blobName;
     }
 
+    public get blobContainerName(): string {
+        return this.container.name;
+    }
+
     public get iconPath(): TreeItemIconPath {
         return new vscode.ThemeIcon('file');
     }
