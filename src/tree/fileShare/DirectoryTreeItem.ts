@@ -20,7 +20,7 @@ import { threeDaysInMS } from '../../constants';
 import { ext } from "../../extensionVariables";
 import { copyAndShowToast } from '../../utils/copyAndShowToast';
 import { askAndCreateChildDirectory, deleteDirectoryAndContents, listFilesInDirectory } from '../../utils/directoryUtils';
-import { askAndCreateEmptyTextFile, createDirectoryClient, createFileClient } from '../../utils/fileUtils';
+import { askAndCreateEmptyTextFile, createDirectoryClient } from '../../utils/fileUtils';
 import { ICopyUrl } from '../ICopyUrl';
 import { IStorageRoot } from '../IStorageRoot';
 import { ITransferSrcOrDstTreeItem } from '../ITransferSrcOrDstTreeItem';
@@ -82,13 +82,11 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         this._continuationToken = continuationToken;
 
         const fileTreeItems: FileTreeItem[] = await Promise.all(files.map(async (file: FileItem) => {
-            const shareClient = await createFileClient(this.root, this.shareName, this.directoryName, file.name);
-            return new FileTreeItem(this, file.name, this.fullPath, this.shareName, shareClient.url);
+            return new FileTreeItem(this, file.name, this.fullPath, this.shareName, this.resourceUri);
         }));
 
         const directoryTreeItems: DirectoryTreeItem[] = await Promise.all(directories.map(async (directory: DirectoryItem) => {
-            const directoryClient = await createDirectoryClient(this.root, this.shareName, directory.name);
-            return new DirectoryTreeItem(this, this.fullPath, directory.name, this.shareName, directoryClient.url);
+            return new DirectoryTreeItem(this, this.fullPath, directory.name, this.shareName, this.resourceUri);
         }));
 
         return (<(DirectoryTreeItem | FileTreeItem)[]>[])
