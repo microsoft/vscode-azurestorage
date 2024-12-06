@@ -13,7 +13,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { copyConnectionString, copyPrimaryKey, createBlobContainer, createFileShare, createQueue, createStorageAccount, createStorageAccountAdvanced, createTable, deleteBlobContainer, deleteFileShare, deleteQueue, deleteStorageAccount, deleteTable, DialogResponses, getRandomHexString } from '../../extension.bundle';
 import { longRunningTestsEnabled } from '../global.test';
-import { webSiteClient as client, resourceGroupsToDelete } from './global.resource.test';
+import { resourceGroupsToDelete, webSiteClient as client } from './global.resource.test';
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 suite('Storage Account Actions', function (this: Mocha.Suite): void {

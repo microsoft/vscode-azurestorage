@@ -48,8 +48,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
-        public readonly container: ContainerItem,
-        public readonly resourceUri: string) {
+        public readonly container: ContainerItem) {
         super(parent);
     }
 
@@ -59,6 +58,11 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
     public get remoteFilePath(): string {
         return '';
+    }
+
+    public get resourceUri(): string {
+        const containerClient: ContainerClient = this.root.createBlobServiceClient().getContainerClient(this.container.name);
+        return containerClient.url;
     }
 
     public get transferSasToken(): string {
@@ -72,8 +76,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     public static async createBlobContainerTreeItem(parent: BlobContainerGroupTreeItem, container: ContainerItem): Promise<BlobContainerTreeItem> {
-        const containerClient: ContainerClient = await createBlobContainerClient(parent.root, container.name);
-        const ti = new BlobContainerTreeItem(parent, container, containerClient.url);
+        const ti = new BlobContainerTreeItem(parent, container);
         // Get static website status to display the appropriate icon
         await ti.refreshImpl();
         return ti;
@@ -136,7 +139,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         let response: AsyncIterableIterator<ContainerListBlobFlatSegmentResponse>;
         let responseValue: ListBlobsFlatSegmentResponse;
         const blobs: BlobItem[] = [];
-        const containerClient: ContainerClient = await createBlobContainerClient(this.root, this.container.name);
+        const containerClient: ContainerClient = createBlobContainerClient(this.root, this.container.name);
 
         ext.outputChannel.appendLog(`Querying Azure... Method: listBlobsFlat blobContainerName: "${this.container.name}" prefix: ""`);
 
@@ -162,7 +165,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         const message: string = `Are you sure you want to delete blob container '${this.label}' and all its contents?`;
         const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const containerClient: ContainerClient = await createBlobContainerClient(this.root, this.container.name);
+            const containerClient: ContainerClient = createBlobContainerClient(this.root, this.container.name);
             await containerClient.delete();
         }
 
@@ -174,11 +177,9 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         if (context.remoteFilePath && context.localFilePath) {
             context.showCreatingTreeItem(context.remoteFilePath);
             await this.uploadLocalFile(context, context.localFilePath, context.remoteFilePath);
-            const containerClient = await createBlobContainerClient(this.root, this.container.name);
-            child = new BlobTreeItem(this, context.remoteFilePath, this.container, containerClient.url);
+            child = new BlobTreeItem(this, context.remoteFilePath, this.container);
         } else if ((context.childName !== undefined) && context.childType === BlobDirectoryTreeItem.contextValue) {
-            const containerClient = await createBlobContainerClient(this.root, this.container.name);
-            child = new BlobDirectoryTreeItem(this, context.childName, this.container, containerClient.url);
+            child = new BlobDirectoryTreeItem(this, context.childName, this.container);
         } else {
             child = await createChildAsNewBlockBlob(this, context);
         }
@@ -188,7 +189,8 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     }
 
     public getUrl(): string {
-        return this.resourceUri;
+        const containerClient: ContainerClient = createBlobContainerClient(this.root, this.container.name);
+        return containerClient.url;
     }
 
     public async copyUrl(): Promise<void> {
@@ -322,7 +324,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         cancellationToken: vscode.CancellationToken,
         properties: TelemetryProperties,
     ): Promise<void> {
-        const containerClient: ContainerClient = await createBlobContainerClient(this.root, this.container.name);
+        const containerClient: ContainerClient = createBlobContainerClient(this.root, this.container.name);
         for (const blobIndex of blobsToDelete.keys()) {
             const blob: BlobItem = blobsToDelete[blobIndex];
             try {

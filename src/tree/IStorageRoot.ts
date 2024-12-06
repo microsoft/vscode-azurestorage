@@ -16,8 +16,8 @@ export interface IStorageRoot {
     isEmulated: boolean;
     primaryEndpoints?: Endpoints;
     generateSasToken(accountSASSignatureValues: AccountSASSignatureValuesBlob | AccountSASSignatureValuesFileShare): string;
-    createBlobServiceClient(): Promise<BlobServiceClient>;
-    createShareServiceClient(): Promise<ShareServiceClient>;
-    createQueueServiceClient(): Promise<QueueServiceClient>;
-    createTableServiceClient(): Promise<TableServiceClient>;
+    createBlobServiceClient(): BlobServiceClient;
+    createShareServiceClient(): ShareServiceClient;
+    createQueueServiceClient(): QueueServiceClient;
+    createTableServiceClient(): TableServiceClient;
 }

@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AccountSASSignatureValues, DirectoryItem, FileItem, ShareClient, ShareDirectoryClient, ShareServiceClient } from '@azure/storage-file-share';
+import type { AccountSASSignatureValues, DirectoryItem, FileItem, ShareClient, ShareDirectoryClient } from '@azure/storage-file-share';
 
 import { polyfill } from '../../polyfill.worker';
 polyfill();
@@ -34,8 +34,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
     constructor(
         parent: FileShareGroupTreeItem,
-        public readonly shareName: string,
-        public readonly resourceUri: string) {
+        public readonly shareName: string) {
         super(parent);
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
@@ -49,6 +48,11 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
     public get remoteFilePath(): string {
         return '';
+    }
+
+    public get resourceUri(): string {
+        const shareClient = this.root.createShareServiceClient().getShareClient(this.shareName);
+        return shareClient.url;
     }
 
     public get transferSasToken(): string {
@@ -86,12 +90,11 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
 
         const { files, directories, continuationToken }: { files: FileItem[]; directories: DirectoryItem[]; continuationToken: string; } = await listFilesInDirectory('', this.shareName, this.root, this._continuationToken);
         this._continuationToken = continuationToken;
-        const shareServiceClient = await this.root.createShareServiceClient();
         return result.concat(directories.map((directory: DirectoryItem) => {
-            return new DirectoryTreeItem(this, '', directory.name, this.shareName, shareServiceClient.getShareClient(this.shareName).url);
+            return new DirectoryTreeItem(this, '', directory.name, this.shareName);
         }))
             .concat(files.map((file: FileItem) => {
-                return new FileTreeItem(this, file.name, '', this.shareName, shareServiceClient.getShareClient(this.shareName).url);
+                return new FileTreeItem(this, file.name, '', this.shareName);
             }));
     }
 
@@ -106,7 +109,8 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
     }
 
     public getUrl(): string {
-        return this.resourceUri;
+        const shareClient: ShareClient = createShareClient(this.root, this.shareName);
+        return shareClient.url;
     }
 
     public async copyUrl(): Promise<void> {
@@ -118,7 +122,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         const message: string = `Are you sure you want to delete file share '${this.label}' and all its contents?`;
         const result = await context.ui.showWarningMessage(message, { modal: true }, DialogResponses.deleteResponse, DialogResponses.cancel);
         if (result === DialogResponses.deleteResponse) {
-            const shareClient: ShareClient = await createShareClient(this.root, this.shareName);
+            const shareClient: ShareClient = createShareClient(this.root, this.shareName);
             await shareClient.delete();
         } else {
             throw new UserCancelledError();
@@ -132,8 +136,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         if (context.remoteFilePath && context.localFilePath) {
             context.showCreatingTreeItem(context.remoteFilePath);
             await this.uploadLocalFile(context, context.localFilePath, context.remoteFilePath);
-            const shareServiceClient: ShareServiceClient = await this.root.createShareServiceClient();
-            child = new FileTreeItem(this, context.remoteFilePath, '', this.shareName, shareServiceClient.getShareClient(this.shareName).url);
+            child = new FileTreeItem(this, context.remoteFilePath, '', this.shareName);
         } else if (context.childType === FileTreeItem.contextValue) {
             child = await askAndCreateEmptyTextFile(this, '', this.shareName, context);
         } else {
@@ -158,7 +161,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         for (const dir of parentDirectories) {
             partialParentDirectoryPath += `${dir}/`;
             if (!(await doesDirectoryExist(this, partialParentDirectoryPath, this.shareName))) {
-                const directoryClient: ShareDirectoryClient = await createDirectoryClient(this.root, this.shareName, partialParentDirectoryPath);
+                const directoryClient: ShareDirectoryClient = createDirectoryClient(this.root, this.shareName, partialParentDirectoryPath);
                 await directoryClient.create();
             }
         }

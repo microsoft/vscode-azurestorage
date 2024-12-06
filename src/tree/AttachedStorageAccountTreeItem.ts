@@ -91,7 +91,7 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
 
     public async getActualWebsiteHostingStatus(): Promise<WebsiteHostingStatus> {
         // Does NOT update treeItem's _webHostingEnabled.
-        const serviceClient: BlobServiceClient = await this.root.createBlobServiceClient();
+        const serviceClient: BlobServiceClient = this.root.createBlobServiceClient();
         const properties: ServiceGetPropertiesResponse = await serviceClient.getProperties();
         const staticWebsite: StaticWebsite | undefined = properties.staticWebsite;
 
@@ -137,19 +137,19 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         ).toString();
     }
 
-    public async createBlobServiceClient(): Promise<BlobServiceClient> {
+    public createBlobServiceClient(): BlobServiceClient {
         return BlobServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
-    public async createShareServiceClient(): Promise<ShareServiceClient> {
+    public createShareServiceClient(): ShareServiceClient {
         return ShareServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
-    public async createQueueServiceClient(): Promise<QueueServiceClient> {
+    public createQueueServiceClient(): QueueServiceClient {
         return QueueServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
-    public async createTableServiceClient(): Promise<TableServiceClient> {
+    public createTableServiceClient(): TableServiceClient {
         return TableServiceClient.fromConnectionString(this._connectionString, { retryOptions: { maxRetries: this._serviceClientPipelineOptions.retryOptions.maxTries } });
     }
 }
