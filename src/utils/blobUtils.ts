@@ -49,14 +49,12 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
     const children: AzExtTreeItem[] = [];
     for (const blob of responseValue.segment.blobItems) {
         // NOTE: `blob.name` as returned from Azure is actually the blob path in the container
-        const innerContainerClient = await createBlobContainerClient(parent.root, blob.name);
-        children.push(new BlobTreeItem(parent, blob.name, parent.container, innerContainerClient.url));
+        children.push(new BlobTreeItem(parent, blob.name, parent.container, containerClient.url));
     }
 
     for (const directory of responseValue.segment.blobPrefixes || []) {
         // NOTE: `directory.name` as returned from Azure is actually the directory path in the container
-        const innerContainerClient = await createBlobContainerClient(parent.root, directory.name);
-        children.push(new BlobDirectoryTreeItem(parent, directory.name, parent.container, innerContainerClient.url));
+        children.push(new BlobDirectoryTreeItem(parent, directory.name, parent.container, containerClient.url));
     }
 
     return { children, continuationToken };
