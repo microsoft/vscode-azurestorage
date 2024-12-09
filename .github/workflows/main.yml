@@ -16,6 +16,7 @@ on:
       - main
       - rel/*
 
+# not using shared template (https://github.com/microsoft/vscode-azuretools/tree/main/.github/workflows) so that we can install azcopy
 jobs:
   Build:
     runs-on: ubuntu-latest
