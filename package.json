@@ -788,7 +788,6 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run webpack-prod",
-        "preinstall": "npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64",
         "postinstall": "gulp setAzCopyExePermissions",
         "build": "tsc",
         "cleanReadme": "gulp cleanReadme",
