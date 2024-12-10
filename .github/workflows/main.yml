@@ -16,7 +16,41 @@ on:
       - main
       - rel/*
 
+# not using shared template (https://github.com/microsoft/vscode-azuretools/tree/main/.github/workflows) so that we can install azcopy
 jobs:
   Build:
-    # Use template from https://github.com/microsoft/vscode-azuretools/tree/main/.github/workflows
-    uses: microsoft/vscode-azuretools/.github/workflows/jobs.yml@main
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: "."
+
+    steps:
+      # Setup
+      - uses: actions/checkout@v3
+      - name: Using Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --no-optional
+      - run: npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
+
+      # Lint
+      - run: npm run lint
+
+      # Build
+      - run: npm run build
+
+      # Package
+      - run: npm run package
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Artifacts
+          path: |
+            **/*.vsix
+            **/*.tgz
+            !**/node_modules
+
+      # Test
+      - run: xvfb-run -a npm test
