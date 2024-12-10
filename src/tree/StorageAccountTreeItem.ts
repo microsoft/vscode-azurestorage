@@ -16,6 +16,7 @@ import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCrede
 import { StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
 import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
+import { ViewPropertiesModel } from '@microsoft/vscode-azureresources-api';
 import { MessageItem, commands, window } from 'vscode';
 import { ResolvedStorageAccount } from '../StorageAccountResolver';
 import { DeleteStorageAccountStep } from '../commands/deleteStorageAccount/DeleteStorageAccountStep';
@@ -86,7 +87,12 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     public label: string = this.storageAccount.name;
     public static contextValue: string = 'azureStorageAccount';
     public contextValuesToAdd: string[] = [StorageAccountTreeItem.contextValue];
-
+    viewProperties: ViewPropertiesModel = {
+        getData: async () => {
+            return this.storageAccount
+        },
+        label: this.label
+    }
     // eslint-disable-next-line @typescript-eslint/require-await
     async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
 
