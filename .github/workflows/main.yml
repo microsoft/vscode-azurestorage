@@ -34,8 +34,7 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: npm ci --no-optional
-      - run: npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
-      - run: gulp setAzCopyExePermissions
+      - run: npm install
 
       # Lint
       - run: npm run lint
