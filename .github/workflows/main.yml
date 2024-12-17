@@ -33,7 +33,12 @@ jobs:
         with:
           node-version-file: .nvmrc
       - run: npm ci --no-optional
+
+      # Install AzCopy
       - run: npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
+
+      # Set AzCopy permissions
+      - run: npm run postinstall
 
       # Lint
       - run: npm run lint
