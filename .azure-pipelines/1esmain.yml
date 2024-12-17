@@ -42,4 +42,4 @@ extends:
     useAzureFederatedCredentials: ${{ parameters.enableLongRunningTests }}
     additionalSetupSteps:
       - script: npm install
-        name: Install azcopy
+        displayName: Install azcopy
