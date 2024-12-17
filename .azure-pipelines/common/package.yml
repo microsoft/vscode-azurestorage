@@ -1,4 +1,16 @@
 steps:
+- bash: |
+      npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
+  displayName: "Install AzCopy"
+
+- bash: |
+      npm run postinstall
+  displayName: "Set AzCopy Permissions"
+
+- bash: |
+      ls -l node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64
+  displayName: "Check Permissions"
+
 - task: Npm@1
   displayName: 'cleanReadme'
   inputs:
