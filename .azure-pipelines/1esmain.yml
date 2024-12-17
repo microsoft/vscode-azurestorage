@@ -40,6 +40,3 @@ extends:
   template: azure-pipelines/1esmain.yml@azExtTemplates
   parameters:
     useAzureFederatedCredentials: ${{ parameters.enableLongRunningTests }}
-    additionalSetupSteps:
-      - script: npm ci --no-optional
-        displayName: Install dependencies & AzCopy
