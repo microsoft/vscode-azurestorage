@@ -43,3 +43,5 @@ extends:
     additionalSetupSteps:
       - script: npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
         name: Install_azcopy
+      - script: npm run postinstall
+        name: Run_Post_Install
