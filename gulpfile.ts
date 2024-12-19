@@ -28,27 +28,29 @@ async function cleanReadme(): Promise<void> {
 async function setAzCopyExePermissions(): Promise<void> {
     console.debug('Setting permissions for azcopy executables in {0}...', __dirname);
     try {
+        console.debug(cp.exec(`ls`));
+
         const path1 = path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64');
         const path2 = path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64');
         console.debug('Comparing paths: {0} and {1}', path1, path2);
-        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64')}`);
+        cp.execSync(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64')}`);
 
         const path3 = path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64');
         const path4 = path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64');
         console.debug('Comparing paths: {0} and {1}', path3, path4);
-        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64')}`);
+        cp.execSync(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64')}`);
         // Related: https://github.com/microsoft/vscode-azurestorage/issues/1346
 
         const path5 = path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-node', 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64');
         const path6 = path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64');
         console.debug('Comparing paths: {0} and {1}', path5, path6);
 
-        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-node', 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64')}`);
+        cp.execSync(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-node', 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64')}`);
 
         const path7 = path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-node', 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64');
         const path8 = path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64');
         console.debug('Comparing paths: {0} and {1}', path7, path8);
-        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-node', 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64')}`);
+        cp.execSync(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-node', 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64')}`);
     } catch (error) {
         console.error(error);
     }
