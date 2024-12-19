@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - rel/*
+      - mwf/*
 
   # Trigger on pull requests to `main` or `rel/*`
   pull_request:
