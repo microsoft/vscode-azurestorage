@@ -42,6 +42,9 @@ extends:
     useAzureFederatedCredentials: ${{ parameters.enableLongRunningTests }}
     additionalSetupSteps:
       - script: npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
+        displayName: Install AzCopy
         name: Install_azcopy
+    additionalPostPackageSteps:
       - script: npm run postinstall
+        displayName: Set AzCopy Permissions
         name: Run_Post_Install
