@@ -788,7 +788,6 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run webpack-prod",
-        "postinstall": "gulp setAzCopyExePermissions",
         "build": "tsc",
         "cleanReadme": "gulp cleanReadme",
         "compile": "tsc -watch",
