@@ -27,25 +27,12 @@ async function cleanReadme(): Promise<void> {
 
 async function setAzCopyExePermissions(): Promise<void> {
     console.debug('Setting permissions for azcopy executables in ', __dirname);
-    try {
-        // const path1 = path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64');
-        // const path2 = path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64');
-        console.debug('Running', `chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64')}`);
-        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64')}`);
+    cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
+    cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`);
 
-        // const path3 = path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64');
-        // const path4 = path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64');
-        console.debug('Running', `chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64')}`);
-        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64')}`);
-        // Related: https://github.com/microsoft/vscode-azurestorage/issues/1346
-
-        // cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-node', 'node_modules', '@azure-tools', 'azcopy-darwin', 'dist', 'bin', 'azcopy_darwin_amd64')}`);
-        console.debug('Running', `chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-node', 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64')}`);
-        cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules', '@azure-tools', 'azcopy-node', 'node_modules', '@azure-tools', 'azcopy-linux', 'dist', 'bin', 'azcopy_linux_amd64')}`);
-    } catch (error) {
-        console.error(error);
-    }
-
+    // Related: https://github.com/microsoft/vscode-azurestorage/issues/1346
+    cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
+    cp.exec(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`);
 }
 
 exports['webpack-dev'] = gulp.series(prepareForWebpack, () => gulp_webpack('development'));
