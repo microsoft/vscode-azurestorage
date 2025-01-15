@@ -38,7 +38,8 @@ jobs:
       - run: npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
 
       # Set AzCopy permissions
-      - run: npm run postinstall
+      # comment out in main because I think it is effecting other branches
+      # - run: npm run postinstall
 
       # Lint
       - run: npm run lint
