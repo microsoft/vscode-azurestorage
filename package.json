@@ -796,6 +796,7 @@
         "lint-fix": "eslint --ext .ts . --fix",
         "pretest": "gulp preTest",
         "test": "node ./out/test/runTest.js",
+        "setazcopypermissions": "gulp setAzCopyExePermissions",
         "webpack": "npm run build && gulp webpack-dev",
         "webpack-prod": "npm run build && gulp webpack-prod",
         "webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats",
