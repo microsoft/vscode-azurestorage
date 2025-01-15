@@ -45,6 +45,6 @@ extends:
         displayName: Install AzCopy
         name: Install_azcopy
     additionalPostPackageSteps:
-      - script: npm run postinstall
+      - script: npm run setazcopypermissions
         displayName: Set AzCopy Permissions
-        name: Run_Post_Install
+        name: Set_Azcopy_Permissions
