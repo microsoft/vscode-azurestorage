@@ -832,11 +832,7 @@
         "webpack-cli": "^4.6.0"
     },
     "dependencies": {
-        "@azure-tools/azcopy-darwin": "^10.26.0",
-        "@azure-tools/azcopy-linux": "^10.26.0",
         "@azure-tools/azcopy-node": "^2.11.0",
-        "@azure-tools/azcopy-win32": "^10.26.0",
-        "@azure-tools/azcopy-win64": "^10.26.0",
         "@azure/arm-storage": "^18.1.0",
         "@azure/arm-storage-profile-2020-09-01-hybrid": "^2.0.0",
         "@azure/core-rest-pipeline": "^1.11.0",
