@@ -795,6 +795,7 @@
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "pretest": "gulp preTest",
+        "postinstall": "",
         "test": "node ./out/test/runTest.js",
         "setazcopypermissions": "gulp setAzCopyExePermissions",
         "webpack": "npm run build && gulp webpack-dev",
