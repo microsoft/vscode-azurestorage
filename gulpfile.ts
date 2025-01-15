@@ -30,9 +30,11 @@ async function setAzCopyExePermissions(): Promise<void> {
 
     // Related: https://github.com/microsoft/vscode-azurestorage/issues/1346
 
+    console.log(cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`).toString());
     try {
+        console.log('BEFORE', cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`).toString());
         cp.execSync(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
-        cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
+        console.log('AFTER', cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`).toString());
     }
     catch (error) {
         console.error('Error setting permissions for azcopy executables in ', __dirname);
@@ -40,8 +42,9 @@ async function setAzCopyExePermissions(): Promise<void> {
     }
 
     try {
+        console.log('BEFORE', cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`).toString());
         cp.execSync(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`);
-        cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`);
+        console.log('AFTER', cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`).toString());
     }
     catch (error) {
         console.error('Error setting permissions for azcopy executables in ', __dirname);
@@ -49,16 +52,18 @@ async function setAzCopyExePermissions(): Promise<void> {
     }
 
     try {
+        console.log('BEFORE', cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`).toString());
         cp.execSync(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
-        cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`);
+        console.log('AFTER', cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64')}`).toString());
     } catch (error) {
         console.error('Error setting permissions for azcopy executables in ', __dirname);
         console.error(error);
     }
 
     try {
+        console.log('BEFORE', cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`).toString());
         cp.execSync(`chmod u+x ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`);
-        cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`);
+        console.log('AFTER', cp.execSync(`ls -l ${path.join(__dirname, 'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64')}`).toString());
     } catch (error) {
         console.error('Error setting permissions for azcopy executables in ', __dirname);
         console.error(error);
