@@ -44,7 +44,6 @@ extends:
       - script: npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
         displayName: Install AzCopy
         name: Install_azcopy
-    additionalPostPackageSteps:
       - script: npm run setazcopypermissions
         displayName: Set AzCopy Permissions
         name: Set_Azcopy_Permissions
