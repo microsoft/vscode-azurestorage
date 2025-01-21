@@ -8,7 +8,7 @@
 
 ### Fixed
 * [[1343]](https://github.com/microsoft/vscode-azurestorage/pull/1343) Upgrade packages for additional telemetry updates
-* [[1354]](https://github.com/microsoft/vscode-azurestorage/pull/1354) Fix file permissions for AzCopy dependencies
+* [[1371]](https://github.com/microsoft/vscode-azurestorage/pull/1371) Fix file permissions for AzCopy dependencies
 
 ## 0.16.1 - 2024-08-23
 ### Added
