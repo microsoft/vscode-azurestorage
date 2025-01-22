@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 0.16.2 - 2024-12-11
+## 0.16.2 - 2025-01-23
 ### Added
 * [[1359]](https://github.com/microsoft/vscode-azurestorage/pull/1359) "View Properties" shows entire storage account data model
 
