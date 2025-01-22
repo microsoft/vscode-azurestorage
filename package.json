@@ -788,7 +788,6 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run webpack-prod",
-        "postinstall": "gulp setAzCopyExePermissions",
         "build": "tsc",
         "cleanReadme": "gulp cleanReadme",
         "compile": "tsc -watch",
@@ -796,7 +795,9 @@
         "lint": "eslint --ext .ts .",
         "lint-fix": "eslint --ext .ts . --fix",
         "pretest": "gulp preTest",
+        "postinstall": "",
         "test": "node ./out/test/runTest.js",
+        "setazcopypermissions": "gulp setAzCopyExePermissions",
         "webpack": "npm run build && gulp webpack-dev",
         "webpack-prod": "npm run build && gulp webpack-prod",
         "webpack-profile": "webpack --profile --json --mode production > webpack-stats.json && echo Use http://webpack.github.io/analyse to analyze the stats",
