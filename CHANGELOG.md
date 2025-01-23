@@ -2,13 +2,13 @@
 
 ## Unreleased
 
-## 0.16.2 - 2024-12-11
+## 0.16.2 - 2025-01-23
 ### Added
 * [[1359]](https://github.com/microsoft/vscode-azurestorage/pull/1359) "View Properties" shows entire storage account data model
 
 ### Fixed
 * [[1343]](https://github.com/microsoft/vscode-azurestorage/pull/1343) Upgrade packages for additional telemetry updates
-* [[1354]](https://github.com/microsoft/vscode-azurestorage/pull/1354) Fix file permissions for AzCopy dependencies
+* [[1371]](https://github.com/microsoft/vscode-azurestorage/pull/1371) Fix file permissions for AzCopy dependencies
 
 ## 0.16.1 - 2024-08-23
 ### Added
