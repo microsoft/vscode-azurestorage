@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.16.2 - 2025-01-23
+### Added
+* [[1359]](https://github.com/microsoft/vscode-azurestorage/pull/1359) "View Properties" shows entire storage account data model
+
+### Fixed
+* [[1343]](https://github.com/microsoft/vscode-azurestorage/pull/1343) Upgrade packages for additional telemetry updates
+* [[1371]](https://github.com/microsoft/vscode-azurestorage/pull/1371) Fix file permissions for AzCopy dependencies
+
 ## 0.16.1 - 2024-08-23
 ### Added
 * [[1331]](https://github.com/microsoft/vscode-azurestorage/pull/1331) Use a list task for the cache that is used for all resolving
