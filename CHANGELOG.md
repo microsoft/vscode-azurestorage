@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.16.3 - 2025-03-10
+
+### Changed
+* [[1380](https://github.com/microsoft/vscode-azurestorage/pull/1380)] Automatically collect subscription and resource information for telemetry. [How to disable telemetry reporting](https://code.visualstudio.com/docs/supporting/FAQ#_how-to-disable-telemetry-reporting)
+* [[1381](https://github.com/microsoft/vscode-azurestorage/pull/1381)] Require a minimum version of VS Code 1.95.0 (October 2024)
+
 ## 0.16.2 - 2025-01-23
 ### Added
 * [[1359]](https://github.com/microsoft/vscode-azurestorage/pull/1359) "View Properties" shows entire storage account data model
