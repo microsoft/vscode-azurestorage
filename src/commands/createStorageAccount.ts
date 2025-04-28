@@ -25,7 +25,7 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
 
     const wizardContext: IStorageAccountWizardContext & ExecuteActivityContext = Object.assign(context, {
         ...treeItem.subscription,
-        ...(await createActivityContext())
+        ...await createActivityContext({ withChildren: true }),
     });
     wizardContext.includeExtendedLocations = true;
     const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
@@ -33,7 +33,7 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
         new StorageAccountCreateStep({ kind: wizardContext.isCustomCloud ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
         new StorageAccountTreeItemCreateStep(treeItem.subscription),
         new StaticWebsiteConfigureStep(),
-        new VerifyProvidersStep([storageProvider])
+        new VerifyProvidersStep([storageProvider]),
     ];
     LocationListStep.addProviderForFiltering(wizardContext, storageProvider, 'storageAccounts');
 
