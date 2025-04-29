@@ -34,7 +34,7 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
         new StorageAccountCreateStep({ kind: wizardContext.isCustomCloud ? StorageAccountKind.Storage : StorageAccountKind.StorageV2, performance: StorageAccountPerformance.Standard, replication: StorageAccountReplication.LRS }),
         new StorageAccountTreeItemCreateStep(treeItem.subscription),
         new StaticWebsiteConfigureStep(),
-        new VerifyProvidersStep([storageProvider]),
+        new VerifyProvidersStep([storageProvider])
     ];
     LocationListStep.addProviderForFiltering(wizardContext, storageProvider, 'storageAccounts');
 
