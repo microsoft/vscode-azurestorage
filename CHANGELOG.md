@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 0.16.4 - 2025-05-01
+## Fixed
+* [[]]() Incomplete telemetry data capture in specific scenarios.
+
 ## 0.16.3 - 2025-03-10
 
 ### Changed
