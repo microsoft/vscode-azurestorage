@@ -17,6 +17,7 @@ import { SubscriptionTreeItem } from '../tree/SubscriptionTreeItem';
 import { createActivityContext } from '../utils/activityUtils';
 import { localize } from '../utils/localize';
 import { ISelectStorageAccountContext } from './selectStorageAccountNodeForCommand';
+import { StartingResourcesLogStep } from './StartingResourcesLogStep';
 
 export async function createStorageAccount(context: IActionContext & Partial<ICreateChildImplContext>, treeItem?: SubscriptionTreeItem): Promise<StorageAccountTreeItem> {
     if (!treeItem) {
@@ -25,7 +26,7 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
 
     const wizardContext: IStorageAccountWizardContext & ExecuteActivityContext = Object.assign(context, {
         ...treeItem.subscription,
-        ...(await createActivityContext())
+        ...await createActivityContext({ withChildren: true }),
     });
     wizardContext.includeExtendedLocations = true;
     const promptSteps: AzureWizardPromptStep<IStorageAccountWizardContext>[] = [new StorageAccountNameStep()];
@@ -53,6 +54,8 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
     LocationListStep.getQuickPickDescription = (location: AzExtLocation) => {
         return location.metadata?.regionCategory === 'Extended' ? localize('onlyPremiumSupported', 'Only supports Premium storage accounts') : undefined;
     }
+
+    promptSteps.push(new StartingResourcesLogStep());
 
     const wizard = new AzureWizard(wizardContext, {
         title: "Create storage account",

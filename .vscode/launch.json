@@ -20,7 +20,7 @@
             }
         },
         {
-            "name": "Launch Extension(s)",
+            "name": "Launch Extension + Host",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
