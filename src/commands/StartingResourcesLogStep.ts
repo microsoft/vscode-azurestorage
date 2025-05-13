@@ -7,7 +7,7 @@ import { type ResourceGroup } from "@azure/arm-resources";
 import { LocationListStep, type ILocationWizardContext } from "@microsoft/vscode-azext-azureutils";
 import { ActivityChildItem, ActivityChildType, activityInfoContext, activityInfoIcon, AzureWizardPromptStep, createContextValue, type ExecuteActivityContext, type IActionContext } from "@microsoft/vscode-azext-utils";
 import { ext } from "../extensionVariables";
-import { prependOrInsertAfterLastInfoChild } from "../utils/activityUtils";
+import { ActivityInfoChild, prependOrInsertAfterLastInfoChild } from "../utils/activityUtils";
 import { localize } from "../utils/localize";
 
 type StartingResourcesLogContext = IActionContext & Partial<ExecuteActivityContext> & ILocationWizardContext & {
@@ -53,7 +53,7 @@ export class StartingResourcesLogStep<T extends StartingResourcesLogContext> ext
                     label: localize('useResourceGroup', 'Use resource group "{0}"', context.resourceGroup.name),
                     activityType: ActivityChildType.Info,
                     iconPath: activityInfoIcon
-                })
+                }) as ActivityInfoChild
             );
             ext.outputChannel.appendLog(localize('usingResourceGroup', 'Using resource group "{0}".', context.resourceGroup.name));
         }
