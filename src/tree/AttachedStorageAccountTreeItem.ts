@@ -8,17 +8,18 @@ import type { AccountSASSignatureValues, ServiceGetPropertiesResponse, StaticWeb
 import { polyfill } from '../polyfill.worker';
 polyfill();
 
-import { TableServiceClient } from '@azure/data-tables';
-import { BlobServiceClient, generateAccountSASQueryParameters, StorageSharedKeyCredential } from '@azure/storage-blob';
+import { AzureNamedKeyCredential, TableServiceClient } from '@azure/data-tables';
+import { BlobServiceClient, generateAccountSASQueryParameters, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob } from '@azure/storage-blob';
 import { ShareServiceClient } from '@azure/storage-file-share';
-import { QueueServiceClient } from '@azure/storage-queue';
+import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialQueue } from '@azure/storage-queue';
 
 import { AzExtParentTreeItem, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { AttachedAccountRoot } from '../AttachedAccountRoot';
-import { emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
+import { azuriteKey, defaultEmulatorHost, emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
 import { localize } from '../utils/localize';
+import { getWorkspaceSetting } from '../utils/settingsUtils';
 import { BlobContainerGroupTreeItem } from './blob/BlobContainerGroupTreeItem';
 import { FileShareGroupTreeItem } from './fileShare/FileShareGroupTreeItem';
 import { IStorageRoot } from './IStorageRoot';
@@ -133,11 +134,19 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         }
         return generateAccountSASQueryParameters(
             accountSASSignatureValues,
-            new StorageSharedKeyCredential(this.storageAccountName, key)
+            new StorageSharedKeyCredentialBlob(this.storageAccountName, key)
         ).toString();
     }
 
     public async createBlobServiceClient(): Promise<BlobServiceClient> {
+        if (this.isEmulated) {
+            const blobEndpoint = getWorkspaceSetting('blobHost', undefined, azuriteKey) || defaultEmulatorHost;
+            const blobPort = getWorkspaceSetting('blobPort', undefined, azuriteKey) || '10000';
+
+            const sharedKeyCredential = new StorageSharedKeyCredentialBlob(emulatorAccountName, emulatorKey);
+            return new BlobServiceClient(`http://${blobEndpoint}:${blobPort}/${emulatorAccountName}`, sharedKeyCredential);
+        }
+
         return BlobServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
@@ -146,10 +155,26 @@ class AttachedStorageRoot extends AttachedAccountRoot {
     }
 
     public async createQueueServiceClient(): Promise<QueueServiceClient> {
+        if (this.isEmulated) {
+            const queueEndpoint = getWorkspaceSetting('queueHost', undefined, azuriteKey) || defaultEmulatorHost;
+            const queuePort = getWorkspaceSetting('queuePort', undefined, azuriteKey) || '10001';
+
+            const sharedKeyCredential = new StorageSharedKeyCredentialQueue(emulatorAccountName, emulatorKey);
+            return new QueueServiceClient(`http://${queueEndpoint}:${queuePort}/${emulatorAccountName}`, sharedKeyCredential);
+        }
+
         return QueueServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
     }
 
     public async createTableServiceClient(): Promise<TableServiceClient> {
+        if (this.isEmulated) {
+            const tableEndpoint = getWorkspaceSetting('tableHost', undefined, azuriteKey) || defaultEmulatorHost;
+            const tablePort = getWorkspaceSetting('tablePort', undefined, azuriteKey) || '10002';
+
+            const sharedKeyCredential = new AzureNamedKeyCredential(emulatorAccountName, emulatorKey);
+            return new TableServiceClient(`http://${tableEndpoint}:${tablePort}/${emulatorAccountName}`, sharedKeyCredential, { allowInsecureConnection: true });
+        }
+
         return TableServiceClient.fromConnectionString(this._connectionString, { retryOptions: { maxRetries: this._serviceClientPipelineOptions.retryOptions.maxTries } });
     }
 }
