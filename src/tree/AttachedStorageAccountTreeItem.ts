@@ -144,7 +144,8 @@ class AttachedStorageRoot extends AttachedAccountRoot {
             const blobPort = getWorkspaceSetting('blobPort', undefined, azuriteKey) || '10000';
 
             const sharedKeyCredential = new StorageSharedKeyCredentialBlob(emulatorAccountName, emulatorKey);
-            return new BlobServiceClient(`http://${blobEndpoint}:${blobPort}/${emulatorAccountName}`, sharedKeyCredential);
+            const protocol = getTransferProtocol();
+            return new BlobServiceClient(`${protocol}://${blobEndpoint}:${blobPort}/${emulatorAccountName}`, sharedKeyCredential);
         }
 
         return BlobServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
@@ -160,7 +161,8 @@ class AttachedStorageRoot extends AttachedAccountRoot {
             const queuePort = getWorkspaceSetting('queuePort', undefined, azuriteKey) || '10001';
 
             const sharedKeyCredential = new StorageSharedKeyCredentialQueue(emulatorAccountName, emulatorKey);
-            return new QueueServiceClient(`http://${queueEndpoint}:${queuePort}/${emulatorAccountName}`, sharedKeyCredential);
+            const protocol = getTransferProtocol();
+            return new QueueServiceClient(`${protocol}://${queueEndpoint}:${queuePort}/${emulatorAccountName}`, sharedKeyCredential);
         }
 
         return QueueServiceClient.fromConnectionString(this._connectionString, this._serviceClientPipelineOptions);
@@ -172,9 +174,14 @@ class AttachedStorageRoot extends AttachedAccountRoot {
             const tablePort = getWorkspaceSetting('tablePort', undefined, azuriteKey) || '10002';
 
             const sharedKeyCredential = new AzureNamedKeyCredential(emulatorAccountName, emulatorKey);
-            return new TableServiceClient(`http://${tableEndpoint}:${tablePort}/${emulatorAccountName}`, sharedKeyCredential, { allowInsecureConnection: true });
+            const protocol = getTransferProtocol();
+            return new TableServiceClient(`${protocol}://${tableEndpoint}:${tablePort}/${emulatorAccountName}`, sharedKeyCredential, { allowInsecureConnection: protocol === 'http' });
         }
 
         return TableServiceClient.fromConnectionString(this._connectionString, { retryOptions: { maxRetries: this._serviceClientPipelineOptions.retryOptions.maxTries } });
     }
+}
+
+function getTransferProtocol(): string {
+    return getWorkspaceSetting('cert', undefined, azuriteKey) && getWorkspaceSetting('key', undefined, azuriteKey) ? 'https' : 'http';
 }
