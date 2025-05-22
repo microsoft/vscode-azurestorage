@@ -418,14 +418,28 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, cancellable: false }, async (progress) => {
                     if (exists) {
                         progress.report({ message: localize('savingBlob', `Saving blob {0}...`, baseName) });
+                        // Get existing properties to preserve content-type including charset
+                        const blockBlobClient = blobClient.getBlockBlobClient();
+                        const existingProps = await blockBlobClient.getProperties();
+                        await blockBlobClient.uploadData(content, {
+                            blobHTTPHeaders: {
+                                blobCacheControl: existingProps.cacheControl,
+                                blobContentType: existingProps.contentType,
+                                blobContentEncoding: existingProps.contentEncoding,
+                                blobContentLanguage: existingProps.contentLanguage,
+                                blobContentDisposition: existingProps.contentDisposition,
+                                blobContentMD5: undefined // Needs to be filled in by SDK
+                            },
+                            metadata: existingProps.metadata
+                        });
                     } else {
                         progress.report({ message: localize('creatingBlob', `Creating blob {0}...`, baseName) });
+                        await blobClient.getBlockBlobClient().uploadData(content, {
+                            blobHTTPHeaders: {
+                                blobContentType: mime.getType(uri.path) || undefined
+                            }
+                        });
                     }
-                    await blobClient.getBlockBlobClient().uploadData(content, {
-                        blobHTTPHeaders: {
-                            blobContentType: mime.getType(uri.path) || undefined
-                        }
-                    });
                 });
             } catch (error) {
                 const pe = parseError(error);

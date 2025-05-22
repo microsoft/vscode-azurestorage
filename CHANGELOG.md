@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixed
+* Preserve content-type including charset when editing files in blob storage
+
 ## 0.16.4 - 2025-05-01
 ## Fixed
 * [[1388]](https://github.com/microsoft/vscode-azurestorage/pull/1388) Incomplete telemetry data capture in specific scenarios.
