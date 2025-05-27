@@ -166,7 +166,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
             await containerClient.delete();
         }
 
-        AzureStorageFS.fireDeleteEvent(this);
+        AzureStorageFS.fireDeleteEvent(context, this);
     }
 
     public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingFileContext> & IBlobContainerCreateChildContext): Promise<AzExtTreeItem> {

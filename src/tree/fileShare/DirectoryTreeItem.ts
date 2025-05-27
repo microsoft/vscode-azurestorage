@@ -129,7 +129,7 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
             throw new UserCancelledError();
         }
 
-        AzureStorageFS.fireDeleteEvent(this);
+        AzureStorageFS.fireDeleteEvent(context, this);
     }
 }
 

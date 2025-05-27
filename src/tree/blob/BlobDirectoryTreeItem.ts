@@ -135,6 +135,6 @@ export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyU
         }
         await wizard.execute();
 
-        AzureStorageFS.fireDeleteEvent(this);
+        AzureStorageFS.fireDeleteEvent(context, this);
     }
 }
