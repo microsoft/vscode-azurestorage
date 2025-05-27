@@ -24,6 +24,5 @@
         "norequired",
         "opencode",
         "repo"
-    ],
-    "azureVirtualMachines.enableOutputTimestamps": false
+    ]
 }
