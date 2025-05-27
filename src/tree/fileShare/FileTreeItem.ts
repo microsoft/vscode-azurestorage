@@ -83,6 +83,6 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
             throw new UserCancelledError();
         }
 
-        AzureStorageFS.fireDeleteEvent(this);
+        AzureStorageFS.fireDeleteEvent(context, this);
     }
 }

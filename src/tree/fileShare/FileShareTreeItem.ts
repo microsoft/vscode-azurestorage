@@ -124,7 +124,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
             throw new UserCancelledError();
         }
 
-        AzureStorageFS.fireDeleteEvent(this);
+        AzureStorageFS.fireDeleteEvent(context, this);
     }
 
     public async createChildImpl(context: ICreateChildImplContext & Partial<IExistingFileContext> & IFileShareCreateChildContext): Promise<AzExtTreeItem> {

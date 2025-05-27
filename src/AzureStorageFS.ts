@@ -101,7 +101,9 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         await vscode.window.showTextDocument(doc, { preserveFocus: false, preview: false });
     }
 
-    public static fireDeleteEvent(node: AzExtTreeItem): void {
+    public static fireDeleteEvent(context: IActionContext, node: AzExtTreeItem): void {
+        // refresh the workspaceResourceTree to reflect changes in attached accounts since azureStorageFS doesn't seem to refresh the workspace view
+        void ext.rgApi.workspaceResourceTree.refresh(context);
         ext.azureStorageFS.fireSoon({ uri: AzureStorageFS.idToUri(node.fullId), type: vscode.FileChangeType.Deleted });
     }
 

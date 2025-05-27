@@ -108,7 +108,7 @@ export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
             const blobClient: BlobClient = await createBlobClient(this.root, this.container.name, this.blobPath);
             await blobClient.delete();
         }
-        AzureStorageFS.fireDeleteEvent(this);
+        AzureStorageFS.fireDeleteEvent(context, this);
     }
 
     public async checkCanDownload(context: IActionContext): Promise<void> {
