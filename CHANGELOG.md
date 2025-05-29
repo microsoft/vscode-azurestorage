@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## 0.16.5 - 2025-05-29
+### Added
+* [[1397](https://github.com/microsoft/vscode-azurestorage/pull/1397)] Add activity children for deleting file share directories
+* [[1390](https://github.com/microsoft/vscode-azurestorage/pull/1390)] Use azurite settings for listening to emulator
+* [[1387](https://github.com/microsoft/vscode-azurestorage/pull/1387)] Add activity children for creating storage accounts
+
+### Changed
+* [[1387](https://github.com/microsoft/vscode-azurestorage/pull/1387)] Upgrade to latest version of the activity log (v2). Now shows live progress on each activity child with timers.
+
+### Fix
+* [[1399](https://github.com/microsoft/vscode-azurestorage/pull/1399)] Fix an issue where deleting a blob would not immediately remove it from the workspace view
+
 ## 0.16.4 - 2025-05-01
 ## Fixed
 * [[1388]](https://github.com/microsoft/vscode-azurestorage/pull/1388) Incomplete telemetry data capture in specific scenarios.
