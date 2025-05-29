@@ -2,12 +2,12 @@
 
 ## Unreleased
 
-## 0.16.5 - 2025-05-0x
+## 0.16.5 - 2025-05-29
 ### Added
+* [[1390](https://github.com/microsoft/vscode-azurestorage/pull/1390)] Use azurite settings for listening to emulator
 * [[1387](https://github.com/microsoft/vscode-azurestorage/pull/1387)] Add activity children for creating storage accounts
 
 ### Changed
-* [[1390](https://github.com/microsoft/vscode-azurestorage/pull/1390)] Use azurite settings for listening to emulator
 * [[1387](https://github.com/microsoft/vscode-azurestorage/pull/1387)] Upgrade to latest version of the activity log (v2). Now shows live progress on each activity child with timers.
 
 ## 0.16.4 - 2025-05-01
