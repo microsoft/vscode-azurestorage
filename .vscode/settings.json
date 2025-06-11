@@ -24,5 +24,6 @@
         "norequired",
         "opencode",
         "repo"
-    ]
+    ],
+    "azurite.location": ".azurite"
 }
