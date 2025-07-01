@@ -27,11 +27,12 @@ export function registerStorageAccountActionHandlers(): void {
     registerCommandWithTreeNodeUnwrapping("azureStorage.deleteStorageAccount", deleteStorageAccount);
 }
 
-async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: ResolvedAppResourceTreeItem<ResolvedStorageAccount>): Promise<void> {
+async function openStorageAccountInStorageExplorer(context: IActionContext, treeItem?: ResolvedAppResourceTreeItem<ResolvedStorageAccount> & StorageAccountTreeItem): Promise<void> {
     if (!treeItem) {
         treeItem = await pickStorageAccount(context);
     }
 
+    await treeItem.initStorageAccount(context);
     const accountId = treeItem.storageAccount.id;
 
     await storageExplorerLauncher.openResource(accountId, treeItem.subscription.subscriptionId);
@@ -42,6 +43,7 @@ export async function copyPrimaryKey(context: IActionContext, treeItem?: Storage
         treeItem = await pickStorageAccount(context);
     }
 
+    await treeItem.initStorageAccount(context);
     await copyAndShowToast(treeItem.key.value, 'Primary key');
 }
 
@@ -50,6 +52,7 @@ export async function copyConnectionString(context: IActionContext, treeItem?: S
         treeItem = await pickStorageAccount(context);
     }
 
+    await treeItem.initStorageAccount(context);
     const connectionString = treeItem.getConnectionString();
     await copyAndShowToast(connectionString, 'Connection string');
 }
@@ -136,6 +139,10 @@ function isTaskEqual(expectedName: string, expectedPath: string, actualTask: vsc
 }
 
 export async function deleteStorageAccount(context: IActionContext, treeItem?: StorageAccountTreeItem & AzExtTreeItem): Promise<void> {
+    if (!treeItem) {
+        treeItem = await pickStorageAccount(context);
+    }
+    await treeItem.initStorageAccount(context);
     await deleteNode(context, undefined, treeItem);
 }
 

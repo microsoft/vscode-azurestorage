@@ -834,11 +834,12 @@
     },
     "dependencies": {
         "@azure-tools/azcopy-node": "^2.11.0",
+        "@azure/arm-resourcegraph": "^4.2.1",
         "@azure/arm-storage": "^18.1.0",
         "@azure/arm-storage-profile-2020-09-01-hybrid": "^2.0.0",
         "@azure/core-rest-pipeline": "^1.11.0",
         "@azure/data-tables": "^13.0.0",
-        "@azure/storage-blob": "^12.1.1",
+        "@azure/storage-blob": "^12.27.0",
         "@azure/storage-file-datalake": "^12.1.1",
         "@azure/storage-file-share": "^12.25.0-beta.1",
         "@azure/storage-queue": "^12.7.0",

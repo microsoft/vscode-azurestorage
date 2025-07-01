@@ -3,15 +3,17 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { BlobServiceClient, ContainerClient, ContainerItem, ListContainersSegmentResponse, ServiceListContainersSegmentResponse } from '@azure/storage-blob';
+import type { ContainerClient, ContainerItem } from '@azure/storage-blob';
 
 import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError } from '@microsoft/vscode-azext-utils';
 
+import { ListContainerItem } from '@azure/arm-storage';
+import { getResourceGroupFromId, uiUtils } from '@microsoft/vscode-azext-azureutils';
 import { ResolvedAppResourceTreeItem } from "@microsoft/vscode-azext-utils/hostapi";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ResolvedStorageAccount } from "../../StorageAccountResolver";
-import { getResourcesPath, maxPageSize } from "../../constants";
+import { getResourcesPath } from "../../constants";
 import { createBlobContainerClient } from '../../utils/blobUtils';
 import { localize } from "../../utils/localize";
 import { nonNullProp } from "../../utils/nonNull";
@@ -48,9 +50,9 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
             this._continuationToken = undefined;
         }
 
-        let containersResponse: ListContainersSegmentResponse;
+        let containersResponse: ListContainerItem[];
         try {
-            containersResponse = await this.listContainers(this._continuationToken);
+            containersResponse = await this.listContainers();
         } catch (error) {
             const errorType: string = parseError(error).errorType;
             if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
@@ -67,9 +69,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
             }
         }
 
-        this._continuationToken = containersResponse.continuationToken;
-
-        const result: AzExtTreeItem[] = await Promise.all(containersResponse.containerItems.map(async (container: ContainerItem) => {
+        const result: AzExtTreeItem[] = await Promise.all(containersResponse.map(async (container: ContainerItem) => {
             return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
         }));
 
@@ -81,12 +81,12 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         return !!this._continuationToken;
     }
 
-    async listContainers(continuationToken?: string): Promise<ListContainersSegmentResponse> {
-        const blobServiceClient: BlobServiceClient = await this.root.createBlobServiceClient();
-        const response: AsyncIterableIterator<ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
-
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return (await response.next()).value;
+    async listContainers(): Promise<ListContainerItem[]> {
+        const storageAccountName = this.root.storageAccountName;
+        const resourceGroupName = getResourceGroupFromId(this.root.storageAccountId);
+        // Use the ARM storage management client because the blob service client has access right issues
+        const containers = await uiUtils.listAllIterator(this.root.getStorageManagementClient().blobContainers.list(resourceGroupName, storageAccountName));
+        return containers;
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<BlobContainerTreeItem> {
@@ -111,9 +111,9 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         const containerClient: ContainerClient = await createBlobContainerClient(this.root, name);
         await containerClient.create();
 
-        const containersResponse: ListContainersSegmentResponse = await this.listContainers();
-        let createdContainer: ContainerItem | undefined;
-        for (const container of containersResponse.containerItems) {
+        const containersResponse: ListContainerItem[] = await this.listContainers();
+        let createdContainer: ListContainerItem | undefined;
+        for (const container of containersResponse) {
             if (container.name === name) {
                 createdContainer = container;
                 break;
@@ -124,6 +124,6 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
             throw new Error(`Could not create container ${name}`);
         }
 
-        return createdContainer;
+        return createdContainer as ContainerItem;
     }
 }

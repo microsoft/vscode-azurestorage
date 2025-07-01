@@ -15,6 +15,7 @@ export class StorageAccountWrapper {
     readonly name: string = nonNullProp(this._account, 'name');
     readonly type: string = nonNullProp(this._account, 'type');
     readonly primaryEndpoints: Endpoints = nonNullProp(this._account, 'primaryEndpoints');
+    readonly location: string = nonNullProp(this._account, 'location');
 }
 
 /**

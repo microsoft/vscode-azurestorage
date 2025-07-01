@@ -3,16 +3,13 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AccountSASSignatureValues, ServiceGetPropertiesResponse, StaticWebsite } from '@azure/storage-blob';
-
-import { polyfill } from '../polyfill.worker';
-polyfill();
-
 import { AzureNamedKeyCredential, TableServiceClient } from '@azure/data-tables';
+import type { AccountSASSignatureValues, ServiceGetPropertiesResponse, StaticWebsite } from '@azure/storage-blob';
 import { BlobServiceClient, generateAccountSASQueryParameters, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob } from '@azure/storage-blob';
 import { ShareServiceClient } from '@azure/storage-file-share';
 import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialQueue } from '@azure/storage-queue';
 
+import { StorageManagementClient } from '@azure/arm-storage';
 import { AzExtParentTreeItem, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { AttachedAccountRoot } from '../AttachedAccountRoot';
@@ -125,6 +122,10 @@ class AttachedStorageRoot extends AttachedAccountRoot {
 
     public get storageAccountId(): string {
         throw new Error(localize('cannotRetrieveStorageAccountIdForAttachedAccount', 'Cannot retrieve storage account id for an attached account.'));
+    }
+
+    public getStorageManagementClient(): StorageManagementClient {
+        throw new Error(localize('cannotRetrieveStorageAccountIdForAttachedAccount', 'Cannot retrieve storage management client for an attached account.'));
     }
 
     public generateSasToken(accountSASSignatureValues: AccountSASSignatureValues): string {
