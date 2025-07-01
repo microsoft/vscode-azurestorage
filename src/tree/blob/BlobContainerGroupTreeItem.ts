@@ -84,7 +84,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     async listContainers(): Promise<ListContainerItem[]> {
         const storageAccountName = this.root.storageAccountName;
         const resourceGroupName = getResourceGroupFromId(this.root.storageAccountId);
-
+        // Use the ARM storage management client because the blob service client has access right issues
         const containers = await uiUtils.listAllIterator(this.root.getStorageManagementClient().blobContainers.list(resourceGroupName, storageAccountName));
         return containers;
     }
