@@ -51,7 +51,7 @@ export type WebsiteHostingStatus = {
 
 export type StorageQueryResult = {
     id: string,
-    // location: string,
+    location: string,
     name: string,
     resourceGroup: string,
     subscriptionId: string,
@@ -88,13 +88,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         this._subscription = subscription;
         if (storageAccount) {
             this._storageAccount = storageAccount;
-            this.dataModel = {
-                id: storageAccount.id,
-                name: storageAccount.name,
-                subscriptionId: subscription.subscriptionId,
-                resourceGroup: getResourceGroupFromId(storageAccount.id),
-                type: storageAccount.type
-            }
+            this.dataModel = this.createDataModelFromStorageAccount(storageAccount);
         }
 
         if (dataModel) {
@@ -103,6 +97,23 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
         this._root = undefined;
         this._storageAccount = undefined;
+    }
+
+    public createDataModelFromStorageAccount(storageAccount: StorageAccountWrapper): StorageQueryResult {
+        return {
+            id: storageAccount.id,
+            location: storageAccount.location,
+            name: storageAccount.name,
+            resourceGroup: getResourceGroupFromId(storageAccount.id),
+            subscriptionId: this._subscription.subscriptionId,
+            type: storageAccount.type
+        };
+    }
+
+    public async refreshImpl(context: IActionContext): Promise<void> {
+        this._storageAccount = undefined;
+        this._root = undefined;
+        return await this.initStorageAccount(context);
     }
 
     public get storageAccount(): StorageAccountWrapper {
@@ -123,17 +134,14 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             this._storageManagementClient = await createStorageClient([context, this._subscription]);
             const storageAccount = await this._storageManagementClient.storageAccounts.getProperties(this.dataModel.resourceGroup, this.dataModel.name);
             this._storageAccount = new StorageAccountWrapper(storageAccount);
-            await this.refreshKey();
-            this.root = this.createRoot();
-        }
-
-    }
-
-    public initRoot(): void {
-        if (!this._root) {
+            this.dataModel = this.createDataModelFromStorageAccount(this.storageAccount);
             this._root = this.createRoot();
+            await this.refreshKey();
         }
+
     }
+
+
 
     public get root(): IStorageRoot {
         if (!this._root) {
@@ -141,10 +149,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         }
 
         return this._root;
-    }
-
-    public set root(root: IStorageRoot) {
-        this._root = root;
     }
 
     public get label(): string {
@@ -171,8 +175,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
         await this.initStorageAccount(context);
-        this.initRoot();
-        await this.refreshKey();
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
         this._queueGroupTreeItem = new QueueGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));

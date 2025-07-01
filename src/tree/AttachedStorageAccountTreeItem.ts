@@ -3,12 +3,8 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { AccountSASSignatureValues, ServiceGetPropertiesResponse, StaticWebsite } from '@azure/storage-blob';
-
-import { polyfill } from '../polyfill.worker';
-polyfill();
-
 import { AzureNamedKeyCredential, TableServiceClient } from '@azure/data-tables';
+import type { AccountSASSignatureValues, ServiceGetPropertiesResponse, StaticWebsite } from '@azure/storage-blob';
 import { BlobServiceClient, generateAccountSASQueryParameters, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob } from '@azure/storage-blob';
 import { ShareServiceClient } from '@azure/storage-file-share';
 import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialQueue } from '@azure/storage-queue';
