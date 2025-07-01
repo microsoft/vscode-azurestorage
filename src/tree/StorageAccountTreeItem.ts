@@ -289,7 +289,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 } catch (error) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
                     client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), token);
-                    await client.getProperties(); // Trigger a request to 6validate the token
+                    await client.getProperties(); // Trigger a request to validate the token
                 }
 
                 return client;
