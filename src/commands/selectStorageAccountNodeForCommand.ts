@@ -9,7 +9,7 @@ import { storageFilter } from "../constants";
 import { ext } from "../extensionVariables";
 import { AttachedStorageAccountTreeItem } from '../tree/AttachedStorageAccountTreeItem';
 import { BlobContainerTreeItem } from "../tree/blob/BlobContainerTreeItem";
-import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem } from "../tree/StorageAccountTreeItem";
+import { isResolvedStorageAccountTreeItem, ResolvedStorageAccountTreeItem, StorageAccountTreeItem } from "../tree/StorageAccountTreeItem";
 import { localize } from '../utils/localize';
 
 /**
@@ -47,14 +47,16 @@ export async function selectStorageAccountTreeItemForCommand(
         isResolvedStorageAccountTreeItem(storageOrContainerTreeItem) || storageOrContainerTreeItem instanceof BlobContainerTreeItem,
         `Internal error: Incorrect treeItem type "${storageOrContainerTreeItem.contextValue}" passed to selectStorageAccountTreeItemForCommand()`);
 
-    let accountTreeItem: ResolvedStorageAccountTreeItem & AzExtTreeItem;
+    let accountTreeItem: ResolvedStorageAccountTreeItem & StorageAccountTreeItem;
     if (storageOrContainerTreeItem instanceof BlobContainerTreeItem) {
         // Currently the portal only allows configuring at the storage account level, so retrieve the storage account treeItem
         accountTreeItem = storageOrContainerTreeItem.getStorageAccountTreeItem(storageOrContainerTreeItem);
     } else {
         assert(isResolvedStorageAccountTreeItem(storageOrContainerTreeItem));
-        accountTreeItem = <ResolvedStorageAccountTreeItem & AzExtTreeItem>treeItem;
+        accountTreeItem = <ResolvedStorageAccountTreeItem & StorageAccountTreeItem>treeItem;
     }
+
+    await accountTreeItem.initStorageAccount(context);
 
     if (options.mustBeWebsiteCapable) {
         const hostingStatus = await accountTreeItem.getActualWebsiteHostingStatus();
@@ -77,7 +79,6 @@ export async function selectStorageAccountTreeItemForCommand(
             await accountTreeItem.configureStaticWebsite(context);
         }
     }
-
     return accountTreeItem;
 }
 

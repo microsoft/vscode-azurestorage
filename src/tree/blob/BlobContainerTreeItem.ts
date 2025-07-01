@@ -302,7 +302,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         return this.root.primaryEndpoints && this.root.primaryEndpoints.web;
     }
 
-    public getStorageAccountTreeItem(treeItem: AzExtTreeItem): ResolvedStorageAccountTreeItem & AzExtTreeItem {
+    public getStorageAccountTreeItem(treeItem: AzExtTreeItem): ResolvedStorageAccountTreeItem & StorageAccountTreeItem {
         if (!(treeItem instanceof BlobContainerTreeItem)) {
             throw new Error(`Unexpected treeItem type: ${treeItem.contextValue}`);
         }

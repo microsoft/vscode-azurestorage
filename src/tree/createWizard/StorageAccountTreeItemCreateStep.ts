@@ -6,7 +6,6 @@
 import { IStorageAccountWizardContext } from "@microsoft/vscode-azext-azureutils";
 import { AzureWizardExecuteStep, ExecuteActivityContext, ISubscriptionContext } from "@microsoft/vscode-azext-utils";
 import { AppResource } from "@microsoft/vscode-azext-utils/hostapi";
-import { createStorageClient } from "../../utils/azureClients";
 import { nonNullProp } from '../../utils/nonNull';
 import { StorageAccountWrapper } from "../../utils/storageWrappers";
 import { StorageAccountTreeItem } from "../StorageAccountTreeItem";
@@ -25,8 +24,7 @@ export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<ISt
     }
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {
-        const storageManagementClient = await createStorageClient(wizardContext);
-        wizardContext.accountTreeItem = await StorageAccountTreeItem.createStorageAccountTreeItem(this.subscription, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')), storageManagementClient);
+        wizardContext.accountTreeItem = new StorageAccountTreeItem(this.subscription, new StorageAccountWrapper(nonNullProp(wizardContext, 'storageAccount')));
 
         const appResource: AppResource = {
             id: wizardContext.accountTreeItem.storageAccount.id,

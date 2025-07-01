@@ -14,7 +14,8 @@ import { ShareServiceClient, StorageSharedKeyCredential as StorageSharedKeyCrede
 import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialQueue } from '@azure/storage-queue';
 
 import { StorageAccountKey, StorageManagementClient } from '@azure/arm-storage';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { getResourceGroupFromId } from '@microsoft/vscode-azext-azureutils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError, callWithTelemetryAndErrorHandling } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import { ViewPropertiesModel } from '@microsoft/vscode-azureresources-api';
 import { MessageItem, commands, window } from 'vscode';
@@ -24,6 +25,7 @@ import { DeleteStorageAccountWizardContext } from '../commands/deleteStorageAcco
 import { staticWebsiteContainerName } from '../constants';
 import { ext } from "../extensionVariables";
 import { createActivityContext } from '../utils/activityUtils';
+import { createStorageClient } from '../utils/azureClients';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
 import { openUrl } from '../utils/openUrl';
@@ -47,6 +49,15 @@ export type WebsiteHostingStatus = {
     errorDocument404Path?: string;
 };
 
+export type StorageQueryResult = {
+    id: string,
+    // location: string,
+    name: string,
+    resourceGroup: string,
+    subscriptionId: string,
+    type: string
+}
+
 export type ResolvedStorageAccountTreeItem = ResolvedAppResourceTreeItem<ResolvedStorageAccount>;
 
 export function isResolvedStorageAccountTreeItem(t: unknown): t is ResolvedStorageAccountTreeItem {
@@ -60,42 +71,108 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
 
+    private _subscription: ISubscriptionContext;
+    public dataModel: StorageQueryResult;
     private _blobContainerGroupTreeItem: BlobContainerGroupTreeItem;
     private _fileShareGroupTreeItem: FileShareGroupTreeItem;
     private _queueGroupTreeItem: QueueGroupTreeItem;
     private _tableGroupTreeItem: TableGroupTreeItem;
-    private _root: IStorageRoot;
+    private _root: IStorageRoot | undefined;
+    private _storageAccount: StorageAccountWrapper | undefined;
+    private _storageManagementClient: StorageManagementClient;
 
-    private constructor(
-        private readonly _subscription: ISubscriptionContext,
-        public readonly storageAccount: StorageAccountWrapper,
-        public readonly storageManagementClient: StorageManagementClient,
+    constructor(subscription: ISubscriptionContext,
+        storageAccount: StorageAccountWrapper | undefined,
+        dataModel?: StorageQueryResult
     ) {
-        this._root = this.createRoot();
+        this._subscription = subscription;
+        if (storageAccount) {
+            this._storageAccount = storageAccount;
+            this.dataModel = {
+                id: storageAccount.id,
+                name: storageAccount.name,
+                subscriptionId: subscription.subscriptionId,
+                resourceGroup: getResourceGroupFromId(storageAccount.id),
+                type: storageAccount.type
+            }
+        }
+
+        if (dataModel) {
+            this.dataModel = dataModel;
+        }
+
+        this._root = undefined;
+        this._storageAccount = undefined;
     }
 
-    public static async createStorageAccountTreeItem(subscription: ISubscriptionContext, storageAccount: StorageAccountWrapper, client: StorageManagementClient): Promise<StorageAccountTreeItem> {
-        const ti = new StorageAccountTreeItem(subscription, storageAccount, client);
-        // make sure key is initialized
-        await ti.refreshKey();
-        return ti;
+    public get storageAccount(): StorageAccountWrapper {
+        if (!this._storageAccount) {
+            void callWithTelemetryAndErrorHandling('storageAccount.initAccountFailed', async (context: IActionContext) => {
+                // try to lazy load the site if it hasn't been initialized yet
+                void this.initStorageAccount(context);
+            });
+            // If the storage account is not initialized, we should throw an error
+            throw new Error(localize('saNotSet', 'Storage account is not initialized. Please try again in a moment.'));
+        }
+
+        return this._storageAccount;
+    }
+
+    public async initStorageAccount(context: IActionContext): Promise<void> {
+        if (!this._storageAccount) {
+            this._storageManagementClient = await createStorageClient([context, this._subscription]);
+            const storageAccount = await this._storageManagementClient.storageAccounts.getProperties(this.dataModel.resourceGroup, this.dataModel.name);
+            this._storageAccount = new StorageAccountWrapper(storageAccount);
+            await this.refreshKey();
+            this.root = this.createRoot();
+        }
+
+    }
+
+    public initRoot(): void {
+        if (!this._root) {
+            this._root = this.createRoot();
+        }
     }
 
     public get root(): IStorageRoot {
+        if (!this._root) {
+            this._root = this.createRoot();
+        }
+
         return this._root;
     }
 
-    public label: string = this.storageAccount.name;
+    public set root(root: IStorageRoot) {
+        this._root = root;
+    }
+
+    public get label(): string {
+        return this.dataModel.name;
+    }
+
     public static contextValue: string = 'azureStorageAccount';
     public contextValuesToAdd: string[] = [StorageAccountTreeItem.contextValue];
-    viewProperties: ViewPropertiesModel = {
-        getData: async () => {
-            return this.storageAccount
-        },
-        label: this.label
+    public get viewProperties(): ViewPropertiesModel {
+        return {
+            getData: async () => await this.getData(),
+            label: this.label
+        }
     }
-    // eslint-disable-next-line @typescript-eslint/require-await
-    async loadMoreChildrenImpl(_clearCache: boolean): Promise<AzExtTreeItem[]> {
+
+    public async getData(): Promise<StorageAccountWrapper> {
+        if (!this._storageAccount) {
+            await callWithTelemetryAndErrorHandling('getData.initSite', async (context: IActionContext) => {
+                await this.initStorageAccount(context);
+            });
+        }
+        return this.storageAccount;
+    }
+
+    async loadMoreChildrenImpl(_clearCache: boolean, context: IActionContext): Promise<AzExtTreeItem[]> {
+        await this.initStorageAccount(context);
+        this.initRoot();
+        await this.refreshKey();
         this._blobContainerGroupTreeItem = new BlobContainerGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
         this._fileShareGroupTreeItem = new FileShareGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
         this._queueGroupTreeItem = new QueueGroupTreeItem(this as unknown as (AzExtParentTreeItem & ResolvedAppResourceTreeItem<ResolvedStorageAccount>));
@@ -161,8 +238,8 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     private createRoot(): IStorageRoot {
         return {
-            storageAccountName: this.storageAccount.name,
-            storageAccountId: this.storageAccount.id,
+            storageAccountName: this.dataModel.name,
+            storageAccountId: this.dataModel.id,
             isEmulated: false,
             primaryEndpoints: this.storageAccount.primaryEndpoints,
             generateSasToken: (accountSASSignatureValues: AccountSASSignatureValues) => {
@@ -171,10 +248,15 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                     new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value)
                 ).toString();
             },
+            getStorageManagementClient: () => {
+                return this._storageManagementClient;
+            },
             createBlobServiceClient: async () => {
-                const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value);
-                let client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
+                let client: BlobServiceClient;
                 try {
+                    await this.refreshKey();
+                    const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value);
+                    client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
                     await client.getProperties(); // Trigger a request to validate the key
                 } catch (error) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
@@ -205,7 +287,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 } catch (error) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
                     client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), token);
-                    await client.getProperties(); // Trigger a request to validate the token
+                    await client.getProperties(); // Trigger a request to 6validate the token
                 }
 
                 return client;
@@ -233,7 +315,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     async getKeys(): Promise<StorageAccountKeyWrapper[]> {
         const parsedId = StorageAccountTreeItem.parseAzureResourceId(this.storageAccount.id);
         const resourceGroupName = parsedId.resourceGroups;
-        const keyResult = await this.storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
+        const keyResult = await this._storageManagementClient.storageAccounts.listKeys(resourceGroupName, this.storageAccount.name);
         return (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
     }
 
