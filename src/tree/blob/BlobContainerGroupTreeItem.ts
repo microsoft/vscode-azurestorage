@@ -128,7 +128,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         await containerClient.create();
         const isAttached = this.fullId.startsWith("/attachedStorageAccounts/");
 
-        const containersResponse: ListContainerItem[] | ListContainersSegmentResponse = await this.listContainers(isAttached, this._continuationToken);
+        const containersResponse: ListContainerItem[] = await this.listContainers(isAttached, this._continuationToken);
         let createdContainer: ListContainerItem | undefined;
         for (const container of containersResponse) {
             if (container.name === name) {
