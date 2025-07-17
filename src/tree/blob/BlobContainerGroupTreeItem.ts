@@ -50,7 +50,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
             this._continuationToken = undefined;
         }
 
-        const isAttached = this.fullId.startsWith("/attachedStorageAccounts/")
+        const isAttached = this.fullId.startsWith("/attachedStorageAccounts/");
 
         let containersResponse: ListContainerItem[] | ListContainersSegmentResponse;
         try {
@@ -71,23 +71,24 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
             }
         }
 
-        return await this.getContainerItems(containersResponse, isAttached);
+        return await this.getContainerItems(containersResponse);
     }
 
     public hasMoreChildrenImpl(): boolean {
         return !!this._continuationToken;
     }
 
-    async listContainers(isAttached: boolean, continuationToken?: string): Promise<ListContainerItem[] | ListContainersSegmentResponse> {
+    async listContainers(isAttached: boolean, continuationToken?: string): Promise<ListContainerItem[]> {
         return isAttached ? await this.listAttachedContainers(continuationToken) : await this.listAzureContainers();
     }
 
-    async listAttachedContainers(continuationToken?: string): Promise<ListContainersSegmentResponse> {
+    async listAttachedContainers(continuationToken?: string): Promise<ListContainerItem[]> {
         const blobServiceClient: BlobServiceClient = await this.root.createBlobServiceClient();
         const response: AsyncIterableIterator<ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return (await response.next()).value;
+        const value = (await response.next()).value as ListContainersSegmentResponse;
+        this._continuationToken = value.continuationToken;
+        return value.containerItems;
     }
 
     async listAzureContainers(): Promise<ListContainerItem[]> {
@@ -98,20 +99,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         return containers;
     }
 
-    async getContainerItems(containersResponse: ListContainersSegmentResponse | ListContainerItem[], isAttached: boolean): Promise<BlobContainerTreeItem[]> {
-        return isAttached ?
-            await this.getAttachedContainerItems(containersResponse as ListContainersSegmentResponse) :
-            await this.getAzureContainerItems(containersResponse as ListContainerItem[]);
-    }
-
-    async getAttachedContainerItems(containersResponse: ListContainersSegmentResponse): Promise<BlobContainerTreeItem[]> {
-        this._continuationToken = containersResponse.continuationToken;
-        return await Promise.all(containersResponse.containerItems.map(async (container: ContainerItem) => {
-            return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
-        }));
-    }
-
-    async getAzureContainerItems(containersResponse: ListContainerItem[]): Promise<BlobContainerTreeItem[]> {
+    async getContainerItems(containersResponse: ListContainerItem[]): Promise<BlobContainerTreeItem[]> {
         return await Promise.all(containersResponse.map(async (container: ContainerItem) => {
             return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
         }));
@@ -138,8 +126,9 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     private async createBlobContainer(name: string): Promise<ContainerItem> {
         const containerClient: ContainerClient = await createBlobContainerClient(this.root, name);
         await containerClient.create();
+        const isAttached = this.fullId.startsWith("/attachedStorageAccounts/");
 
-        const containersResponse: ListContainerItem[] = await this.listContainers();
+        const containersResponse: ListContainerItem[] | ListContainersSegmentResponse = await this.listContainers(isAttached, this._continuationToken);
         let createdContainer: ListContainerItem | undefined;
         for (const container of containersResponse) {
             if (container.name === name) {
