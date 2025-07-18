@@ -77,8 +77,8 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     private _fileShareGroupTreeItem: FileShareGroupTreeItem;
     private _queueGroupTreeItem: QueueGroupTreeItem;
     private _tableGroupTreeItem: TableGroupTreeItem;
-    private _root: IStorageRoot | undefined;
-    private _storageAccount: StorageAccountWrapper | undefined;
+    private _root: IStorageRoot | undefined = undefined;
+    private _storageAccount: StorageAccountWrapper | undefined = undefined;
     private _storageManagementClient: StorageManagementClient;
 
     constructor(subscription: ISubscriptionContext,
@@ -94,9 +94,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         if (dataModel) {
             this.dataModel = dataModel;
         }
-
-        this._root = undefined;
-        this._storageAccount = undefined;
     }
 
     public createDataModelFromStorageAccount(storageAccount: StorageAccountWrapper): StorageQueryResult {
