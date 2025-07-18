@@ -138,8 +138,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     }
 
-
-
     public get root(): IStorageRoot {
         if (!this._root) {
             this._root = this.createRoot();
