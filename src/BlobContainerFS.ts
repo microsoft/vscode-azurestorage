@@ -396,7 +396,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             }
         });
 
-        return result ?? Buffer.from("");
+        return result ? new Uint8Array(result) : new Uint8Array();
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {

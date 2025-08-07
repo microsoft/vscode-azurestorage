@@ -249,7 +249,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                     client = await createBlobClient(treeItem.root, treeItem.container.name, parsedUri.filePath);
                     buffer = await client.downloadToBuffer();
                 }
-                return buffer;
+                return new Uint8Array(buffer);
             } catch (error) {
                 const pe = parseError(error);
                 if (pe.errorType === '404') {
@@ -257,7 +257,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 }
                 throw error;
             }
-        }) || Buffer.from('');
+        }) || new Uint8Array();
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {
