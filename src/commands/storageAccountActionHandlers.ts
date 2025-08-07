@@ -44,7 +44,8 @@ export async function copyPrimaryKey(context: IActionContext, treeItem?: Storage
     }
 
     await treeItem.initStorageAccount(context);
-    await copyAndShowToast(treeItem.key.value, 'Primary key');
+    const key = await treeItem.getKey();
+    await copyAndShowToast(key.value, 'Primary key');
 }
 
 export async function copyConnectionString(context: IActionContext, treeItem?: StorageAccountTreeItem): Promise<void> {
