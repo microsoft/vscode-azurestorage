@@ -67,7 +67,7 @@ export function isResolvedStorageAccountTreeItem(t: unknown): t is ResolvedStora
 export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageTreeItem {
     public static kind: 'microsoft.storage/storageaccounts' = 'microsoft.storage/storageaccounts';
     public readonly kind = StorageAccountTreeItem.kind;
-    public key: StorageAccountKeyWrapper;
+    public _key: StorageAccountKeyWrapper;
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
 
@@ -202,24 +202,26 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
     async getKey(): Promise<StorageAccountKeyWrapper> {
         await callWithTelemetryAndErrorHandling('storageAccountTreeItem.getKey', async (context: IActionContext) => {
-            if (!this.key) {
+            if (!this._key) {
                 await this.refreshKey(context);
             }
         });
 
-        return this.key;
+        return this._key;
     }
 
     async refreshKey(context: IActionContext): Promise<void> {
-        const keys: StorageAccountKeyWrapper[] = await this.getKeys(context);
-        const primaryKey = keys.find(key => {
-            return key.keyName === "key1" || key.keyName === "primaryKey";
-        });
+        try {
+            const keys: StorageAccountKeyWrapper[] = await this.getKeys(context);
+            const primaryKey = keys.find(key => {
+                return key.keyName === "key1" || key.keyName === "primaryKey";
+            });
 
-        if (primaryKey) {
-            this.key = new StorageAccountKeyWrapper(primaryKey);
-        } else {
-            throw new Error("Could not find primary key");
+            if (primaryKey) {
+                this._key = new StorageAccountKeyWrapper(primaryKey);
+            }
+        } catch (err) {
+            // no access to key, ignore error for now
         }
     }
 
@@ -251,7 +253,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             generateSasToken: (accountSASSignatureValues: AccountSASSignatureValues) => {
                 return generateAccountSASQueryParameters(
                     accountSASSignatureValues,
-                    new StorageSharedKeyCredentialBlob(this.storageAccount.name, this.key.value)
+                    new StorageSharedKeyCredentialBlob(this.storageAccount.name, this._key.value)
                 ).toString();
             },
             getStorageManagementClient: async (context: IActionContext) => {
@@ -272,9 +274,10 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 return client;
             },
             createShareServiceClient: async () => {
-                const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, ((await this.getKey()).value));
-                let client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
+                let client: ShareServiceClient;
                 try {
+                    const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, ((await this.getKey()).value));
+                    client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
                     await client.getProperties(); // Trigger a request to validate the key
                 } catch (error) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
@@ -285,9 +288,10 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 return client;
             },
             createQueueServiceClient: async () => {
-                const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, ((await this.getKey()).value));
-                let client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
+                let client: QueueServiceClient;
                 try {
+                    const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, ((await this.getKey()).value));
+                    client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
                     await client.getProperties(); // Trigger a request to validate the key
                 } catch (error) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
@@ -298,9 +302,10 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 return client;
             },
             createTableServiceClient: async () => {
-                const credential = new AzureNamedKeyCredential(this.storageAccount.name, ((await this.getKey()).value));
-                let client = new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
+                let client: TableServiceClient;
                 try {
+                    const credential = new AzureNamedKeyCredential(this.storageAccount.name, ((await this.getKey()).value));
+                    client = new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
                     await client.getProperties(); // Trigger a request to validate the key
                 } catch (error) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
@@ -313,8 +318,9 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         };
     }
 
-    getConnectionString(): string {
-        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${this.key.value};EndpointSuffix=${nonNullProp(this._subscription.environment, 'storageEndpointSuffix')}`;
+    async getConnectionString(): Promise<string> {
+        const key = await this.getKey();
+        return `DefaultEndpointsProtocol=https;AccountName=${this.storageAccount.name};AccountKey=${key.value};EndpointSuffix=${nonNullProp(this._subscription.environment, 'storageEndpointSuffix')}`;
     }
 
     async getKeys(context: IActionContext): Promise<StorageAccountKeyWrapper[]> {

@@ -53,7 +53,7 @@ export async function copyConnectionString(context: IActionContext, treeItem?: S
     }
 
     await treeItem.initStorageAccount(context);
-    const connectionString = treeItem.getConnectionString();
+    const connectionString = await treeItem.getConnectionString();
     await copyAndShowToast(connectionString, 'Connection string');
 }
 
