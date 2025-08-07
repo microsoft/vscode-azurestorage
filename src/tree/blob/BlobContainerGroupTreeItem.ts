@@ -5,7 +5,7 @@
 
 import type { BlobServiceClient, ContainerClient, ContainerItem, ListContainersSegmentResponse, ServiceListContainersSegmentResponse } from '@azure/storage-blob';
 
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, callWithTelemetryAndErrorHandling, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError } from '@microsoft/vscode-azext-utils';
 
 import { ListContainerItem } from '@azure/arm-storage';
 import { getResourceGroupFromId, uiUtils } from '@microsoft/vscode-azext-azureutils';
@@ -95,8 +95,10 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         const storageAccountName = this.root.storageAccountName;
         const resourceGroupName = getResourceGroupFromId(this.root.storageAccountId);
         // Use the ARM storage management client because the blob service client has access right issues
-        const containers = await uiUtils.listAllIterator(this.root.getStorageManagementClient().blobContainers.list(resourceGroupName, storageAccountName));
-        return containers;
+        return await callWithTelemetryAndErrorHandling('listAzureContainers', async (context: IActionContext) => {
+            const containers = await uiUtils.listAllIterator((await this.root.getStorageManagementClient(context)).blobContainers.list(resourceGroupName, storageAccountName));
+            return containers;
+        }) ?? [];
     }
 
     async getContainerItems(containersResponse: ListContainerItem[]): Promise<BlobContainerTreeItem[]> {

@@ -10,7 +10,7 @@ import { ShareServiceClient } from '@azure/storage-file-share';
 import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialQueue } from '@azure/storage-queue';
 
 import { StorageManagementClient } from '@azure/arm-storage';
-import { AzExtParentTreeItem, AzExtTreeItem } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, IActionContext } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
 import { AttachedAccountRoot } from '../AttachedAccountRoot';
 import { azuriteKey, defaultEmulatorHost, emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
@@ -124,7 +124,7 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         throw new Error(localize('cannotRetrieveStorageAccountIdForAttachedAccount', 'Cannot retrieve storage account id for an attached account.'));
     }
 
-    public getStorageManagementClient(): StorageManagementClient {
+    public async getStorageManagementClient(_context: IActionContext): Promise<StorageManagementClient> {
         throw new Error(localize('cannotRetrieveStorageAccountIdForAttachedAccount', 'Cannot retrieve storage management client for an attached account.'));
     }
 

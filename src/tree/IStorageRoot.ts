@@ -8,7 +8,8 @@ import type { AccountSASSignatureValues as AccountSASSignatureValuesBlob, BlobSe
 import type { AccountSASSignatureValues as AccountSASSignatureValuesFileShare, ShareServiceClient } from "@azure/storage-file-share";
 import type { QueueServiceClient } from "@azure/storage-queue";
 
-import { Endpoints, StorageManagementClient } from "@azure/arm-storage";
+import { type Endpoints, type StorageManagementClient } from "@azure/arm-storage";
+import { type IActionContext } from "@microsoft/vscode-azext-utils";
 
 export interface IStorageRoot {
     storageAccountName: string;
@@ -16,7 +17,7 @@ export interface IStorageRoot {
     isEmulated: boolean;
     primaryEndpoints?: Endpoints;
     generateSasToken(accountSASSignatureValues: AccountSASSignatureValuesBlob | AccountSASSignatureValuesFileShare): string;
-    getStorageManagementClient(): StorageManagementClient;
+    getStorageManagementClient(context: IActionContext): Promise<StorageManagementClient>;
     createBlobServiceClient(): Promise<BlobServiceClient>;
     createShareServiceClient(): Promise<ShareServiceClient>;
     createQueueServiceClient(): Promise<QueueServiceClient>;
