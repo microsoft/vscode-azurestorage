@@ -41,7 +41,7 @@ type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | Blo
 export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDocumentContentProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     private _bufferedEvents: vscode.FileChangeEvent[] = [];
-    private _fireSoonHandle?: NodeJS.Timer;
+    private _fireSoonHandle?: NodeJS.Timeout;
 
     private _queryCache: Map<string, { query: string, invalid?: boolean }> = new Map<string, { query: string, invalid?: boolean }>(); // Key: rootName
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
@@ -235,7 +235,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
 
     async readFile(uri: vscode.Uri): Promise<Uint8Array> {
         let client: ShareFileClient | BlobClient;
-        return await callWithTelemetryAndErrorHandling('readFile', async (context) => {
+        const result = await callWithTelemetryAndErrorHandling('readFile', async (context) => {
             context.errorHandling.suppressDisplay = true;
             const parsedUri = this.parseUri(uri);
             const treeItem: FileShareTreeItem | BlobContainerTreeItem = await this.lookupRoot(uri, context, parsedUri.resourceId);
@@ -257,7 +257,8 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                 }
                 throw error;
             }
-        }) || Buffer.from('');
+        });
+        return result ? new Uint8Array(result) : new Uint8Array(0);
     }
 
     async writeFile(uri: vscode.Uri, content: Uint8Array, options: { create: boolean; overwrite: boolean; }): Promise<void> {

@@ -85,7 +85,8 @@ export async function updateFileFromText(directoryPath: string, name: string, sh
     options = options || {};
     options.fileHttpHeaders = options.fileHttpHeaders || {};
     options.fileHttpHeaders.fileContentType = options.fileHttpHeaders.fileContentType || mime.getType(name) || undefined;
-    await fileClient.uploadData(Buffer.from(text), options);
+    const data = typeof text === 'string' ? Buffer.from(text) : text;
+    await fileClient.uploadData(data, options);
 }
 
 export async function deleteFile(directory: string, name: string, share: string, root: IStorageRoot): Promise<void> {
