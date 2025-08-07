@@ -78,8 +78,9 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
 
     // In case this account has been created via a deploy or browse command, the enable website hosting prompt shouldn't be shown
     (<ISelectStorageAccountContext>context).showEnableWebsiteHostingPrompt = false;
-
-    return (wizardContext as unknown as IStorageAccountTreeItemCreateContext).accountTreeItem;
+    const storageAccountTreeItem = (wizardContext as unknown as IStorageAccountTreeItemCreateContext).accountTreeItem;
+    await storageAccountTreeItem.initStorageAccount(wizardContext);
+    return storageAccountTreeItem;
 }
 
 export async function createStorageAccountAdvanced(actionContext: IActionContext, treeItem?: SubscriptionTreeItem): Promise<StorageAccountTreeItem> {
