@@ -61,8 +61,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     private getContainerName(uri: vscode.Uri): string {
-        const match: RegExpMatchArray | null = uri.path.match(/^\/([^\/]*)\/?/);
-        return match && match[1] ? match[1] : '';
+        const match: RegExpMatchArray | null = uri.path.match(/^\/(?<container>[^\/]*)\/?/);
+        return match?.groups ? match.groups.container : '';
     }
 
     private getBlobPath(uri: vscode.Uri): string {
