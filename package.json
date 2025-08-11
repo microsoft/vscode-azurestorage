@@ -812,7 +812,7 @@
         "@types/jsdom": "^21.1.1",
         "@types/mime": "^2.0.1",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^20.0.0",
+        "@types/node": "^16.0.0",
         "@types/p-retry": "^3.0.1",
         "@types/vscode": "^1.95.0",
         "@types/winreg": "1.2.30",
