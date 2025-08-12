@@ -808,11 +808,11 @@
         "@microsoft/eslint-config-azuretools": "^0.1.0",
         "@microsoft/vscode-azext-dev": "^2.0.4",
         "@types/fs-extra": "^8.1.0",
-        "@types/gulp": "^4.0.6",
+        "@types/gulp": "^4.0.17",
         "@types/jsdom": "^21.1.1",
         "@types/mime": "^2.0.1",
         "@types/mocha": "^7.0.2",
-        "@types/node": "^16.0.0",
+        "@types/node": "^22.17.0",
         "@types/p-retry": "^3.0.1",
         "@types/vscode": "^1.95.0",
         "@types/winreg": "1.2.30",
@@ -821,15 +821,15 @@
         "copy-webpack-plugin": "^6.0.0",
         "eslint": "^7.19.0",
         "eslint-plugin-import": "^2.22.1",
-        "gulp": "^5.0.0",
+        "gulp": "^5.0.1",
         "mocha": "^10.1.0",
         "mocha-junit-reporter": "^1.18.0",
         "mocha-multi-reporters": "^1.1.7",
         "node-polyfill-webpack-plugin": "^2.0.1",
         "ts-node": "^7.0.1",
-        "typescript": "^4.3.5",
+        "typescript": "^5.9.2",
         "vsce": "^2.11.0",
-        "webpack": "^5.76.0",
+        "webpack": "^5.101.1",
         "webpack-cli": "^4.6.0"
     },
     "dependencies": {
@@ -854,7 +854,17 @@
         "vscode-nls": "^4.1.1",
         "winreg": "^1.2.3"
     },
+    "overrides": {
+        "@types/vinyl": "^2.0.12",
+        "chokidar": "^4.0.3"
+    },
     "extensionDependencies": [
         "ms-azuretools.vscode-azureresourcegroups"
-    ]
+    ],
+    "optionalDependencies": {
+        "@azure-tools/azcopy-darwin": "^10.29.1",
+        "@azure-tools/azcopy-linux": "^10.29.1",
+        "@azure-tools/azcopy-win32": "^10.29.1",
+        "@azure-tools/azcopy-win64": "^10.29.1"
+    }
 }

@@ -41,7 +41,7 @@ type AzureStorageDirectoryTreeItem = DirectoryTreeItem | FileShareTreeItem | Blo
 export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDocumentContentProvider {
     private _emitter: vscode.EventEmitter<vscode.FileChangeEvent[]> = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     private _bufferedEvents: vscode.FileChangeEvent[] = [];
-    private _fireSoonHandle?: NodeJS.Timer;
+    private _fireSoonHandle?: NodeJS.Timeout;
 
     private _queryCache: Map<string, { query: string, invalid?: boolean }> = new Map<string, { query: string, invalid?: boolean }>(); // Key: rootName
     readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
