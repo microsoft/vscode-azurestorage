@@ -52,7 +52,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
 
         const isAttached = this.fullId.startsWith("/attachedStorageAccounts/");
 
-        let containersResponse: ListContainerItem[] | ListContainersSegmentResponse;
+        let containersResponse: ContainerItem[];
         try {
             containersResponse = await this.listContainers(isAttached, this._continuationToken);
         } catch (error) {
@@ -78,33 +78,48 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         return !!this._continuationToken;
     }
 
-    async listContainers(isAttached: boolean, continuationToken?: string): Promise<ListContainerItem[]> {
+    async listContainers(isAttached: boolean, continuationToken?: string): Promise<ContainerItem[]> {
         return isAttached ? await this.listAttachedContainers(continuationToken) : await this.listAzureContainers();
     }
 
-    async listAttachedContainers(continuationToken?: string): Promise<ListContainerItem[]> {
+    async listAttachedContainers(continuationToken?: string): Promise<ContainerItem[]> {
         const blobServiceClient: BlobServiceClient = await this.root.createBlobServiceClient();
         const response: AsyncIterableIterator<ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
 
         const value = (await response.next()).value as ListContainersSegmentResponse;
-        this._continuationToken = value.continuationToken;
+        this._continuationToken = value.continuationToken ? value.continuationToken : undefined;
         return value.containerItems;
     }
 
-    async listAzureContainers(): Promise<ListContainerItem[]> {
+    async listAzureContainers(): Promise<ContainerItem[]> {
         const storageAccountName = this.root.storageAccountName;
         const resourceGroupName = getResourceGroupFromId(this.root.storageAccountId);
         // Use the ARM storage management client because the blob service client has access right issues
         return await callWithTelemetryAndErrorHandling('listAzureContainers', async (context: IActionContext) => {
             const containers = await uiUtils.listAllIterator((await this.root.getStorageManagementClient(context)).blobContainers.list(resourceGroupName, storageAccountName));
-            return containers;
+            // Convert ListContainerItem[] to ContainerItem[] for consistency
+            return containers.map(container => this.convertToContainerItem(container));
         }) ?? [];
     }
 
-    async getContainerItems(containersResponse: ListContainerItem[]): Promise<BlobContainerTreeItem[]> {
+    async getContainerItems(containersResponse: ContainerItem[]): Promise<BlobContainerTreeItem[]> {
         return await Promise.all(containersResponse.map(async (container: ContainerItem) => {
             return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
         }));
+    }
+
+    private convertToContainerItem(listContainer: ListContainerItem): ContainerItem {
+        return {
+            name: listContainer.name || '',
+            properties: {
+                lastModified: listContainer.lastModifiedTime,
+                etag: listContainer.etag,
+                leaseStatus: listContainer.leaseStatus as never,
+                leaseState: listContainer.leaseState as never,
+                hasImmutabilityPolicy: listContainer.hasImmutabilityPolicy,
+                hasLegalHold: listContainer.hasLegalHold
+            }
+        } as ContainerItem;
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<BlobContainerTreeItem> {
@@ -117,8 +132,11 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
             context.showCreatingTreeItem(name);
             progress.report({ message: `Azure Storage: Creating blob container '${name}'` });
-            return await BlobContainerTreeItem.createBlobContainerTreeItem(this, await this.createBlobContainer(name));
+            const container = await BlobContainerTreeItem.createBlobContainerTreeItem(this, await this.createBlobContainer(name));
+            void this.refresh(context)
+            return container;
         });
+
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
@@ -126,12 +144,19 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     }
 
     private async createBlobContainer(name: string): Promise<ContainerItem> {
+        // need to reset the continuation token to start at the beginning of the list
+        this._continuationToken = undefined;
         const containerClient: ContainerClient = await createBlobContainerClient(this.root, name);
         await containerClient.create();
         const isAttached = this.fullId.startsWith("/attachedStorageAccounts/");
+        const containersResponse: ContainerItem[] = [];
+        // load all of the containers until we find the one we just created
+        do {
+            const containers = await this.listContainers(isAttached, this._continuationToken);
+            containersResponse.push(...containers);
+        } while (this._continuationToken);
 
-        const containersResponse: ListContainerItem[] = await this.listContainers(isAttached, this._continuationToken);
-        let createdContainer: ListContainerItem | undefined;
+        let createdContainer: ContainerItem | undefined;
         for (const container of containersResponse) {
             if (container.name === name) {
                 createdContainer = container;
@@ -143,6 +168,6 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
             throw new Error(`Could not create container ${name}`);
         }
 
-        return createdContainer as ContainerItem;
+        return createdContainer;
     }
 }
