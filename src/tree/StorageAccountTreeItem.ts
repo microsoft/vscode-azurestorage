@@ -83,7 +83,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     private _root: IStorageRoot | undefined = undefined;
     private _storageAccount: StorageAccountWrapper | undefined = undefined;
     private _allowSharedKeyAccess: boolean;
-  
+
     constructor(subscription: ISubscriptionContext,
         storageAccount: StorageAccount | undefined,
         dataModel?: StorageQueryResult

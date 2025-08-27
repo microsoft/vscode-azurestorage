@@ -12,7 +12,7 @@ import { AppResource, AppResourceResolver, ResolvedAppResourceBase } from "@micr
 import { IStorageRoot } from "./tree/IStorageRoot";
 import { StorageAccountTreeItem, StorageQueryResult, WebsiteHostingStatus } from "./tree/StorageAccountTreeItem";
 import { BlobContainerTreeItem } from "./tree/blob/BlobContainerTreeItem";
-import { createStorageClient } from "./utils/azureClients";
+import { createResourceGraphClient, createStorageClient } from "./utils/azureClients";
 import { StorageAccountWrapper } from "./utils/storageWrappers";
 
 export interface ResolvedStorageAccount extends ResolvedAppResourceBase {
@@ -42,7 +42,7 @@ export class StorageAccountResolver implements AppResourceResolver {
                 this.loaded = false;
                 this.storageAccountCacheLastUpdated = Date.now();
                 this.storageAccountCache.clear();
-                const graphClient = new ResourceGraphClient(subContext.credentials);
+                const graphClient = await createResourceGraphClient({ ...context, ...subContext });
                 async function fetchAllAccounts(graphClient: ResourceGraphClient, subContext: ISubscriptionContext, resolver: StorageAccountResolver) {
                     const subscriptions = [subContext.subscriptionId];
                     const query = "resources|where type =~ \"microsoft.storage/storageaccounts\" or type =~ \"microsoft.classicstorage/storageaccounts\"";
