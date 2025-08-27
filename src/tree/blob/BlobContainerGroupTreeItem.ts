@@ -121,7 +121,6 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
             void this.refresh(context)
             return container;
         });
-
     }
 
     public isAncestorOfImpl(contextValue: string): boolean {
