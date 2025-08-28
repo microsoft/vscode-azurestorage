@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { type ResourceGraphClient } from '@azure/arm-resourcegraph';
 import { StorageManagementClient } from '@azure/arm-storage';
-import { AzExtClientContext, createAzureClient, parseClientContext } from '@microsoft/vscode-azext-azureutils';
+import { AzExtClientContext, createAzureClient, createAzureSubscriptionClient, parseClientContext } from '@microsoft/vscode-azext-azureutils';
 
 // Lazy-load @azure packages to improve startup performance.
 // NOTE: The client is the only import that matters, the rest of the types disappear when compiled to JavaScript
@@ -17,4 +18,8 @@ export async function createStorageClient(context: AzExtClientContext): Promise<
     } else {
         return createAzureClient(context, (await import('@azure/arm-storage')).StorageManagementClient);
     }
+}
+
+export async function createResourceGraphClient(context: AzExtClientContext): Promise<ResourceGraphClient> {
+    return createAzureSubscriptionClient(context, (await import('@azure/arm-resourcegraph')).ResourceGraphClient);
 }
