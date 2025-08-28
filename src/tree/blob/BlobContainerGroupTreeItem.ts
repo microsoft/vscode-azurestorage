@@ -87,7 +87,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         const response: AsyncIterableIterator<ServiceListContainersSegmentResponse> = blobServiceClient.listContainers().byPage({ continuationToken, maxPageSize: maxPageSize });
 
         const value = (await response.next()).value as ListContainersSegmentResponse;
-        this._continuationToken = value.continuationToken;
+        this._continuationToken = value.continuationToken ? value.continuationToken : undefined;
         return value.containerItems;
     }
 
@@ -117,7 +117,9 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
         return await vscode.window.withProgress({ location: vscode.ProgressLocation.Window }, async (progress) => {
             context.showCreatingTreeItem(name);
             progress.report({ message: `Azure Storage: Creating blob container '${name}'` });
-            return await BlobContainerTreeItem.createBlobContainerTreeItem(this, await this.createBlobContainer(name));
+            const container = await BlobContainerTreeItem.createBlobContainerTreeItem(this, await this.createBlobContainer(name));
+            void this.refresh(context)
+            return container;
         });
     }
 
@@ -126,11 +128,18 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     }
 
     private async createBlobContainer(name: string): Promise<ContainerItem> {
+        // need to reset the continuation token to start at the beginning of the list
+        this._continuationToken = undefined;
         const containerClient: ContainerClient = await createBlobContainerClient(this.root, name);
         await containerClient.create();
         const isAttached = this.fullId.startsWith("/attachedStorageAccounts/");
+        const containersResponse: ListContainerItem[] = [];
+        // load all of the containers until we find the one we just created
+        do {
+            const containers = await this.listContainers(isAttached, this._continuationToken);
+            containersResponse.push(...containers);
+        } while (this._continuationToken);
 
-        const containersResponse: ListContainerItem[] = await this.listContainers(isAttached, this._continuationToken);
         let createdContainer: ListContainerItem | undefined;
         for (const container of containersResponse) {
             if (container.name === name) {
