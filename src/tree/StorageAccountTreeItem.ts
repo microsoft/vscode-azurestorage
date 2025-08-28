@@ -82,7 +82,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     private _tableGroupTreeItem: TableGroupTreeItem;
     private _root: IStorageRoot | undefined = undefined;
     private _storageAccount: StorageAccountWrapper | undefined = undefined;
-    private _allowSharedKeyAccess: boolean;
 
     constructor(subscription: ISubscriptionContext,
         storageAccount: StorageAccount | undefined,
@@ -97,8 +96,10 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         if (dataModel) {
             this.dataModel = dataModel;
         }
+    }
 
-        this._allowSharedKeyAccess = !!this.dataModel?.properties.allowSharedKeyAccess;
+    public get allowSharedKeyAccess(): boolean {
+        return !!this.dataModel?.properties.allowSharedKeyAccess;
     }
 
     public createDataModelFromStorageAccount(storageAccount: StorageAccount): StorageQueryResult {
@@ -140,8 +141,8 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             const client = await createStorageClient([context, this._subscription]);
             const storageAccount = await client.storageAccounts.getProperties(this.dataModel.resourceGroup, this.dataModel.name);
             this._storageAccount = new StorageAccountWrapper(storageAccount);
-            this.dataModel = this.createDataModelFromStorageAccount(this.storageAccount);
-            if (this._allowSharedKeyAccess) {
+            this.dataModel = this.createDataModelFromStorageAccount(storageAccount);
+            if (this.allowSharedKeyAccess) {
                 await this.refreshKey(context);
             }
             this._root = this.createRoot();
@@ -213,7 +214,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
     }
 
     async getKey(): Promise<StorageAccountKeyWrapper> {
-        if (!this._allowSharedKeyAccess) {
+        if (!this.allowSharedKeyAccess) {
             throw new Error(localize('storageAccountTreeItem.noSharedKeyAccess', 'No shared key access for storage account "{0}". Allow it to enable this command.', this.label));
         }
 
@@ -267,7 +268,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             isEmulated: false,
             primaryEndpoints: this.storageAccount.primaryEndpoints,
             generateSasToken: (accountSASSignatureValues: AccountSASSignatureValues) => {
-                if (!this._allowSharedKeyAccess) {
+                if (!this.allowSharedKeyAccess) {
                     throw new Error(localize('storageAccountTreeItem.noSharedKeyAccess', 'No shared key access for storage account "{0}". Allow it to enable this command.', this.label));
                 }
 
@@ -281,7 +282,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             },
             createBlobServiceClient: async () => {
                 let client: BlobServiceClient | undefined = undefined;
-                if (this._allowSharedKeyAccess) {
+                if (this.allowSharedKeyAccess) {
                     try {
                         const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, ((await this.getKey()).value));
                         client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
@@ -301,7 +302,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             },
             createShareServiceClient: async () => {
                 let client: ShareServiceClient | undefined = undefined;
-                if (this._allowSharedKeyAccess) {
+                if (this.allowSharedKeyAccess) {
                     try {
                         const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, ((await this.getKey()).value));
                         client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
@@ -320,7 +321,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             },
             createQueueServiceClient: async () => {
                 let client: QueueServiceClient | undefined = undefined;
-                if (this._allowSharedKeyAccess) {
+                if (this.allowSharedKeyAccess) {
                     try {
                         const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, ((await this.getKey()).value));
                         client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
@@ -339,7 +340,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             },
             createTableServiceClient: async () => {
                 let client: TableServiceClient | undefined = undefined;
-                if (this._allowSharedKeyAccess) {
+                if (this.allowSharedKeyAccess) {
                     try {
                         const credential = new AzureNamedKeyCredential(this.storageAccount.name, ((await this.getKey()).value));
                         client = new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);

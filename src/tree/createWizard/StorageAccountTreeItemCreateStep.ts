@@ -24,6 +24,7 @@ export class StorageAccountTreeItemCreateStep extends AzureWizardExecuteStep<ISt
 
     public async execute(wizardContext: IStorageAccountTreeItemCreateContext): Promise<void> {
         wizardContext.accountTreeItem = new StorageAccountTreeItem(this.subscription, nonNullProp(wizardContext, 'storageAccount'));
+        await wizardContext.accountTreeItem.initStorageAccount(wizardContext);
 
         const appResource: AppResource = {
             id: wizardContext.accountTreeItem.storageAccount.id,
