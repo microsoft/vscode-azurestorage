@@ -109,6 +109,7 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
 class AttachedStorageRoot extends AttachedAccountRoot {
     public storageAccountName: string;
     public isEmulated: boolean;
+    public allowSharedKeyAccess: boolean = true;
 
     private readonly _serviceClientPipelineOptions = { retryOptions: { maxTries: 2 } };
     private _connectionString: string;
@@ -118,6 +119,9 @@ class AttachedStorageRoot extends AttachedAccountRoot {
         this._connectionString = connectionString;
         this.storageAccountName = storageAccountName;
         this.isEmulated = isEmulated;
+    }
+    public getAccessToken(): Promise<string> {
+        throw new Error(localize('cannotRetrieveAccessTokenForAttachedAccount', 'Cannot retrieve access token for an attached account.'));
     }
 
     public get storageAccountId(): string {

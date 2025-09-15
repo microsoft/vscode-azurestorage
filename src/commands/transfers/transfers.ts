@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { FromToOption, ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
+import type { FromToOption, ILocalLocation, IRemoteAuthLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 
 import { AzExtFsExtra, IActionContext } from "@microsoft/vscode-azext-utils";
 import { dirname } from "path";
@@ -24,7 +24,9 @@ export type DownloadItem = {
     localFilePath: string;
     isDirectory: boolean;
     resourceUri: string;
-    sasToken: string;
+    sasToken?: string;
+    accessToken?: string;
+    tenantId?: string;
 }
 
 export async function downloadFoldersAndFiles(context: IDownloadWizardContext, folders: DownloadItem[], files: DownloadItem[], notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
@@ -63,11 +65,14 @@ export async function downloadFoldersAndFiles(context: IDownloadWizardContext, f
 
 export type UploadItem = {
     type: "blob" | "file";
+    isDirectory: false;
     localFilePath: string;
     resourceName: string;
     resourceUri: string;
     remoteFilePath: string;
-    transferSasToken: string;
+    sasToken?: string;
+    accessToken?: string;
+    tenantId?: string
 }
 
 export async function uploadFile(context: IActionContext, item: UploadItem, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
@@ -115,7 +120,7 @@ async function startAzCopyDownload(context: IDownloadWizardContext, item: Downlo
     const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
     const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
 
-    const src: IRemoteSasLocation = createAzCopyRemoteLocation(item.resourceUri, item.sasToken, item.remoteFilePath, item.isDirectory);
+    const src: IRemoteSasLocation | IRemoteAuthLocation = createAzCopyRemoteLocation(item);
     const dst: ILocalLocation = createAzCopyLocalLocation(item.localFilePath);
     const fromTo: FromToOption = item.type === "blob" ? "BlobLocal" : "FileLocal";
     const units: "files" | "bytes" = item.isDirectory ? "files" : "bytes";
@@ -132,7 +137,7 @@ async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, 
     const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
 
     const src: ILocalLocation = createAzCopyLocalLocation(item.localFilePath);
-    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(item.resourceUri, item.transferSasToken, item.remoteFilePath);
+    const dst: IRemoteSasLocation | IRemoteAuthLocation = createAzCopyRemoteLocation(item);
     const transferProgress: TransferProgress = new TransferProgress("bytes", item.remoteFilePath);
     await azCopyTransfer(context, item.type === 'file' ? "LocalFile" : "LocalBlob", src, dst, transferProgress, notificationProgress, cancellationToken);
 }
@@ -153,7 +158,7 @@ async function startAzCopyFolderUpload(context: IActionContext, item: UploadItem
     const fromTo: FromToOption = item.type === "blob" ? "LocalBlob" : "LocalFile";
 
     const src: ILocalLocation = createAzCopyLocalLocation(item.localFilePath, useWildCard);
-    const dst: IRemoteSasLocation = createAzCopyRemoteLocation(item.resourceUri, item.transferSasToken, item.remoteFilePath, false);
+    const dst: IRemoteSasLocation | IRemoteAuthLocation = createAzCopyRemoteLocation(item);
     const transferProgress: TransferProgress = new TransferProgress("files", messagePrefix || item.remoteFilePath);
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, notificationProgress, cancellationToken);
 }

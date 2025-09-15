@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ILocalLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
+import { ILocalLocation, IRemoteAuthLocation, IRemoteSasLocation } from "@azure-tools/azcopy-node";
 import { posix, sep } from "path";
+import { DownloadItem, UploadItem } from "../transfers";
 
 export function createAzCopyLocalLocation(path: string, isFolder?: boolean): ILocalLocation {
     if (isFolder && !path.endsWith(sep)) {
@@ -13,12 +14,47 @@ export function createAzCopyLocalLocation(path: string, isFolder?: boolean): ILo
     return { type: 'Local', path, useWildCard: !!isFolder };
 }
 
-export function createAzCopyRemoteLocation(resourceUri: string, sasToken: string, path: string, isFolder?: boolean): IRemoteSasLocation {
-    if (isFolder && !path.endsWith(posix.sep)) {
+export function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): IRemoteSasLocation | IRemoteAuthLocation {
+    let path = item.remoteFilePath;
+    if (item.isDirectory && !path.endsWith(posix.sep)) {
         path += posix.sep;
     }
 
     // Ensure path begins with '/' to transfer properly
     path = path[0] === posix.sep ? path : `${posix.sep}${path}`;
-    return { type: 'RemoteSas', sasToken, resourceUri, path, useWildCard: !!isFolder };
+    let remoteLocation: IRemoteSasLocation | IRemoteAuthLocation;
+    const { sasToken, accessToken, resourceUri } = item;
+    if (accessToken) {
+        remoteLocation = createRemoteAuthLocation(item, path, resourceUri, accessToken);
+    } else if (sasToken) {
+        remoteLocation = {
+            type: 'RemoteSas',
+            sasToken,
+            resourceUri,
+            path,
+            useWildCard: !!item.isDirectory
+        };
+    } else {
+        throw new Error(`No sasToken or accessToken found for resourceUri "${resourceUri}".`);
+    }
+
+    return remoteLocation;
+}
+
+function createRemoteAuthLocation(item: DownloadItem | UploadItem, path: string, resourceUri: string, accessToken: string): IRemoteAuthLocation {
+    const refreshToken = async (): Promise<string> => {
+        // not technically refreshing the token, but we are refreshing it every time we make a call to AzCopy anyway
+        return accessToken;
+    };
+    const tenantId = item.tenantId ?? '';
+    return {
+        type: 'RemoteAuth',
+        authToken: accessToken,
+        refreshToken,
+        tenantId,
+        resourceUri,
+        path,
+        aadEndpoint: 'https://storage.azure.com',
+        useWildCard: !!item.isDirectory
+    };
 }
