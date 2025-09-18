@@ -266,7 +266,13 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             storageAccountName: this.dataModel.name,
             storageAccountId: this.dataModel.id,
             isEmulated: false,
+            allowSharedKeyAccess: this.allowSharedKeyAccess,
             primaryEndpoints: this.storageAccount.primaryEndpoints,
+            getAccessToken: async (): Promise<string> => {
+                const credentials = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
+                const token = await credentials.getToken() as unknown as { token: string };
+                return token.token;
+            },
             generateSasToken: (accountSASSignatureValues: AccountSASSignatureValues) => {
                 if (!this.allowSharedKeyAccess) {
                     throw new Error(localize('storageAccountTreeItem.noSharedKeyAccess', 'No shared key access for storage account "{0}". Allow it to enable this command.', this.label));

@@ -14,6 +14,7 @@ import { DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential a
 
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
+import { AzExtServiceClientCredentialsT2 } from '@microsoft/vscode-azext-dev';
 import { IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, createSubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';
@@ -91,7 +92,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     /**
      * @todo Support Azure AD authorization.
      */
-    private async getStorageAccount(uri: vscode.Uri, context: IActionContext): Promise<{ storageAccount: StorageAccount, accountKey?: string }> {
+    private async getStorageAccount(uri: vscode.Uri, context: IActionContext): Promise<{ storageAccount: StorageAccount, accountKey?: string, credentials?: AzExtServiceClientCredentialsT2 }> {
         const { storageAccountId } = this.parseUri(uri);
         const subscriptionId = parseAzureResourceId(storageAccountId).subscriptionId;
         const resourceGroupName = parseAzureResourceId(storageAccountId).resourceGroup;
@@ -103,20 +104,24 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             throw new Error(`Could not find subscription with ID "${subscriptionId}"`);
         }
 
-        const client = await createStorageClient([context, createSubscriptionContext(subscription)]);
-
-        const keyResult = await client.storageAccounts.listKeys(resourceGroupName, storageAccountName);
-        const keys = (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
-        const primaryKey = keys.find(key => {
-            return key.keyName === "key1" || key.keyName === "primaryKey";
-        });
-
+        const subContext = createSubscriptionContext(subscription);
+        const client = await createStorageClient([context, subContext]);
         const storageAccount = await client.storageAccounts.getProperties(resourceGroupName, storageAccountName);
+        if (storageAccount.allowSharedKeyAccess === false) {
+            const credentials = await subContext.createCredentialsForScopes(['https://storage.azure.com/.default']);
+            return { storageAccount, credentials };
+        } else {
+            const keyResult = await client.storageAccounts.listKeys(resourceGroupName, storageAccountName);
+            const keys = (keyResult.keys || <StorageAccountKey[]>[]).map(key => new StorageAccountKeyWrapper(key));
+            const primaryKey = keys.find(key => {
+                return key.keyName === "key1" || key.keyName === "primaryKey";
+            });
 
-        return { storageAccount, accountKey: primaryKey?.value };
+            return { storageAccount, accountKey: primaryKey?.value };
+        }
     }
 
-    private async getBlobClients(uri: vscode.Uri, storageAccount: StorageAccount, accountKey?: string): Promise<{ containerClient: ContainerClient, blobClient: BlobClient }> {
+    private async getBlobClients(uri: vscode.Uri, storageAccount: StorageAccount, accountKey?: string, credentials?: AzExtServiceClientCredentialsT2): Promise<{ containerClient: ContainerClient, blobClient: BlobClient }> {
         const { containerName, blobPath } = this.parseUri(uri);
 
         const blobEndpoint = storageAccount.primaryEndpoints?.blob;
@@ -124,8 +129,11 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             throw Error("Unable to get blob endpoint.");
         }
 
-        let credential: StorageSharedKeyCredentialBlob;
-        if (accountKey !== undefined) {
+        let credential: StorageSharedKeyCredentialBlob | AzExtServiceClientCredentialsT2;
+        if (credentials) {
+            credential = credentials;
+        }
+        else if (accountKey !== undefined) {
             credential = new StorageSharedKeyCredentialBlob(storageAccount.name as string, accountKey);
         } else {
             throw Error("Unable to get key credential.");
@@ -138,7 +146,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         return { containerClient, blobClient };
     }
 
-    private async getDataLakeClients(uri: vscode.Uri, storageAccount: StorageAccount, accountKey?: string): Promise<{ fileSystemClient: DataLakeFileSystemClient, pathClient: DataLakePathClient }> {
+    private async getDataLakeClients(uri: vscode.Uri, storageAccount: StorageAccount, accountKey?: string, credentials?: AzExtServiceClientCredentialsT2): Promise<{ fileSystemClient: DataLakeFileSystemClient, pathClient: DataLakePathClient }> {
         const { containerName, blobPath } = this.parseUri(uri);
 
         const dfsEndpoint = storageAccount.primaryEndpoints?.dfs;
@@ -146,8 +154,10 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             throw Error("Unable to get dfs endpoint.");
         }
 
-        let credential: StorageSharedKeyCredentialDataLake;
-        if (accountKey !== undefined) {
+        let credential: StorageSharedKeyCredentialDataLake | AzExtServiceClientCredentialsT2;
+        if (credentials) {
+            credential = credentials;
+        } else if (accountKey !== undefined) {
             credential = new StorageSharedKeyCredentialDataLake(storageAccount.name as string, accountKey);
         } else {
             throw Error("Unable to get key credential.");
@@ -235,9 +245,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     type: vscode.FileType.Directory
                 };
             } else {
-                const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
+                const { storageAccount, accountKey, credentials } = await this.getStorageAccount(uri, context);
                 const isHnsEnabled = !!storageAccount.isHnsEnabled;
-                const { containerClient, blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
+                const { containerClient, blobClient } = await this.getBlobClients(uri, storageAccount, accountKey, credentials);
                 if (!isHnsEnabled) {
                     try {
                         // Attempt to get the blob properties. If it succeeds, it's a file.
@@ -313,8 +323,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         const result = await callWithTelemetryAndErrorHandling<[string, vscode.FileType][]>("azureStorageBlob.readDirectory", async (context) => {
             context.errorHandling.rethrow = true;
 
-            const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
-            const { containerClient } = await this.getBlobClients(uri, storageAccount, accountKey);
+            const { storageAccount, accountKey, credentials } = await this.getStorageAccount(uri, context);
+            const { containerClient } = await this.getBlobClients(uri, storageAccount, accountKey, credentials);
 
             const results: [string, vscode.FileType][] = [];
 
@@ -345,13 +355,13 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.rethrow = true;
             context.errorHandling.suppressDisplay = true;
 
-            const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
+            const { storageAccount, accountKey, credentials } = await this.getStorageAccount(uri, context);
             const isHnsEnabled = !!storageAccount.isHnsEnabled;
 
             if (!isHnsEnabled) {
                 throw new Error(localize('createDirectoryNotSupported', 'Creating directories is not supported for non-HNS enabled storage accounts.'));
             } else {
-                const { pathClient } = await this.getDataLakeClients(uri, storageAccount, accountKey);
+                const { pathClient } = await this.getDataLakeClients(uri, storageAccount, accountKey, credentials);
                 const directoryClient = pathClient.toDirectoryClient();
                 const exists = await directoryClient.exists();
                 if (exists) {
@@ -380,8 +390,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             context.errorHandling.suppressDisplay = true;
 
             try {
-                const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
-                const { blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
+                const { storageAccount, accountKey, credentials } = await this.getStorageAccount(uri, context);
+                const { blobClient } = await this.getBlobClients(uri, storageAccount, accountKey, credentials);
 
                 const buffer = await blobClient.downloadToBuffer();
                 return buffer;
@@ -403,8 +413,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         const result = await callWithTelemetryAndErrorHandling("azureStorageBlob.writeFile", async (context) => {
             context.errorHandling.rethrow = true;
 
-            const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
-            const { blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
+            const { storageAccount, accountKey, credentials } = await this.getStorageAccount(uri, context);
+            const { blobClient } = await this.getBlobClients(uri, storageAccount, accountKey, credentials);
             const { baseName } = this.parseUri(uri);
 
             const exists = await blobClient.exists();
@@ -449,7 +459,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 throw new Error("Azure storage does not support non-recursive deletion.");
             }
 
-            const { storageAccount, accountKey } = await this.getStorageAccount(uri, context);
+            const { storageAccount, accountKey, credentials } = await this.getStorageAccount(uri, context);
             const isHnsEnabled = !!storageAccount.isHnsEnabled;
 
             try {
@@ -457,7 +467,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     const { baseName, blobPath } = this.parseUri(uri);
                     progress.report({ message: localize('deletingBlob', `Deleting blob {0}...`, baseName) });
                     if (!isHnsEnabled) {
-                        const { containerClient, blobClient } = await this.getBlobClients(uri, storageAccount, accountKey);
+                        const { containerClient, blobClient } = await this.getBlobClients(uri, storageAccount, accountKey, credentials);
                         const exists = await blobClient.exists();
                         if (exists) {
                             // Check if there is matching blob and delete it.
@@ -506,20 +516,20 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
         const result = await callWithTelemetryAndErrorHandling("azureStorageBlob.rename", async (context) => {
             context.errorHandling.rethrow = true;
 
-            const { storageAccount, accountKey } = await this.getStorageAccount(oldUri, context);
+            const { storageAccount, accountKey, credentials } = await this.getStorageAccount(oldUri, context);
             const isHnsEnabled = !!storageAccount.isHnsEnabled;
             if (!isHnsEnabled) {
                 throw new vscode.FileSystemError("Rename is not supported in a flat namespace storage account. (loc)");
             } else {
                 if (options.overwrite) {
-                    const { pathClient } = await this.getDataLakeClients(newUri, storageAccount, accountKey);
+                    const { pathClient } = await this.getDataLakeClients(newUri, storageAccount, accountKey, credentials);
                     const exists = await pathClient.exists();
                     if (exists) {
                         throw vscode.FileSystemError.FileExists(newUri);
                     }
                 }
 
-                const { pathClient } = await this.getDataLakeClients(oldUri, storageAccount, accountKey);
+                const { pathClient } = await this.getDataLakeClients(oldUri, storageAccount, accountKey, credentials);
                 const { blobPath } = this.parseUri(newUri);
 
                 try {

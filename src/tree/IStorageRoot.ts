@@ -15,7 +15,9 @@ export interface IStorageRoot {
     storageAccountName: string;
     storageAccountId: string;
     isEmulated: boolean;
+    allowSharedKeyAccess: boolean;
     primaryEndpoints?: Endpoints;
+    getAccessToken(): Promise<string>;
     generateSasToken(accountSASSignatureValues: AccountSASSignatureValuesBlob | AccountSASSignatureValuesFileShare): string;
     getStorageManagementClient(context: IActionContext): Promise<StorageManagementClient>;
     createBlobServiceClient(): Promise<BlobServiceClient>;

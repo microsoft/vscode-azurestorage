@@ -1,6 +1,11 @@
 # Change Log
 
 ## Unreleased
+## 0.17.0 - 2025-09-09
+### Added
+* [[1402](https://github.com/microsoft/vscode-azurestorage/pull/1402)] Refactor **storage accounts** to load on expand and utilize **ARM graph** rather than relying on list calls.
+* [[1409](https://github.com/microsoft/vscode-azurestorage/pull/1409)] Use the **blob service client** for attached accounts without Azure credentials, use ARM client for Azure blobs.
+* [[1423](https://github.com/microsoft/vscode-azurestorage/pull/1423)] Fix RBAC access by verifying **sharedKeyAccess** property is enabled before attempting to use key.
 
 ## 0.16.5 - 2025-05-29
 ### Added
