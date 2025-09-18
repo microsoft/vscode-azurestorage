@@ -353,13 +353,18 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         notificationProgress?: NotificationProgress,
         cancellationToken?: vscode.CancellationToken
     ): Promise<void> {
+        // either sasToken or accessToken should be undefined; we use the according credential accordingly
+        const token = this.root.allowSharedKeyAccess ? this.transferSasToken : await this.root.getAccessToken();
         const uploadItem: UploadItem = {
             type: "blob",
+            isDirectory: false,
             localFilePath: filePath,
             resourceName: this.container.name,
             resourceUri: this.resourceUri,
             remoteFilePath: blobPath,
-            transferSasToken: this.transferSasToken,
+            sasToken: token,
+            accessToken: token,
+            tenantId: this.subscription.tenantId
         };
         await uploadFile(context, uploadItem, notificationProgress, cancellationToken);
     }

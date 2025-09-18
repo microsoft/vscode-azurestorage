@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzCopyClient, AzCopyLocation, FromToOption, ICopyOptions, ILocalLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
+import { AzCopyClient, AzCopyLocation, FromToOption, ICopyOptions, ILocalLocation, IRemoteAuthLocation, IRemoteSasLocation, TransferStatus } from "@azure-tools/azcopy-node";
 // eslint-disable-next-line import/no-internal-modules
 import { IJobInfo } from "@azure-tools/azcopy-node/dist/src/IJobInfo";
 // eslint-disable-next-line import/no-internal-modules
@@ -16,6 +16,7 @@ import { ext } from '../../../extensionVariables';
 import { delay } from "../../../utils/delay";
 import { throwIfCanceled } from "../../../utils/errorUtils";
 import { localize } from "../../../utils/localize";
+import { CredentialStore } from "./credentialStore";
 
 interface ITransferLocation {
     src: AzCopyLocation;
@@ -27,8 +28,8 @@ type AzCopyTransferStatus = ITransferStatus<"Progress", ProgressJobStatus> | ITr
 export async function azCopyTransfer(
     context: IActionContext,
     fromTo: FromToOption,
-    src: ILocalLocation | IRemoteSasLocation,
-    dst: ILocalLocation | IRemoteSasLocation,
+    src: ILocalLocation | IRemoteSasLocation | IRemoteAuthLocation,
+    dst: ILocalLocation | IRemoteSasLocation | IRemoteAuthLocation,
     transferProgress: TransferProgress,
     notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken
@@ -90,7 +91,10 @@ async function startAndWaitForTransfer(
     notificationProgress?: NotificationProgress,
     cancellationToken?: CancellationToken
 ): Promise<IJobInfo> {
-    const copyClient: AzCopyClient = new AzCopyClient();
+    const copyClient: AzCopyClient = new AzCopyClient({
+        // credentialStore is required for using OAuth with AzCopy
+        credentialStore: new CredentialStore()
+    });
     const jobId: string = await copyClient.copy(location.src, location.dst, options);
 
     // Directory transfers always have `useWildCard` set
