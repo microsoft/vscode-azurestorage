@@ -364,6 +364,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
             remoteFilePath: blobPath,
             sasToken: token,
             accessToken: token,
+            refreshToken: this.root.getAccessToken,
             tenantId: this.subscription.tenantId
         };
         await uploadFile(context, uploadItem, notificationProgress, cancellationToken);
