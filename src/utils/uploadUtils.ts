@@ -36,13 +36,18 @@ export async function uploadLocalFolder(
     cancellationToken: vscode.CancellationToken,
     messagePrefix?: string,
 ): Promise<void> {
+    // either sasToken or accessToken should be undefined; we use the according credential accordingly
+    const token = destTreeItem.root.allowSharedKeyAccess ? destTreeItem.transferSasToken : await destTreeItem.root.getAccessToken();
     const uploadItem: UploadItem = {
         type: destTreeItem instanceof BlobContainerTreeItem ? "blob" : "file",
+        isDirectory: false,
         localFilePath: sourcePath,
         resourceName: destTreeItem instanceof BlobContainerTreeItem ? destTreeItem.container.name : destTreeItem.shareName,
         resourceUri: destTreeItem.resourceUri,
         remoteFilePath: destPath,
-        transferSasToken: destTreeItem.transferSasToken,
+        sasToken: token,
+        accessToken: token,
+        tenantId: destTreeItem.subscription.tenantId
     }
     await uploadFolder(context, uploadItem, messagePrefix, notificationProgress, cancellationToken);
 }
