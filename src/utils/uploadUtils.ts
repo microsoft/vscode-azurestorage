@@ -47,6 +47,7 @@ export async function uploadLocalFolder(
         remoteFilePath: destPath,
         sasToken: token,
         accessToken: token,
+        refreshToken: destTreeItem.root.getAccessToken,
         tenantId: destTreeItem.subscription.tenantId
     }
     await uploadFolder(context, uploadItem, messagePrefix, notificationProgress, cancellationToken);

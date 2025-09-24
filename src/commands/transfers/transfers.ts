@@ -26,6 +26,7 @@ export type DownloadItem = {
     resourceUri: string;
     sasToken?: string;
     accessToken?: string;
+    refreshToken?: () => Promise<string>;
     tenantId?: string;
 }
 
@@ -72,6 +73,7 @@ export type UploadItem = {
     remoteFilePath: string;
     sasToken?: string;
     accessToken?: string;
+    refreshToken?: () => Promise<string>;
     tenantId?: string
 }
 

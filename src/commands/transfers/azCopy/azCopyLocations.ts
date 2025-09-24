@@ -23,9 +23,9 @@ export function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): IRe
     // Ensure path begins with '/' to transfer properly
     path = path[0] === posix.sep ? path : `${posix.sep}${path}`;
     let remoteLocation: IRemoteSasLocation | IRemoteAuthLocation;
-    const { sasToken, accessToken, resourceUri } = item;
-    if (accessToken) {
-        remoteLocation = createRemoteAuthLocation(item, path, resourceUri, accessToken);
+    const { sasToken, accessToken, resourceUri, refreshToken } = item;
+    if (accessToken && refreshToken) {
+        remoteLocation = createRemoteAuthLocation(item, path, resourceUri, accessToken, refreshToken);
     } else if (sasToken) {
         remoteLocation = {
             type: 'RemoteSas',
@@ -41,11 +41,7 @@ export function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): IRe
     return remoteLocation;
 }
 
-function createRemoteAuthLocation(item: DownloadItem | UploadItem, path: string, resourceUri: string, accessToken: string): IRemoteAuthLocation {
-    const refreshToken = async (): Promise<string> => {
-        // not technically refreshing the token, but we are refreshing it every time we make a call to AzCopy anyway
-        return accessToken;
-    };
+function createRemoteAuthLocation(item: DownloadItem | UploadItem, path: string, resourceUri: string, accessToken: string, refreshToken: () => Promise<string>): IRemoteAuthLocation {
     const tenantId = item.tenantId ?? '';
     return {
         type: 'RemoteAuth',
