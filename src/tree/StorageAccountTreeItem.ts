@@ -275,6 +275,10 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 return token.token;
             },
             generateSasToken: (accountSASSignatureValues: AccountSASSignatureValues) => {
+                if (!this.allowSharedKeyAccess) {
+                    throw new Error(localize('storageAccountTreeItem.noSharedKeyAccess', 'No shared key access for storage account "{0}". Allow it to enable this command.', this.label));
+                }
+
                 return generateAccountSASQueryParameters(
                     accountSASSignatureValues,
                     new StorageSharedKeyCredentialBlob(this.storageAccount.name, this._key.value)
