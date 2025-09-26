@@ -14,7 +14,7 @@ export function createAzCopyLocalLocation(path: string, isFolder?: boolean): ILo
     return { type: 'Local', path, useWildCard: !!isFolder };
 }
 
-export function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): IRemoteSasLocation | IRemoteAuthLocation {
+export async function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): Promise<IRemoteSasLocation | IRemoteAuthLocation> {
     let path = item.remoteFilePath;
     if (item.isDirectory && !path.endsWith(posix.sep)) {
         path += posix.sep;
@@ -23,8 +23,11 @@ export function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): IRe
     // Ensure path begins with '/' to transfer properly
     path = path[0] === posix.sep ? path : `${posix.sep}${path}`;
     let remoteLocation: IRemoteSasLocation | IRemoteAuthLocation;
-    const { sasToken, accessToken, resourceUri, refreshToken } = item;
-    if (accessToken && refreshToken) {
+    const { sasToken, resourceUri, treeItem } = item;
+
+    if (treeItem && !treeItem.root.allowSharedKeyAccess) {
+        const accessToken = await treeItem.root.getAccessToken();
+        const refreshToken = treeItem.root.getAccessToken;
         remoteLocation = createRemoteAuthLocation(item, path, resourceUri, accessToken, refreshToken);
     } else if (sasToken) {
         remoteLocation = {
@@ -42,7 +45,7 @@ export function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): IRe
 }
 
 function createRemoteAuthLocation(item: DownloadItem | UploadItem, path: string, resourceUri: string, accessToken: string, refreshToken: () => Promise<string>): IRemoteAuthLocation {
-    const tenantId = item.tenantId ?? '';
+    const tenantId = item.treeItem?.root.tenantId ?? '';
     return {
         type: 'RemoteAuth',
         authToken: accessToken,

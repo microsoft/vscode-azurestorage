@@ -38,8 +38,8 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
         for (const treeItem of treeItems) {
             // if there is no remoteFilePath, then it is the root
             const remoteFilePath = treeItem.remoteFilePath ?? `${posix.sep}`;
-            const token = treeItem.root.allowSharedKeyAccess ? treeItem.transferSasToken : await treeItem.root.getAccessToken();
             const resourceUri = treeItem.resourceUri;
+            const sasToken = treeItem.root.allowSharedKeyAccess ? treeItem.transferSasToken : undefined;
             if (treeItem instanceof BlobTreeItem) {
                 await treeItem.checkCanDownload(context);
                 allFileDownloads.push({
@@ -49,9 +49,8 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
                     localFilePath: join(destinationFolder, treeItem.blobName),
                     isDirectory: false,
                     resourceUri,
-                    sasToken: token,
-                    accessToken: token,
-                    tenantId: treeItem.subscription.tenantId
+                    sasToken,
+                    treeItem,
                 });
             } else if (treeItem instanceof BlobDirectoryTreeItem) {
                 allFolderDownloads.push({
@@ -61,8 +60,8 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
                     localFilePath: join(destinationFolder, treeItem.dirName),
                     isDirectory: true,
                     resourceUri,
-                    sasToken: token,
-                    accessToken: token
+                    sasToken,
+                    treeItem,
                 });
             } else if (treeItem instanceof BlobContainerTreeItem) {
                 allFolderDownloads.push({
@@ -72,8 +71,8 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
                     localFilePath: join(destinationFolder, treeItem.container.name),
                     isDirectory: true,
                     resourceUri,
-                    sasToken: token,
-                    accessToken: token
+                    sasToken,
+                    treeItem,
                 });
             } else if (treeItem instanceof FileTreeItem) {
                 allFileDownloads.push({
@@ -83,8 +82,8 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
                     localFilePath: join(destinationFolder, treeItem.fileName),
                     isDirectory: false,
                     resourceUri,
-                    sasToken: token,
-                    accessToken: token,
+                    sasToken,
+                    treeItem
                 });
             } else if (treeItem instanceof DirectoryTreeItem) {
                 allFolderDownloads.push({
@@ -94,8 +93,8 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
                     localFilePath: join(destinationFolder, treeItem.directoryName),
                     isDirectory: true,
                     resourceUri,
-                    sasToken: token,
-                    accessToken: token
+                    sasToken,
+                    treeItem
                 });
             } else if (treeItem instanceof FileShareTreeItem) {
                 allFolderDownloads.push({
@@ -105,8 +104,8 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
                     localFilePath: join(destinationFolder, treeItem.shareName),
                     isDirectory: true,
                     resourceUri,
-                    sasToken: token,
-                    accessToken: token
+                    sasToken,
+                    treeItem
                 });
             }
         }
