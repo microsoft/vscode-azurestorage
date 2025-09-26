@@ -14,7 +14,7 @@ export function createAzCopyLocalLocation(path: string, isFolder?: boolean): ILo
     return { type: 'Local', path, useWildCard: !!isFolder };
 }
 
-export function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): IRemoteSasLocation | IRemoteAuthLocation {
+export async function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): Promise<IRemoteSasLocation | IRemoteAuthLocation> {
     let path = item.remoteFilePath;
     if (item.isDirectory && !path.endsWith(posix.sep)) {
         path += posix.sep;
@@ -23,9 +23,12 @@ export function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): IRe
     // Ensure path begins with '/' to transfer properly
     path = path[0] === posix.sep ? path : `${posix.sep}${path}`;
     let remoteLocation: IRemoteSasLocation | IRemoteAuthLocation;
-    const { sasToken, accessToken, resourceUri } = item;
-    if (accessToken) {
-        remoteLocation = createRemoteAuthLocation(item, path, resourceUri, accessToken);
+    const { sasToken, resourceUri, treeItem } = item;
+
+    if (treeItem && !treeItem.root.allowSharedKeyAccess) {
+        const accessToken = await treeItem.root.getAccessToken();
+        const refreshToken = treeItem.root.getAccessToken;
+        remoteLocation = createRemoteAuthLocation(item, path, resourceUri, accessToken, refreshToken);
     } else if (sasToken) {
         remoteLocation = {
             type: 'RemoteSas',
@@ -41,12 +44,8 @@ export function createAzCopyRemoteLocation(item: DownloadItem | UploadItem): IRe
     return remoteLocation;
 }
 
-function createRemoteAuthLocation(item: DownloadItem | UploadItem, path: string, resourceUri: string, accessToken: string): IRemoteAuthLocation {
-    const refreshToken = async (): Promise<string> => {
-        // not technically refreshing the token, but we are refreshing it every time we make a call to AzCopy anyway
-        return accessToken;
-    };
-    const tenantId = item.tenantId ?? '';
+function createRemoteAuthLocation(item: DownloadItem | UploadItem, path: string, resourceUri: string, accessToken: string, refreshToken: () => Promise<string>): IRemoteAuthLocation {
+    const tenantId = item.treeItem?.root.tenantId ?? '';
     return {
         type: 'RemoteAuth',
         authToken: accessToken,

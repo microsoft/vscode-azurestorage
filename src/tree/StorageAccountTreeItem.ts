@@ -265,6 +265,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         return {
             storageAccountName: this.dataModel.name,
             storageAccountId: this.dataModel.id,
+            tenantId: this._subscription.tenantId,
             isEmulated: false,
             allowSharedKeyAccess: this.allowSharedKeyAccess,
             primaryEndpoints: this.storageAccount.primaryEndpoints,
