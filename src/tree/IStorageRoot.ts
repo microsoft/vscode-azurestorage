@@ -14,6 +14,7 @@ import { type IActionContext } from "@microsoft/vscode-azext-utils";
 export interface IStorageRoot {
     storageAccountName: string;
     storageAccountId: string;
+    tenantId: string;
     isEmulated: boolean;
     allowSharedKeyAccess: boolean;
     primaryEndpoints?: Endpoints;

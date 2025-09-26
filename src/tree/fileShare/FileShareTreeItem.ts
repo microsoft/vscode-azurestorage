@@ -162,8 +162,8 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
                 await directoryClient.create();
             }
         }
-        // either sasToken or accessToken should be undefined; we use the according credential accordingly
-        const token = this.root.allowSharedKeyAccess ? this.transferSasToken : await this.root.getAccessToken();
+        // either sasToken requires allowSharedKeyAccess to be true
+        const sasToken = this.root.allowSharedKeyAccess ? this.transferSasToken : undefined
         const uploadItem: UploadItem = {
             type: "file",
             isDirectory: false,
@@ -171,10 +171,8 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
             resourceName: this.shareName,
             resourceUri: this.resourceUri,
             remoteFilePath: destFilePath,
-            sasToken: token,
-            accessToken: token,
-            refreshToken: this.root.getAccessToken,
-            tenantId: this.subscription.tenantId
+            sasToken,
+            treeItem: this
         };
         await uploadFile(context, uploadItem, notificationProgress, cancellationToken);
     }

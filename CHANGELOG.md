@@ -1,6 +1,13 @@
 # Change Log
 
 ## Unreleased
+## 0.17.1 - 2025-09-26
+### Added
+* [[1443](https://github.com/microsoft/vscode-azurestorage/pull/1443)] Add support for **OAuth/RBAC** in **AzCopy** calls.
+
+### Changed
+* [[1437](https://github.com/microsoft/vscode-azurestorage/pull/1437)] Changes were made to support the upcoming multi-factor authentication requirements for Azure
+
 ## 0.17.0 - 2025-09-09
 ### Added
 * [[1402](https://github.com/microsoft/vscode-azurestorage/pull/1402)] Refactor **storage accounts** to load on expand and utilize **ARM graph** rather than relying on list calls.
