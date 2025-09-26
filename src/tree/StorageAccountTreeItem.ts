@@ -265,6 +265,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         return {
             storageAccountName: this.dataModel.name,
             storageAccountId: this.dataModel.id,
+            tenantId: this._subscription.tenantId,
             isEmulated: false,
             allowSharedKeyAccess: this.allowSharedKeyAccess,
             primaryEndpoints: this.storageAccount.primaryEndpoints,
@@ -274,10 +275,6 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 return token.token;
             },
             generateSasToken: (accountSASSignatureValues: AccountSASSignatureValues) => {
-                if (!this.allowSharedKeyAccess) {
-                    throw new Error(localize('storageAccountTreeItem.noSharedKeyAccess', 'No shared key access for storage account "{0}". Allow it to enable this command.', this.label));
-                }
-
                 return generateAccountSASQueryParameters(
                     accountSASSignatureValues,
                     new StorageSharedKeyCredentialBlob(this.storageAccount.name, this._key.value)
