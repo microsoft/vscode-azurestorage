@@ -1,6 +1,5 @@
 # Change Log
 
-## Unreleased
 ## 0.17.1 - 2025-09-26
 ### Added
 * [[1443](https://github.com/microsoft/vscode-azurestorage/pull/1443)] Add support for **OAuth/RBAC** in **AzCopy** calls.
