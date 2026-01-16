@@ -818,7 +818,7 @@
         "@types/winreg": "1.2.30",
         "@typescript-eslint/eslint-plugin": "^4.28.3",
         "@vscode/test-electron": "^2.3.8",
-        "copy-webpack-plugin": "^6.0.0",
+        "copy-webpack-plugin": "^13.0.1",
         "eslint": "^7.19.0",
         "eslint-plugin-import": "^2.22.1",
         "gulp": "^5.0.0",
