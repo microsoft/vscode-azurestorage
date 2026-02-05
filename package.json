@@ -822,7 +822,7 @@
         "eslint": "^7.19.0",
         "eslint-plugin-import": "^2.22.1",
         "gulp": "^5.0.0",
-        "mocha": "^10.1.0",
+        "mocha": "^10.8.2",
         "mocha-junit-reporter": "^1.18.0",
         "mocha-multi-reporters": "^1.1.7",
         "node-polyfill-webpack-plugin": "^2.0.1",
