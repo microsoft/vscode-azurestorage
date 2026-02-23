@@ -792,7 +792,8 @@
         "build:check": "tsc --noEmit",
         "package": "vsce package --no-dependencies --githubBranch main",
         "lint": "eslint --max-warnings 0",
-        "test": "vscode-test"
+        "test": "vscode-test",
+        "setazcopypermissions": "node scripts/setAzCopyPermissions.mjs"
     },
     "devDependencies": {
         "@azure/arm-resources": "^5.0.0",
