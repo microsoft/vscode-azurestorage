@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { autoEsbuildOrWatch, autoSelectEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
+import { copy } from 'esbuild-plugin-copy';
 
 const { extensionConfig, telemetryConfig } = autoSelectEsbuildConfig();
 
@@ -21,8 +22,20 @@ const finalConfig = {
         'bufferutil',
         'utf-8-validate',
         'canvas',
-        // jsdom xhr-sync-worker uses require.resolve; mark as external
+        // jsdom xhr-sync-worker is loaded via require.resolve at runtime; keep external and copy it
         './xhr-sync-worker.js',
+    ],
+    plugins: [
+        ...(extensionConfig.plugins ?? []),
+        copy({
+            resolveFrom: 'out',
+            assets: [
+                {
+                    from: ['./node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js'],
+                    to: ['./xhr-sync-worker.js'],
+                },
+            ],
+        }),
     ],
 };
 

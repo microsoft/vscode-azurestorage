@@ -39,8 +39,8 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         super(parent);
         this.label = this.shareName;
         this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
+            light: vscode.Uri.file(path.join(getResourcesPath(), 'light', 'AzureFileShare.svg')),
+            dark: vscode.Uri.file(path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg'))
         };
     }
 

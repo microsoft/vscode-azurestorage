@@ -8,7 +8,7 @@ import type { ServiceListSharesSegmentResponse, ShareItem, ShareServiceClient } 
 import { AzExtParentTreeItem, AzureWizard, ICreateChildImplContext, parseError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
-import { ProgressLocation, window } from 'vscode';
+import { ProgressLocation, Uri, window } from 'vscode';
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { localize } from '../../utils/localize';
@@ -35,8 +35,8 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
     public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
         this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
+            light: Uri.file(path.join(getResourcesPath(), 'light', 'AzureFileShare.svg')),
+            dark: Uri.file(path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg'))
         };
     }
 

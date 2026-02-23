@@ -42,7 +42,7 @@ export enum ChildType {
 
 export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     private _continuationToken: string | undefined;
-    private _websiteHostingEnabled: boolean;
+    private _websiteHostingEnabled!: boolean;
     private _openInFileExplorerString: string = 'Open in Explorer...';
     public declare parent: BlobContainerGroupTreeItem;
 
@@ -80,12 +80,12 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         return ti;
     }
 
-    public get iconPath(): { light: string | Uri; dark: string | Uri } {
+    public get iconPath(): { light: Uri; dark: Uri } {
         const iconFileName = this._websiteHostingEnabled && this.container.name === staticWebsiteContainerName ?
             'BrandAzureStaticWebsites' : 'AzureBlobContainer';
         return {
-            light: path.join(getResourcesPath(), 'light', `${iconFileName}.svg`),
-            dark: path.join(getResourcesPath(), 'dark', `${iconFileName}.svg`)
+            light: Uri.file(path.join(getResourcesPath(), 'light', `${iconFileName}.svg`)),
+            dark: Uri.file(path.join(getResourcesPath(), 'dark', `${iconFileName}.svg`))
         };
     }
 
