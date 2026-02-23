@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { AzExtFsExtra, callWithTelemetryAndErrorHandling, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import { MessageItem } from "vscode";
-import * as winreg from "winreg";
+import winreg from "winreg";
 import { storageExplorerDownloadUrl } from "../constants";
 import { Launcher } from "../utils/launcher";
 import { localize } from "../utils/localize";

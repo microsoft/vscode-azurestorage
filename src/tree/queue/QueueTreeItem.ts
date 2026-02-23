@@ -13,11 +13,12 @@ import { IStorageTreeItem } from '../IStorageTreeItem';
 import { QueueGroupTreeItem } from "./QueueGroupTreeItem";
 
 export class QueueTreeItem extends AzExtTreeItem implements IStorageTreeItem {
-    public parent: QueueGroupTreeItem;
+    public declare parent: QueueGroupTreeItem;
     constructor(
         parent: QueueGroupTreeItem,
         public readonly queue: QueueItem) {
         super(parent);
+        this.label = this.queue.name;
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureQueue.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureQueue.svg')
@@ -28,7 +29,7 @@ export class QueueTreeItem extends AzExtTreeItem implements IStorageTreeItem {
         return this.parent.root;
     }
 
-    public label: string = this.queue.name;
+    public label: string = '';
     public static contextValue: string = 'azureQueue';
     public contextValue: string = QueueTreeItem.contextValue;
 

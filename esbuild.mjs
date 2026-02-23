@@ -1,0 +1,29 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See LICENSE.md in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+import { autoEsbuildOrWatch, autoSelectEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
+
+const { extensionConfig, telemetryConfig } = autoSelectEsbuildConfig();
+
+/** @type {import('esbuild').BuildOptions} */
+const finalConfig = {
+    ...extensionConfig,
+    external: [
+        ...(extensionConfig.external ?? []),
+        // AzCopy platform packages contain native executables and must not be bundled
+        '@azure-tools/azcopy-darwin',
+        '@azure-tools/azcopy-linux',
+        '@azure-tools/azcopy-win32',
+        '@azure-tools/azcopy-win64',
+        // Optional native modules used by ws/jsdom; fail gracefully if absent
+        'bufferutil',
+        'utf-8-validate',
+        'canvas',
+        // jsdom xhr-sync-worker uses require.resolve; mark as external
+        './xhr-sync-worker.js',
+    ],
+};
+
+await autoEsbuildOrWatch({ extensionConfig: finalConfig, telemetryConfig });

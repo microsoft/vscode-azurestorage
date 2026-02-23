@@ -25,7 +25,7 @@ import { DirectoryTreeItem, IDirectoryDeleteContext } from "./DirectoryTreeItem"
 import { FileShareTreeItem } from './FileShareTreeItem';
 
 export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
-    public parent: FileShareTreeItem | DirectoryTreeItem;
+    public declare parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,
         public readonly fileName: string,
@@ -33,10 +33,11 @@ export class FileTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSr
         public readonly shareName: string,
         public readonly resourceUri: string) {
         super(parent);
+        this.label = this.fileName;
         this.commandId = 'azureStorage.editFile';
     }
 
-    public label: string = this.fileName;
+    public label: string = '';
     public static contextValue: string = 'azureFile';
     public contextValue: string = FileTreeItem.contextValue;
 

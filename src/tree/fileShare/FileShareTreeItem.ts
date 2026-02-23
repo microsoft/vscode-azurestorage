@@ -28,7 +28,7 @@ import { FileShareGroupTreeItem } from './FileShareGroupTreeItem';
 import { FileTreeItem } from './FileTreeItem';
 
 export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
-    public parent: FileShareGroupTreeItem;
+    public declare parent: FileShareGroupTreeItem;
     private _continuationToken: string | undefined;
     private _openInFileExplorerString: string = 'Open in Explorer...';
 
@@ -37,6 +37,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         public readonly shareName: string,
         public readonly resourceUri: string) {
         super(parent);
+        this.label = this.shareName;
         this.iconPath = {
             light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
             dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
@@ -61,7 +62,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         return this.root.generateSasToken(accountSASSignatureValues);
     }
 
-    public label: string = this.shareName;
+    public label: string = '';
     public static contextValue: string = 'azureFileShare';
     public contextValue: string = FileShareTreeItem.contextValue;
 

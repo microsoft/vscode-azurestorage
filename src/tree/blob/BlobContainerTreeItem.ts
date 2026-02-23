@@ -11,7 +11,7 @@ polyfill();
 import { AccountSASPermissions } from '@azure/storage-blob';
 
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
-import * as retry from 'p-retry';
+import retry from 'p-retry';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
@@ -44,13 +44,14 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     private _continuationToken: string | undefined;
     private _websiteHostingEnabled: boolean;
     private _openInFileExplorerString: string = 'Open in Explorer...';
-    public parent: BlobContainerGroupTreeItem;
+    public declare parent: BlobContainerGroupTreeItem;
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
         public readonly container: ContainerItem,
         public readonly resourceUri: string) {
         super(parent);
+        this.label = this.container.name;
     }
 
     public get root(): IStorageRoot {
@@ -88,7 +89,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         };
     }
 
-    public label: string = this.container.name;
+    public label: string = '';
     public static contextValue: string = 'azureBlobContainer';
     public contextValue: string = BlobContainerTreeItem.contextValue;
 

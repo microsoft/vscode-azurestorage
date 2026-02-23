@@ -14,7 +14,7 @@ import { DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential a
 
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
-import { AzExtServiceClientCredentialsT2 } from '@microsoft/vscode-azext-dev';
+import { AzExtServiceClientCredentialsT2 } from '@microsoft/vscode-azext-utils';
 import { IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, createSubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';

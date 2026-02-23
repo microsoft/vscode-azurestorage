@@ -30,7 +30,7 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
     public readonly childTypeLabel: string = "File Share";
     public static contextValue: string = 'azureFileShareGroup';
     public contextValue: string = FileShareGroupTreeItem.contextValue;
-    public parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
+    public declare parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
 
     public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);

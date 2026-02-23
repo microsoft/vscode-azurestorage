@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzExtTreeItem, IActionContext } from "@microsoft/vscode-azext-utils";
-import * as assert from 'assert';
+import assert from 'assert';
 import { storageFilter } from "../constants";
 import { ext } from "../extensionVariables";
 import { AttachedStorageAccountTreeItem } from '../tree/AttachedStorageAccountTreeItem';

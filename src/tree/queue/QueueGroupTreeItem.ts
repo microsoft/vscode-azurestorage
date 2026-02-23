@@ -24,7 +24,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
     public readonly childTypeLabel: string = "Queue";
     public static contextValue: string = 'azureQueueGroup';
     public contextValue: string = QueueGroupTreeItem.contextValue;
-    public parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
+    public declare parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
 
     public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);

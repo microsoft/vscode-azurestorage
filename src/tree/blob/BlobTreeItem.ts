@@ -31,7 +31,7 @@ import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     public static contextValue: string = 'azureBlobFile';
     public contextValue: string = BlobTreeItem.contextValue;
-    public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
+    public declare parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
 
     /**
      * The name (and only the name) of the directory

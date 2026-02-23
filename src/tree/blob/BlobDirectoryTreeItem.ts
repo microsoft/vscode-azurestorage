@@ -30,7 +30,7 @@ import { BlobTreeItem, ISuppressMessageContext } from "./BlobTreeItem";
 export class BlobDirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     public static contextValue: string = 'azureBlobDirectory';
     public contextValue: string = BlobDirectoryTreeItem.contextValue;
-    public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
+    public declare parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
 
     /**
      * The name (and only the name) of the directory
