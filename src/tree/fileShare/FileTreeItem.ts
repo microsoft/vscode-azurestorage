@@ -5,9 +5,6 @@
 
 import type { AccountSASSignatureValues, ShareFileClient } from '@azure/storage-file-share';
 
-import { polyfill } from '../../polyfill.worker';
-polyfill();
-
 import { AccountSASPermissions } from '@azure/storage-file-share';
 
 import { AzExtTreeItem, DialogResponses, IActionContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';

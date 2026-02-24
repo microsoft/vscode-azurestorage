@@ -5,9 +5,8 @@
 
 import { StorageAccount } from '@azure/arm-storage';
 import { PipelineResponse, createPipelineRequest } from '@azure/core-rest-pipeline';
-import { runWithTestActionContext } from '@microsoft/vscode-azext-utils';
 import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
-import { AzExtTreeItem } from '@microsoft/vscode-azext-utils';
+import { AzExtTreeItem, runWithTestActionContext } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import assert from 'assert';
 import * as path from 'path';

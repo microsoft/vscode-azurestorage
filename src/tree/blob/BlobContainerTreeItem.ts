@@ -5,9 +5,6 @@
 
 import type { AccountSASSignatureValues, BlobDeleteResponse, BlobItem, ContainerClient, ContainerItem, ContainerListBlobFlatSegmentResponse, ListBlobsFlatSegmentResponse } from '@azure/storage-blob';
 
-import { polyfill } from '../../polyfill.worker';
-polyfill();
-
 import { AccountSASPermissions } from '@azure/storage-blob';
 
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';

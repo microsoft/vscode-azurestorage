@@ -5,9 +5,6 @@
 
 import type { AccountSASSignatureValues, BlobClient, ContainerItem } from "@azure/storage-blob";
 
-import { polyfill } from '../../polyfill.worker';
-polyfill();
-
 import { AccountSASPermissions } from '@azure/storage-blob';
 
 import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, ICreateChildImplContext, TreeItemIconPath } from "@microsoft/vscode-azext-utils";

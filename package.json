@@ -799,17 +799,10 @@
         "@azure/arm-resources": "^5.0.0",
         "@microsoft/vscode-azext-eng": "^1.0.0-alpha.12",
         "@types/fs-extra": "^8.1.0",
-        "@types/jsdom": "^21.1.1",
         "@types/mime": "^2.0.1",
-        "@types/node": "22.x",
         "@types/p-retry": "^3.0.1",
         "@types/vscode": "1.104.0",
-        "@types/winreg": "1.2.30",
-        "@vscode/test-cli": "*",
-        "@vscode/test-electron": "*",
-        "@vscode/vsce": "*",
-        "esbuild": "*",
-        "esbuild-plugin-copy": "*"
+        "@types/winreg": "1.2.30"
     },
     "dependencies": {
         "@azure-tools/azcopy-node": "^2.11.0",
@@ -826,7 +819,6 @@
         "@microsoft/vscode-azext-utils": "^4.0.2",
         "@microsoft/vscode-azureresources-api": "^2.6.2",
         "glob": "^7.1.2",
-        "jsdom": "^21.1.1",
         "mime": "^2.4.4",
         "open": "^8.0.4",
         "p-retry": "^4.2.0",
