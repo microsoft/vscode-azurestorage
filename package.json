@@ -787,7 +787,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run build:esbuild",
-        "build": "npm run build:esbuild & npm run build:check",
+        "build": "npm run build:esbuild && npm run build:check",
         "build:esbuild": "node esbuild.mjs",
         "build:check": "tsc --noEmit",
         "package": "vsce package --no-dependencies --githubBranch main",
