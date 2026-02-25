@@ -802,7 +802,12 @@
         "@types/mime": "^2.0.1",
         "@types/p-retry": "^3.0.1",
         "@types/vscode": "1.104.0",
-        "@types/winreg": "1.2.30"
+        "@types/winreg": "1.2.30",
+        "@vscode/test-cli": "*",
+        "@vscode/test-electron": "*",
+        "@vscode/vsce": "*",
+        "esbuild": "*",
+        "esbuild-plugin-copy": "*"
     },
     "dependencies": {
         "@azure-tools/azcopy-node": "^2.11.0",
