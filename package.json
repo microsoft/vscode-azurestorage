@@ -790,6 +790,7 @@
         "build": "npm run build:esbuild && npm run build:check",
         "build:esbuild": "node esbuild.mjs",
         "build:check": "tsc --noEmit",
+        "prepackage": "npm run setazcopypermissions",
         "package": "vsce package --no-dependencies --githubBranch main",
         "lint": "eslint --max-warnings 0",
         "test": "vscode-test",
