@@ -29,12 +29,6 @@ steps:
     command: custom
     customCommand: run package
 
-- task: Npm@1
-  displayName: 'setAzCopyPermissions'
-  inputs:
-    command: custom
-    customCommand: run setazcopypermissions
-
 - task: CopyFiles@2
   displayName: 'Copy vsix to staging directory'
   inputs:
