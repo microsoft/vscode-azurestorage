@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { AzExtFsExtra, callWithTelemetryAndErrorHandling, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import { MessageItem } from "vscode";
-import winreg from "winreg";
+import * as winreg from "winreg";
 import { storageExplorerDownloadUrl } from "../constants";
 import { Launcher } from "../utils/launcher";
 import { localize } from "../utils/localize";
@@ -66,7 +66,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
 
     private static async getWindowsRegistryValue(hive: string, key: string): Promise<string | undefined> {
         return new Promise((resolve, reject) => {
-            const rgKey = new winreg({ hive, key });
+            const rgKey = new winreg.default({ hive, key });
             rgKey.values((err?: {}, items?: Winreg.RegistryItem[]) => {
                 if (err) {
                     reject(err);

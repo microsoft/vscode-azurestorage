@@ -8,7 +8,7 @@ import type { AccountSASSignatureValues, BlobDeleteResponse, BlobItem, Container
 import { AccountSASPermissions } from '@azure/storage-blob';
 
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
-import retry from 'p-retry';
+import * as retry from 'p-retry';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ProgressLocation, Uri } from 'vscode';
@@ -235,7 +235,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     ): Promise<string> {
         ext.outputChannel.appendLog(localize('deploying', 'Deploying to static website "{0}/{1}"', this.root.storageAccountId, this.container.name));
         const retries: number = 4;
-        await retry(
+        await retry.default(
             async (currentAttempt) => {
                 context.telemetry.properties.deployAttempt = currentAttempt.toString();
                 if (currentAttempt > 1) {
