@@ -4,20 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { chmod, stat } from 'fs/promises';
-import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 
-// Force-install all azcopy platform packages (they are optional dependencies
-// and may not be installed on every platform by default).
-console.log('Installing azcopy platform packages...');
-execSync(
-    'npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64',
-    { cwd: root, stdio: 'inherit' },
-);
+console.log('Setting permissions for azcopy executables in', root);
 
 const paths = [
     // Binaries copied into dist/ by esbuild (included in VSIX)
