@@ -827,11 +827,5 @@
     },
     "extensionDependencies": [
         "ms-azuretools.vscode-azureresourcegroups"
-    ],
-    "optionalDependencies": {
-        "@azure-tools/azcopy-darwin": "^10.18.1",
-        "@azure-tools/azcopy-linux": "^10.18.1",
-        "@azure-tools/azcopy-win32": "^10.18.1",
-        "@azure-tools/azcopy-win64": "^10.18.1"
-    }
+    ]
 }
