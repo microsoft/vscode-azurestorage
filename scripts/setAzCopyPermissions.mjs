@@ -11,6 +11,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 
 const paths = [
+    // Binaries copied into dist/ by esbuild (included in VSIX)
+    'dist/node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64',
+    'dist/node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64',
+    // Original locations in node_modules (for local dev)
     'node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64',
     'node_modules/@azure-tools/azcopy-linux/dist/bin/azcopy_linux_amd64',
     'node_modules/@azure-tools/azcopy-node/node_modules/@azure-tools/azcopy-darwin/dist/bin/azcopy_darwin_amd64',

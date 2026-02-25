@@ -34,6 +34,23 @@ const finalConfig = {
                     from: ['./node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js'],
                     to: ['./xhr-sync-worker.js'],
                 },
+                // Copy azcopy platform packages so they end up in dist/node_modules/ inside the VSIX
+                {
+                    from: ['./node_modules/@azure-tools/azcopy-darwin/**/*'],
+                    to: ['./node_modules/@azure-tools/azcopy-darwin'],
+                },
+                {
+                    from: ['./node_modules/@azure-tools/azcopy-linux/**/*'],
+                    to: ['./node_modules/@azure-tools/azcopy-linux'],
+                },
+                {
+                    from: ['./node_modules/@azure-tools/azcopy-win32/**/*'],
+                    to: ['./node_modules/@azure-tools/azcopy-win32'],
+                },
+                {
+                    from: ['./node_modules/@azure-tools/azcopy-win64/**/*'],
+                    to: ['./node_modules/@azure-tools/azcopy-win64'],
+                },
             ],
         }),
     ],
