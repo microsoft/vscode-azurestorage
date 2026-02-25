@@ -5,9 +5,6 @@
 
 import type { AccountSASSignatureValues, BlobClient, BlobGetPropertiesResponse, BlockBlobClient, ContainerItem } from "@azure/storage-blob";
 
-import { polyfill } from '../../polyfill.worker';
-polyfill();
-
 import { AccountSASPermissions } from '@azure/storage-blob';
 
 import { AzExtTreeItem, AzureWizard, DeleteConfirmationStep, IActionContext, TreeItemIconPath } from '@microsoft/vscode-azext-utils';
@@ -31,7 +28,7 @@ import { BlobDirectoryTreeItem } from "./BlobDirectoryTreeItem";
 export class BlobTreeItem extends AzExtTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     public static contextValue: string = 'azureBlobFile';
     public contextValue: string = BlobTreeItem.contextValue;
-    public parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
+    public declare parent: BlobContainerTreeItem | BlobDirectoryTreeItem;
 
     /**
      * The name (and only the name) of the directory

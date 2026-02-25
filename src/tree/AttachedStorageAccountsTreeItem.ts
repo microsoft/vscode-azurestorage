@@ -3,9 +3,6 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { polyfill } from '../polyfill.worker';
-polyfill();
-
 import { BlobServiceClient } from "@azure/storage-blob";
 
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext, ISubscriptionContext, parseError, TreeItemIconPath } from "@microsoft/vscode-azext-utils";

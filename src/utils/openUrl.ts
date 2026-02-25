@@ -9,5 +9,5 @@ export async function openUrl(url: string): Promise<void> {
     // Using this functionality is blocked by https://github.com/Microsoft/vscode/issues/85930
     // await vscode.env.openExternal(vscode.Uri.parse(url));
 
-    await open(url);
+    await open.default(url);
 }

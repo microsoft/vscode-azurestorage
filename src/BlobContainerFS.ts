@@ -6,15 +6,12 @@
 import type { BlobClient, BlobGetPropertiesResponse, BlockBlobClient, ContainerClient, ListBlobsFlatSegmentResponse, ListBlobsHierarchySegmentResponse } from '@azure/storage-blob';
 import type { DataLakeFileSystemClient } from '@azure/storage-file-datalake';
 
-import { polyfill } from './polyfill.worker';
-polyfill();
-
 import { BlobServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob } from '@azure/storage-blob';
 import { DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialDataLake } from '@azure/storage-file-datalake';
 
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
-import { AzExtServiceClientCredentialsT2 } from '@microsoft/vscode-azext-dev';
+import { AzExtServiceClientCredentialsT2 } from '@microsoft/vscode-azext-utils';
 import { IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, createSubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';

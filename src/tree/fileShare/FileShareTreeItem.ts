@@ -5,9 +5,6 @@
 
 import type { AccountSASSignatureValues, DirectoryItem, FileItem, ShareClient, ShareDirectoryClient, ShareServiceClient } from '@azure/storage-file-share';
 
-import { polyfill } from '../../polyfill.worker';
-polyfill();
-
 import { AccountSASPermissions } from '@azure/storage-file-share';
 
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError } from '@microsoft/vscode-azext-utils';
@@ -28,7 +25,7 @@ import { FileShareGroupTreeItem } from './FileShareGroupTreeItem';
 import { FileTreeItem } from './FileTreeItem';
 
 export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
-    public parent: FileShareGroupTreeItem;
+    public declare parent: FileShareGroupTreeItem;
     private _continuationToken: string | undefined;
     private _openInFileExplorerString: string = 'Open in Explorer...';
 
@@ -37,9 +34,10 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         public readonly shareName: string,
         public readonly resourceUri: string) {
         super(parent);
+        this.label = this.shareName;
         this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureFileShare.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg')
+            light: vscode.Uri.file(path.join(getResourcesPath(), 'light', 'AzureFileShare.svg')),
+            dark: vscode.Uri.file(path.join(getResourcesPath(), 'dark', 'AzureFileShare.svg'))
         };
     }
 
@@ -61,7 +59,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         return this.root.generateSasToken(accountSASSignatureValues);
     }
 
-    public label: string = this.shareName;
+    public label: string = '';
     public static contextValue: string = 'azureFileShare';
     public contextValue: string = FileShareTreeItem.contextValue;
 
