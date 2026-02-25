@@ -18,22 +18,12 @@ const finalConfig = {
         '@azure-tools/azcopy-linux',
         '@azure-tools/azcopy-win32',
         '@azure-tools/azcopy-win64',
-        // Optional native modules used by ws/jsdom; fail gracefully if absent
-        'bufferutil',
-        'utf-8-validate',
-        'canvas',
-        // jsdom xhr-sync-worker is loaded via require.resolve at runtime; keep external and copy it
-        './xhr-sync-worker.js',
     ],
     plugins: [
         ...(extensionConfig.plugins ?? []),
         copy({
             resolveFrom: 'out',
             assets: [
-                {
-                    from: ['./node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js'],
-                    to: ['./xhr-sync-worker.js'],
-                },
                 // Copy azcopy platform packages so they end up in dist/node_modules/ inside the VSIX
                 {
                     from: ['./node_modules/@azure-tools/azcopy-darwin/**/*'],
