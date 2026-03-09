@@ -3,15 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-// eslint-disable-next-line import/no-internal-modules
 import { StorageAccount } from '@azure/arm-storage';
 import { PipelineResponse, createPipelineRequest } from '@azure/core-rest-pipeline';
-import { runWithTestActionContext } from '@microsoft/vscode-azext-dev';
-import { AzExtTreeItem } from '@microsoft/vscode-azext-utils';
-import * as assert from 'assert';
+import { createGenericClient } from '@microsoft/vscode-azext-azureutils';
+import { AzExtTreeItem, runWithTestActionContext } from '@microsoft/vscode-azext-utils';
+import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
+import assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ResolvedAppResourceTreeItem, ResolvedStorageAccount, createGenericClient, delay, deployStaticWebsite, ext, getRandomHexString } from '../../extension.bundle';
+import { ResolvedStorageAccount } from '../../src/StorageAccountResolver.js';
+import { deployStaticWebsite } from '../../src/commands/storageAccountActionHandlers.js';
+import { ext } from '../../src/extensionVariables.js';
+import { delay } from '../../src/utils/delay.js';
+import { getRandomHexString } from '../../src/utils/stringUtils.js';
 import { longRunningTestsEnabled } from '../global.test';
 import { resourceGroupsToDelete, webSiteClient } from './global.resource.test';
 

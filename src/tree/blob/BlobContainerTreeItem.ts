@@ -5,9 +5,6 @@
 
 import type { AccountSASSignatureValues, BlobDeleteResponse, BlobItem, ContainerClient, ContainerItem, ContainerListBlobFlatSegmentResponse, ListBlobsFlatSegmentResponse } from '@azure/storage-blob';
 
-import { polyfill } from '../../polyfill.worker';
-polyfill();
-
 import { AccountSASPermissions } from '@azure/storage-blob';
 
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, GenericTreeItem, IActionContext, ICreateChildImplContext, IParsedError, TelemetryProperties, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
@@ -42,15 +39,16 @@ export enum ChildType {
 
 export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
     private _continuationToken: string | undefined;
-    private _websiteHostingEnabled: boolean;
+    private _websiteHostingEnabled!: boolean;
     private _openInFileExplorerString: string = 'Open in Explorer...';
-    public parent: BlobContainerGroupTreeItem;
+    public declare parent: BlobContainerGroupTreeItem;
 
     private constructor(
         parent: BlobContainerGroupTreeItem,
         public readonly container: ContainerItem,
         public readonly resourceUri: string) {
         super(parent);
+        this.label = this.container.name;
     }
 
     public get root(): IStorageRoot {
@@ -79,16 +77,16 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
         return ti;
     }
 
-    public get iconPath(): { light: string | Uri; dark: string | Uri } {
+    public get iconPath(): { light: Uri; dark: Uri } {
         const iconFileName = this._websiteHostingEnabled && this.container.name === staticWebsiteContainerName ?
             'BrandAzureStaticWebsites' : 'AzureBlobContainer';
         return {
-            light: path.join(getResourcesPath(), 'light', `${iconFileName}.svg`),
-            dark: path.join(getResourcesPath(), 'dark', `${iconFileName}.svg`)
+            light: Uri.file(path.join(getResourcesPath(), 'light', `${iconFileName}.svg`)),
+            dark: Uri.file(path.join(getResourcesPath(), 'dark', `${iconFileName}.svg`))
         };
     }
 
-    public label: string = this.container.name;
+    public label: string = '';
     public static contextValue: string = 'azureBlobContainer';
     public contextValue: string = BlobContainerTreeItem.contextValue;
 
@@ -237,7 +235,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
     ): Promise<string> {
         ext.outputChannel.appendLog(localize('deploying', 'Deploying to static website "{0}/{1}"', this.root.storageAccountId, this.container.name));
         const retries: number = 4;
-        await retry(
+        await retry.default(
             async (currentAttempt) => {
                 context.telemetry.properties.deployAttempt = currentAttempt.toString();
                 if (currentAttempt > 1) {

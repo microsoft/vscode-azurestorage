@@ -117,8 +117,8 @@ function okToOverwriteOrDoesNotExist(context: IActionContext, item: DownloadItem
 
 async function startAzCopyDownload(context: IDownloadWizardContext, item: DownloadItem, progress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
     // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
-    const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
-    const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
+    const { azCopyTransfer } = await import("./azCopy/azCopyTransfer.js");
+    const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations.js");
 
     const src: IRemoteSasLocation | IRemoteAuthLocation = await createAzCopyRemoteLocation(item);
     const dst: ILocalLocation = createAzCopyLocalLocation(item.localFilePath);
@@ -133,8 +133,8 @@ async function startAzCopyDownload(context: IDownloadWizardContext, item: Downlo
 
 async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken) {
     // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
-    const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
-    const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
+    const { azCopyTransfer } = await import("./azCopy/azCopyTransfer.js");
+    const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations.js");
 
     const src: ILocalLocation = createAzCopyLocalLocation(item.localFilePath);
     const dst: IRemoteSasLocation | IRemoteAuthLocation = await createAzCopyRemoteLocation(item);
@@ -144,8 +144,8 @@ async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, 
 
 async function startAzCopyFolderUpload(context: IActionContext, item: UploadItem, messagePrefix?: string, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
     // Import AzCopy packages with async import to avoid loading them in runtimes that don't support AzCopy.
-    const { azCopyTransfer } = await import("./azCopy/azCopyTransfer");
-    const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations");
+    const { azCopyTransfer } = await import("./azCopy/azCopyTransfer.js");
+    const { createAzCopyLocalLocation, createAzCopyRemoteLocation } = await import("./azCopy/azCopyLocations.js");
 
     let useWildCard: boolean = true;
     if (await isEmptyDirectory(item.localFilePath)) {

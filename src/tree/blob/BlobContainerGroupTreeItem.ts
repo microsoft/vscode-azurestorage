@@ -31,13 +31,13 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     public readonly childTypeLabel: string = "Blob Container";
     public static contextValue: string = 'azureBlobContainerGroup';
     public contextValue: string = BlobContainerGroupTreeItem.contextValue;
-    public parent: (StorageAccountTreeItem & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
+    public declare parent: (StorageAccountTreeItem & AzExtParentTreeItem) | AttachedStorageAccountTreeItem;
 
     public constructor(parent: (ResolvedAppResourceTreeItem<ResolvedStorageAccount> & AzExtParentTreeItem) | AttachedStorageAccountTreeItem) {
         super(parent);
         this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg')
+            light: vscode.Uri.file(path.join(getResourcesPath(), 'light', 'AzureBlobContainer.svg')),
+            dark: vscode.Uri.file(path.join(getResourcesPath(), 'dark', 'AzureBlobContainer.svg'))
         };
     }
 
@@ -102,8 +102,8 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
     }
 
     async getContainerItems(containersResponse: ListContainerItem[]): Promise<BlobContainerTreeItem[]> {
-        return await Promise.all(containersResponse.map(async (container: ContainerItem) => {
-            return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container);
+        return await Promise.all(containersResponse.map(async (container: ListContainerItem) => {
+            return await BlobContainerTreeItem.createBlobContainerTreeItem(this, container as ContainerItem);
         }));
     }
 

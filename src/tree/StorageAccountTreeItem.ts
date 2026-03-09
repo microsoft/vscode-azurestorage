@@ -5,9 +5,6 @@
 
 import type { AccountKind, AccountSASSignatureValues, BlobServiceProperties, ServiceGetPropertiesResponse, StaticWebsite } from '@azure/storage-blob';
 
-import { polyfill } from '../polyfill.worker';
-polyfill();
-
 import { AzureNamedKeyCredential, TableServiceClient } from '@azure/data-tables';
 import { BlobServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialBlob, generateAccountSASQueryParameters } from '@azure/storage-blob';
 import { ShareServiceClient, StorageSharedKeyCredential as StorageSharedKeyCredentialFileShare } from '@azure/storage-file-share';

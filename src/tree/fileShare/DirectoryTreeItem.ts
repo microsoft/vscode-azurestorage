@@ -5,9 +5,6 @@
 
 import type { AccountSASSignatureValues, DirectoryItem, FileItem, ShareDirectoryClient } from '@azure/storage-file-share';
 
-import { polyfill } from '../../polyfill.worker';
-polyfill();
-
 import { AccountSASPermissions } from '@azure/storage-file-share';
 
 import { AzExtParentTreeItem, AzExtTreeItem, DialogResponses, IActionContext, ICreateChildImplContext, TreeItemIconPath, UserCancelledError } from '@microsoft/vscode-azext-utils';
@@ -28,7 +25,7 @@ import { FileShareTreeItem, IFileShareCreateChildContext } from "./FileShareTree
 import { FileTreeItem } from './FileTreeItem';
 
 export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, ITransferSrcOrDstTreeItem {
-    public parent: FileShareTreeItem | DirectoryTreeItem;
+    public declare parent: FileShareTreeItem | DirectoryTreeItem;
     constructor(
         parent: FileShareTreeItem | DirectoryTreeItem,
         public readonly parentPath: string,
@@ -36,10 +33,11 @@ export class DirectoryTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
         public readonly shareName: string,
         public readonly resourceUri: string) {
         super(parent);
+        this.label = this.directoryName;
     }
 
     private _continuationToken: string | undefined;
-    public label: string = this.directoryName;
+    public label: string = '';
     public static contextValue: string = 'azureFileShareDirectory';
     public contextValue: string = DirectoryTreeItem.contextValue;
 

@@ -12,6 +12,7 @@ import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCrede
 import { StorageManagementClient } from '@azure/arm-storage';
 import { AzExtParentTreeItem, AzExtTreeItem, IActionContext } from '@microsoft/vscode-azext-utils';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { AttachedAccountRoot } from '../AttachedAccountRoot';
 import { azuriteKey, defaultEmulatorHost, emulatorAccountName, emulatorConnectionString, emulatorKey, getResourcesPath } from '../constants';
 import { getPropertyFromConnectionString } from '../utils/getPropertyFromConnectionString';
@@ -45,8 +46,8 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
 
         this.id = this.storageAccountName;
         this.iconPath = {
-            light: path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg'),
-            dark: path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg')
+            light: Uri.file(path.join(getResourcesPath(), 'light', 'AzureStorageAccount.svg')),
+            dark: Uri.file(path.join(getResourcesPath(), 'dark', 'AzureStorageAccount.svg'))
         };
 
         this._root = new AttachedStorageRoot(connectionString, storageAccountName, this.storageAccountName === emulatorAccountName);
