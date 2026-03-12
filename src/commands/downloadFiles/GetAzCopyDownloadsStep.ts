@@ -21,9 +21,11 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
 
     public async execute(context: IDownloadWizardContext, _progress: NotificationProgress): Promise<void> {
         const destinationFolder = nonNullProp(context, 'destinationFolder');
-        context.sasUrl ?
-            await this.setDownloadItemsFromContextSasUrl(context, destinationFolder) :
+        if (context.sasUrl) {
+            await this.setDownloadItemsFromContextSasUrl(context, destinationFolder);
+        } else {
             await this.setDownloadItemsFromTreeItems(context, destinationFolder, context.treeItems);
+        }
     }
 
     public shouldExecute(wizardContext: IDownloadWizardContext): boolean {
@@ -133,7 +135,11 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
             sasToken: url.search.substring(1),
         };
 
-        download.isDirectory ? allFolderDownloads.push(download) : allFileDownloads.push(download);
+        if (download.isDirectory) {
+            allFolderDownloads.push(download);
+        } else {
+            allFileDownloads.push(download);
+        }
 
         context.allFileDownloads = allFileDownloads;
         context.allFolderDownloads = allFolderDownloads;

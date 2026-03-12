@@ -5,6 +5,7 @@
 
 import { AzExtTreeItem, NoResourceFoundError } from "@microsoft/vscode-azext-utils";
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace treeUtils {
     export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parentContextValues: string | RegExp | (string | RegExp)[]): T {
         parentContextValues = Array.isArray(parentContextValues) ? parentContextValues : [parentContextValues];

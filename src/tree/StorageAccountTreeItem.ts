@@ -64,9 +64,9 @@ export function isResolvedStorageAccountTreeItem(t: unknown): t is ResolvedStora
 }
 
 export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageTreeItem {
-    public static kind: 'microsoft.storage/storageaccounts' = 'microsoft.storage/storageaccounts';
+    public static kind = 'microsoft.storage/storageaccounts' as const;
     public readonly kind = StorageAccountTreeItem.kind;
-    public _key: StorageAccountKeyWrapper;
+    private _key: StorageAccountKeyWrapper;
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
 
@@ -233,7 +233,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             if (primaryKey) {
                 this._key = new StorageAccountKeyWrapper(primaryKey);
             }
-        } catch (err) {
+        } catch {
             // no access to key, ignore error for now
         }
     }
@@ -290,7 +290,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                         const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, ((await this.getKey()).value));
                         client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
                         await client.getProperties(); // Trigger a request to validate the key
-                    } catch (error) {
+                    } catch {
                         // ignore and try scoped token
                     }
                 }
@@ -310,7 +310,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                         const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, ((await this.getKey()).value));
                         client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
                         await client.getProperties(); // Trigger a request to validate the key
-                    } catch (error) {
+                    } catch {
                         // ignore and try scoped token
                     }
                 }
@@ -329,7 +329,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                         const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, ((await this.getKey()).value));
                         client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
                         await client.getProperties(); // Trigger a request to validate the key
-                    } catch (error) {
+                    } catch {
                         // ignore and try scoped token
                     }
                 }
@@ -348,7 +348,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                         const credential = new AzureNamedKeyCredential(this.storageAccount.name, ((await this.getKey()).value));
                         client = new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
                         await client.getProperties(); // Trigger a request to validate the key
-                    } catch (error) {
+                    } catch {
                         // ignore and try scoped token
                     }
                 }
@@ -523,7 +523,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             let accountType: AccountKind | undefined;
             try {
                 accountType = await this.getAccountType();
-            } catch (error) {
+            } catch {
                 // Ignore errors
             }
             if (accountType !== 'StorageV2') {

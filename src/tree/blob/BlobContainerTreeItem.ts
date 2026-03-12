@@ -243,8 +243,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
                 if (getWorkspaceSetting<boolean>(configurationSettingsKeys.deleteBeforeDeploy)) {
                     // Find existing blobs
-                    let blobsToDelete: BlobItem[] = [];
-                    blobsToDelete = await this.listAllBlobs(cancellationToken);
+                    const blobsToDelete = await this.listAllBlobs(cancellationToken);
 
                     if (blobsToDelete.length) {
                         const message = `The storage container "${this.friendlyContainerName}" contains ${blobsToDelete.length} files. Deploying will delete all of these existing files.  Continue?`;
@@ -337,7 +336,7 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
                     throw error;
                 }
 
-                throw new Error(`Error deleting blob "${blob.name}" : ${parseError(error).message}`);
+                throw new Error(`Error deleting blob "${blob.name}" : ${parseError(error).message}`, { cause: error });
             }
         }
     }

@@ -25,7 +25,6 @@ import { getRandomHexString } from '../../src/utils/stringUtils.js';
 import { longRunningTestsEnabled } from '../global.test';
 import { webSiteClient as client, resourceGroupsToDelete } from './global.resource.test';
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
 suite('Storage Account Actions', function (this: Mocha.Suite): void {
     this.timeout(5 * 60 * 1000);
     let blobUrl: string;

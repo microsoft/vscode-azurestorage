@@ -53,14 +53,17 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     static idToUri(resourceId: string, filePath?: string): vscode.Uri {
         let idRegExp: RegExp;
         if (resourceId.startsWith('/attachedStorageAccounts')) {
+            // eslint-disable-next-line no-useless-escape
             idRegExp = /(\/attachedStorageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
         } else {
 
             if (/\/subscriptions\/.*\/subscriptions\//.test(resourceId)) {
                 // compatible with Resource Groups v1
+                // eslint-disable-next-line no-useless-escape
                 idRegExp = /(\/subscriptions\/.*\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
             } else {
                 // resource groups v2
+                // eslint-disable-next-line no-useless-escape
                 idRegExp = /(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
             }
         }
@@ -197,7 +200,11 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
                     throw getFileSystemError(uri, context, () => { return new vscode.FileSystemError(response); });
                 }
 
-                this.isFileShareUri(uri) ? await this.createDirectoryFileShare(parsedUri, context) : await this.createDirectoryBlobContainer(uri, parsedUri, context);
+                if (this.isFileShareUri(uri)) {
+                    await this.createDirectoryFileShare(parsedUri, context);
+                } else {
+                    await this.createDirectoryBlobContainer(uri, parsedUri, context);
+                }
             } catch (error) {
                 const pe = parseError(error);
                 if (pe.errorType === "ResourceAlreadyExists") {
@@ -222,14 +229,17 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
         }
 
         const tiParsedUri = this.parseUri(AzureStorageFS.idToUri(parsedUri.resourceId, path.dirname(parsedUri.filePath)));
+        // eslint-disable-next-line no-useless-escape
         let matches = parsedUri.filePath.match(`^${this.regexEscape(tiParsedUri.filePath)}\/?([^\/^]+)\/?(.*?)$`);
         while (matches) {
             treeItem = <BlobDirectoryTreeItem>await treeItem.createChild(<IBlobContainerCreateChildContext>{ ...context, childType: 'azureBlobDirectory', childName: matches[1] });
+            // eslint-disable-next-line no-useless-escape
             matches = matches[2].match("^([^\/]+)\/?(.*?)$");
         }
     }
 
     private regexEscape(s: string): string {
+        // eslint-disable-next-line no-useless-escape
         return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     }
 
@@ -498,6 +508,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
     }
 
     private getRootName(uri: vscode.Uri): string {
+        // eslint-disable-next-line no-useless-escape
         const match: RegExpMatchArray | null = uri.path.match(/^\/[^\/]*\/?/);
         return match ? match[0] : '';
     }

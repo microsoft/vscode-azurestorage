@@ -10,6 +10,7 @@ export const staticWebsiteContainerName = '$web';
 
 export const maxPageSize = 50;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export enum configurationSettingsKeys {
     deployPath = 'deployPath',
     preDeployTask = 'preDeployTask',

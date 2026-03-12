@@ -42,7 +42,7 @@ export class SasUrlPromptStep extends AzureWizardPromptStep<IActionContext> {
             ) {
                 return localize('enterValidToken', 'The SAS token is missing a parameter. Enter a valid SAS token.',);
             }
-        } catch (err) {
+        } catch {
             return localize('enterValidSasUrl', 'The URL "{0}" is not valid. Enter a valid URL', value);
         }
 

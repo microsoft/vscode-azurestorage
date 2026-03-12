@@ -56,7 +56,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
                     includeInTreeItemPicker: false
                 })];
             } else if (errorType === 'ENOTFOUND') {
-                throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'));
+                throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'), { cause: error });
             } else {
                 throw error;
             }

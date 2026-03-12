@@ -13,6 +13,7 @@ import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
+    // eslint-disable-next-line no-useless-escape
     private static subExecutableLocation: string = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
 
     private static async getStorageExplorerExecutable(
