@@ -2,13 +2,12 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-import { AzExtFsExtra, callWithTelemetryAndErrorHandling, UserCancelledError } from "@microsoft/vscode-azext-utils";
+import { AzExtFsExtra, callWithTelemetryAndErrorHandling, openUrl, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import { MessageItem } from "vscode";
 import * as winreg from "winreg";
 import { storageExplorerDownloadUrl } from "../constants";
 import { Launcher } from "../utils/launcher";
 import { localize } from "../utils/localize";
-import { openUrl } from "../utils/openUrl";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 

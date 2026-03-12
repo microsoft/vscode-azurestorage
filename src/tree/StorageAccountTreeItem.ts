@@ -12,7 +12,7 @@ import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCrede
 
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
 import { getResourceGroupFromId } from '@microsoft/vscode-azext-azureutils';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError, callWithTelemetryAndErrorHandling } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError, callWithTelemetryAndErrorHandling, openUrl } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import { ViewPropertiesModel } from '@microsoft/vscode-azureresources-api';
 import { MessageItem, commands, window } from 'vscode';
@@ -25,7 +25,6 @@ import { createActivityContext } from '../utils/activityUtils';
 import { createStorageClient } from '../utils/azureClients';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
-import { openUrl } from '../utils/openUrl';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
