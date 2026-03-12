@@ -3,17 +3,17 @@
  *  Licensed under the MIT License. See License.md in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AzExtFsExtra, callWithTelemetryAndErrorHandling, UserCancelledError } from "@microsoft/vscode-azext-utils";
+import { AzExtFsExtra, callWithTelemetryAndErrorHandling, openUrl, UserCancelledError } from "@microsoft/vscode-azext-utils";
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { storageExplorerDownloadUrl } from "../constants";
 import { Launcher } from "../utils/launcher";
-import { openUrl } from "../utils/openUrl";
 import { getSingleRootWorkspace } from "../utils/workspaceUtils";
 import { IStorageExplorerLauncher } from "./IStorageExplorerLauncher";
 import { ResourceType } from "./ResourceType";
 
 export class MacOSStorageExplorerLauncher implements IStorageExplorerLauncher {
+    // eslint-disable-next-line no-useless-escape
     private static subExecutableLocation: string = "/Contents/MacOS/Microsoft\ Azure\ Storage\ Explorer";
 
     private static async getStorageExplorerExecutable(

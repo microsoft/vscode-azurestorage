@@ -49,7 +49,7 @@ export function registerCommands(): void {
     registerTableActionHandlers();
     registerTableGroupActionHandlers();
 
-    registerCommandWithTreeNodeUnwrapping('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem) })
+    registerCommandWithTreeNodeUnwrapping('azureStorage.refresh', async (actionContext: IActionContext, treeItem?: AzExtTreeItem & IStorageTreeItem) => { await refreshTreeItem(actionContext, treeItem); });
     registerCommandWithTreeNodeUnwrapping('azureStorage.showOutputChannel', () => { ext.outputChannel.show(); });
     registerCommandWithTreeNodeUnwrapping('azureStorage.openInFileExplorer', async (actionContext: IActionContext, treeItem?: BlobContainerTreeItem | FileShareTreeItem) => {
         if (!treeItem) {
@@ -63,7 +63,7 @@ export function registerCommands(): void {
         if (treeItem.root.isEmulated) {
             wizardContext.openBehavior = 'OpenInNewWindow';
         }
-        const wizard: AzureWizard<IOpenInFileExplorerWizardContext> = new AzureWizard(wizardContext, {
+        const wizard = new AzureWizard<IOpenInFileExplorerWizardContext>(wizardContext, {
             promptSteps: [new OpenBehaviorStep()],
             executeSteps: [new OpenTreeItemStep()]
         });

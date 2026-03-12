@@ -12,6 +12,7 @@ import { AttachedStorageAccountsTreeItem } from "./tree/AttachedStorageAccountsT
 /**
  * Namespace for common variables used throughout the extension. They must be initialized in the activate() method of extension.ts
  */
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace ext {
     export let context: ExtensionContext;
     export let outputChannel: IAzExtOutputChannel;

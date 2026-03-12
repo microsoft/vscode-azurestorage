@@ -53,6 +53,7 @@ export async function activate(context: vscode.ExtensionContext, perfStats: { lo
             ext.rgApi = api;
             api.registerApplicationResourceResolver(AzExtResourceType.StorageAccounts, new StorageAccountResolver());
 
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             const workspaceRootTreeItem = (ext.rgApi.workspaceResourceTree as unknown as { _rootTreeItem: AzExtParentTreeItem })._rootTreeItem;
             const storageWorkspaceProvider = new StorageWorkspaceProvider(workspaceRootTreeItem);
             ext.rgApi.registerWorkspaceResourceProvider('storageEmulator', storageWorkspaceProvider);

@@ -89,7 +89,7 @@ export class StorageAccountResolver implements AppResourceResolver {
                 storageAccount = new StorageAccountWrapper((await storageClient.storageAccounts.getProperties(getResourceGroupFromId(resource.id), resource.name)));
             }
 
-            return new StorageAccountTreeItem(subContext, storageAccount, dataModel)
+            return new StorageAccountTreeItem(subContext, storageAccount, dataModel);
         });
     }
 

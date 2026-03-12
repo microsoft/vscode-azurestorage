@@ -37,7 +37,7 @@ export async function deleteFilesAndDirectories(context: IActionContext, treeIte
                 break;
             }
         }
-        if (shouldSkip) continue;
+        if (shouldSkip) { continue; }
         if (isTreeItemDirectory(node)) {
             dirPaths.push(node.fullId);
         }

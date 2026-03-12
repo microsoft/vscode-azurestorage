@@ -12,7 +12,7 @@ import { QueueServiceClient, StorageSharedKeyCredential as StorageSharedKeyCrede
 
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
 import { getResourceGroupFromId } from '@microsoft/vscode-azext-azureutils';
-import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError, callWithTelemetryAndErrorHandling } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, AzureWizard, DeleteConfirmationStep, DialogResponses, IActionContext, ISubscriptionContext, UserCancelledError, callWithTelemetryAndErrorHandling, openUrl } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import { ViewPropertiesModel } from '@microsoft/vscode-azureresources-api';
 import { MessageItem, commands, window } from 'vscode';
@@ -25,7 +25,6 @@ import { createActivityContext } from '../utils/activityUtils';
 import { createStorageClient } from '../utils/azureClients';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
-import { openUrl } from '../utils/openUrl';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
@@ -65,8 +64,9 @@ export function isResolvedStorageAccountTreeItem(t: unknown): t is ResolvedStora
 }
 
 export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageTreeItem {
-    public static kind: 'microsoft.storage/storageaccounts' = 'microsoft.storage/storageaccounts';
+    public static kind = 'microsoft.storage/storageaccounts' as const;
     public readonly kind = StorageAccountTreeItem.kind;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public _key: StorageAccountKeyWrapper;
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
@@ -165,7 +165,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         return {
             getData: async () => await this.getData(),
             label: this.label
-        }
+        };
     }
 
     public async getData(): Promise<StorageAccountWrapper> {
@@ -234,7 +234,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             if (primaryKey) {
                 this._key = new StorageAccountKeyWrapper(primaryKey);
             }
-        } catch (err) {
+        } catch {
             // no access to key, ignore error for now
         }
     }
@@ -291,7 +291,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                         const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, ((await this.getKey()).value));
                         client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
                         await client.getProperties(); // Trigger a request to validate the key
-                    } catch (error) {
+                    } catch {
                         // ignore and try scoped token
                     }
                 }
@@ -311,7 +311,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                         const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, ((await this.getKey()).value));
                         client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
                         await client.getProperties(); // Trigger a request to validate the key
-                    } catch (error) {
+                    } catch {
                         // ignore and try scoped token
                     }
                 }
@@ -330,7 +330,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                         const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, ((await this.getKey()).value));
                         client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
                         await client.getProperties(); // Trigger a request to validate the key
-                    } catch (error) {
+                    } catch {
                         // ignore and try scoped token
                     }
                 }
@@ -349,7 +349,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                         const credential = new AzureNamedKeyCredential(this.storageAccount.name, ((await this.getKey()).value));
                         client = new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), credential);
                         await client.getProperties(); // Trigger a request to validate the key
-                    } catch (error) {
+                    } catch {
                         // ignore and try scoped token
                     }
                 }
@@ -457,7 +457,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         const oldStatus: WebsiteHostingStatus = await this.getActualWebsiteHostingStatus();
         const wizardContext: IStaticWebsiteConfigWizardContext = Object.assign(<IStaticWebsiteConfigWizardContext>context, this);
         wizardContext.enableStaticWebsite = true;
-        const wizard: AzureWizard<IStaticWebsiteConfigWizardContext> = new AzureWizard(wizardContext, {
+        const wizard = new AzureWizard<IStaticWebsiteConfigWizardContext>(wizardContext, {
             promptSteps: [new StaticWebsiteIndexDocumentStep(oldStatus.indexDocument), new StaticWebsiteErrorDocument404Step(oldStatus.errorDocument404Path)],
             executeSteps: [new StaticWebsiteConfigureStep(this, oldStatus.enabled)],
             title: localize('configureStaticWebsite', 'Configure static website'),
@@ -524,7 +524,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
             let accountType: AccountKind | undefined;
             try {
                 accountType = await this.getAccountType();
-            } catch (error) {
+            } catch {
                 // Ignore errors
             }
             if (accountType !== 'StorageV2') {

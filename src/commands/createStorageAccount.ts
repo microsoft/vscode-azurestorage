@@ -53,7 +53,7 @@ export async function createStorageAccount(context: IActionContext & Partial<ICr
     LocationListStep.addStep(wizardContext, promptSteps);
     LocationListStep.getQuickPickDescription = (location: AzExtLocation) => {
         return location.metadata?.regionCategory === 'Extended' ? localize('onlyPremiumSupported', 'Only supports Premium storage accounts') : undefined;
-    }
+    };
 
     promptSteps.push(new StartingResourcesLogStep());
 
