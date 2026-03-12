@@ -54,7 +54,6 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
 
         let responseValue: ServiceListSharesSegmentResponse;
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             responseValue = (await response.next()).value;
         } catch (error) {
             if (parseError(error).errorType === 'REQUEST_SEND_ERROR') {

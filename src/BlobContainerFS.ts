@@ -327,7 +327,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             let continuationToken: string | undefined = undefined;
             do {
-                const prefix = blobPath === "" ? blobPath : BlobPathUtils.appendSlash(blobPath)
+                const prefix = blobPath === "" ? blobPath : BlobPathUtils.appendSlash(blobPath);
                 const listResult = containerClient.listBlobsByHierarchy("/", {
                     prefix: prefix,
                 }).byPage({ maxPageSize: BlobContainerFS.listBlobPageSize, continuationToken });
@@ -474,7 +474,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
                             let continuationToken: string | undefined = undefined;
                             do {
-                                const prefix = BlobPathUtils.appendSlash(blobPath)
+                                const prefix = BlobPathUtils.appendSlash(blobPath);
                                 const listResult = containerClient.listBlobsFlat({
                                     prefix: prefix,
                                 }).byPage({ maxPageSize: BlobContainerFS.listBlobPageSize, continuationToken });

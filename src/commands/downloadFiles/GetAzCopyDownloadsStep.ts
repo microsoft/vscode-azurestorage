@@ -23,7 +23,7 @@ export class GetAzCopyDownloadsStep extends AzureWizardExecuteStep<IDownloadWiza
         const destinationFolder = nonNullProp(context, 'destinationFolder');
         context.sasUrl ?
             await this.setDownloadItemsFromContextSasUrl(context, destinationFolder) :
-            await this.setDownloadItemsFromTreeItems(context, destinationFolder, context.treeItems)
+            await this.setDownloadItemsFromTreeItems(context, destinationFolder, context.treeItems);
     }
 
     public shouldExecute(wizardContext: IDownloadWizardContext): boolean {

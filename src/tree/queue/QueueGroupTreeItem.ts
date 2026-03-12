@@ -79,7 +79,6 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         const queueServiceClient = await this.root.createQueueServiceClient();
         const response: AsyncIterableIterator<ServiceListQueuesSegmentResponse> = queueServiceClient.listQueues().byPage({ continuationToken, maxPageSize });
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (await response.next()).value;
     }
 

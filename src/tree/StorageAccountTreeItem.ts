@@ -164,7 +164,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         return {
             getData: async () => await this.getData(),
             label: this.label
-        }
+        };
     }
 
     public async getData(): Promise<StorageAccountWrapper> {
@@ -456,7 +456,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
         const oldStatus: WebsiteHostingStatus = await this.getActualWebsiteHostingStatus();
         const wizardContext: IStaticWebsiteConfigWizardContext = Object.assign(<IStaticWebsiteConfigWizardContext>context, this);
         wizardContext.enableStaticWebsite = true;
-        const wizard: AzureWizard<IStaticWebsiteConfigWizardContext> = new AzureWizard(wizardContext, {
+        const wizard = new AzureWizard<IStaticWebsiteConfigWizardContext>(wizardContext, {
             promptSteps: [new StaticWebsiteIndexDocumentStep(oldStatus.indexDocument), new StaticWebsiteErrorDocument404Step(oldStatus.errorDocument404Path)],
             executeSteps: [new StaticWebsiteConfigureStep(this, oldStatus.enabled)],
             title: localize('configureStaticWebsite', 'Configure static website'),

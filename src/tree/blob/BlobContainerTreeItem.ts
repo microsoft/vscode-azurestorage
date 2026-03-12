@@ -138,12 +138,10 @@ export class BlobContainerTreeItem extends AzExtParentTreeItem implements ICopyU
 
         ext.outputChannel.appendLog(`Querying Azure... Method: listBlobsFlat blobContainerName: "${this.container.name}" prefix: ""`);
 
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             throwIfCanceled(cancellationToken, properties, "listAllBlobs");
             response = containerClient.listBlobsFlat().byPage({ continuationToken: currentToken, maxPageSize: 5000 });
 
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             responseValue = (await response.next()).value;
 
             blobs.push(...responseValue.segment.blobItems);

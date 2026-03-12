@@ -470,7 +470,7 @@ export class AzureStorageFS implements vscode.FileSystemProvider, vscode.TextDoc
             // the storage account needs to be resolved for the file system to read the files
             const appResourceId = getAppResourceIdFromId(resourceId);
             if (appResourceId) {
-                const appResource = await ext.rgApi.appResourceTree.findTreeItem(appResourceId, { ...context, loadAll: true }) as unknown as { resolve: () => Promise<void> }
+                const appResource = await ext.rgApi.appResourceTree.findTreeItem(appResourceId, { ...context, loadAll: true }) as unknown as { resolve: () => Promise<void> };
                 await appResource.resolve();
             }
         } catch {

@@ -79,7 +79,6 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         const tableServiceClient = await this.root.createTableServiceClient();
         const response: AsyncIterableIterator<TableItemResultPage> = tableServiceClient.listTables().byPage({ continuationToken, maxPageSize });
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (await response.next()).value;
     }
 
