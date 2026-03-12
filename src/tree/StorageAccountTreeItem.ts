@@ -66,7 +66,8 @@ export function isResolvedStorageAccountTreeItem(t: unknown): t is ResolvedStora
 export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageTreeItem {
     public static kind = 'microsoft.storage/storageaccounts' as const;
     public readonly kind = StorageAccountTreeItem.kind;
-    private _key: StorageAccountKeyWrapper;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public _key: StorageAccountKeyWrapper;
     public childTypeLabel: string = 'resource type';
     public autoSelectInTreeItemPicker: boolean = true;
 
