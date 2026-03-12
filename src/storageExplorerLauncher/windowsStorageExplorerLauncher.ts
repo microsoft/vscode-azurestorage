@@ -41,7 +41,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
             let regVal: string | undefined;
             try {
                 regVal = await WindowsStorageExplorerLauncher.getWindowsRegistryValue(regKey.hive, regKey.key);
-            } catch (err) {
+            } catch {
                 context.telemetry.properties.storageExplorerNotFound = 'true';
             }
 
@@ -67,7 +67,7 @@ export class WindowsStorageExplorerLauncher implements IStorageExplorerLauncher 
     private static async getWindowsRegistryValue(hive: string, key: string): Promise<string | undefined> {
         return new Promise((resolve, reject) => {
             const rgKey = new winreg.default({ hive, key });
-            rgKey.values((err?: {}, items?: Winreg.RegistryItem[]) => {
+            rgKey.values((err?: unknown, items?: Winreg.RegistryItem[]) => {
                 if (err) {
                     reject(err);
                 } else {

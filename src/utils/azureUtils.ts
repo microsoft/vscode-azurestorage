@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 export function getAppResourceIdFromId(id: string): string | undefined {
+    // eslint-disable-next-line no-useless-escape
     const matches: RegExpMatchArray | null = id.match(/\/subscriptions\/.*\/resourceGroups\/.*\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]*/);
 
     return matches?.[0];

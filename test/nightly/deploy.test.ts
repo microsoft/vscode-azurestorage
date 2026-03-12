@@ -41,7 +41,7 @@ suite('Deploy', function (this: Mocha.Suite): void {
             const client = await createGenericClient(context, undefined);
             await validateWebSite(webUrl, client, 60 * 1000, 1000);
         });
-    })
+    });
 });
 
 // The workspace folder that vscode is opened against for tests
@@ -65,7 +65,6 @@ function getWorkspacePath(testWorkspaceName: string): string {
 async function validateWebSite(webUrl: string, client: Awaited<ReturnType<typeof createGenericClient>>, maximumValidationMs: number, pollingMs: number) {
     const endTime: number = Date.now() + maximumValidationMs;
     let response: PipelineResponse;
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         try {
             response = await client.sendRequest(createPipelineRequest({ method: 'GET', url: webUrl }));

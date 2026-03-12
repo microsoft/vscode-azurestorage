@@ -65,7 +65,7 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
                     includeInTreeItemPicker: false
                 })];
             } else if (errorType === 'ENOTFOUND') {
-                throw new Error(localize('storageAccountDoesNotSupportBlobs', 'This storage account does not support blobs.'));
+                throw new Error(localize('storageAccountDoesNotSupportBlobs', 'This storage account does not support blobs.'), { cause: error });
             } else {
                 throw error;
             }

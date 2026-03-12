@@ -49,7 +49,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         } catch (error) {
             const errorType: string = parseError(error).errorType;
             if (errorType === 'NotImplemented') {
-                throw new Error(localize('storageAccountDoesNotSupportTables', 'This storage account does not support tables.'));
+                throw new Error(localize('storageAccountDoesNotSupportTables', 'This storage account does not support tables.'), { cause: error });
             } else if (this.root.isEmulated && errorType === 'ECONNREFUSED') {
                 return [new GenericTreeItem(this, {
                     contextValue: 'startTableEmulator',
