@@ -33,7 +33,6 @@ export async function listFilesInDirectory(directory: string, shareName: string,
     const directoryClient: ShareDirectoryClient = await createDirectoryClient(root, shareName, directory);
     const response: AsyncIterableIterator<DirectoryListFilesAndDirectoriesSegmentResponse> = directoryClient.listFilesAndDirectories().byPage({ continuationToken: currentToken, maxPageSize });
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const responseValue: DirectoryListFilesAndDirectoriesSegmentResponse = (await response.next()).value;
 
     const files: FileItem[] = responseValue.segment.fileItems;
@@ -50,7 +49,6 @@ export async function deleteDirectoryAndContents(directory: string, shareName: s
     await callWithTelemetryAndErrorHandling('deleteDirectoryAndContents', async (context) => {
 
 
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             const { files, directories, continuationToken }: { files: FileItem[], directories: DirectoryItem[], continuationToken: string } = await listFilesInDirectory(directory, shareName, root, currentToken);
             let promises: Promise<void>[] = [];

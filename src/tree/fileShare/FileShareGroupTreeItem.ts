@@ -54,11 +54,10 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
 
         let responseValue: ServiceListSharesSegmentResponse;
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             responseValue = (await response.next()).value;
         } catch (error) {
             if (parseError(error).errorType === 'REQUEST_SEND_ERROR') {
-                throw new Error(localize('storageAccountDoesNotSupportFileShares', 'This storage account does not support file shares.'));
+                throw new Error(localize('storageAccountDoesNotSupportFileShares', 'This storage account does not support file shares.'), { cause: error });
             } else {
                 throw error;
             }

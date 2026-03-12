@@ -5,10 +5,11 @@
 
 import { AzExtTreeItem, NoResourceFoundError } from "@microsoft/vscode-azext-utils";
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace treeUtils {
     export function findNearestParent<T extends AzExtTreeItem>(node: AzExtTreeItem, parentContextValues: string | RegExp | (string | RegExp)[]): T {
         parentContextValues = Array.isArray(parentContextValues) ? parentContextValues : [parentContextValues];
-        if (!parentContextValues.length) throw new NoResourceFoundError();
+        if (!parentContextValues.length) { throw new NoResourceFoundError(); }
 
         let currentNode: AzExtTreeItem = node;
         let foundParent: boolean = false;
@@ -20,10 +21,10 @@ export namespace treeUtils {
                     break;
                 }
             }
-            if (foundParent) break;
+            if (foundParent) { break; }
             currentNode = currentNode.parent;
         }
-        if (!foundParent) throw new NoResourceFoundError();
+        if (!foundParent) { throw new NoResourceFoundError(); }
         return currentNode as T;
     }
 }

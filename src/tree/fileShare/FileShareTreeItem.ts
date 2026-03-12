@@ -161,7 +161,7 @@ export class FileShareTreeItem extends AzExtParentTreeItem implements ICopyUrl, 
             }
         }
         // either sasToken requires allowSharedKeyAccess to be true
-        const sasToken = this.root.allowSharedKeyAccess ? this.transferSasToken : undefined
+        const sasToken = this.root.allowSharedKeyAccess ? this.transferSasToken : undefined;
         const uploadItem: UploadItem = {
             type: "file",
             isDirectory: false,

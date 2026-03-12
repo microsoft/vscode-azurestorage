@@ -31,7 +31,7 @@ export async function uploadFolder(
         promptSteps: [new GetFolderDestinationDirectoryStep()],
         executeSteps: [new UploadFolderStep(cancellationToken)],
     };
-    const wizard: AzureWizard<IUploadFolderWizardContext> = new AzureWizard(wizardContext, wizardOptions);
+    const wizard = new AzureWizard<IUploadFolderWizardContext>(wizardContext, wizardOptions);
     await wizard.prompt();
 
     const nTreeItem: BlobContainerTreeItem | FileShareTreeItem = nonNullProp(wizardContext, "treeItem");

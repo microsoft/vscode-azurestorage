@@ -49,7 +49,6 @@ export class DeleteBlobDirectoryStep extends AzureWizardExecuteStep<IDeleteBlobD
         const blobDirectory = nonNullProp(context, 'blobDirectory');
 
         const dirPaths: BlobDirectoryTreeItem[] = [];
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
         let dirPath: BlobDirectoryTreeItem | undefined = blobDirectory;
         let errors: boolean = false;
 

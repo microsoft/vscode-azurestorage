@@ -31,7 +31,7 @@ export async function uploadFiles(
         promptSteps: [new GetFileDestinationDirectoryStep()],
         executeSteps: [new UploadFilesStep(cancellationToken)],
     };
-    const wizard: AzureWizard<IUploadFilesWizardContext> = new AzureWizard(wizardContext, wizardOptions);
+    const wizard = new AzureWizard<IUploadFilesWizardContext>(wizardContext, wizardOptions);
     await wizard.prompt();
 
     const nUris: Uri[] = nonNullProp(wizardContext, "uris");

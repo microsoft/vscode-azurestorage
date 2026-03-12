@@ -42,7 +42,6 @@ export async function loadMoreBlobChildren(parent: BlobContainerTreeItem | BlobD
     };
     const response: AsyncIterableIterator<ContainerListBlobHierarchySegmentResponse> = containerClient.listBlobsByHierarchy(path.posix.sep, { prefix }).byPage(settings);
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const responseValue: ListBlobsHierarchySegmentResponse = (await response.next()).value;
     continuationToken = responseValue.continuationToken;
 

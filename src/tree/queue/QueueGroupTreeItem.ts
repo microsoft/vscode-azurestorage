@@ -56,7 +56,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
                     includeInTreeItemPicker: false
                 })];
             } else if (errorType === 'ENOTFOUND') {
-                throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'));
+                throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'), { cause: error });
             } else {
                 throw error;
             }
@@ -79,7 +79,6 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         const queueServiceClient = await this.root.createQueueServiceClient();
         const response: AsyncIterableIterator<ServiceListQueuesSegmentResponse> = queueServiceClient.listQueues().byPage({ continuationToken, maxPageSize });
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return (await response.next()).value;
     }
 

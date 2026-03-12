@@ -19,7 +19,7 @@ export function isSubpath(expectedParent: string, expectedChild: string): boolea
 
 export async function isEmptyDirectory(pathOrUri: Uri | string): Promise<boolean> {
     if (typeof pathOrUri === 'string') {
-        pathOrUri = vscode.Uri.file(pathOrUri)
+        pathOrUri = vscode.Uri.file(pathOrUri);
     }
 
     const files = await workspace.fs.readDirectory(pathOrUri);

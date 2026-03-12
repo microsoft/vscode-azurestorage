@@ -5,7 +5,6 @@
 
 import { spawn } from "child_process";
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class Launcher {
     public static async launch(command: string, ...args: string[]): Promise<void> {
         await new Promise<void>((resolve, _reject) => {
