@@ -11,8 +11,7 @@ import { DataLakePathClient, DataLakeServiceClient, StorageSharedKeyCredential a
 
 import { StorageAccount, StorageAccountKey } from '@azure/arm-storage';
 import { parseAzureResourceId } from '@microsoft/vscode-azext-azureutils';
-import { AzExtServiceClientCredentialsT2 } from '@microsoft/vscode-azext-utils';
-import { IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, createSubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
+import { AzExtServiceClientCredentialsT2, IActionContext, UserCancelledError, callWithTelemetryAndErrorHandling, createSubscriptionContext, parseError } from '@microsoft/vscode-azext-utils';
 import { AzureSubscription } from '@microsoft/vscode-azureresources-api';
 import * as mime from 'mime';
 import * as vscode from 'vscode';
@@ -59,6 +58,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     }
 
     private getContainerName(uri: vscode.Uri): string {
+        // eslint-disable-next-line no-useless-escape
         const match: RegExpMatchArray | null = uri.path.match(/^\/(?<container>[^\/]*)\/?/);
         return match?.groups ? match.groups.container : '';
     }
@@ -179,14 +179,17 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
     static idToUri(resourceId: string): vscode.Uri {
         let idRegExp: RegExp;
         if (resourceId.startsWith('/attachedStorageAccounts')) {
+            // eslint-disable-next-line no-useless-escape
             idRegExp = /(\/attachedStorageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
         } else {
 
             if (/\/subscriptions\/.*\/subscriptions\//.test(resourceId)) {
                 // compatible with Resource Groups v1
+                // eslint-disable-next-line no-useless-escape
                 idRegExp = /(\/subscriptions\/.*\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
             } else {
                 // resource groups v2
+                // eslint-disable-next-line no-useless-escape
                 idRegExp = /(\/subscriptions\/[^\/]+\/resourceGroups\/[^\/]+\/providers\/Microsoft.Storage\/storageAccounts\/[^\/]+\/[^\/]+\/[^\/]+)\/?(.*)/i;
             }
         }
@@ -260,8 +263,8 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                         if (pe.errorType === "404") {
                             // If the blob doesn't exist, it might be a virtual directory.
                             const prefix = BlobPathUtils.appendSlash(blobPath);
-                            let continuationToken: string | undefined = undefined;
-                            let hasBlobs = false;
+                            let continuationToken: string | undefined;
+                            let hasBlobs: boolean | undefined;
                             do {
                                 // Occasionally the server returns 0 blobs and a non-empty continuation token.
                                 const listResult = await containerClient.listBlobsFlat({ prefix }).byPage({ maxPageSize: 5 }).next();
@@ -327,7 +330,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
             let continuationToken: string | undefined = undefined;
             do {
-                const prefix = blobPath === "" ? blobPath : BlobPathUtils.appendSlash(blobPath)
+                const prefix = blobPath === "" ? blobPath : BlobPathUtils.appendSlash(blobPath);
                 const listResult = containerClient.listBlobsByHierarchy("/", {
                     prefix: prefix,
                 }).byPage({ maxPageSize: BlobContainerFS.listBlobPageSize, continuationToken });
@@ -341,7 +344,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                 if (!continuationToken) {
                     return results;
                 }
-            } while (true);
+            } while (true); // eslint-disable-line no-constant-condition
         });
 
         return result ?? [];
@@ -474,7 +477,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
 
                             let continuationToken: string | undefined = undefined;
                             do {
-                                const prefix = BlobPathUtils.appendSlash(blobPath)
+                                const prefix = BlobPathUtils.appendSlash(blobPath);
                                 const listResult = containerClient.listBlobsFlat({
                                     prefix: prefix,
                                 }).byPage({ maxPageSize: BlobContainerFS.listBlobPageSize, continuationToken });
@@ -490,7 +493,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                                 if (cancellationToken.isCancellationRequested || !continuationToken) {
                                     return;
                                 }
-                            } while (true);
+                            } while (true); // eslint-disable-line no-constant-condition
                         }
                     } else {
                         const { pathClient } = await this.getDataLakeClients(uri, storageAccount, accountKey);

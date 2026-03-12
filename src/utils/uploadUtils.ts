@@ -47,7 +47,7 @@ export async function uploadLocalFolder(
         remoteFilePath: destPath,
         sasToken,
         treeItem: destTreeItem
-    }
+    };
     await uploadFolder(context, uploadItem, messagePrefix, notificationProgress, cancellationToken);
 }
 

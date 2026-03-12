@@ -29,7 +29,7 @@ export class SasUrlPromptStep extends AzureWizardPromptStep<IActionContext> {
 
     public async validateInput(_wizardContext: ISasDownloadContext, value: string | undefined): Promise<string | undefined> {
         if (!value) {
-            return localize('emptySasUrl', 'A SAS token and URL cannot be empty.')
+            return localize('emptySasUrl', 'A SAS token and URL cannot be empty.');
         }
 
         try {
@@ -40,9 +40,9 @@ export class SasUrlPromptStep extends AzureWizardPromptStep<IActionContext> {
                 !url.searchParams.get('se') ||
                 !url.searchParams.get('sig')
             ) {
-                return localize('enterValidToken', 'The SAS token is missing a parameter. Enter a valid SAS token.',)
+                return localize('enterValidToken', 'The SAS token is missing a parameter. Enter a valid SAS token.',);
             }
-        } catch (err) {
+        } catch {
             return localize('enterValidSasUrl', 'The URL "{0}" is not valid. Enter a valid URL', value);
         }
 

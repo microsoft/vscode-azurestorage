@@ -31,7 +31,7 @@ export async function download(context: IActionContext, treeItems?: ITransferSrc
         wizardContext.treeItems = treeItems;
     }
 
-    const wizard: AzureWizard<IDownloadWizardContext> = new AzureWizard(wizardContext, {
+    const wizard = new AzureWizard<IDownloadWizardContext>(wizardContext, {
         promptSteps,
         executeSteps: [new GetAzCopyDownloadsStep(), new DownloadFilesStep()],
         title: localize('download', 'Download Files')

@@ -10,6 +10,7 @@ export const staticWebsiteContainerName = '$web';
 
 export const maxPageSize = 50;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export enum configurationSettingsKeys {
     deployPath = 'deployPath',
     preDeployTask = 'preDeployTask',
@@ -23,7 +24,7 @@ export const emulatorTimeoutMS: number = 3 * 1000;
 export const emulatorAccountName: string = 'devstoreaccount1';
 export const emulatorConnectionString: string = 'UseDevelopmentStorage=true;';
 export const emulatorKey: string = 'Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==';
-export const azuriteKey: string = 'azurite'
+export const azuriteKey: string = 'azurite';
 export const defaultEmulatorHost: string = '127.0.0.1';
 
 export const maxRemoteFileEditSizeMB: number = 50;
@@ -44,6 +45,6 @@ export const storageProvider: string = 'Microsoft.Storage';
 
 export const storageFilter = {
     type: 'Microsoft.Storage/storageAccounts',
-}
+};
 
 export const threeDaysInMS: number = 1000 * 60 * 60 * 24 * 3;

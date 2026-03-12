@@ -69,7 +69,6 @@ export class AttachedStorageAccountTreeItem extends AzExtParentTreeItem implemen
         return this.root.isEmulated ? AttachedStorageAccountTreeItem.emulatedContextValue : AttachedStorageAccountTreeItem.baseContextValue;
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
     public async loadMoreChildrenImpl(): Promise<AzExtTreeItem[]> {
         const groupTreeItems: AzExtTreeItem[] = [this._blobContainerGroupTreeItem, this._queueGroupTreeItem, this._tableGroupTreeItem];
 

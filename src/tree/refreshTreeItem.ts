@@ -9,7 +9,9 @@ import { ext } from "../extensionVariables";
 import { IStorageTreeItem } from "./IStorageTreeItem";
 
 export async function refreshTreeItem(actionContext: IActionContext, node: (AzExtTreeItem & IStorageTreeItem) | undefined): Promise<void> {
-    node && node.root instanceof AttachedAccountRoot ?
-        await ext.rgApi.workspaceResourceTree.refresh(actionContext, node) :
+    if (node && node.root instanceof AttachedAccountRoot) {
+        await ext.rgApi.workspaceResourceTree.refresh(actionContext, node);
+    } else {
         await ext.rgApi.appResourceTree.refresh(actionContext, node);
+    }
 }
