@@ -11,6 +11,7 @@ import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
+import { isAzuriteApiVersionError, promptToSkipApiVersionCheck } from '../../utils/azuriteUtils';
 import { localize } from "../../utils/localize";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
@@ -57,6 +58,11 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
                     commandId: 'azureStorage.startTableEmulator',
                     includeInTreeItemPicker: false
                 })];
+            } else if (this.root.isEmulated && isAzuriteApiVersionError(error)) {
+                if (await promptToSkipApiVersionCheck()) {
+                    return this.loadMoreChildrenImpl(clearCache);
+                }
+                throw error;
             } else {
                 throw error;
             }

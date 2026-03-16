@@ -11,6 +11,7 @@ import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
 import { getResourcesPath, maxPageSize } from "../../constants";
+import { isAzuriteApiVersionError, promptToSkipApiVersionCheck } from '../../utils/azuriteUtils';
 import { localize } from "../../utils/localize";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
@@ -55,6 +56,11 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
                     commandId: 'azureStorage.startQueueEmulator',
                     includeInTreeItemPicker: false
                 })];
+            } else if (this.root.isEmulated && isAzuriteApiVersionError(error)) {
+                if (await promptToSkipApiVersionCheck()) {
+                    return this.loadMoreChildrenImpl(clearCache);
+                }
+                throw error;
             } else if (errorType === 'ENOTFOUND') {
                 throw new Error(localize('storageAccountDoesNotSupportQueues', 'This storage account does not support queues.'), { cause: error });
             } else {
