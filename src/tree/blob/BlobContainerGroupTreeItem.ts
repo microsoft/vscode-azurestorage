@@ -66,7 +66,11 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
                     includeInTreeItemPicker: false
                 })];
             } else if (this.root.isEmulated && isAzuriteApiVersionError(error)) {
-                if (await promptToSkipApiVersionCheck()) {
+                const enabled = await callWithTelemetryAndErrorHandling('azureStorage.skipApiVersionCheck', async (context: IActionContext) => {
+                    context.errorHandling.rethrow = true;
+                    return await promptToSkipApiVersionCheck(context);
+                });
+                if (enabled) {
                     return this.loadMoreChildrenImpl(clearCache);
                 }
                 throw error;

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IActionContext, parseError } from "@microsoft/vscode-azext-utils";
-import { commands, ConfigurationTarget, extensions, window, workspace } from "vscode";
+import { commands, ConfigurationTarget, extensions, workspace } from "vscode";
 import { azuriteExtensionId } from "../constants";
 import { cpUtils } from "./cpUtils";
 import { localize } from "./localize";
@@ -38,9 +38,9 @@ export function isAzuriteApiVersionError(error: unknown): boolean {
  * Prompts the user to enable the `azurite.skipApiVersionCheck` setting.
  * Returns true if the setting was enabled (caller should retry the operation).
  */
-export async function promptToSkipApiVersionCheck(): Promise<boolean> {
-    const enableSetting = localize('enableSkipApiVersionCheck', 'Enable Skip API Version Check');
-    const result = await window.showWarningMessage(
+export async function promptToSkipApiVersionCheck(context: IActionContext): Promise<boolean> {
+    const enableSetting = { title: localize('enableSkipApiVersionCheck', 'Enable Skip API Version Check') };
+    const result = await context.ui.showWarningMessage(
         localize('azuriteApiVersionMismatch',
             'The installed Azure Storage SDK uses an API version not yet supported by Azurite. You can skip this check by enabling the "azurite.skipApiVersionCheck" setting. Azurite will be restarted to apply the change.'),
         enableSetting,
