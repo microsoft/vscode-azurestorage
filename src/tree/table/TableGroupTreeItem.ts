@@ -5,12 +5,13 @@
 
 import type { TableItem, TableItemResultPage } from '@azure/data-tables';
 
-import { AzExtParentTreeItem, AzExtTreeItem, GenericTreeItem, ICreateChildImplContext, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, callWithTelemetryAndErrorHandling, GenericTreeItem, IActionContext, ICreateChildImplContext, nonNullProp, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { ResolvedStorageAccount } from '../../StorageAccountResolver';
+import { isAzuriteApiVersionError, promptToSkipApiVersionCheck } from '../../utils/azuriteUtils';
 import { localize } from "../../utils/localize";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
 import { IStorageRoot } from "../IStorageRoot";
@@ -57,6 +58,15 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
                     commandId: 'azureStorage.startTableEmulator',
                     includeInTreeItemPicker: false
                 })];
+            } else if (this.root.isEmulated && isAzuriteApiVersionError(error)) {
+                const enabled = await callWithTelemetryAndErrorHandling('azureStorage.skipApiVersionCheck', async (context: IActionContext) => {
+                    context.errorHandling.rethrow = true;
+                    return await promptToSkipApiVersionCheck(context);
+                });
+                if (enabled) {
+                    return this.loadMoreChildrenImpl(clearCache);
+                }
+                throw error;
             } else {
                 throw error;
             }

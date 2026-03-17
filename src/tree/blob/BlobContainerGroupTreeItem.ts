@@ -15,6 +15,7 @@ import * as vscode from 'vscode';
 import { ResolvedStorageAccount } from "../../StorageAccountResolver";
 import { getResourcesPath, maxPageSize } from "../../constants";
 import { createBlobContainerClient } from '../../utils/blobUtils';
+import { isAzuriteApiVersionError, promptToSkipApiVersionCheck } from '../../utils/azuriteUtils';
 import { localize } from "../../utils/localize";
 import { nonNullProp } from "../../utils/nonNull";
 import { AttachedStorageAccountTreeItem } from "../AttachedStorageAccountTreeItem";
@@ -64,6 +65,15 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
                     commandId: 'azureStorage.startBlobEmulator',
                     includeInTreeItemPicker: false
                 })];
+            } else if (this.root.isEmulated && isAzuriteApiVersionError(error)) {
+                const enabled = await callWithTelemetryAndErrorHandling('azureStorage.skipApiVersionCheck', async (context: IActionContext) => {
+                    context.errorHandling.rethrow = true;
+                    return await promptToSkipApiVersionCheck(context);
+                });
+                if (enabled) {
+                    return this.loadMoreChildrenImpl(clearCache);
+                }
+                throw error;
             } else if (errorType === 'ENOTFOUND') {
                 throw new Error(localize('storageAccountDoesNotSupportBlobs', 'This storage account does not support blobs.'), { cause: error });
             } else {
