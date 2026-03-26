@@ -77,7 +77,12 @@ export class FileShareGroupTreeItem extends AzExtParentTreeItem implements IStor
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<FileShareTreeItem> {
         const wizardContext: IFileShareWizardContext = { ...context };
-        const promptSteps = [new FileShareNameStep(), new StorageQuotaPromptStep()];
+        const shareServiceClient: ShareServiceClient = await this.root.createShareServiceClient();
+        const existingNames: string[] = [];
+        for await (const share of shareServiceClient.listShares()) {
+            existingNames.push(share.name);
+        }
+        const promptSteps = [new FileShareNameStep(existingNames), new StorageQuotaPromptStep()];
 
         const wizard = new AzureWizard(wizardContext, { title: localize('createFileShare', "Create File Share"), promptSteps });
         await wizard.prompt();

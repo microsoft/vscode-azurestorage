@@ -93,16 +93,18 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<QueueTreeItem> {
+        const existingNames = new Set<string>();
+        const queuesResponse = await this.listQueues();
+        for (const queue of queuesResponse.queueItems || []) {
+            existingNames.add(queue.name);
+        }
+
         const queueName = await context.ui.showInputBox({
             placeHolder: 'Enter a name for the new queue',
-            validateInput: QueueGroupTreeItem.validateQueueName
+            validateInput: (name: string) => QueueGroupTreeItem.validateQueueName(name, existingNames)
         });
 
         if (queueName) {
-            const currentChildren = await this.getCachedChildren(context);
-            if (currentChildren.some(child => child.label === queueName)) {
-                throw new Error(localize('queueAlreadyExists', 'The queue "{0}" already exists', queueName));
-            }
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
                 context.showCreatingTreeItem(queueName);
                 progress.report({ message: `Azure Storage: Creating queue '${queueName}'` });
@@ -138,7 +140,7 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         return createdQueue;
     }
 
-    private static validateQueueName(name: string): string | undefined | null {
+    private static validateQueueName(name: string, existingNames: Set<string>): string | undefined | null {
         const validLength = { min: 3, max: 63 };
 
         if (!name) {
@@ -158,6 +160,9 @@ export class QueueGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         }
         if (/(^-)|(-$)/.test(name)) {
             return 'Queue name cannot begin or end with a hyphen';
+        }
+        if (existingNames.has(name)) {
+            return localize('queueAlreadyExists', 'The queue "{0}" already exists', name);
         }
 
         return undefined;

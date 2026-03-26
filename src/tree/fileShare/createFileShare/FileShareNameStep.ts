@@ -8,10 +8,17 @@ import { localize } from "../../../utils/localize";
 import { IFileShareWizardContext } from "./IFileShareWizardContext";
 
 export class FileShareNameStep extends AzureWizardPromptStep<IFileShareWizardContext> {
+    private readonly _existingNames: string[];
+
+    public constructor(existingNames: string[]) {
+        super();
+        this._existingNames = existingNames;
+    }
+
     public async prompt(context: IFileShareWizardContext): Promise<void> {
         context.name = await context.ui.showInputBox({
             placeHolder: localize('enterFileShareName', 'Enter a name for the new file share'),
-            validateInput: this.validateFileShareName
+            validateInput: (name: string) => this.validateFileShareName(name)
         });
     }
 
@@ -34,6 +41,8 @@ export class FileShareNameStep extends AzureWizardPromptStep<IFileShareWizardCon
             return localize('shareNameDoubleHyphen', 'Share name cannot contain two hyphens in a row');
         } else if (/(^-)|(-$)/.test(name)) {
             return localize('shareNameHyphen', 'Share name cannot begin or end with a hyphen');
+        } else if (this._existingNames.includes(name)) {
+            return localize('shareAlreadyExists', 'The file share "{0}" already exists', name);
         }
 
         return undefined;

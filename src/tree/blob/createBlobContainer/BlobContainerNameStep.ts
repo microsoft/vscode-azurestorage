@@ -8,10 +8,17 @@ import { IBlobContainerCreateChildContext } from "../../../utils/blobUtils";
 import { localize } from "../../../utils/localize";
 
 export class BlobContainerNameStep extends AzureWizardPromptStep<IBlobContainerCreateChildContext> {
+    private readonly _existingNames: string[];
+
+    public constructor(existingNames: string[]) {
+        super();
+        this._existingNames = existingNames;
+    }
+
     public async prompt(context: IActionContext & { name?: string }): Promise<void> {
         context.name = await context.ui.showInputBox({
             placeHolder: localize('enterBlobContainerName', 'Enter a name for the new blob container'),
-            validateInput: this.validateBlobContainerName
+            validateInput: (name: string) => this.validateBlobContainerName(name)
         });
     }
 
@@ -34,6 +41,8 @@ export class BlobContainerNameStep extends AzureWizardPromptStep<IBlobContainerC
             return 'Container name cannot contain two hyphens in a row';
         } else if (/(^-)|(-$)/.test(name)) {
             return 'Container name cannot begin or end with a hyphen';
+        } else if (this._existingNames.includes(name)) {
+            return localize('containerAlreadyExists', 'The blob container "{0}" already exists', name);
         }
 
         return undefined;
