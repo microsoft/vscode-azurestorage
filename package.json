@@ -760,7 +760,7 @@
             ]
         },
         "configuration": {
-            "title": "Azure Storage Accounts",
+            "title": "Azure Storage",
             "properties": {
                 "azureStorage.showExplorer": {
                     "type": "boolean",
