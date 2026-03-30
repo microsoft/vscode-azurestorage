@@ -93,16 +93,20 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
     }
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<TableTreeItem> {
+        const existingNames = new Set<string>();
+        const tablesResponse = await this.listTables();
+        for (const table of tablesResponse) {
+            if (table.name) {
+                existingNames.add(table.name);
+            }
+        }
+
         const tableName = await context.ui.showInputBox({
             placeHolder: 'Enter a name for the new table',
-            validateInput: TableGroupTreeItem.validateTableName
+            validateInput: (name: string) => TableGroupTreeItem.validateTableName(name, existingNames)
         });
 
         if (tableName) {
-            const currentChildren = await this.getCachedChildren(context);
-            if (currentChildren.some(child => child.label === tableName)) {
-                throw new Error(localize('tableAlreadyExists', 'The table "{0}" already exists', tableName));
-            }
             return await window.withProgress({ location: ProgressLocation.Window }, async (progress) => {
                 context.showCreatingTreeItem(tableName);
                 progress.report({ message: `Azure Storage: Creating table '${tableName}'` });
@@ -138,7 +142,7 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         return createdTable;
     }
 
-    private static validateTableName(name: string): string | undefined | null {
+    private static validateTableName(name: string, existingNames: Set<string>): string | undefined | null {
         const validLength = { min: 3, max: 36 };
 
         if (!name) {
@@ -155,6 +159,9 @@ export class TableGroupTreeItem extends AzExtParentTreeItem implements IStorageT
         }
         if (/(^[0-9])/.test(name)) {
             return 'Table name cannot begin with a digit';
+        }
+        if (existingNames.has(name)) {
+            return localize('tableAlreadyExists', 'The table "{0}" already exists', name);
         }
 
         return undefined;

@@ -119,7 +119,10 @@ export class BlobContainerGroupTreeItem extends AzExtParentTreeItem implements I
 
     public async createChildImpl(context: ICreateChildImplContext): Promise<BlobContainerTreeItem> {
         const wizardContext: IActionContext & { name?: string } = { ...context };
-        const wizard = new AzureWizard(wizardContext, { promptSteps: [new BlobContainerNameStep()] });
+        const isAttached = this.fullId.startsWith("/attachedStorageAccounts/");
+        const existingContainers = await this.listContainers(isAttached);
+        const existingNames = existingContainers.map(c => c.name).filter((n): n is string => !!n);
+        const wizard = new AzureWizard(wizardContext, { promptSteps: [new BlobContainerNameStep(existingNames)] });
         await wizard.prompt();
 
         const name = nonNullProp(wizardContext, 'name');
