@@ -831,9 +831,5 @@
     },
     "extensionDependencies": [
         "ms-azuretools.vscode-azureresourcegroups"
-    ],
-    "overrides": {
-        "diff": ">=8.0.3",
-        "serialize-javascript": ">=7.0.5"
-    }
+    ]
 }
