@@ -822,7 +822,7 @@
         "@azure/storage-file-share": "^12.25.0-beta.1",
         "@azure/storage-queue": "^12.7.0",
         "@microsoft/vscode-azext-azureutils": "^4.1.1",
-        "@microsoft/vscode-azext-utils": "^4.0.6",
+        "@microsoft/vscode-azext-utils": "^4.0.7",
         "@microsoft/vscode-azureresources-api": "^3.1.0",
         "mime": "^2.4.4",
         "p-retry": "^4.2.0",
