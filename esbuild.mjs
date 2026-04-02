@@ -18,8 +18,6 @@ const finalConfig = {
         '@azure-tools/azcopy-linux',
         '@azure-tools/azcopy-win32',
         '@azure-tools/azcopy-win64',
-        // Optional peer dependency used by vscode-azext-utils for Copilot integration; not required at bundle time
-        '@github/copilot-sdk',
     ],
     plugins: [
         ...(extensionConfig.plugins ?? []),
