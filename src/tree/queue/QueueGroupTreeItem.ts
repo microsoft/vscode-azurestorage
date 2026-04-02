@@ -5,7 +5,7 @@
 
 import type { ListQueuesSegmentResponse, QueueItem, ServiceListQueuesSegmentResponse } from '@azure/storage-queue';
 
-import { AzExtParentTreeItem, AzExtTreeItem, callWithTelemetryAndErrorHandling, GenericTreeItem, IActionContext, ICreateChildImplContext, UserCancelledError, parseError } from '@microsoft/vscode-azext-utils';
+import { AzExtParentTreeItem, AzExtTreeItem, callWithTelemetryAndErrorHandling, GenericTreeItem, IActionContext, ICreateChildImplContext, parseError, UserCancelledError } from '@microsoft/vscode-azext-utils';
 import { ResolvedAppResourceTreeItem } from '@microsoft/vscode-azext-utils/hostapi';
 import * as path from 'path';
 import { ProgressLocation, Uri, window } from 'vscode';
