@@ -431,9 +431,16 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                     } else {
                         progress.report({ message: localize('creatingBlob', `Creating blob {0}...`, baseName) });
                     }
+
+                    let existingContentType: string | undefined;
+                    if (exists) {
+                        const properties: BlobGetPropertiesResponse = await blobClient.getProperties();
+                        existingContentType = properties.contentType;
+                    }
+
                     await blobClient.getBlockBlobClient().uploadData(content, {
                         blobHTTPHeaders: {
-                            blobContentType: mime.getType(uri.path) || undefined
+                            blobContentType: existingContentType || mime.getType(uri.path) || undefined
                         }
                     });
                 });
