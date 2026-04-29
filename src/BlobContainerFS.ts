@@ -417,7 +417,16 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             const { blobClient } = await this.getBlobClients(uri, storageAccount, accountKey, credentials);
             const { baseName } = this.parseUri(uri);
 
-            const exists = await blobClient.exists();
+            let existingProperties: BlobGetPropertiesResponse | undefined;
+            try {
+                existingProperties = await blobClient.getProperties();
+            } catch (error) {
+                if (parseError(error).errorType !== "404") {
+                    throw error;
+                }
+            }
+            const exists = existingProperties !== undefined;
+
             if (!options.create && !exists) {
                 throw vscode.FileSystemError.FileNotFound(uri);
             } else if (options.create && !options.overwrite && exists) {
@@ -432,15 +441,9 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
                         progress.report({ message: localize('creatingBlob', `Creating blob {0}...`, baseName) });
                     }
 
-                    let existingContentType: string | undefined;
-                    if (exists) {
-                        const properties: BlobGetPropertiesResponse = await blobClient.getProperties();
-                        existingContentType = properties.contentType;
-                    }
-
                     await blobClient.getBlockBlobClient().uploadData(content, {
                         blobHTTPHeaders: {
-                            blobContentType: existingContentType || mime.getType(uri.path) || undefined
+                            blobContentType: existingProperties?.contentType || mime.getType(uri.path) || undefined
                         }
                     });
                 });
