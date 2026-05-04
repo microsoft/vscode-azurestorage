@@ -122,7 +122,7 @@ async function startAzCopyDownload(context: IDownloadWizardContext, item: Downlo
 
     const src: IRemoteSasLocation | IRemoteAuthLocation = await createAzCopyRemoteLocation(item);
     const dst: ILocalLocation = createAzCopyLocalLocation(item.localFilePath);
-    const fromTo: FromToOption = item.type === "blob" ? "BlobLocal" : "FileLocal";
+    const fromTo: FromToOption = item.type === "blob" ? "BlobLocal" : "FileSMBLocal";
     const units: "files" | "bytes" = item.isDirectory ? "files" : "bytes";
     const transferProgress: TransferProgress = new TransferProgress(units, item.remoteFileName);
     await azCopyTransfer(context, fromTo, src, dst, transferProgress, progress, cancellationToken);
@@ -139,7 +139,7 @@ async function startAzCopyFileUpload(context: IActionContext, item: UploadItem, 
     const src: ILocalLocation = createAzCopyLocalLocation(item.localFilePath);
     const dst: IRemoteSasLocation | IRemoteAuthLocation = await createAzCopyRemoteLocation(item);
     const transferProgress: TransferProgress = new TransferProgress("bytes", item.remoteFilePath);
-    await azCopyTransfer(context, item.type === 'file' ? "LocalFile" : "LocalBlob", src, dst, transferProgress, notificationProgress, cancellationToken);
+    await azCopyTransfer(context, item.type === 'file' ? "LocalFileSMB" : "LocalBlob", src, dst, transferProgress, notificationProgress, cancellationToken);
 }
 
 async function startAzCopyFolderUpload(context: IActionContext, item: UploadItem, messagePrefix?: string, notificationProgress?: NotificationProgress, cancellationToken?: CancellationToken): Promise<void> {
@@ -155,7 +155,7 @@ async function startAzCopyFolderUpload(context: IActionContext, item: UploadItem
             item.remoteFilePath = "";
         }
     }
-    const fromTo: FromToOption = item.type === "blob" ? "LocalBlob" : "LocalFile";
+    const fromTo: FromToOption = item.type === "blob" ? "LocalBlob" : "LocalFileSMB";
 
     const src: ILocalLocation = createAzCopyLocalLocation(item.localFilePath, useWildCard);
     const dst: IRemoteSasLocation | IRemoteAuthLocation = await createAzCopyRemoteLocation(item);
