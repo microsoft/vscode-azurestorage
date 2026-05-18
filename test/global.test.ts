@@ -7,7 +7,8 @@ import { registerOnActionStartHandler, TestUserInput } from '@microsoft/vscode-a
 import * as vscode from 'vscode';
 
 const longRunningLocalTestsEnabled: boolean = !/^(false|0)?$/i.test(process.env.AzCode_EnableLongRunningTestsLocal || '');
-const longRunningRemoteTestsEnabled: boolean = !/^(false|0)?$/i.test(process.env.AzCode_UseAzureFederatedCredentials || '');
+const longRunningRemoteTestsEnabled: boolean = !!process.env.FC_SERVICE_CONNECTION_NAME
+    || !/^(false|0)?$/i.test(process.env.AzCode_UseAzureFederatedCredentials || '');
 
 export const longRunningTestsEnabled: boolean = longRunningLocalTestsEnabled || longRunningRemoteTestsEnabled;
 
