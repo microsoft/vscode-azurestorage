@@ -41,6 +41,11 @@ extends:
     ${{ if eq(parameters.enableLongRunningTests, true) }}:
       testARMServiceConnection: ${{ variables.testARMServiceConnection }}
     additionalSetupSteps:
-      - script: npm install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
+      - task: Npm@1
+        inputs:
+          command: custom
+          customCommand: install --force @azure-tools/azcopy-darwin @azure-tools/azcopy-linux @azure-tools/azcopy-win32 @azure-tools/azcopy-win64
+          customRegistry: useFeed
+          customFeed: ${{ variables.npmFeed }}
         displayName: Install AzCopy
         name: Install_azcopy
