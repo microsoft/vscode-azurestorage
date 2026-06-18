@@ -798,7 +798,7 @@
     },
     "devDependencies": {
         "@azure/arm-resources": "^5.0.0",
-        "@microsoft/vscode-azext-eng": "1.1.0-alpha.1",
+        "@microsoft/vscode-azext-eng": "^1.1.0-alpha.1",
         "@types/fs-extra": "^8.1.0",
         "@types/mime": "^2.0.1",
         "@types/p-retry": "^3.0.1",
