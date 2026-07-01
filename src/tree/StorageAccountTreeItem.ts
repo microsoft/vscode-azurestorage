@@ -25,6 +25,7 @@ import { createActivityContext } from '../utils/activityUtils';
 import { createStorageClient } from '../utils/azureClients';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
+import { withProxyOptions } from '../utils/proxyUtils';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
@@ -289,7 +290,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 if (this.allowSharedKeyAccess) {
                     try {
                         const credential = new StorageSharedKeyCredentialBlob(this.storageAccount.name, ((await this.getKey()).value));
-                        client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential);
+                        client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), credential, withProxyOptions(nonNullProp(this.storageAccount.primaryEndpoints, 'blob')));
                         await client.getProperties(); // Trigger a request to validate the key
                     } catch {
                         // ignore and try scoped token
@@ -298,7 +299,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
 
                 if (!client) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
-                    client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), token);
+                    client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), token, withProxyOptions(nonNullProp(this.storageAccount.primaryEndpoints, 'blob')));
                     await client.getProperties(); // Trigger a request to validate the token
                 }
 
@@ -309,7 +310,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 if (this.allowSharedKeyAccess) {
                     try {
                         const credential = new StorageSharedKeyCredentialFileShare(this.storageAccount.name, ((await this.getKey()).value));
-                        client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential);
+                        client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), credential, withProxyOptions(nonNullProp(this.storageAccount.primaryEndpoints, 'file')));
                         await client.getProperties(); // Trigger a request to validate the key
                     } catch {
                         // ignore and try scoped token
@@ -317,7 +318,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 }
                 if (!client) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
-                    client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), token, { fileRequestIntent: 'backup' });
+                    client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), token, withProxyOptions(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), { fileRequestIntent: 'backup' }));
                     await client.getProperties(); // Trigger a request to validate the token
                 }
 
@@ -328,7 +329,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 if (this.allowSharedKeyAccess) {
                     try {
                         const credential = new StorageSharedKeyCredentialQueue(this.storageAccount.name, ((await this.getKey()).value));
-                        client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential);
+                        client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), credential, withProxyOptions(nonNullProp(this.storageAccount.primaryEndpoints, 'queue')));
                         await client.getProperties(); // Trigger a request to validate the key
                     } catch {
                         // ignore and try scoped token
@@ -336,7 +337,7 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 }
                 if (!client) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
-                    client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), token);
+                    client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), token, withProxyOptions(nonNullProp(this.storageAccount.primaryEndpoints, 'queue')));
                     await client.getProperties(); // Trigger a request to validate the token
                 }
 

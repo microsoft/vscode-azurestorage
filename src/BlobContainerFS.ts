@@ -23,6 +23,7 @@ import { createStorageClient } from './utils/azureClients';
 import { BlobPathUtils } from './utils/blobPathUtils';
 import { createBlockBlobClient } from './utils/blobUtils';
 import { localize } from './utils/localize';
+import { withProxyOptions } from './utils/proxyUtils';
 import { nonNullValue } from "./utils/nonNull";
 import { StorageAccountKeyWrapper } from './utils/storageWrappers';
 
@@ -136,7 +137,7 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             throw Error("Unable to get key credential.");
         }
 
-        const serviceClient = new BlobServiceClient(blobEndpoint, credential);
+        const serviceClient = new BlobServiceClient(blobEndpoint, credential, withProxyOptions(blobEndpoint));
         const containerClient = serviceClient.getContainerClient(containerName);
         const blobClient = containerClient.getBlobClient(blobPath);
 
