@@ -161,12 +161,12 @@ export class BlobContainerFS implements vscode.FileSystemProvider {
             throw Error("Unable to get key credential.");
         }
 
-        const serviceClient = new DataLakeServiceClient(dfsEndpoint, credential);
+        const serviceClient = new DataLakeServiceClient(dfsEndpoint, credential, withProxyOptions(dfsEndpoint));
         const fileSystemClient = serviceClient.getFileSystemClient(containerName);
 
         const pathUrl = new URL(dfsEndpoint);
         pathUrl.pathname = `${containerName}/${blobPath}`;
-        const pathClient = new DataLakePathClient(pathUrl.toString(), credential);
+        const pathClient = new DataLakePathClient(pathUrl.toString(), credential, withProxyOptions(dfsEndpoint));
 
         return { fileSystemClient, pathClient };
     }
