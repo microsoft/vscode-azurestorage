@@ -81,7 +81,7 @@ To resolve it, point Node.js and VS Code at your corporate root CA (typically by
 Many enterprise Azure tenants disable storage account key access (`allowSharedKeyAccess: false` on the storage account). In these environments, the extension authenticates using your signed-in Entra ID (Azure AD) identity via a token credential (`https://storage.azure.com/.default` scope). To use the extension in this mode, your identity must be assigned the appropriate Azure RBAC data-plane role on the storage account:
 
 | Storage service | Required role (read) | Required role (read + write) |
-|---|---|---|
+| --- | --- | --- |
 | Blob Containers | Storage Blob Data Reader | Storage Blob Data Contributor |
 | File Shares | Storage File Data SMB Share Reader | Storage File Data SMB Share Contributor |
 | Queues | Storage Queue Data Reader | Storage Queue Data Contributor |
@@ -89,7 +89,7 @@ Many enterprise Azure tenants disable storage account key access (`allowSharedKe
 
 To assign a role, go to your storage account in the [Azure portal](https://portal.azure.com) → **Access control (IAM)** → **Add role assignment**.
 
-See [Assign an Azure role for access to blob data](https://learn.microsoft.com/azure/storage/blobs/assign-azure-role-data-access) for step-by-step instructions.
+See [Authorize access to Azure Storage using Azure role-based access control](https://learn.microsoft.com/azure/storage/blobs/authorize-access-azure-active-directory) for step-by-step instructions covering all storage service types.
 
 > **Note:** Azure RBAC role assignments can take a few minutes to propagate. If you still see access-denied errors after assigning a role, wait a few minutes and try refreshing the storage account node in the tree.
 
