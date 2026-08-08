@@ -25,6 +25,7 @@ import { createActivityContext } from '../utils/activityUtils';
 import { createStorageClient } from '../utils/azureClients';
 import { localize } from '../utils/localize';
 import { nonNullProp } from '../utils/nonNull';
+import { getBlobRBACErrorMessage, getFileShareRBACErrorMessage, getQueueRBACErrorMessage, getTableRBACErrorMessage, isAuthorizationPermissionMismatchError } from '../utils/storageErrors';
 import { StorageAccountKeyWrapper, StorageAccountWrapper } from '../utils/storageWrappers';
 import { IStorageRoot } from './IStorageRoot';
 import { IStorageTreeItem } from './IStorageTreeItem';
@@ -299,7 +300,14 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 if (!client) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
                     client = new BlobServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'blob'), token);
-                    await client.getProperties(); // Trigger a request to validate the token
+                    try {
+                        await client.getProperties(); // Trigger a request to validate the token
+                    } catch (error) {
+                        if (isAuthorizationPermissionMismatchError(error)) {
+                            throw new Error(getBlobRBACErrorMessage(this.storageAccount.name), { cause: error });
+                        }
+                        throw error;
+                    }
                 }
 
                 return client;
@@ -318,7 +326,14 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 if (!client) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
                     client = new ShareServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'file'), token, { fileRequestIntent: 'backup' });
-                    await client.getProperties(); // Trigger a request to validate the token
+                    try {
+                        await client.getProperties(); // Trigger a request to validate the token
+                    } catch (error) {
+                        if (isAuthorizationPermissionMismatchError(error)) {
+                            throw new Error(getFileShareRBACErrorMessage(this.storageAccount.name), { cause: error });
+                        }
+                        throw error;
+                    }
                 }
 
                 return client;
@@ -337,7 +352,14 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 if (!client) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
                     client = new QueueServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'queue'), token);
-                    await client.getProperties(); // Trigger a request to validate the token
+                    try {
+                        await client.getProperties(); // Trigger a request to validate the token
+                    } catch (error) {
+                        if (isAuthorizationPermissionMismatchError(error)) {
+                            throw new Error(getQueueRBACErrorMessage(this.storageAccount.name), { cause: error });
+                        }
+                        throw error;
+                    }
                 }
 
                 return client;
@@ -356,7 +378,14 @@ export class StorageAccountTreeItem implements ResolvedStorageAccount, IStorageT
                 if (!client) {
                     const token = await this._subscription.createCredentialsForScopes(['https://storage.azure.com/.default']);
                     client = new TableServiceClient(nonNullProp(this.storageAccount.primaryEndpoints, 'table'), token);
-                    await client.getProperties(); // Trigger a request to validate the token
+                    try {
+                        await client.getProperties(); // Trigger a request to validate the token
+                    } catch (error) {
+                        if (isAuthorizationPermissionMismatchError(error)) {
+                            throw new Error(getTableRBACErrorMessage(this.storageAccount.name), { cause: error });
+                        }
+                        throw error;
+                    }
                 }
 
                 return client;
