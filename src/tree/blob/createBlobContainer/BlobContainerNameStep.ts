@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { AzureWizardPromptStep, IActionContext } from "@microsoft/vscode-azext-utils";
-import { IBlobContainerCreateChildContext } from "../../../utils/blobUtils";
 import { localize } from "../../../utils/localize";
 
-export class BlobContainerNameStep extends AzureWizardPromptStep<IBlobContainerCreateChildContext> {
+export class BlobContainerNameStep extends AzureWizardPromptStep<IActionContext & { name?: string; childName?: string }> {
     private readonly _existingNames: string[];
 
     public constructor(existingNames: string[]) {
@@ -22,7 +21,7 @@ export class BlobContainerNameStep extends AzureWizardPromptStep<IBlobContainerC
         });
     }
 
-    public shouldPrompt(context: IBlobContainerCreateChildContext): boolean {
+    public shouldPrompt(context: IActionContext & { childName?: string }): boolean {
         return !context.childName;
     }
 
