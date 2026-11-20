@@ -6,13 +6,13 @@
 import { autoEsbuildOrWatch, autoSelectEsbuildConfig } from '@microsoft/vscode-azext-eng/esbuild';
 import { copy } from 'esbuild-plugin-copy';
 
-const { extensionConfig, telemetryConfig } = autoSelectEsbuildConfig();
+const { extension, telemetry } = autoSelectEsbuildConfig();
 
 /** @type {import('esbuild').BuildOptions} */
 const finalConfig = {
-    ...extensionConfig,
+    ...extension,
     external: [
-        ...(extensionConfig.external ?? []),
+        ...(extension.external ?? []),
         // AzCopy platform packages contain native executables and must not be bundled
         '@azure-tools/azcopy-darwin',
         '@azure-tools/azcopy-linux',
@@ -20,7 +20,7 @@ const finalConfig = {
         '@azure-tools/azcopy-win64',
     ],
     plugins: [
-        ...(extensionConfig.plugins ?? []),
+        ...(extension.plugins ?? []),
         copy({
             resolveFrom: 'out',
             assets: [
@@ -46,4 +46,4 @@ const finalConfig = {
     ],
 };
 
-await autoEsbuildOrWatch({ extensionConfig: finalConfig, telemetryConfig });
+await autoEsbuildOrWatch({ extension: finalConfig, telemetry });

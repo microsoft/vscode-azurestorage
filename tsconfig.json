@@ -12,13 +12,17 @@
         "noUnusedLocals": true,
         "noImplicitThis": true,
         "noImplicitReturns": true,
+        "strict": false,
         "strictNullChecks": true,
         "noUnusedParameters": true,
-        "baseUrl": "./",
+        "types": [
+            "node",
+            "mocha"
+        ],
         "paths": {
             "*": [
-                "node_modules/@types/*",
-                "*"
+                "./node_modules/@types/*",
+                "./*"
             ]
         },
         "skipLibCheck": false
